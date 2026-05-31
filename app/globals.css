@@ -99,9 +99,6 @@ ul { list-style: none; }
 .logo { display: inline-flex; align-items: center; gap: 10px; }
 .logo-mark {
   width: 30px; height: 30px; border-radius: 9px;
-  background: linear-gradient(135deg, var(--teal), var(--teal-2));
-  display: flex; align-items: center; justify-content: center;
-  color: #000; font-weight: 800; font-size: 17px;
   box-shadow: 0 4px 14px rgba(0, 191, 166, 0.35);
 }
 .logo-text { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
