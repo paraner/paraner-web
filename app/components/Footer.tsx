@@ -1,0 +1,25 @@
+import Logo from "./Logo";
+
+// Alt bilgi — logo, yasal linkler, telif
+export default function Footer() {
+  const year = new Date().getFullYear();
+  return (
+    <footer className="footer">
+      <div className="footer-inner">
+        <div>
+          <Logo />
+          <p className="footer-copy">Paranı yönet, geleceğini kur.</p>
+        </div>
+        <div className="footer-links">
+          <a href="/#ozellikler">Özellikler</a>
+          <a href="/#fiyatlar">Fiyatlar</a>
+          <a href="/giris">Giriş Yap</a>
+          <a href="/kayit">Kayıt Ol</a>
+        </div>
+      </div>
+      <div className="footer-inner" style={{ marginTop: 24 }}>
+        <p className="footer-copy">© {year} Paraner · MGZR LLC · Tüm hakları saklıdır.</p>
+      </div>
+    </footer>
+  );
+}

@@ -1,66 +1,139 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import Link from "next/link";
+import Background from "./components/Background";
+import Nav from "./components/Nav";
+import Footer from "./components/Footer";
+
+// ─── İçerik verisi (kolay düzenlenebilsin diye dosyanın başında) ───
+
+const FEATURES = [
+  { icon: "📊", title: "Gelir & Gider Takibi", desc: "Her kuruşu kategorilere ayır, nereye gittiğini anında gör." },
+  { icon: "🎯", title: "Birikim Hedefleri", desc: "Ev, araba, tatil… Hedef koy, ilerlemeni takip et." },
+  { icon: "🤖", title: "Parla — AI Asistan", desc: "“Bu ay ne kadar harcadım?” diye sor, yapay zeka cevaplasın." },
+  { icon: "🧾", title: "Fiş Tarama", desc: "Fişin fotoğrafını çek, tutar ve kategori otomatik dolsun." },
+  { icon: "💱", title: "Döviz & Altın", desc: "Canlı kurlar, hesap makinesi ve çevirici cebinde." },
+  { icon: "🏢", title: "İşletme Modülü", desc: "Fatura, stok, çalışan, KDV — esnaf işleri tek yerde." },
+];
+
+const PLANS = [
+  {
+    name: "Free",
+    tag: "Uygulamayı tanımak ve başlangıç bütçesi için.",
+    amount: "₺0",
+    period: "sonsuza dek ücretsiz",
+    featured: false,
+    features: ["Sınırsız gelir/gider", "20 hazır kategori", "1 birikim hedefi", "5 fiş tarama / ay"],
+  },
+  {
+    name: "Plus",
+    tag: "Bütçesini kontrol altına almak isteyen bireyler için.",
+    amount: "₺129",
+    period: "/ay · 7 gün ücretsiz deneme",
+    featured: true,
+    features: ["Sınırsız hedef & bütçe", "AI chat asistanı", "Sınırsız fiş tarama", "Detaylı raporlar"],
+  },
+  {
+    name: "İşletme Pro",
+    tag: "Esnaf ve KOBİ'ler için tam finans yönetimi.",
+    amount: "₺349",
+    period: "/ay · 7 gün ücretsiz deneme",
+    featured: false,
+    features: ["Fatura & teklif", "Stok & ürün takibi", "Çalışan & maaş", "KDV & vergi raporları"],
+  },
+];
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <>
+      <Background />
+      <Nav />
+
+      {/* ─── HERO ─── */}
+      <section className="hero wrap">
+        <span className="eyebrow">AI Destekli Finans Asistanı</span>
+        <h1>
+          Paranı yönet,
+          <br />
+          <em>geleceğini kur.</em>
+        </h1>
+        <p className="hero-sub">
+          Kişisel ve işletme finanslarını tek yerden yönet. Bütçe yap, hedef koy,
+          yapay zeka koçun Parla ile akıllı kararlar al.
+        </p>
+        <div className="hero-cta">
+          <Link href="/kayit" className="btn btn-primary btn-lg">Ücretsiz Başla</Link>
+          <Link href="/giris" className="btn btn-ghost btn-lg">Giriş Yap</Link>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="stores">
+          <span className="store-badge">
+            <span className="store-icon"></span>
+            <span>
+              <span className="store-small" style={{ display: "block" }}>İndir</span>
+              <span className="store-big">App Store<span className="soon"> yakında</span></span>
+            </span>
+          </span>
+          <span className="store-badge">
+            <span className="store-icon">▶</span>
+            <span>
+              <span className="store-small" style={{ display: "block" }}>İndir</span>
+              <span className="store-big">Google Play<span className="soon"> yakında</span></span>
+            </span>
+          </span>
         </div>
-      </main>
-    </div>
+        <p className="hero-note">Kart gerekmez · İstediğin zaman iptal et</p>
+      </section>
+
+      {/* ─── ÖZELLİKLER ─── */}
+      <section id="ozellikler" className="section wrap">
+        <div className="section-head">
+          <h2>Tek uygulama, her şey kontrol altında</h2>
+          <p>Günlük harcamadan işletme faturasına kadar finansının tamamı.</p>
+        </div>
+        <div className="features-grid">
+          {FEATURES.map((f) => (
+            <div className="feature-card" key={f.title}>
+              <div className="feature-ico">{f.icon}</div>
+              <h3>{f.title}</h3>
+              <p>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── FİYATLAR ─── */}
+      <section id="fiyatlar" className="section wrap">
+        <div className="section-head">
+          <h2>Sana uygun bir plan var</h2>
+          <p>Ücretsiz başla, ihtiyacın büyüdükçe yükselt. Taahhüt yok.</p>
+        </div>
+        <div className="price-grid">
+          {PLANS.map((p) => (
+            <div className={`price-card${p.featured ? " featured" : ""}`} key={p.name}>
+              {p.featured && <span className="price-badge">En Popüler</span>}
+              <div className="price-name">{p.name}</div>
+              <div className="price-tag">{p.tag}</div>
+              <div className="price-amount">{p.amount}</div>
+              <div className="price-period">{p.period}</div>
+              <ul className="price-features">
+                {p.features.map((feat) => (
+                  <li key={feat}>{feat}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── CTA BAND ─── */}
+      <section className="wrap">
+        <div className="cta-band">
+          <h2>Bugün başla, geleceğini kur</h2>
+          <p>Dakikalar içinde hesabını oluştur, paranı kontrol altına al.</p>
+          <Link href="/kayit" className="btn btn-primary btn-lg">Ücretsiz Hesap Oluştur</Link>
+        </div>
+      </section>
+
+      <Footer />
+    </>
   );
 }
