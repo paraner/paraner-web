@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency } from "../../../lib/format";
+import PageHead from "../../../components/ui/PageHead";
+import Modal from "../../../components/ui/Modal";
+import Field from "../../../components/ui/Field";
+import { EditIcon, TrashIcon } from "../../../components/icons";
 
 export type Account = {
   id: string;
@@ -25,13 +29,6 @@ const CURRENCIES = ["TRY", "USD", "EUR", "GBP", "CHF"];
 function typeLabel(t: string) {
   return TYPES.find((x) => x.id === t)?.label ?? t;
 }
-
-const EditIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
-);
-const TrashIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
-);
 
 export default function HesaplarClient({
   profileId,
@@ -139,17 +136,15 @@ export default function HesaplarClient({
 
   return (
     <>
-      <div className="panel-page-head">
-        <div>
-          <h1 className="panel-h1">Hesaplar</h1>
-          <p className="panel-sub" style={{ marginBottom: 0 }}>
-            Banka ve nakit hesapların
-          </p>
-        </div>
-        <button className="btn btn-primary btn-sm" onClick={openNew}>
-          + Hesap Ekle
-        </button>
-      </div>
+      <PageHead
+        title="Hesaplar"
+        sub="Banka ve nakit hesapların"
+        action={
+          <button className="btn btn-primary btn-sm" onClick={openNew}>
+            + Hesap Ekle
+          </button>
+        }
+      />
 
       {Object.keys(totals).length > 0 && (
         <div className="total-banner">
@@ -177,7 +172,7 @@ export default function HesaplarClient({
                   }}
                   aria-label="Düzenle"
                 >
-                  {EditIcon}
+                  <EditIcon />
                 </button>
                 <button
                   className="icon-btn danger"
@@ -187,7 +182,7 @@ export default function HesaplarClient({
                   }}
                   aria-label="Sil"
                 >
-                  {TrashIcon}
+                  <TrashIcon />
                 </button>
               </div>
               <div className="acct-top">
@@ -206,96 +201,85 @@ export default function HesaplarClient({
       )}
 
       {open && (
-        <div className="modal-overlay" onClick={() => !saving && setOpen(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <h2>{editing ? "Hesabı Düzenle" : "Hesap Ekle"}</h2>
-              <button className="modal-close" onClick={() => setOpen(false)}>
-                ×
-              </button>
+        <Modal
+          title={editing ? "Hesabı Düzenle" : "Hesap Ekle"}
+          onClose={() => setOpen(false)}
+          busy={saving}
+        >
+          <form onSubmit={handleSave}>
+            {error && <div className="form-error">{error}</div>}
+
+            <Field label="Hesap Adı">
+              <input
+                type="text"
+                placeholder="ör. Ziraat Vadesiz"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+              />
+            </Field>
+
+            <div className="form-row">
+              <Field label="Tür">
+                <select value={type} onChange={(e) => setType(e.target.value)}>
+                  {TYPES.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Para Birimi">
+                <select value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                  {CURRENCIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </Field>
             </div>
 
-            <form onSubmit={handleSave}>
-              {error && <div className="form-error">{error}</div>}
-
-              <div className="field">
-                <label>Hesap Adı</label>
+            {type === "bank" && (
+              <Field label="Banka Adı (opsiyonel)">
                 <input
                   type="text"
-                  placeholder="ör. Ziraat Vadesiz"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  autoFocus
+                  placeholder="ör. Ziraat Bankası"
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
                 />
-              </div>
+              </Field>
+            )}
 
-              <div className="form-row">
-                <div className="field">
-                  <label>Tür</label>
-                  <select value={type} onChange={(e) => setType(e.target.value)}>
-                    {TYPES.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label>Para Birimi</label>
-                  <select value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                    {CURRENCIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+            <Field label="IBAN (opsiyonel)">
+              <input
+                type="text"
+                placeholder="TR.."
+                value={iban}
+                onChange={(e) => setIban(e.target.value)}
+              />
+            </Field>
 
-              {type === "bank" && (
-                <div className="field">
-                  <label>Banka Adı (opsiyonel)</label>
-                  <input
-                    type="text"
-                    placeholder="ör. Ziraat Bankası"
-                    value={bankName}
-                    onChange={(e) => setBankName(e.target.value)}
-                  />
-                </div>
-              )}
+            <Field label={editing ? "Bakiye" : "Başlangıç Bakiyesi"}>
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="0,00"
+                value={balance}
+                onChange={(e) => setBalance(e.target.value)}
+              />
+            </Field>
 
-              <div className="field">
-                <label>IBAN (opsiyonel)</label>
-                <input
-                  type="text"
-                  placeholder="TR.."
-                  value={iban}
-                  onChange={(e) => setIban(e.target.value)}
-                />
-              </div>
-
-              <div className="field">
-                <label>{editing ? "Bakiye" : "Başlangıç Bakiyesi"}</label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0,00"
-                  value={balance}
-                  onChange={(e) => setBalance(e.target.value)}
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-primary btn-block btn-lg"
-                disabled={saving}
-                style={{ marginTop: 4 }}
-              >
-                {saving ? "Kaydediliyor…" : "Kaydet"}
-              </button>
-            </form>
-          </div>
-        </div>
+            <button
+              type="submit"
+              className="btn btn-primary btn-block btn-lg"
+              disabled={saving}
+              style={{ marginTop: 4 }}
+            >
+              {saving ? "Kaydediliyor…" : "Kaydet"}
+            </button>
+          </form>
+        </Modal>
       )}
     </>
   );

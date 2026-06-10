@@ -1,14 +1,11 @@
 import { createClient } from "../../../lib/supabase/server";
+import { getActiveProfile } from "../../../lib/supabase/profile";
 import FaturalarClient, { type Invoice } from "./FaturalarClient";
 
 export default async function FaturalarPage() {
   const supabase = await createClient();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, currency, invoice_prefix, invoice_next_number")
-    .eq("is_active", true)
-    .maybeSingle();
+  const profile = await getActiveProfile();
 
   if (!profile?.id) {
     return <div className="panel-empty">Profil bulunamadı.</div>;

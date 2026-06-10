@@ -105,7 +105,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className={inter.variable}>
-      <body>
+      {/* suppressHydrationWarning: bazı tarayıcı eklentileri <body>'ye attribute
+          ekleyip hydration uyarısı tetikliyor; bu zararsız farkı görmezden geliriz. */}
+      <body suppressHydrationWarning>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

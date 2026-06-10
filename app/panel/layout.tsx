@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { createClient } from "../../lib/supabase/server";
+import { getProfiles, profileAvatarUrl } from "../../lib/supabase/profile";
 import Sidebar from "./Sidebar";
 import LogoutButton from "./LogoutButton";
+import Avatar from "../../components/ui/Avatar";
 
 // Panel uygulamanın içi — tüm /panel sayfaları arama motorlarına kapalı
 export const metadata: Metadata = {
@@ -15,33 +16,22 @@ export default async function PanelLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
+  // Oturum kontrolü zaten proxy.ts'te yapılıyor (girişsizi /giris'e atar).
+  // getProfiles cache'li: sidebar + sayfalar aynı render içinde paylaşır → tek sorgu.
+  const profiles = await getProfiles();
+  const active = profiles.find((p) => p.is_active) ?? profiles[0] ?? null;
+  if (!active) {
     redirect("/giris");
   }
 
-  // Üst bar + menü için aktif profil
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("profile_name, profile_type")
-    .eq("is_active", true)
-    .maybeSingle();
-
-  const typeLabel =
-    profile?.profile_type === "business" ? "İşletme" : "Bireysel";
-
   return (
     <div className="panel-shell">
-      <Sidebar profileType={profile?.profile_type ?? null} />
+      <Sidebar profiles={profiles} />
       <div className="panel-main">
         <header className="panel-topbar">
-          <div className="panel-profile">
-            <strong>{profile?.profile_name ?? "Profil"}</strong>
-            <span>{typeLabel}</span>
+          <div className="panel-topbar-title">
+            <Avatar name={active.profile_name} url={profileAvatarUrl(active)} small />
+            <span>{active.profile_name ?? "Profil"}</span>
           </div>
           <LogoutButton />
         </header>

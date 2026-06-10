@@ -1,14 +1,12 @@
 import { createClient } from "../../../lib/supabase/server";
+import { getActiveProfile } from "../../../lib/supabase/profile";
 import IslemlerClient, { type Tx, type Account } from "./IslemlerClient";
 
 export default async function IslemlerPage() {
   const supabase = await createClient();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, currency")
-    .eq("is_active", true)
-    .maybeSingle();
+  // Aktif profil cache'li — layout zaten çekti, burada tekrar ağ turu olmaz
+  const profile = await getActiveProfile();
 
   if (!profile?.id) {
     return <div className="panel-empty">Profil bulunamadı.</div>;

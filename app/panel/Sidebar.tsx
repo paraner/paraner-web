@@ -1,8 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "../../lib/supabase/client";
+import { profileAvatarUrl, type ActiveProfile } from "../../lib/supabase/profileShared";
+import Avatar from "../../components/ui/Avatar";
+
+const COLLAPSE_KEY = "paraner-sidebar-collapsed";
 
 // Basit, çizgisel ikonlar (harici kütüphane yok)
 const icons = {
@@ -29,59 +35,197 @@ const icons = {
   ),
 };
 
-type Item = {
-  label: string;
-  href: string;
-  icon: React.ReactNode;
-  enabled: boolean;
-};
+type Item = { label: string; href: string; icon: React.ReactNode };
+type Group = { label: string | null; items: Item[] };
 
-export default function Sidebar({ profileType }: { profileType: string | null }) {
+export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
   const pathname = usePathname();
-  const isBusiness = profileType === "business";
+  const router = useRouter();
+  const supabase = createClient();
 
-  const items: Item[] = [
-    { label: "Genel Bakış", href: "/panel", icon: icons.overview, enabled: true },
-    { label: "İşlemler", href: "/panel/islemler", icon: icons.transactions, enabled: true },
-    { label: "Hesaplar", href: "/panel/hesaplar", icon: icons.accounts, enabled: true },
-    ...(!isBusiness
-      ? [{ label: "Cüzdanım", href: "/panel/cuzdanim", icon: icons.wallet, enabled: true }]
-      : []),
+  const active = profiles.find((p) => p.is_active) ?? profiles[0] ?? null;
+  const isBusiness = active?.profile_type === "business";
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [switching, setSwitching] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Daralt/genişlet tercihini hatırla (localStorage). Sunucu hep "açık" render eder,
+  // tarayıcıda okunur → hydration uyumlu.
+  useEffect(() => {
+    if (localStorage.getItem(COLLAPSE_KEY) === "1") setCollapsed(true);
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((c) => {
+      const next = !c;
+      localStorage.setItem(COLLAPSE_KEY, next ? "1" : "0");
+      return next;
+    });
+    setMenuOpen(false);
+  }
+
+  const typeLabel = (t: string | null | undefined) =>
+    t === "business" ? "İşletme" : "Bireysel";
+
+  async function switchTo(p: ActiveProfile) {
+    if (p.is_active || switching) return;
+    setSwitching(true);
+    setMenuOpen(false);
+    const ids = profiles.map((x) => x.id);
+    await supabase.from("profiles").update({ is_active: false }).in("id", ids);
+    await supabase.from("profiles").update({ is_active: true }).eq("id", p.id);
+    router.push("/panel");
+    router.refresh();
+  }
+
+  // Menü grupları (profil tipine göre)
+  const groups: Group[] = [
+    {
+      label: null,
+      items: [
+        { label: "Genel Bakış", href: "/panel", icon: icons.overview },
+        { label: "İşlemler", href: "/panel/islemler", icon: icons.transactions },
+        { label: "Hesaplar", href: "/panel/hesaplar", icon: icons.accounts },
+        ...(!isBusiness
+          ? [{ label: "Cüzdanım", href: "/panel/cuzdanim", icon: icons.wallet }]
+          : []),
+      ],
+    },
     ...(isBusiness
       ? [
-          { label: "Faturalar", href: "/panel/faturalar", icon: icons.invoices, enabled: true },
-          { label: "Cariler", href: "/panel/cariler", icon: icons.contacts, enabled: true },
+          {
+            label: "İŞLETME",
+            items: [
+              { label: "Faturalar", href: "/panel/faturalar", icon: icons.invoices },
+              { label: "Cariler", href: "/panel/cariler", icon: icons.contacts },
+            ],
+          },
         ]
       : []),
-    { label: "Ayarlar", href: "/panel/ayarlar", icon: icons.settings, enabled: true },
   ];
 
+  const canSwitch = profiles.length > 1;
+
   return (
-    <aside className="panel-sidebar">
+    <aside className={`panel-sidebar${collapsed ? " collapsed" : ""}`}>
       <div className="panel-brand">
-        <Image src="/paraner-logo.png" alt="Paraner" width={26} height={26} />
-        <span>Paraner</span>
+        {/* Açık: tam PARANER wordmark · Daraltılmış: aynı wordmark'tan kırpılmış temiz P.
+            P birebir aynı (aynı kaynak), A sızması/kesilme olmaz. */}
+        <Image
+          src="/paraner-wordmark.png"
+          alt="Paraner"
+          width={118}
+          height={24}
+          className="brand-full"
+          priority
+        />
+        <Image
+          src="/paraner-p.png"
+          alt="Paraner"
+          width={19}
+          height={24}
+          className="brand-mini"
+          priority
+        />
       </div>
-      <nav className="panel-nav">
-        {items.map((item) =>
-          item.enabled ? (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`panel-nav-item${pathname === item.href ? " active" : ""}`}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          ) : (
-            <span key={item.href} className="panel-nav-item disabled">
-              {item.icon}
-              {item.label}
-              <span className="panel-nav-soon">yakında</span>
+
+      {/* Profil değiştirici */}
+      {active && (
+        <div className="profile-switch">
+          <button
+            type="button"
+            className="profile-switch-btn"
+            onClick={() => canSwitch && setMenuOpen((o) => !o)}
+            disabled={!canSwitch || switching}
+            aria-expanded={menuOpen}
+            title={collapsed ? active.profile_name ?? "Profil" : undefined}
+          >
+            <Avatar name={active.profile_name} url={profileAvatarUrl(active)} />
+            <span className="profile-switch-info">
+              <span className="profile-switch-name">
+                {active.profile_name ?? "Profil"}
+              </span>
+              <span className="profile-switch-type">
+                {typeLabel(active.profile_type)}
+              </span>
             </span>
-          )
-        )}
+            {canSwitch && (
+              <svg className="profile-switch-chev" viewBox="0 0 12 8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 1.5 6 6.5l5-5" />
+              </svg>
+            )}
+          </button>
+
+          {menuOpen && canSwitch && (
+            <div className="profile-switch-menu">
+              {profiles.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`profile-switch-opt${p.is_active ? " active" : ""}`}
+                  onClick={() => switchTo(p)}
+                >
+                  <Avatar name={p.profile_name} url={profileAvatarUrl(p)} small />
+                  <span className="profile-switch-info">
+                    <span className="profile-switch-name">
+                      {p.profile_name ?? "Profil"}
+                    </span>
+                    <span className="profile-switch-type">
+                      {typeLabel(p.profile_type)}
+                    </span>
+                  </span>
+                  {p.is_active && <span className="profile-switch-dot" />}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <nav className="panel-nav">
+        {groups.map((g, gi) => (
+          <div key={gi} className="nav-group">
+            {g.label && <div className="nav-group-label">{g.label}</div>}
+            {g.items.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`panel-nav-item${pathname === item.href ? " active" : ""}`}
+                title={collapsed ? item.label : undefined}
+              >
+                {item.icon}
+                <span className="nav-label">{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        ))}
+
+        {/* Ayarlar — en altta sabit */}
+        <Link
+          href="/panel/ayarlar"
+          className={`panel-nav-item nav-bottom${pathname === "/panel/ayarlar" ? " active" : ""}`}
+          title={collapsed ? "Ayarlar" : undefined}
+        >
+          {icons.settings}
+          <span className="nav-label">Ayarlar</span>
+        </Link>
       </nav>
+
+      {/* Daralt / genişlet */}
+      <button
+        type="button"
+        className="sidebar-toggle"
+        onClick={toggleCollapsed}
+        aria-label={collapsed ? "Menüyü genişlet" : "Menüyü daralt"}
+        title={collapsed ? "Genişlet" : "Daralt"}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 6l-6 6 6 6" />
+        </svg>
+        <span className="nav-label">Menüyü daralt</span>
+      </button>
     </aside>
   );
 }
+

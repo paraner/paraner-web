@@ -3,11 +3,16 @@
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
+import { todayStr } from "../../../lib/date";
 import {
   CATEGORIES,
   INCOME_CATEGORIES,
   findCategory,
 } from "../../../lib/categories";
+import PageHead from "../../../components/ui/PageHead";
+import Modal from "../../../components/ui/Modal";
+import Field from "../../../components/ui/Field";
+import { TrashIcon } from "../../../components/icons";
 
 export type Tx = {
   id: string;
@@ -26,13 +31,6 @@ export type Account = {
   currency: string;
   balance: string;
 };
-
-function todayStr(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate()
-  ).padStart(2, "0")}`;
-}
 
 export default function IslemlerClient({
   profileId,
@@ -60,6 +58,24 @@ export default function IslemlerClient({
   const [accountId, setAccountId] = useState("");
 
   const cats = type === "income" ? INCOME_CATEGORIES : CATEGORIES;
+
+  // Filtreler — anında, client-side (yüklü son 100 işlem üzerinde)
+  const [query, setQuery] = useState("");
+  const [ftype, setFtype] = useState<"all" | "income" | "expense">("all");
+  const [fcat, setFcat] = useState("");
+  const allCats = Array.from(
+    new Map([...CATEGORIES, ...INCOME_CATEGORIES].map((c) => [c.id, c])).values()
+  );
+  const q = query.trim().toLocaleLowerCase("tr");
+  const filtered = list.filter((t) => {
+    if (ftype !== "all" && t.type !== ftype) return false;
+    if (fcat && t.category !== fcat) return false;
+    if (q) {
+      const hay = `${t.title} ${findCategory(t.category).label}`.toLocaleLowerCase("tr");
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
 
   function resetForm() {
     setType("expense");
@@ -145,173 +161,208 @@ export default function IslemlerClient({
 
   return (
     <>
-      <div className="panel-page-head">
-        <div>
-          <h1 className="panel-h1">İşlemler</h1>
-          <p className="panel-sub" style={{ marginBottom: 0 }}>
-            Gelir ve giderlerin
-          </p>
-        </div>
-        <button className="btn btn-primary btn-sm" onClick={() => setOpen(true)}>
-          + İşlem Ekle
-        </button>
-      </div>
+      <PageHead
+        title="İşlemler"
+        sub="Gelir ve giderlerin"
+        action={
+          <button className="btn btn-primary btn-sm" onClick={() => setOpen(true)}>
+            + İşlem Ekle
+          </button>
+        }
+      />
 
       {list.length === 0 ? (
         <div className="panel-empty">
           Henüz işlem yok. Sağ üstten ilk işlemini ekle.
         </div>
       ) : (
-        <div className="tx-list">
-          {list.map((t) => {
-            const isIncome = t.type === "income";
-            const isExpense = t.type === "expense";
-            const sign = isIncome ? "+" : isExpense ? "−" : "";
-            const cls = isIncome ? "pos" : isExpense ? "neg" : "";
-            const cat = findCategory(t.category);
-            return (
-              <div key={t.id} className="tx-row">
-                <div className="tx-main">
-                  <span className="tx-dot" style={{ background: cat.color }} />
-                  <div className="tx-left">
-                    <span className="tx-title">{t.title}</span>
-                    <span className="tx-meta">
-                      {[cat.label, formatDate(t.date)].filter(Boolean).join(" · ")}
-                    </span>
+        <>
+          <div className="filter-row">
+            <div className="chip-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              <input
+                type="text"
+                placeholder="İşlem ara…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+            <div className="chip-seg">
+              <button
+                className={ftype === "all" ? "active" : ""}
+                onClick={() => setFtype("all")}
+              >
+                Tümü
+              </button>
+              <button
+                className={ftype === "income" ? "active on-income" : ""}
+                onClick={() => setFtype("income")}
+              >
+                Gelir
+              </button>
+              <button
+                className={ftype === "expense" ? "active on-expense" : ""}
+                onClick={() => setFtype("expense")}
+              >
+                Gider
+              </button>
+            </div>
+            <select
+              className="chip-select"
+              value={fcat}
+              onChange={(e) => setFcat(e.target.value)}
+            >
+              <option value="">Tüm kategoriler</option>
+              {allCats.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="panel-empty">Filtreye uyan işlem yok.</div>
+          ) : (
+            <div className="tx-list">
+              {filtered.map((t) => {
+                const isIncome = t.type === "income";
+                const isExpense = t.type === "expense";
+                const sign = isIncome ? "+" : isExpense ? "−" : "";
+                const cls = isIncome ? "pos" : isExpense ? "neg" : "";
+                const cat = findCategory(t.category);
+                return (
+                  <div key={t.id} className="tx-row">
+                    <div className="tx-main">
+                      <span className="tx-dot" style={{ background: cat.color }} />
+                      <div className="tx-left">
+                        <span className="tx-title">{t.title}</span>
+                        <span className="tx-meta">
+                          {[cat.label, formatDate(t.date)].filter(Boolean).join(" · ")}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="tx-right">
+                      <span className={`tx-amount ${cls}`}>
+                        {sign}
+                        {formatCurrency(Number(t.amount) || 0, t.currency || currency)}
+                      </span>
+                      <button
+                        className="tx-delete"
+                        onClick={() => handleDelete(t)}
+                        aria-label="Sil"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <div className="tx-right">
-                  <span className={`tx-amount ${cls}`}>
-                    {sign}
-                    {formatCurrency(Number(t.amount) || 0, t.currency || currency)}
-                  </span>
-                  <button
-                    className="tx-delete"
-                    onClick={() => handleDelete(t)}
-                    aria-label="Sil"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
 
       {open && (
-        <div className="modal-overlay" onClick={() => !saving && setOpen(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <h2>İşlem Ekle</h2>
-              <button className="modal-close" onClick={() => setOpen(false)}>
-                ×
+        <Modal title="İşlem Ekle" onClose={() => setOpen(false)} busy={saving}>
+          <form onSubmit={handleAdd}>
+            <div className="type-toggle">
+              <button
+                type="button"
+                className={type === "expense" ? "on-expense" : ""}
+                onClick={() => {
+                  setType("expense");
+                  setCategory("");
+                }}
+              >
+                Gider
+              </button>
+              <button
+                type="button"
+                className={type === "income" ? "on-income" : ""}
+                onClick={() => {
+                  setType("income");
+                  setCategory("");
+                }}
+              >
+                Gelir
               </button>
             </div>
 
-            <form onSubmit={handleAdd}>
-              <div className="type-toggle">
-                <button
-                  type="button"
-                  className={type === "expense" ? "on-expense" : ""}
-                  onClick={() => {
-                    setType("expense");
-                    setCategory("");
-                  }}
+            {error && <div className="form-error">{error}</div>}
+
+            <Field label="Tutar">
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="0,00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                autoFocus
+              />
+            </Field>
+
+            <Field label="Açıklama (opsiyonel)">
+              <input
+                type="text"
+                placeholder="ör. Market alışverişi"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </Field>
+
+            <div className="form-row">
+              <Field label="Kategori">
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
                 >
-                  Gider
-                </button>
-                <button
-                  type="button"
-                  className={type === "income" ? "on-income" : ""}
-                  onClick={() => {
-                    setType("income");
-                    setCategory("");
-                  }}
+                  <option value="">Seç</option>
+                  {cats.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Tarih">
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </Field>
+            </div>
+
+            {accounts.length > 0 && (
+              <Field label="Hesap (opsiyonel)">
+                <select
+                  value={accountId}
+                  onChange={(e) => setAccountId(e.target.value)}
                 >
-                  Gelir
-                </button>
-              </div>
+                  <option value="">Hesapsız</option>
+                  {accounts.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name} ({a.currency})
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
 
-              {error && <div className="form-error">{error}</div>}
-
-              <div className="field">
-                <label>Tutar</label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0,00"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  autoFocus
-                />
-              </div>
-
-              <div className="field">
-                <label>Açıklama (opsiyonel)</label>
-                <input
-                  type="text"
-                  placeholder="ör. Market alışverişi"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="field">
-                  <label>Kategori</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                  >
-                    <option value="">Seç</option>
-                    {cats.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label>Tarih</label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {accounts.length > 0 && (
-                <div className="field">
-                  <label>Hesap (opsiyonel)</label>
-                  <select
-                    value={accountId}
-                    onChange={(e) => setAccountId(e.target.value)}
-                  >
-                    <option value="">Hesapsız</option>
-                    {accounts.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.name} ({a.currency})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                className="btn btn-primary btn-block btn-lg"
-                disabled={saving}
-                style={{ marginTop: 4 }}
-              >
-                {saving ? "Kaydediliyor…" : "Kaydet"}
-              </button>
-            </form>
-          </div>
-        </div>
+            <button
+              type="submit"
+              className="btn btn-primary btn-block btn-lg"
+              disabled={saving}
+              style={{ marginTop: 4 }}
+            >
+              {saving ? "Kaydediliyor…" : "Kaydet"}
+            </button>
+          </form>
+        </Modal>
       )}
     </>
   );

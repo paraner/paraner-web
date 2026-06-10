@@ -1,5 +1,41 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-10 — Performans + Stripe-tarzı redesign + sidebar/logo
+
+**Hedef:** Panel geçişlerini hızlandır, paneli Stripe dashboard diline (koyu+teal koruyarak) taşı, profil/işletme logosu + açılır-kapanır sidebar.
+
+### Performans (geçişler yavaştı → hızlandı)
+- `app/panel/loading.tsx`: tüm panel sayfaları için anında iskelet (shimmer) → "tak" hissi.
+- Aktif profil React `cache()` ile tek sorgu: `lib/supabase/profile.ts` (`getProfiles` → `getActiveProfile` türetildi); layout + sayfalar aynı render'da paylaşır.
+- Layout'tan gereksiz ikinci `getUser()` kaldırıldı (proxy zaten koruyor) → her geçişte 1 ağ turu az.
+
+### Tasarım sistemi (zemin)
+- `globals.css` token katmanı: anlamsal renkler (`--danger`, `--danger-soft`, `--warning`, `--success`, `--surface-modal`), boşluk/tipografi/gölge skalaları. Elle yazılı `#E24B4A` vb. değişkene bağlandı.
+- Ortak bileşenler (kopya-yapıştır → tek kaynak): `components/ui/` (Modal, PageHead, Field, Avatar, Sparkline) + `components/icons.tsx` + `lib/date.ts`.
+
+### Stripe-tarzı redesign (koyu + teal)
+- **Genel Bakış**: metrik düzeni (etiket+▾ / kocaman rakam / geçen aya göre değişim) + bağımlılıksız SVG **sparkline** (günlük birikimli seri) + geçen ay karşılaştırması.
+- **Sidebar**: üstte profil değiştirici (avatar+ad+▾, tıkla-değiştir), gruplu menü (Genel / İŞLETME), **daralt/genişlet** (en altta toggle, localStorage'da hatırlanır). Üst bara avatar.
+- **İşlemler**: filtre çipleri (arama + Tümü/Gelir/Gider + kategori), anında client-side.
+- **Hesaplar/Cariler**: özet şeridi metrik diline, kartlar ferah, rozetler pill.
+- **Faturalar**: özet şeridi (Satış/Alış/Ödenmemiş) + pill durum rozetleri.
+
+### Profil/işletme logosu
+- `profiles.avatar_url` (bireysel foto) + `profiles.company_logo_url` (işletme logosu) — şemaya dokunmadan, mevcut kolonlar. `profileAvatarUrl()` tipe göre seçer (`lib/supabase/profileShared.ts`, client-güvenli).
+- Sidebar + üst bar avatarı; foto yüklenemezse baş harfe düşer.
+
+### Marka logosu (wordmark)
+- `public/paraner-wordmark.png` mobil projeden alındı. Açık → tam **PARANER** wordmark; daraltılmış → wordmark'tan kırpılmış temiz **P** (`paraner-p.png`). (Klip yöntemi P/A bitişikliği yüzünden kırılgandı; ayrı temiz P'ye geçildi.)
+
+### Temizlik + düzeltmeler
+- Hydration uyarısı: `<body suppressHydrationWarning>` (tarayıcı eklentisi kaynaklı).
+- 5 kullanılmayan starter SVG silindi (file/globe/next/vercel/window). `next lint` + tsc + build temiz.
+
+### Durum
+- TypeScript + production build temiz. Bekleyenler: GOREVLER.md.
+
+---
+
 ## 2026-06-10 — Panel altyapısı + tüm modüller (sıfırdan)
 
 **Hedef:** Giriş sonrası web paneli; mobil ile aynı Supabase backend, entegre çalışsın.

@@ -1,4 +1,5 @@
 import { createClient } from "../../../lib/supabase/server";
+import { getActiveProfile } from "../../../lib/supabase/profile";
 
 // Cüzdanım (birikim varlıkları) — v1 SALT-OKUNUR.
 // Varlık ekleme/satış canlı piyasa fiyatı (Truncgil) gerektirir; bu yüzden şimdilik
@@ -6,11 +7,7 @@ import { createClient } from "../../../lib/supabase/server";
 export default async function CuzdanimPage() {
   const supabase = await createClient();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("is_active", true)
-    .maybeSingle();
+  const profile = await getActiveProfile();
 
   if (!profile?.id) {
     return <div className="panel-empty">Profil bulunamadı.</div>;

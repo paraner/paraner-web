@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
+import { todayStr } from "../../../lib/date";
+import PageHead from "../../../components/ui/PageHead";
+import Modal from "../../../components/ui/Modal";
+import Field from "../../../components/ui/Field";
+import { TrashIcon } from "../../../components/icons";
 
 export type Invoice = {
   id: string;
@@ -14,17 +19,6 @@ export type Invoice = {
   type: string | null;
   invoice_date: string | null;
 };
-
-function todayStr(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate()
-  ).padStart(2, "0")}`;
-}
-
-const TrashIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
-);
 
 export default function FaturalarClient({
   profileId,
@@ -64,6 +58,13 @@ export default function FaturalarClient({
     setError(null);
     setOpen(true);
   }
+
+  // Özet (yüklü faturalar üzerinden)
+  const sum = (rows: Invoice[]) =>
+    rows.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  const totalSales = sum(list.filter((i) => i.type === "income"));
+  const totalPurchase = sum(list.filter((i) => i.type === "expense"));
+  const totalUnpaid = sum(list.filter((i) => i.payment_status !== "paid"));
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -132,23 +133,41 @@ export default function FaturalarClient({
 
   return (
     <>
-      <div className="panel-page-head">
-        <div>
-          <h1 className="panel-h1">Faturalar</h1>
-          <p className="panel-sub" style={{ marginBottom: 0 }}>
-            Kestiğin ve aldığın faturalar
-          </p>
-        </div>
-        <button className="btn btn-primary btn-sm" onClick={openNew}>
-          + Fatura Oluştur
-        </button>
-      </div>
+      <PageHead
+        title="Faturalar"
+        sub="Kestiğin ve aldığın faturalar"
+        action={
+          <button className="btn btn-primary btn-sm" onClick={openNew}>
+            + Fatura Oluştur
+          </button>
+        }
+      />
 
       {list.length === 0 ? (
         <div className="panel-empty">Henüz fatura yok. Sağ üstten ilk faturanı oluştur.</div>
       ) : (
-        <div className="tx-list">
-          {list.map((inv) => {
+        <>
+          <div className="total-banner">
+            <div className="t-item">
+              <div className="t-label">Toplam Satış</div>
+              <div className="t-value">{formatCurrency(totalSales, currency)}</div>
+            </div>
+            <div className="t-item">
+              <div className="t-label">Toplam Alış</div>
+              <div className="t-value" style={{ color: "var(--danger)" }}>
+                {formatCurrency(totalPurchase, currency)}
+              </div>
+            </div>
+            <div className="t-item">
+              <div className="t-label">Ödenmemiş</div>
+              <div className="t-value" style={{ color: "var(--warning)" }}>
+                {formatCurrency(totalUnpaid, currency)}
+              </div>
+            </div>
+          </div>
+
+          <div className="tx-list">
+            {list.map((inv) => {
             const isIncome = inv.type === "income";
             const isPaid = inv.payment_status === "paid";
             return (
@@ -156,7 +175,7 @@ export default function FaturalarClient({
                 <div className="tx-main">
                   <span
                     className="tx-dot"
-                    style={{ background: isIncome ? "var(--teal)" : "#E24B4A" }}
+                    style={{ background: isIncome ? "var(--teal)" : "var(--danger)" }}
                   />
                   <div className="tx-left">
                     <span className="tx-title">{inv.customer_name || "—"}</span>
@@ -183,109 +202,97 @@ export default function FaturalarClient({
                     onClick={() => handleDelete(inv)}
                     aria-label="Sil"
                   >
-                    {TrashIcon}
+                    <TrashIcon />
                   </button>
                 </div>
               </div>
             );
           })}
-        </div>
+          </div>
+        </>
       )}
 
       {open && (
-        <div className="modal-overlay" onClick={() => !saving && setOpen(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <h2>Fatura Oluştur</h2>
-              <button className="modal-close" onClick={() => setOpen(false)}>
-                ×
+        <Modal title="Fatura Oluştur" onClose={() => setOpen(false)} busy={saving}>
+          <form onSubmit={handleSave}>
+            <div className="type-toggle">
+              <button
+                type="button"
+                className={type === "income" ? "on-income" : ""}
+                onClick={() => setType("income")}
+              >
+                Satış (Kesilen)
+              </button>
+              <button
+                type="button"
+                className={type === "expense" ? "on-expense" : ""}
+                onClick={() => setType("expense")}
+              >
+                Alış (Gelen)
               </button>
             </div>
-            <form onSubmit={handleSave}>
-              <div className="type-toggle">
-                <button
-                  type="button"
-                  className={type === "income" ? "on-income" : ""}
-                  onClick={() => setType("income")}
-                >
-                  Satış (Kesilen)
-                </button>
-                <button
-                  type="button"
-                  className={type === "expense" ? "on-expense" : ""}
-                  onClick={() => setType("expense")}
-                >
-                  Alış (Gelen)
-                </button>
-              </div>
 
-              {error && <div className="form-error">{error}</div>}
+            {error && <div className="form-error">{error}</div>}
 
-              <div className="field">
-                <label>Müşteri / Firma</label>
+            <Field label="Müşteri / Firma">
+              <input
+                type="text"
+                placeholder="ör. ABC Ltd. Şti."
+                value={customer}
+                onChange={(e) => setCustomer(e.target.value)}
+                autoFocus
+              />
+            </Field>
+
+            <div className="form-row">
+              <Field label="Tutar (KDV hariç)">
                 <input
                   type="text"
-                  placeholder="ör. ABC Ltd. Şti."
-                  value={customer}
-                  onChange={(e) => setCustomer(e.target.value)}
-                  autoFocus
+                  inputMode="decimal"
+                  placeholder="0,00"
+                  value={subtotal}
+                  onChange={(e) => setSubtotal(e.target.value)}
                 />
-              </div>
+              </Field>
+              <Field label="KDV %">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={vatRate}
+                  onChange={(e) => setVatRate(e.target.value)}
+                />
+              </Field>
+            </div>
 
-              <div className="form-row">
-                <div className="field">
-                  <label>Tutar (KDV hariç)</label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="0,00"
-                    value={subtotal}
-                    onChange={(e) => setSubtotal(e.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>KDV %</label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={vatRate}
-                    onChange={(e) => setVatRate(e.target.value)}
-                  />
-                </div>
-              </div>
+            <div className="form-row">
+              <Field label="Fatura Tarihi">
+                <input
+                  type="date"
+                  value={invoiceDate}
+                  onChange={(e) => setInvoiceDate(e.target.value)}
+                />
+              </Field>
+              <Field label="Ödeme Durumu">
+                <select
+                  value={paid ? "paid" : "unpaid"}
+                  onChange={(e) => setPaid(e.target.value === "paid")}
+                >
+                  <option value="unpaid">Ödenmedi</option>
+                  <option value="paid">Ödendi</option>
+                </select>
+              </Field>
+            </div>
 
-              <div className="form-row">
-                <div className="field">
-                  <label>Fatura Tarihi</label>
-                  <input
-                    type="date"
-                    value={invoiceDate}
-                    onChange={(e) => setInvoiceDate(e.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>Ödeme Durumu</label>
-                  <select
-                    value={paid ? "paid" : "unpaid"}
-                    onChange={(e) => setPaid(e.target.value === "paid")}
-                  >
-                    <option value="unpaid">Ödenmedi</option>
-                    <option value="paid">Ödendi</option>
-                  </select>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-primary btn-block btn-lg"
-                disabled={saving}
-                style={{ marginTop: 4 }}
-              >
-                {saving ? "Kaydediliyor…" : "Faturayı Kaydet"}
-              </button>
-            </form>
-          </div>
-        </div>
+            <button
+              type="submit"
+              className="btn btn-primary btn-block btn-lg"
+              disabled={saving}
+              style={{ marginTop: 4 }}
+            >
+              {saving ? "Kaydediliyor…" : "Faturayı Kaydet"}
+            </button>
+          </form>
+        </Modal>
       )}
     </>
   );

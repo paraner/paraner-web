@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency } from "../../../lib/format";
+import PageHead from "../../../components/ui/PageHead";
+import Modal from "../../../components/ui/Modal";
+import Field from "../../../components/ui/Field";
+import { TrashIcon } from "../../../components/icons";
 
 export type Cari = {
   id: string;
@@ -19,10 +23,6 @@ const TYPES = [
 function typeLabel(t: string) {
   return TYPES.find((x) => x.id === t)?.label ?? t;
 }
-
-const TrashIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
-);
 
 export default function CarilerClient({
   profileId,
@@ -89,17 +89,15 @@ export default function CarilerClient({
 
   return (
     <>
-      <div className="panel-page-head">
-        <div>
-          <h1 className="panel-h1">Cariler</h1>
-          <p className="panel-sub" style={{ marginBottom: 0 }}>
-            Müşteri ve tedarikçi hesapların
-          </p>
-        </div>
-        <button className="btn btn-primary btn-sm" onClick={openNew}>
-          + Cari Ekle
-        </button>
-      </div>
+      <PageHead
+        title="Cariler"
+        sub="Müşteri ve tedarikçi hesapların"
+        action={
+          <button className="btn btn-primary btn-sm" onClick={openNew}>
+            + Cari Ekle
+          </button>
+        }
+      />
 
       {list.length === 0 ? (
         <div className="panel-empty">Henüz cari yok. Sağ üstten ilk carini ekle.</div>
@@ -115,7 +113,7 @@ export default function CarilerClient({
                     onClick={() => handleDelete(c)}
                     aria-label="Sil"
                   >
-                    {TrashIcon}
+                    <TrashIcon />
                   </button>
                 </div>
                 <div className="acct-top">
@@ -124,7 +122,7 @@ export default function CarilerClient({
                 </div>
                 <div
                   className="acct-balance"
-                  style={{ color: bal < 0 ? "#E24B4A" : bal > 0 ? "var(--teal)" : undefined }}
+                  style={{ color: bal < 0 ? "var(--danger)" : bal > 0 ? "var(--teal)" : undefined }}
                 >
                   {formatCurrency(bal, currency)}
                 </div>
@@ -138,59 +136,48 @@ export default function CarilerClient({
       )}
 
       {open && (
-        <div className="modal-overlay" onClick={() => !saving && setOpen(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <h2>Cari Ekle</h2>
-              <button className="modal-close" onClick={() => setOpen(false)}>
-                ×
-              </button>
-            </div>
-            <form onSubmit={handleSave}>
-              {error && <div className="form-error">{error}</div>}
-              <div className="field">
-                <label>Cari Adı</label>
+        <Modal title="Cari Ekle" onClose={() => setOpen(false)} busy={saving}>
+          <form onSubmit={handleSave}>
+            {error && <div className="form-error">{error}</div>}
+            <Field label="Cari Adı">
+              <input
+                type="text"
+                placeholder="ör. ABC Ltd. Şti."
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+              />
+            </Field>
+            <div className="form-row">
+              <Field label="Tür">
+                <select value={type} onChange={(e) => setType(e.target.value)}>
+                  {TYPES.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Bakiye (opsiyonel)">
                 <input
                   type="text"
-                  placeholder="ör. ABC Ltd. Şti."
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  autoFocus
+                  inputMode="decimal"
+                  placeholder="0,00"
+                  value={balance}
+                  onChange={(e) => setBalance(e.target.value)}
                 />
-              </div>
-              <div className="form-row">
-                <div className="field">
-                  <label>Tür</label>
-                  <select value={type} onChange={(e) => setType(e.target.value)}>
-                    {TYPES.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label>Bakiye (opsiyonel)</label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="0,00"
-                    value={balance}
-                    onChange={(e) => setBalance(e.target.value)}
-                  />
-                </div>
-              </div>
-              <button
-                type="submit"
-                className="btn btn-primary btn-block btn-lg"
-                disabled={saving}
-                style={{ marginTop: 4 }}
-              >
-                {saving ? "Kaydediliyor…" : "Kaydet"}
-              </button>
-            </form>
-          </div>
-        </div>
+              </Field>
+            </div>
+            <button
+              type="submit"
+              className="btn btn-primary btn-block btn-lg"
+              disabled={saving}
+              style={{ marginTop: 4 }}
+            >
+              {saving ? "Kaydediliyor…" : "Kaydet"}
+            </button>
+          </form>
+        </Modal>
       )}
     </>
   );

@@ -1,14 +1,11 @@
 import { createClient } from "../../../lib/supabase/server";
+import { getActiveProfile } from "../../../lib/supabase/profile";
 import HesaplarClient, { type Account } from "./HesaplarClient";
 
 export default async function HesaplarPage() {
   const supabase = await createClient();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("is_active", true)
-    .maybeSingle();
+  const profile = await getActiveProfile();
 
   if (!profile?.id) {
     return <div className="panel-empty">Profil bulunamadı.</div>;
