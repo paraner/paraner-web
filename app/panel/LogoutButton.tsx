@@ -20,7 +20,7 @@ export default function LogoutButton() {
     <button
       onClick={handleLogout}
       disabled={loading}
-      className="btn btn-primary btn-lg"
+      className="panel-logout"
     >
       {loading ? "Çıkış yapılıyor…" : "Çıkış Yap"}
     </button>
