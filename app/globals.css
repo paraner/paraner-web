@@ -1323,15 +1323,19 @@ ul { list-style: none; }
 .wallet-type-chev { width: 18px; height: 18px; opacity: 0.6; transition: transform 0.2s; flex-shrink: 0; }
 .wallet-type-chev.open { transform: rotate(180deg); }
 
-.wallet-type-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.wallet-type-chip {
-  display: flex; align-items: center; gap: 7px;
-  padding: 8px 12px; border-radius: 999px; cursor: pointer;
+/* Açılır liste (alt alta) — native select dropdown hissi, görselli */
+.wallet-type-menu {
+  margin-top: 6px; display: flex; flex-direction: column;
   background: rgba(255,255,255,0.04); border: 1px solid var(--border-strong);
-  color: rgba(255,255,255,0.75); font-size: 13px; font-weight: 600;
+  border-radius: 12px; overflow-y: auto; max-height: 264px; padding: 4px;
 }
-.wallet-type-chip:hover { background: rgba(255,255,255,0.08); }
-.wallet-type-chip.on {
-  border-color: rgba(0,191,166,0.55); background: rgba(0,191,166,0.12); color: var(--text);
+.wallet-type-opt {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 10px 12px; border-radius: 9px; cursor: pointer;
+  background: transparent; border: none; text-align: left;
+  color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 600;
 }
-.wallet-type-chip img, .wallet-type-chip span:first-child { flex-shrink: 0; }
+.wallet-type-opt:hover { background: rgba(255,255,255,0.06); }
+.wallet-type-opt.on { background: rgba(0,191,166,0.12); color: var(--text); }
+.wallet-type-opt-name { flex: 1; min-width: 0; }
+.wallet-type-check { width: 16px; height: 16px; color: var(--teal); flex-shrink: 0; }

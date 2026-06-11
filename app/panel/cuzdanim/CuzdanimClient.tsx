@@ -18,7 +18,7 @@ import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
-import { Plus, TrendingDown, RefreshCw, ChevronDown } from "lucide-react";
+import { Plus, TrendingDown, RefreshCw, ChevronDown, Check } from "lucide-react";
 
 export type Asset = {
   id: string;
@@ -549,12 +549,12 @@ export default function CuzdanimClient({
                     <ChevronDown className={`wallet-type-chev${typeOpen ? " open" : ""}`} />
                   </button>
                   {typeOpen && (
-                    <div className="wallet-type-grid">
+                    <div className="wallet-type-menu">
                       {ASSET_TYPES.map((t) => (
                         <button
                           key={t.id}
                           type="button"
-                          className={`wallet-type-chip${fType === t.id ? " on" : ""}`}
+                          className={`wallet-type-opt${fType === t.id ? " on" : ""}`}
                           onClick={() => {
                             setFType(t.id);
                             setTypeOpen(false);
@@ -564,7 +564,8 @@ export default function CuzdanimClient({
                           }}
                         >
                           <AssetIcon type={t.id} size={20} />
-                          <span>{t.name}</span>
+                          <span className="wallet-type-opt-name">{t.name}</span>
+                          {fType === t.id && <Check className="wallet-type-check" />}
                         </button>
                       ))}
                     </div>
