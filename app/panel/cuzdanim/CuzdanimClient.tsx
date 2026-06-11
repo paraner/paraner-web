@@ -7,6 +7,7 @@ import { formatCurrency } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
 import {
   ASSET_TYPES,
+  GOLD_IMAGES,
   getAssetDef,
   getTLValue,
   getUnitPrice,
@@ -32,6 +33,24 @@ const DONUT_COLORS = [
   "#00BFA6", "#4F8DFD", "#F5A623", "#E24B4A", "#9B6DFF",
   "#2ECC71", "#FF7A59", "#00C2D1", "#C0CA33",
 ];
+
+// Varlık ikonu — altın için gerçek görsel (mobil ile aynı), diğerleri emoji bayrak.
+function AssetIcon({ type, size = 22 }: { type: string; size?: number }) {
+  const img = GOLD_IMAGES[type];
+  if (img) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return (
+      <img
+        src={img}
+        alt=""
+        width={size}
+        height={size}
+        style={{ borderRadius: "50%", objectFit: "contain", display: "block" }}
+      />
+    );
+  }
+  return <span style={{ fontSize: size - 2, lineHeight: 1 }}>{getAssetDef(type).icon}</span>;
+}
 
 // "1.234,56" / "1234.56" / "12,5" → sayı. Virgül varsa ondalık, nokta binlik.
 function parseAmount(str: string): number {
@@ -447,7 +466,9 @@ export default function CuzdanimClient({
               return (
                 <div key={a.id} className="tx-row">
                   <div className="tx-main">
-                    <span className="wallet-icon">{def.icon}</span>
+                    <span className="wallet-icon">
+                      <AssetIcon type={a.asset_type} />
+                    </span>
                     <div className="tx-left">
                       <span className="tx-title">{def.name}</span>
                       <span className="tx-meta">
@@ -514,21 +535,24 @@ export default function CuzdanimClient({
           <form onSubmit={handleSave}>
             {!editing && (
               <Field label="Varlık Türü">
-                <select
-                  value={fType}
-                  onChange={(e) => {
-                    setFType(e.target.value);
-                    setFAmount("");
-                    setFCost("");
-                    setFDate("");
-                  }}
-                >
+                <div className="wallet-type-grid">
                   {ASSET_TYPES.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.icon} {t.name}
-                    </option>
+                    <button
+                      key={t.id}
+                      type="button"
+                      className={`wallet-type-chip${fType === t.id ? " on" : ""}`}
+                      onClick={() => {
+                        setFType(t.id);
+                        setFAmount("");
+                        setFCost("");
+                        setFDate("");
+                      }}
+                    >
+                      <AssetIcon type={t.id} size={20} />
+                      <span>{t.name}</span>
+                    </button>
                   ))}
-                </select>
+                </div>
               </Field>
             )}
 

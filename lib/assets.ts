@@ -30,6 +30,15 @@ export const ASSET_TYPES: AssetDef[] = [
   { id: "REPUBLIC_GOLD", name: "Cumhuriyet Altını", icon: "🪙", unit: "adet", group: "gold" },
 ];
 
+// Altın asset_type → gerçek görsel (mobil assets/gold ile aynı dosyalar, public/gold).
+export const GOLD_IMAGES: Record<string, string> = {
+  GRAM_GOLD: "/gold/gram.png",
+  QUARTER_GOLD: "/gold/ceyrek.png",
+  HALF_GOLD: "/gold/yarim.png",
+  FULL_GOLD: "/gold/tam.png",
+  REPUBLIC_GOLD: "/gold/cumhuriyet.png",
+};
+
 // Altın asset_type → Truncgil isim (fiyat eşleştirme)
 export const GOLD_NAME_MAP: Record<string, string> = {
   GRAM_GOLD: "Gram Altın",
