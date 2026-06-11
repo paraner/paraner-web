@@ -10,7 +10,9 @@ export default async function AyarlarPage() {
 
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, profile_name, profile_type, currency, is_active")
+    .select(
+      "id, profile_name, profile_type, currency, is_active, invoice_prefix, invoice_next_number"
+    )
     .order("created_at", { ascending: true });
 
   return (
