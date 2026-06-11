@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# pazarlama notları — PC'de kalsın, GitHub'a gitmesin (kod değil)
+/pazarlama/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
