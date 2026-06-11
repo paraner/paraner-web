@@ -34,9 +34,6 @@
 ### 📱 Mobil Claude'a iletilecek
 - [ ] Faturalar: `invoices-list` ekranı `?type=`'a göre başlık/filtre göstersin (2 ayrı ekran hissi olmasın)
 - [ ] `businessMenu.ts`: "Çalışan Listesi" ve "Harcama Kayıtları" ikisi de `/employee-expenses` — gerçek tekrar, ayrıştır
-- [ ] **`source` (eklendiği yer)** — web `transactions.source` kolonunu kullanıyor (web→`'web'`). Mobil **eksik**: (1) `addTransaction`/transfer/yatır-çek insert'lerine `source: 'mobile'` ekle, (2) `transaction-detail.tsx`'e "Eklendiği yer" satırı ekle (mobile/web/accountant ikon+etiket). İleride muhasebeci erişimi `'accountant'` yazacak.
-- [ ] **Transfer silme tek bacak siliyor (BUG)** — `transactionStore.deleteTransaction(id)` yalnız bir satırı siler + tek bakiyeyi geri alır. Transfer silinince karşı bacak (`transfer_group_id`) öksüz kalır, diğer hesabın bakiyesi düzelmez. Web düzeltti: aynı `transfer_group_id`'li tüm satırları sil + her bacağın bakiyesini geri al. Mobilde de uygula.
-- [ ] **PDF content-type (BUG)** — bazı mobil yüklemelerinde PDF, storage'da `image/jpeg` content-type ile saklanıyor (gerçek dosya PDF). Upload'ta `contentType: 'application/pdf'` gönderildiğinden emin ol; web blob ile telafi ediyor ama kaynak mobilde düzelmeli.
 
 ### Tasarım
 - [x] Panel Stripe-tarzı redesign'a geçti (koyu+teal): metrik düzeni + sparkline, gruplu/daralabilir sidebar, filtre çipleri, profil/işletme logosu, PARANER wordmark. *(2026-06-10)*
