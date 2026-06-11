@@ -1,5 +1,28 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-11 — Hesap ekleme (max 3) + liquid-glass geçiş animasyonu + İşletme Ayarları
+
+**Hedef:** Sol menüdeki hesap değiştiriciye mobil ile tutarlı "yeni hesap ekle" (max 3) yetisi; hesap geçişinde şık bir karşılama animasyonu; bekleyen İşletme Ayarları özelliklerini Ayarlar sayfasına işle.
+
+### Hesap ekleme (Sidebar profil değiştirici)
+- Mobil deseni (`plan-detail.tsx` "Yeni Hesap Ekle · max 3") web'e taşındı: switcher menüsünde **Bireysel / İşletme** seçimi + ad girişi + Oluştur.
+- `< 3` profil → ekleme formu; `= 3` → kilitli "Hesap limiti doldu" satırı. Menü artık tek profilde de açılır (yalnız geçiş değil, ekleme için de).
+- `createAccount`: mobildeki `createProfile` ile **birebir alan seti** (`auth_user_id`, `profile_type`, `currency:'TRY'`, `is_premium:false`…) ile `profiles`'a insert → yeni hesaba otomatik geçiş. İşletme webde direkt açılıyor (Stripe/trial sonra; şema mobil ile aynı).
+
+### Hesap geçişi animasyonu (liquid glass)
+- Geçişte tüm ekranı kaplayan **cam kart**: arka plandaki sayfa `backdrop-filter: blur` ile bulanıklaşır; yatay yuvarlak köşeli, yarı saydam gradient + ışıklı kenar + gölge + kayan parıltı (sheen).
+- İçinde **PARANER wordmark** CSS `mask` ile: beyaz başlar, **soldan sağa yeşile dolar** (~1.1sn). Altında "HESAP DEĞİŞTİRİLİYOR" + hedef hesap adı.
+- En az 1.1sn gösterim (hızlı geçişte yanıp sönme yok) + 6sn güvenlik kapanışı + `prefers-reduced-motion` desteği. Headless Chrome ile gerçek asset üstünde doğrulandı.
+- **Mobil için prompt verildi** (paraner-app'te aynı tasarımı MaskedView + expo-blur + LinearGradient + Reanimated ile kurmak üzere).
+
+### İşletme Ayarları (Ayarlar sayfasına işlendi)
+- `ayarlar` sayfası: işletme profilinde **Fatura Numaralandırma** (prefix + sıradaki no), **Bildirim Tercihleri**, **Yedek/Export**, **Roller** (yakında) bölümleri. `page.tsx` sorgusuna `invoice_prefix, invoice_next_number` eklendi.
+
+### Durum
+- `tsc --noEmit` + production build temiz. main'e push → Vercel deploy → canlı.
+
+---
+
 ## 2026-06-11 — Sol menü revizyonu + işletme panel sayfalarının inşası
 
 **Hedef:** İşletme sol menüsünü mobil (`paraner-app`) ile tutarlı, premium ve sapmasız hale getir; menüdeki "Yakında" modülleri tek tek çalışır yap (ortak Supabase, şemaya dokunmadan).

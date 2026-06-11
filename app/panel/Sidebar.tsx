@@ -18,9 +18,14 @@ import {
   ChevronDown,
   ChevronLeft,
   Star,
+  Plus,
+  Lock,
+  User,
+  Building2,
 } from "lucide-react";
 import { BUSINESS_SECTIONS, type BusinessMenuItem } from "./businessMenu";
 
+const MAX_PROFILES = 3; // mobil ile aynı: kullanıcı en fazla 3 hesap açabilir
 const COLLAPSE_KEY = "paraner-sidebar-collapsed";
 const FAV_KEY = "paraner-fav-ops"; // favori işlemler (web'e özel)
 // Sidebar genişlikleri (globals.css ile aynı): sürükle-bırak snap için referans
@@ -63,6 +68,18 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [switching, setSwitching] = useState(false);
+  // Yeni hesap ekleme (mobil "Yeni Hesap Ekle · max 3" deseni)
+  const [addOpen, setAddOpen] = useState(false);
+  const [addType, setAddType] = useState<"individual" | "business">("individual");
+  const [addName, setAddName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+  // Hesap geçişi animasyon overlay'i — P aşağıdan yukarıya beyazdan teal'e dolar
+  const [transition, setTransition] = useState<{
+    name: string;
+    type: string | null;
+  } | null>(null);
+  const transitionStart = useRef(0);
   const [collapsed, setCollapsed] = useState(false);
   const [dragWidth, setDragWidth] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -97,6 +114,33 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
   useEffect(() => {
     setSwitching(false);
   }, [active?.id]);
+
+  // Menü kapanınca "yeni hesap" formunu sıfırla (yarım kalan giriş kalmasın)
+  useEffect(() => {
+    if (!menuOpen) {
+      setAddOpen(false);
+      setAddName("");
+      setAddType("individual");
+      setAddError(null);
+    }
+  }, [menuOpen]);
+
+  // Aktif profil değişince geçiş tamamlandı → overlay'i (en az 1.1sn gösterip) kapat.
+  // Böylece dolma animasyonu hep tamamlanır, hızlı geçişte yanıp sönmez.
+  useEffect(() => {
+    if (!transition) return;
+    const MIN = 1100;
+    const wait = Math.max(0, MIN - (Date.now() - transitionStart.current));
+    const t = setTimeout(() => setTransition(null), wait);
+    return () => clearTimeout(t);
+  }, [active?.id]);
+
+  // Güvenlik: bir aksilikte overlay takılı kalmasın (örn. aktif id değişmezse)
+  useEffect(() => {
+    if (!transition) return;
+    const t = setTimeout(() => setTransition(null), 6000);
+    return () => clearTimeout(t);
+  }, [transition]);
 
   // Daralt/genişlet tercihini hatırla (localStorage). Sunucu hep "açık" render eder,
   // tarayıcıda okunur → hydration uyumlu.
@@ -266,9 +310,72 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
     if (p.is_active || switching) return;
     setSwitching(true);
     setMenuOpen(false);
+    transitionStart.current = Date.now();
+    setTransition({ name: p.profile_name ?? "Profil", type: p.profile_type });
     const ids = profiles.map((x) => x.id);
     await supabase.from("profiles").update({ is_active: false }).in("id", ids);
     await supabase.from("profiles").update({ is_active: true }).eq("id", p.id);
+    router.push("/panel");
+    router.refresh();
+  }
+
+  // Yeni hesap oluştur — mobildeki createProfile ile birebir alan seti.
+  // Webde billing yok; işletme hesabı da (mobildeki gibi) is_premium:false açılır,
+  // Stripe entegrasyonu sonra eklenecek. Oluşunca o hesaba geçilir.
+  async function createAccount() {
+    if (creating) return;
+    const name = addName.trim();
+    if (!name) {
+      setAddError("Hesap adı gerekli");
+      return;
+    }
+    setCreating(true);
+    setAddError(null);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setAddError("Oturum bulunamadı");
+      setCreating(false);
+      return;
+    }
+
+    const { data: created, error } = await supabase
+      .from("profiles")
+      .insert({
+        auth_user_id: user.id,
+        profile_type: addType,
+        profile_name: name,
+        account_type: addType,
+        is_active: false,
+        name: addType === "individual" ? name : "",
+        company_name: addType === "business" ? name : null,
+        currency: "TRY",
+        language: "tr",
+        theme: "dark",
+        is_premium: false,
+        monthly_income: 0,
+        monthly_budget: 0,
+        monthly_revenue: 0,
+        monthly_savings_target: 0,
+      })
+      .select("id")
+      .single();
+
+    if (error || !created) {
+      setAddError("Hesap oluşturulamadı");
+      setCreating(false);
+      return;
+    }
+
+    // Yeni hesaba geç: tüm profilleri pasifle, yenisini aktif yap.
+    const ids = [...profiles.map((x) => x.id), created.id];
+    await supabase.from("profiles").update({ is_active: false }).in("id", ids);
+    await supabase.from("profiles").update({ is_active: true }).eq("id", created.id);
+    setMenuOpen(false);
+    transitionStart.current = Date.now();
+    setTransition({ name, type: addType });
     router.push("/panel");
     router.refresh();
   }
@@ -293,8 +400,12 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
   ];
 
   const canSwitch = profiles.length > 1;
+  const canAdd = profiles.length < MAX_PROFILES;
+  // Menü artık hem geçiş hem "hesap ekle" için açılır → tek profilde bile erişilir.
+  const menuEnabled = canSwitch || canAdd;
 
   return (
+    <>
     <aside
       ref={asideRef}
       className={`panel-sidebar${showCollapsed ? " collapsed" : ""}${dragging ? " dragging" : ""}`}
@@ -327,8 +438,8 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
           <button
             type="button"
             className="profile-switch-btn"
-            onClick={() => canSwitch && setMenuOpen((o) => !o)}
-            disabled={!canSwitch || switching}
+            onClick={() => menuEnabled && setMenuOpen((o) => !o)}
+            disabled={!menuEnabled || switching}
             aria-expanded={menuOpen}
             title={collapsed ? active.profile_name ?? "Profil" : undefined}
           >
@@ -341,10 +452,10 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
                 {typeLabel(active.profile_type)}
               </span>
             </span>
-            {canSwitch && <ChevronDown className="profile-switch-chev" />}
+            {menuEnabled && <ChevronDown className="profile-switch-chev" />}
           </button>
 
-          {menuOpen && canSwitch && (
+          {menuOpen && (
             <div className="profile-switch-menu">
               {profiles.map((p) => (
                 <button
@@ -365,6 +476,91 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
                   {p.is_active && <span className="profile-switch-dot" />}
                 </button>
               ))}
+
+              <div className="profile-switch-sep" />
+
+              {/* Yeni hesap ekle — max 3 (mobil ile aynı kural) */}
+              {canAdd ? (
+                addOpen ? (
+                  <div className="profile-add-form">
+                    <div className="profile-add-types">
+                      <button
+                        type="button"
+                        className={`profile-add-type${addType === "individual" ? " on" : ""}`}
+                        onClick={() => setAddType("individual")}
+                      >
+                        <User />
+                        <span>Bireysel</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`profile-add-type${addType === "business" ? " on" : ""}`}
+                        onClick={() => setAddType("business")}
+                      >
+                        <Building2 />
+                        <span>İşletme</span>
+                      </button>
+                    </div>
+                    <input
+                      className="profile-add-input"
+                      value={addName}
+                      onChange={(e) => {
+                        setAddName(e.target.value);
+                        setAddError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") createAccount();
+                      }}
+                      placeholder={addType === "business" ? "İşletme adı" : "Hesap adı"}
+                      maxLength={40}
+                      autoFocus
+                    />
+                    {addError && <div className="profile-add-error">{addError}</div>}
+                    <div className="profile-add-actions">
+                      <button
+                        type="button"
+                        className="profile-add-cancel"
+                        onClick={() => setAddOpen(false)}
+                        disabled={creating}
+                      >
+                        İptal
+                      </button>
+                      <button
+                        type="button"
+                        className="profile-add-submit"
+                        onClick={createAccount}
+                        disabled={creating}
+                      >
+                        {creating ? "Oluşturuluyor…" : "Oluştur"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="profile-switch-opt profile-add-trigger"
+                    onClick={() => setAddOpen(true)}
+                  >
+                    <span className="profile-add-plus">
+                      <Plus />
+                    </span>
+                    <span className="profile-switch-info">
+                      <span className="profile-switch-name">Yeni Hesap Ekle</span>
+                      <span className="profile-switch-type">Bireysel veya işletme</span>
+                    </span>
+                  </button>
+                )
+              ) : (
+                <div className="profile-add-locked">
+                  <span className="profile-add-plus locked">
+                    <Lock />
+                  </span>
+                  <span className="profile-switch-info">
+                    <span className="profile-switch-name">Hesap limiti doldu</span>
+                    <span className="profile-switch-type">En fazla 3 hesap</span>
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -468,6 +664,24 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
         <ChevronLeft />
       </button>
     </aside>
+
+    {/* Hesap geçişi — liquid glass kart; PARANER yazısı soldan sağa beyazdan yeşile dolar */}
+    {transition && (
+      <div className="switch-overlay" role="status" aria-live="polite">
+        <div className="switch-card">
+          <span className="switch-card-sheen" aria-hidden />
+          <div className="switch-word" aria-hidden>
+            <div className="switch-word-base" />
+            <div className="switch-word-fill" />
+          </div>
+          <div className="switch-card-caption">
+            <span className="switch-card-sub">Hesap değiştiriliyor</span>
+            <span className="switch-card-name">{transition.name}</span>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 

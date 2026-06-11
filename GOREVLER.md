@@ -3,8 +3,10 @@
 ## Bekleyen
 
 ### Auth / hesap
+- [x] **Hesap ekleme** (max 3): switcher'da Bireysel/İşletme oluşturma + otomatik geçiş; **liquid-glass geçiş animasyonu** (PARANER soldan sağa beyaz→yeşil) *(2026-06-11)*
 - [ ] Web'de **kayıt akışı** (signUp + onboarding: para birimi / profil oluşturma) — şu an pasif, "önce giriş" denmişti
 - [ ] **Şifremi unuttum** (parola sıfırlama e-postası) — link var, işlev yok
+- [ ] İşletme hesabı eklemede **Stripe ödeme/trial kapısı** (şimdilik direkt açılıyor; altyapı sonra)
 
 ### İşletme paneli — bölüm sayfaları (mobil ile tutarlı)
 - [x] **Sol menü** mobil accordion'a geçti + Favoriler + taşma/scroll-fade + Lucide ikonlar *(2026-06-11)*
@@ -14,7 +16,7 @@
 - [x] **Faturalar**: satış/alış tek ekran + ?type filtre; **Teklifler** (kalemli), **Düzenli Fatura** *(2026-06-11)*
 - [x] **Raporlar** (nakit-akisi, gelir-gider+CSV, kar-zarar, kdv-raporu, vergi-takvimi) *(2026-06-11)*
 - [ ] Her sayfanın tek tek **tasarım/UX cilası** (sıradaki faz)
-- [ ] **İşletme Ayarları** özellikleri → Ayarlar sayfasına işle (Fatura Numaralama, Bildirim, Yedekleme, Roller)
+- [x] **İşletme Ayarları** → Ayarlar sayfasına işlendi (Fatura Numaralandırma, Bildirim, Yedek/Export, Roller-yakında) *(2026-06-11)*
 - [ ] Dış-entegrasyon "Yakında" öğeleri: Fiş Tara (OCR), Döviz & Altın (API), PDF Rapor, SGK, e-Defter, Muhasebeci
 
 ### Modül derinleştirme (mobilde var, web'de v1)
