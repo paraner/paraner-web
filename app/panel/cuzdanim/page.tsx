@@ -1,54 +1,40 @@
 import { createClient } from "../../../lib/supabase/server";
 import { getActiveProfile } from "../../../lib/supabase/profile";
+import { fetchMarket } from "../../../lib/market";
+import CuzdanimClient, { type Asset } from "./CuzdanimClient";
 
-// Cüzdanım (birikim varlıkları) — v1 SALT-OKUNUR.
-// Varlık ekleme/satış canlı piyasa fiyatı (Truncgil) gerektirir; bu yüzden şimdilik
-// mobil uygulamada yapılır. Burada mevcut varlıklar listelenir.
+// Cüzdanım (birikim varlıkları) — canlı Truncgil fiyatıyla değer + kâr/zarar + ekleme/satış.
 export default async function CuzdanimPage() {
   const supabase = await createClient();
-
   const profile = await getActiveProfile();
 
   if (!profile?.id) {
     return <div className="panel-empty">Profil bulunamadı.</div>;
   }
 
-  const { data: assets } = await supabase
-    .from("savings_assets")
-    .select("id, asset_type, amount, avg_cost")
-    .eq("user_id", profile.id)
-    .order("created_at", { ascending: true });
+  const [{ data: assets }, market] = await Promise.all([
+    supabase
+      .from("savings_assets")
+      .select("id, asset_type, amount, avg_cost, purchase_date, created_at")
+      .eq("user_id", profile.id)
+      .order("created_at", { ascending: true }),
+    fetchMarket(),
+  ]);
 
-  const list = assets ?? [];
+  const list: Asset[] = (assets ?? []).map((a) => ({
+    id: a.id,
+    asset_type: a.asset_type,
+    amount: Number(a.amount) || 0,
+    avg_cost: a.avg_cost != null ? Number(a.avg_cost) : null,
+    purchase_date: a.purchase_date ?? null,
+  }));
 
   return (
-    <>
-      <h1 className="panel-h1">Cüzdanım</h1>
-      <p className="panel-sub">Birikim ve yatırım varlıkların</p>
-
-      <div
-        className="auth-soon"
-        style={{ marginTop: 0, marginBottom: 22, textAlign: "left", maxWidth: 640 }}
-      >
-        ℹ️ Varlık ekleme/satış canlı piyasa fiyatı gerektirdiği için şimdilik mobil
-        uygulamadan yapılıyor. Burada varlıkların görüntülenir.
-      </div>
-
-      {list.length === 0 ? (
-        <div className="panel-empty">Henüz varlık yok.</div>
-      ) : (
-        <div className="tx-list" style={{ maxWidth: 640 }}>
-          {list.map((a) => (
-            <div key={a.id} className="info-row">
-              <span className="v">{a.asset_type}</span>
-              <span className="k">
-                {Number(a.amount) || 0}
-                {a.avg_cost ? ` · ort. ${Number(a.avg_cost).toLocaleString("tr-TR")} ₺` : ""}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-    </>
+    <CuzdanimClient
+      profileId={profile.id}
+      currency={profile.currency || "TRY"}
+      assets={list}
+      market={market}
+    />
   );
 }
