@@ -18,7 +18,7 @@ import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
-import { Plus, TrendingDown, RefreshCw } from "lucide-react";
+import { Plus, TrendingDown, RefreshCw, ChevronDown } from "lucide-react";
 
 export type Asset = {
   id: string;
@@ -139,6 +139,7 @@ export default function CuzdanimClient({
 
   // Ekle/Düzenle formu
   const [fType, setFType] = useState("TRY");
+  const [typeOpen, setTypeOpen] = useState(false); // varlık türü seçici açık mı
   const [fAmount, setFAmount] = useState("");
   const [fCost, setFCost] = useState("");
   const [fDate, setFDate] = useState("");
@@ -155,6 +156,7 @@ export default function CuzdanimClient({
   function openAdd() {
     setEditing(null);
     setFType("TRY");
+    setTypeOpen(false);
     setFAmount("");
     setFCost("");
     setFDate("");
@@ -535,23 +537,38 @@ export default function CuzdanimClient({
           <form onSubmit={handleSave}>
             {!editing && (
               <Field label="Varlık Türü">
-                <div className="wallet-type-grid">
-                  {ASSET_TYPES.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      className={`wallet-type-chip${fType === t.id ? " on" : ""}`}
-                      onClick={() => {
-                        setFType(t.id);
-                        setFAmount("");
-                        setFCost("");
-                        setFDate("");
-                      }}
-                    >
-                      <AssetIcon type={t.id} size={20} />
-                      <span>{t.name}</span>
-                    </button>
-                  ))}
+                <div className="wallet-type-select">
+                  <button
+                    type="button"
+                    className="wallet-type-trigger"
+                    onClick={() => setTypeOpen((o) => !o)}
+                    aria-expanded={typeOpen}
+                  >
+                    <AssetIcon type={fType} size={20} />
+                    <span className="wallet-type-trigger-name">{fDef.name}</span>
+                    <ChevronDown className={`wallet-type-chev${typeOpen ? " open" : ""}`} />
+                  </button>
+                  {typeOpen && (
+                    <div className="wallet-type-grid">
+                      {ASSET_TYPES.map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          className={`wallet-type-chip${fType === t.id ? " on" : ""}`}
+                          onClick={() => {
+                            setFType(t.id);
+                            setTypeOpen(false);
+                            setFAmount("");
+                            setFCost("");
+                            setFDate("");
+                          }}
+                        >
+                          <AssetIcon type={t.id} size={20} />
+                          <span>{t.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </Field>
             )}

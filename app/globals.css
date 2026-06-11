@@ -1311,7 +1311,19 @@ ul { list-style: none; }
 .wallet-modal-info { font-size: 13px; color: var(--text-dim); margin-bottom: 14px; }
 .wallet-modal-info strong { color: var(--text); }
 
-.wallet-type-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.wallet-type-select { position: relative; }
+.wallet-type-trigger {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 11px 14px; border-radius: 12px; cursor: pointer;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border-strong);
+  color: var(--text); font-size: 15px; font-weight: 600; text-align: left;
+}
+.wallet-type-trigger:hover { background: rgba(255,255,255,0.07); }
+.wallet-type-trigger-name { flex: 1; min-width: 0; }
+.wallet-type-chev { width: 18px; height: 18px; opacity: 0.6; transition: transform 0.2s; flex-shrink: 0; }
+.wallet-type-chev.open { transform: rotate(180deg); }
+
+.wallet-type-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .wallet-type-chip {
   display: flex; align-items: center; gap: 7px;
   padding: 8px 12px; border-radius: 999px; cursor: pointer;
