@@ -33,7 +33,7 @@ export default async function FaturalarPage({
     <FaturalarClient
       profileId={profile.id}
       currency={profile.currency ?? "TRY"}
-      invoicePrefix={profile.invoice_prefix ?? "BPR"}
+      invoicePrefix={profile.invoice_prefix ?? "MGZR"}
       invoiceNextNumber={profile.invoice_next_number ?? 1}
       invoices={(invoices as Invoice[]) ?? []}
       initialFilter={initialFilter}

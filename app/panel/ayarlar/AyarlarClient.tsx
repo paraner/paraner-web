@@ -103,7 +103,7 @@ export default function AyarlarClient({
       {isBusiness && active && (
         <InvoiceNumbering
           profileId={active.id}
-          initialPrefix={active.invoice_prefix ?? "BPR"}
+          initialPrefix={active.invoice_prefix ?? "MGZR"}
           initialNext={active.invoice_next_number ?? 1}
         />
       )}
@@ -169,7 +169,7 @@ function InvoiceNumbering({
   const [saved, setSaved] = useState(false);
 
   const dirty = prefix !== initialPrefix || next !== initialNext;
-  const preview = `${prefix || "BPR"}-${String(next).padStart(6, "0")}`;
+  const preview = `${prefix || "MGZR"}-${String(next).padStart(6, "0")}`;
 
   function onPrefix(v: string) {
     setPrefix(v.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 5));
@@ -209,7 +209,7 @@ function InvoiceNumbering({
           className="set-input"
           value={prefix}
           onChange={(e) => onPrefix(e.target.value)}
-          placeholder="BPR"
+          placeholder="MGZR"
         />
       </div>
 
@@ -245,7 +245,7 @@ function InvoiceNumbering({
       </div>
 
       <p className="set-note">
-        Fatura numarası &quot;ÖNEK-NUMARA&quot; formatındadır (örn. BPR-000001).
+        Fatura numarası &quot;ÖNEK-NUMARA&quot; formatındadır (örn. MGZR-000001).
         Yasal olarak numaralar sıralı ve benzersiz olmalıdır.
       </p>
     </div>
