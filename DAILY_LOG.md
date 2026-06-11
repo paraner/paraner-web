@@ -1,5 +1,36 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-11 — İşlemler: düzenleme + ay filtresi + transfer + detay paneli (kaynak & dosya ekleme)
+
+**Hedef:** İşlemler modülünü mobil seviyesine yaklaştır: düzenleme, ay filtresi, hesaplar arası transfer, ve işleme tıklayınca açılan zengin detay paneli (nereden eklendi + dosya/fiş ekleri).
+
+### İşlemler — düzenleme + ay filtresi
+- **Düzenleme:** ekle/düzenle tek modal; düzenlemede **bakiye mutabakatı** (eski etkiyi geri al + yenisini uygula → tutar/tür/hesap değişse de bakiye doğru).
+- **Ay filtresi:** `<input type=month>` çipi; seçilince o ayı **DB'den** çeker (son-100 sınırının ötesi de görülür), boş → son 100. Arama+tür+kategori ile birlikte çalışır.
+
+### Hesaplar arası transfer (mobil mantığı, şemaya dokunmadan)
+- `transfer_out` (kaynak −) + `transfer_in` (hedef +) + opsiyonel `transfer_fee` (expense), hepsi ortak `transfer_group_id`. Bakiye senkronu 2 ondalık. **Farklı para birimi engelli** (hedef listesi aynı para biriminden). Raporlar `type='transfer'`'ı zaten hariç tutuyor.
+- **Tutarlılık:** İşlemler'de transfer satırı düzenlenemez; silince çift bacak (+ücret) birlikte silinir, her hesabın bakiyesi geri alınır.
+
+### İşlem detay paneli (sağ yüzen kart)
+- Satıra tıkla → sağda **yüzen kart** (üst bar altından hizalı, 22px köşe, Esc/X kapat, overlay yok → sayfa tıklanabilir kalır). Düzenle/Sil yan yana.
+- Gösterir: tutar+tür, kategori, tarih, **saat** (`created_at`), hesap, **eklendiği yer**, not.
+- **Eklendiği yer** için `transactions.source` (text) kolonu eklendi (Mehmet onayı). Web insert'leri `'web'` yazar (işlem + transfer); boş/eski/mobil → "Mobil uygulama"; ileride `'accountant'` → "Muhasebeci".
+
+### Dosya / fiş ekleme
+- Ekleme modalı + detay panelinde **sürükle-bırak / tıkla** yükleme (max 3, PNG/JPG/PDF). Mobil ile **aynı `receipts` bucket** + `receipt_urls/receipt_thumbnails/receipt_url` kolonları → mobil↔web ortak.
+- PDF bazı mobil yüklemelerinde yanlış content-type (`image/jpeg`) ile saklanmış → web, eki çekip **`application/pdf` blob** ile açarak telafi ediyor. Görseller direkt açılır.
+
+### Mobil'e taşınacaklar (GOREVLER → Mobil Claude'a iletilecek)
+- `source` alanını mobil de yazsın (`'mobile'`) + `transaction-detail`'de "eklendiği yer" göstersin.
+- **Mobil transfer silme BUG'ı:** tek bacağı siliyor → çift bacak + bakiye düzeltmesi gerekli.
+- **Mobil PDF content-type BUG'ı:** upload `application/pdf` göndersin.
+
+### Durum
+- `tsc` + production build temiz. `source` kolonu Supabase'de eklendi (canlı çalışıyor).
+
+---
+
 ## 2026-06-11 — Hesap ekleme (max 3) + liquid-glass geçiş animasyonu + İşletme Ayarları
 
 **Hedef:** Sol menüdeki hesap değiştiriciye mobil ile tutarlı "yeni hesap ekle" (max 3) yetisi; hesap geçişinde şık bir karşılama animasyonu; bekleyen İşletme Ayarları özelliklerini Ayarlar sayfasına işle.

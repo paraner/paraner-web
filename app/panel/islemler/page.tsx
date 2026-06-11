@@ -22,7 +22,9 @@ export default async function IslemlerPage() {
       .order("created_at", { ascending: true }),
     supabase
       .from("transactions")
-      .select("id, title, amount, type, category, date, currency, bank_account_id")
+      .select(
+        "id, title, amount, type, category, date, currency, bank_account_id, transfer_group_id, created_at, note, source, receipt_url, receipt_urls, receipt_thumbnails"
+      )
       .eq("user_id", profile.id)
       .order("date", { ascending: false })
       .order("created_at", { ascending: false })

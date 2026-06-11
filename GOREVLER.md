@@ -21,17 +21,31 @@
 
 ### Modül derinleştirme (mobilde var, web'de v1)
 - [ ] **Cüzdanım** tam işlevsel: piyasa fiyatı (Truncgil) entegrasyonu → varlık değeri + K/Z + ekleme/satış
-- [ ] **İşlemler**: ay/tarih filtresi + çoklu para birimi çipi (arama + tür + kategori filtresi ✅ yapıldı)
-- [ ] **Hesaplar**: hesaplar arası transfer ekranı
-- [ ] İşlem **düzenleme** (şu an sadece ekle/sil)
+- [x] **İşlemler**: ay filtresi (DB'den o ay) — arama + tür + kategori filtresi de var *(2026-06-11)*
+- [ ] **İşlemler**: çoklu para birimi çipi (kaldı)
+- [x] **Hesaplar**: hesaplar arası transfer (mobil mantığı: transfer_out/in + ücret + bakiye senkronu, farklı para birimi engelli) *(2026-06-11)*
+- [x] İşlem **düzenleme** (modal ortak ekle/düzenle, bakiye mutabakatı); transfer satırı düzenlenemez, silince çift bacak birlikte gider *(2026-06-11)*
+
+### İşlemler — detay paneli + ekler *(2026-06-11)*
+- [x] Satıra tıkla → sağ **detay paneli** (yüzen kart, üst bar altından hizalı, Esc/X kapat): tutar, tür, kategori, tarih, **saat**, hesap, **eklendiği yer** (mobil/web/muhasebeci), not.
+- [x] **Eklendiği yer** için `transactions.source` kolonu eklendi (web `'web'` yazar; boş/eski/mobil → "Mobil"; ileride `'accountant'`). SQL: `alter table transactions add column if not exists source text;`
+- [x] **Dosya/fiş ekleme**: ekleme modalında + detay panelinde **sürükle-bırak/tıkla** (max 3, PNG/JPG/PDF), mobil ile aynı `receipts` bucket + kolonlar. PDF yanlış content-type ile saklanmışsa bile blob ile doğru açılır.
 
 ### 📱 Mobil Claude'a iletilecek
 - [ ] Faturalar: `invoices-list` ekranı `?type=`'a göre başlık/filtre göstersin (2 ayrı ekran hissi olmasın)
 - [ ] `businessMenu.ts`: "Çalışan Listesi" ve "Harcama Kayıtları" ikisi de `/employee-expenses` — gerçek tekrar, ayrıştır
+- [ ] **`source` (eklendiği yer)** — web `transactions.source` kolonunu kullanıyor (web→`'web'`). Mobil **eksik**: (1) `addTransaction`/transfer/yatır-çek insert'lerine `source: 'mobile'` ekle, (2) `transaction-detail.tsx`'e "Eklendiği yer" satırı ekle (mobile/web/accountant ikon+etiket). İleride muhasebeci erişimi `'accountant'` yazacak.
+- [ ] **Transfer silme tek bacak siliyor (BUG)** — `transactionStore.deleteTransaction(id)` yalnız bir satırı siler + tek bakiyeyi geri alır. Transfer silinince karşı bacak (`transfer_group_id`) öksüz kalır, diğer hesabın bakiyesi düzelmez. Web düzeltti: aynı `transfer_group_id`'li tüm satırları sil + her bacağın bakiyesini geri al. Mobilde de uygula.
+- [ ] **PDF content-type (BUG)** — bazı mobil yüklemelerinde PDF, storage'da `image/jpeg` content-type ile saklanıyor (gerçek dosya PDF). Upload'ta `contentType: 'application/pdf'` gönderildiğinden emin ol; web blob ile telafi ediyor ama kaynak mobilde düzelmeli.
 
 ### Tasarım
 - [x] Panel Stripe-tarzı redesign'a geçti (koyu+teal): metrik düzeni + sparkline, gruplu/daralabilir sidebar, filtre çipleri, profil/işletme logosu, PARANER wordmark. *(2026-06-10)*
 - [ ] Opsiyonel cila: sidebar aç/kapa fade efekti; native `confirm()` yerine özel onay diyaloğu + başarı toast'ı; gerçek mobil menü (drawer)
+
+## Sonraki Faz (lansman sonrası / v2 — şimdi DEĞİL)
+> Önce: arayüzler + ödeme altyapısı (Stripe) + app/web temel işler bitsin. Bunlar sonraki aşama.
+- [ ] **E-Fatura / GİB entegrasyonu** — özel entegratör API ile (öneri: **Nilvera**, REST/OAuth2). Akış: Paraner'de fatura → entegratör API → UBL-TR XML + mali mühür imza → GİB → durum/PDF dönüşü. Hem **e-Fatura** (kayıtlı firmalar arası) hem **e-Arşiv** (son tüketici) desteklenecek. Gerekli: entegratör anlaşması, müşterinin mali mührü (TÜBİTAK), kontör (~0,75–1,50 ₺/fatura). Mevcut `faturalar/` "taslak"tan "gönder" akışına bağlanacak. → Eklenince işletme planı **699 ₺/ay** (Paraşüt seviyesi) olabilir.
+- [ ] **SEO / AEO (AI görünürlüğü)** — "en iyi finans / gelir-gider uygulaması" aramalarında ve ChatGPT/AI önerilerinde Paraner çıksın. Pazarlama sitesi içerik + schema + landing sayfaları (sonraki faz, ayrı plan).
 
 ## Notlar
 - DB şemasına dokunma — mobil aynı şemayı kullanıyor, yeni kolon/tablo gerekiyorsa önce sor.
