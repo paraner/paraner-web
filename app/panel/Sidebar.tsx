@@ -380,22 +380,17 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
     router.refresh();
   }
 
-  // Genel (üst) menü. İşletmede Hesaplar/Faturalar/Cariler artık bölümlerin içinde,
-  // bu yüzden işletme için üstte yalnız Genel Bakış + İşlemler kalır.
+  // Genel (üst) menü — her iki profil tipinde de aynı çekirdek sayfalar.
+  // İşletmede Hesaplar ayrıca Finans bölümünde de var (aynı sayfaya hızlı erişim).
   const groups: Group[] = [
     {
       label: null,
-      items: isBusiness
-        ? [
-            { label: "Genel Bakış", href: "/panel", icon: icons.overview },
-            { label: "İşlemler", href: "/panel/islemler", icon: icons.transactions },
-          ]
-        : [
-            { label: "Genel Bakış", href: "/panel", icon: icons.overview },
-            { label: "İşlemler", href: "/panel/islemler", icon: icons.transactions },
-            { label: "Hesaplar", href: "/panel/hesaplar", icon: icons.accounts },
-            { label: "Cüzdanım", href: "/panel/cuzdanim", icon: icons.wallet },
-          ],
+      items: [
+        { label: "Genel Bakış", href: "/panel", icon: icons.overview },
+        { label: "İşlemler", href: "/panel/islemler", icon: icons.transactions },
+        { label: "Hesaplar", href: "/panel/hesaplar", icon: icons.accounts },
+        { label: "Cüzdanım", href: "/panel/cuzdanim", icon: icons.wallet },
+      ],
     },
   ];
 
