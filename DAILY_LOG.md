@@ -1,5 +1,37 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-11 — Sol menü revizyonu + işletme panel sayfalarının inşası
+
+**Hedef:** İşletme sol menüsünü mobil (`paraner-app`) ile tutarlı, premium ve sapmasız hale getir; menüdeki "Yakında" modülleri tek tek çalışır yap (ortak Supabase, şemaya dokunmadan).
+
+### Sol menü (Sidebar) revizyonu
+- Üst bar sadeleşti: hesap adı + "Çıkış Yap" kaldırıldı; sağa AI sohbet · bildirim · ayarlar ikonları.
+- Sidebar **ayrı yüzen bar** (yuvarlak köşe + liquid-glass), koyu teal zemin, aktif öğe teal "hap".
+- Aç/kapa: sağ kenarda yüzen yuvarlak kol — **tek tık aç/kapa + sürükle-bırak snap** (pointer events). Hover titreme düzeltildi (backdrop-filter kaldırıldı).
+- Hesap seçici: dışarı tık/Esc kapatır; daraltılmışken sağa flyout.
+- **Taşma giderildi:** nav iç scroll + sabit Ayarlar footer + kenarlarda `mask-image` ile "metin arka plana karışarak" kaybolma; etiketler `nowrap+ellipsis`.
+- **İkonlar Lucide'a** geçti (tüm site) → optik eşit boyut, temiz dişli.
+- Boşluklar 12px sol inset'e hizalandı.
+- **İşletme accordion menüsü** (`businessMenu.tsx`): mobil ile birebir 7 bölüm + alt öğeler, renkli kare ikon, aktif bölüm otomatik açılır.
+- **Favoriler** (web'e özel, localStorage): alt öğeleri yıldızla → üstte hızlı erişim.
+
+### Faturalar: tek ekran + ?type filtre
+- Satış/Alış aynı ekran; menü `?type=income|expense`, sayfada Satış/Alış/Tümü sekmesi + dinamik başlık. Sidebar aktif-vurgu query'yi de eşliyor.
+
+### Çalışır hale gelen sayfalar (mobil tablolarıyla, şemaya dokunmadan)
+- **Stok & Ürünler:** `urunler` (products), `stok` (stock_movements: giriş/çıkış/düzeltme).
+- **Çalışanlar:** `calisanlar`, `maaslar`, `harcamalar`, `izinler`.
+- **Finans:** `duzenli-odemeler`, `cek-senet`, `borc-alacak`, `butceler` (bu ayki harcamayla), `kdv` (hesaplayıcı).
+- **Müşteriler:** `musteriler` (contacts), `veresiye` (credit_book+entries), `mutabakat`, `vade` (faturadan aging).
+- **Faturalar ek:** `teklifler` (quotes+quote_items, kalemli), `duzenli-fatura`.
+- **Rapor/analiz:** `nakit-akisi`, `gelir-gider-raporu` (+CSV), `kar-zarar`, `kdv-raporu`, `vergi-takvimi`.
+
+### Durum
+- TypeScript + production build temiz. Menüde **30 öğe çalışır**, 6 dış-entegrasyon öğesi "Yakında" (OCR, döviz API, PDF, SGK, e-Defter, Muhasebeci).
+- **Bekleyen:** her sayfanın tek tek tasarım/UX cilası; İşletme Ayarları özellikleri → Ayarlar sayfasına; mobil Claude'a not (faturalar başlık + Çalışan Listesi/Harcama aynı route fazlalığı).
+
+---
+
 ## 2026-06-10 — Performans + Stripe-tarzı redesign + sidebar/logo
 
 **Hedef:** Panel geçişlerini hızlandır, paneli Stripe dashboard diline (koyu+teal koruyarak) taşı, profil/işletme logosu + açılır-kapanır sidebar.

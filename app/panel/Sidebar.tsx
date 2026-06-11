@@ -1,38 +1,43 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
 import { profileAvatarUrl, type ActiveProfile } from "../../lib/supabase/profileShared";
 import Avatar from "../../components/ui/Avatar";
+import {
+  LayoutDashboard,
+  ArrowRightLeft,
+  CreditCard,
+  FileText,
+  Users,
+  Wallet,
+  Settings,
+  ChevronDown,
+  ChevronLeft,
+  Star,
+} from "lucide-react";
+import { BUSINESS_SECTIONS, type BusinessMenuItem } from "./businessMenu";
 
 const COLLAPSE_KEY = "paraner-sidebar-collapsed";
+const FAV_KEY = "paraner-fav-ops"; // favori işlemler (web'e özel)
+// Sidebar genişlikleri (globals.css ile aynı): sürükle-bırak snap için referans
+const SIDEBAR_OPEN = 248;
+const SIDEBAR_COLLAPSED = 74;
+const SIDEBAR_MID = (SIDEBAR_OPEN + SIDEBAR_COLLAPSED) / 2;
+const DRAG_THRESHOLD = 4; // bu kadar piksel hareket = sürükleme (yoksa tık)
 
-// Basit, çizgisel ikonlar (harici kütüphane yok)
+// Menü ikonları — Lucide (tutarlı grid + stroke → optik eşit boyut).
+// Boyut globals.css'teki `.panel-nav-item svg { width:18; height:18 }` ile gelir.
 const icons = {
-  overview: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-  ),
-  transactions: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 7h13M7 7l3-3M7 7l3 3"/><path d="M17 17H4m13 0-3-3m3 3-3 3"/></svg>
-  ),
-  accounts: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/></svg>
-  ),
-  invoices: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2.5h8l4 4V21a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 21z"/><path d="M14 2.5V7h4M9 13h6M9 17h6"/></svg>
-  ),
-  contacts: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/><path d="M16 5.5a3 3 0 0 1 0 6M18 20c0-2.4-1-4.3-2.5-5.2"/></svg>
-  ),
-  settings: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 6.6 19l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 4 13.4H4a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 5 6.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1V2a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V6.6c.3.7 1 1.2 1.7 1.2H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1.1z"/></svg>
-  ),
-  wallet: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H18a2 2 0 0 1 2 2v.5"/><path d="M3 7.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3"/><path d="M21 11h-4a2 2 0 0 0 0 4h4z"/></svg>
-  ),
+  overview: <LayoutDashboard />,
+  transactions: <ArrowRightLeft />,
+  accounts: <CreditCard />,
+  invoices: <FileText />,
+  contacts: <Users />,
+  wallet: <Wallet />,
 };
 
 type Item = { label: string; href: string; icon: React.ReactNode };
@@ -41,14 +46,57 @@ type Group = { label: string | null; items: Item[] };
 export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const active = profiles.find((p) => p.is_active) ?? profiles[0] ?? null;
   const isBusiness = active?.profile_type === "business";
 
+  // Aktif vurgu — query'li hrefleri (örn. faturalar?type=income) da doğru eşleştir
+  function isActive(href: string) {
+    const [path, qs] = href.split("?");
+    if (pathname !== path) return false;
+    if (!qs) return true;
+    const want = new URLSearchParams(qs).get("type");
+    return searchParams.get("type") === want;
+  }
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [switching, setSwitching] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [dragWidth, setDragWidth] = useState<number | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set());
+  const [favs, setFavs] = useState<string[]>([]);
+  const [navFade, setNavFade] = useState({ top: false, bottom: false });
+  const switchRef = useRef<HTMLDivElement>(null);
+  const asideRef = useRef<HTMLElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+
+  // Hesap seçici: boş bir yere tıklayınca ya da Esc'e basınca kapansın
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onPointer(e: MouseEvent) {
+      if (switchRef.current && !switchRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
+
+  // Hesap değişimi tamamlanınca (router.refresh sonrası yeni aktif profil gelince)
+  // "değiştiriyorum" kilidini bırak — yoksa buton kalıcı disabled kalır.
+  useEffect(() => {
+    setSwitching(false);
+  }, [active?.id]);
 
   // Daralt/genişlet tercihini hatırla (localStorage). Sunucu hep "açık" render eder,
   // tarayıcıda okunur → hydration uyumlu.
@@ -56,14 +104,160 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
     if (localStorage.getItem(COLLAPSE_KEY) === "1") setCollapsed(true);
   }, []);
 
-  function toggleCollapsed() {
-    setCollapsed((c) => {
-      const next = !c;
-      localStorage.setItem(COLLAPSE_KEY, next ? "1" : "0");
+  // Aktif sayfanın bulunduğu işletme bölümünü otomatik aç.
+  useEffect(() => {
+    const sec = BUSINESS_SECTIONS.find((s) =>
+      s.items.some((i) => i.href != null && i.href.split("?")[0] === pathname)
+    );
+    if (sec) setOpenSections((prev) => new Set(prev).add(sec.id));
+  }, [pathname]);
+
+  function toggleSection(id: string) {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
+  }
+
+  // Daraltılmışken bölüme tıklama: önce menüyü genişlet, sonra o bölümü aç.
+  function onSectionClick(id: string) {
+    if (collapsed) {
+      applyCollapsed(false);
+      setOpenSections((prev) => new Set(prev).add(id));
+    } else {
+      toggleSection(id);
+    }
+  }
+
+  // ── Favoriler (web'e özel): kullanıcının sık kullandığı işlemleri yıldızla ──
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(FAV_KEY);
+      if (raw) setFavs(JSON.parse(raw));
+    } catch {}
+  }, []);
+
+  function toggleFav(key: string) {
+    setFavs((prev) => {
+      const next = prev.includes(key)
+        ? prev.filter((k) => k !== key)
+        : [...prev, key];
+      localStorage.setItem(FAV_KEY, JSON.stringify(next));
+      return next;
+    });
+  }
+
+  // Favori anahtarı → menüdeki gerçek öğe (sırayı favs'a göre koru)
+  const favItems = favs
+    .map((key) => {
+      for (const sec of BUSINESS_SECTIONS) {
+        const it = sec.items.find((i) => `${sec.id}:${i.label}` === key);
+        if (it) return { key, item: it };
+      }
+      return null;
+    })
+    .filter((x): x is { key: string; item: (typeof BUSINESS_SECTIONS)[number]["items"][number] } => x !== null);
+
+  // ── Kaydırma fade'i (üst/alt blur): içerik taşıyorsa kenarlar yumuşasın ──
+  function updateNavFade() {
+    const el = navRef.current;
+    if (!el) return;
+    const top = el.scrollTop > 2;
+    const bottom = el.scrollTop + el.clientHeight < el.scrollHeight - 2;
+    setNavFade((p) => (p.top === top && p.bottom === bottom ? p : { top, bottom }));
+  }
+
+  // İçerik değişince (bölüm aç/kapa, favori, daralt) fade'i yeniden hesapla
+  useEffect(() => {
+    updateNavFade();
+  }, [openSections, favs, collapsed, isBusiness]);
+
+  // Alt öğe satırı (bölüm içi + favoriler aynı görünümü paylaşır) + yıldız
+  function renderSubRow(item: BusinessMenuItem, favKey: string) {
+    const fav = favs.includes(favKey);
+    return (
+      <div key={favKey} className="nav-subitem-row">
+        {item.href ? (
+          <Link
+            href={item.href}
+            className={`nav-subitem${isActive(item.href) ? " active" : ""}`}
+          >
+            <span className="nav-subicon">{item.icon}</span>
+            <span className="nav-label">{item.label}</span>
+          </Link>
+        ) : (
+          <div className="nav-subitem soon">
+            <span className="nav-subicon">{item.icon}</span>
+            <span className="nav-label">{item.label}</span>
+            <span className="nav-soon-badge">Yakında</span>
+          </div>
+        )}
+        <button
+          type="button"
+          className={`nav-fav-btn${fav ? " on" : ""}`}
+          onClick={() => toggleFav(favKey)}
+          aria-label={fav ? "Favoriden çıkar" : "Favorilere ekle"}
+          title={fav ? "Favoriden çıkar" : "Favorilere ekle"}
+        >
+          <Star />
+        </button>
+      </div>
+    );
+  }
+
+  function applyCollapsed(next: boolean) {
+    setCollapsed(next);
+    localStorage.setItem(COLLAPSE_KEY, next ? "1" : "0");
     setMenuOpen(false);
   }
+
+  function toggleCollapsed() {
+    applyCollapsed(!collapsed);
+  }
+
+  // Kolu sürükle: parmağı takip et, bırakınca en yakın duruma (açık/kapalı) otur.
+  // Hiç sürüklemeden bırakırsan → tek tık → aç/kapa.
+  function onHandlePointerDown(e: React.PointerEvent) {
+    if (e.button !== 0) return; // yalnız sol tık / birincil dokunuş
+    e.preventDefault();
+    const leftEdge = asideRef.current?.getBoundingClientRect().left ?? 0;
+    const startX = e.clientX;
+    let moved = false;
+
+    const widthAt = (clientX: number) =>
+      Math.min(SIDEBAR_OPEN, Math.max(SIDEBAR_COLLAPSED, clientX - leftEdge));
+
+    const onMove = (ev: PointerEvent) => {
+      if (!moved && Math.abs(ev.clientX - startX) > DRAG_THRESHOLD) {
+        moved = true;
+        setDragging(true);
+        document.body.style.userSelect = "none";
+      }
+      if (moved) setDragWidth(widthAt(ev.clientX));
+    };
+
+    const onUp = (ev: PointerEvent) => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      document.body.style.userSelect = "";
+      if (!moved) {
+        applyCollapsed(!collapsed); // sürükleme yok → tık
+      } else {
+        applyCollapsed(widthAt(ev.clientX) < SIDEBAR_MID); // en yakına snap
+      }
+      setDragging(false);
+      setDragWidth(null);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  }
+
+  // Sürükleme sırasında: genişlik parmağı takip eder; etiket/ikon görünümü de
+  // en yakın duruma göre canlı önizlenir (orta noktayı geçince kapalı görünür).
+  const showCollapsed = dragWidth !== null ? dragWidth < SIDEBAR_MID : collapsed;
 
   const typeLabel = (t: string | null | undefined) =>
     t === "business" ? "İşletme" : "Bireysel";
@@ -79,36 +273,33 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
     router.refresh();
   }
 
-  // Menü grupları (profil tipine göre)
+  // Genel (üst) menü. İşletmede Hesaplar/Faturalar/Cariler artık bölümlerin içinde,
+  // bu yüzden işletme için üstte yalnız Genel Bakış + İşlemler kalır.
   const groups: Group[] = [
     {
       label: null,
-      items: [
-        { label: "Genel Bakış", href: "/panel", icon: icons.overview },
-        { label: "İşlemler", href: "/panel/islemler", icon: icons.transactions },
-        { label: "Hesaplar", href: "/panel/hesaplar", icon: icons.accounts },
-        ...(!isBusiness
-          ? [{ label: "Cüzdanım", href: "/panel/cuzdanim", icon: icons.wallet }]
-          : []),
-      ],
+      items: isBusiness
+        ? [
+            { label: "Genel Bakış", href: "/panel", icon: icons.overview },
+            { label: "İşlemler", href: "/panel/islemler", icon: icons.transactions },
+          ]
+        : [
+            { label: "Genel Bakış", href: "/panel", icon: icons.overview },
+            { label: "İşlemler", href: "/panel/islemler", icon: icons.transactions },
+            { label: "Hesaplar", href: "/panel/hesaplar", icon: icons.accounts },
+            { label: "Cüzdanım", href: "/panel/cuzdanim", icon: icons.wallet },
+          ],
     },
-    ...(isBusiness
-      ? [
-          {
-            label: "İŞLETME",
-            items: [
-              { label: "Faturalar", href: "/panel/faturalar", icon: icons.invoices },
-              { label: "Cariler", href: "/panel/cariler", icon: icons.contacts },
-            ],
-          },
-        ]
-      : []),
   ];
 
   const canSwitch = profiles.length > 1;
 
   return (
-    <aside className={`panel-sidebar${collapsed ? " collapsed" : ""}`}>
+    <aside
+      ref={asideRef}
+      className={`panel-sidebar${showCollapsed ? " collapsed" : ""}${dragging ? " dragging" : ""}`}
+      style={dragWidth !== null ? { width: `${dragWidth}px` } : undefined}
+    >
       <div className="panel-brand">
         {/* Açık: tam PARANER wordmark · Daraltılmış: aynı wordmark'tan kırpılmış temiz P.
             P birebir aynı (aynı kaynak), A sızması/kesilme olmaz. */}
@@ -132,7 +323,7 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
 
       {/* Profil değiştirici */}
       {active && (
-        <div className="profile-switch">
+        <div className="profile-switch" ref={switchRef}>
           <button
             type="button"
             className="profile-switch-btn"
@@ -150,11 +341,7 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
                 {typeLabel(active.profile_type)}
               </span>
             </span>
-            {canSwitch && (
-              <svg className="profile-switch-chev" viewBox="0 0 12 8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M1 1.5 6 6.5l5-5" />
-              </svg>
-            )}
+            {canSwitch && <ChevronDown className="profile-switch-chev" />}
           </button>
 
           {menuOpen && canSwitch && (
@@ -183,47 +370,102 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
         </div>
       )}
 
-      <nav className="panel-nav">
-        {groups.map((g, gi) => (
-          <div key={gi} className="nav-group">
-            {g.label && <div className="nav-group-label">{g.label}</div>}
-            {g.items.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`panel-nav-item${pathname === item.href ? " active" : ""}`}
-                title={collapsed ? item.label : undefined}
-              >
-                {item.icon}
-                <span className="nav-label">{item.label}</span>
-              </Link>
-            ))}
-          </div>
-        ))}
+      <div
+        className={`nav-region${navFade.top ? " fade-top" : ""}${navFade.bottom ? " fade-bottom" : ""}`}
+      >
+        <nav className="panel-nav" ref={navRef} onScroll={updateNavFade}>
+          {groups.map((g, gi) => (
+            <div key={gi} className="nav-group">
+              {g.label && <div className="nav-group-label">{g.label}</div>}
+              {g.items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`panel-nav-item${isActive(item.href) ? " active" : ""}`}
+                  title={collapsed ? item.label : undefined}
+                >
+                  {item.icon}
+                  <span className="nav-label">{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          ))}
 
-        {/* Ayarlar — en altta sabit */}
+          {/* Favoriler (web'e özel) — yıldızlanan işlemler en üstte hızlı erişim */}
+          {isBusiness && favItems.length > 0 && (
+            <div className="nav-group nav-fav-group">
+              <div className="nav-group-label">FAVORİLER</div>
+              {favItems.map(({ key, item }) => renderSubRow(item, key))}
+            </div>
+          )}
+
+          {/* İşletme bölümleri — mobil ile tutarlı, açılır-kapanır (accordion) */}
+          {isBusiness && (
+            <div className="nav-sections">
+              {BUSINESS_SECTIONS.map((sec) => {
+                const open = openSections.has(sec.id) && !collapsed;
+                return (
+                  <div key={sec.id} className="nav-section">
+                    <button
+                      type="button"
+                      className={`nav-section-head${open ? " open" : ""}`}
+                      onClick={() => onSectionClick(sec.id)}
+                      title={collapsed ? sec.label : undefined}
+                      aria-expanded={open}
+                    >
+                      <span
+                        className="nav-section-icon"
+                        style={{ "--sec": sec.color } as CSSProperties}
+                      >
+                        {sec.icon}
+                      </span>
+                      <span className="nav-label">{sec.label}</span>
+                      <ChevronDown className="nav-section-chev" />
+                    </button>
+
+                    {open && (
+                      <div className="nav-section-items">
+                        {sec.items.map((item) =>
+                          renderSubRow(item, `${sec.id}:${item.label}`)
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </nav>
+      </div>
+
+      {/* Ayarlar — kaydırmadan bağımsız, en altta sabit */}
+      <div className="nav-footer">
         <Link
           href="/panel/ayarlar"
-          className={`panel-nav-item nav-bottom${pathname === "/panel/ayarlar" ? " active" : ""}`}
+          className={`panel-nav-item${pathname === "/panel/ayarlar" ? " active" : ""}`}
           title={collapsed ? "Ayarlar" : undefined}
         >
-          {icons.settings}
+          <Settings />
           <span className="nav-label">Ayarlar</span>
         </Link>
-      </nav>
+      </div>
 
-      {/* Daralt / genişlet */}
+      {/* Daralt / genişlet — sağ kenara yüzen yuvarlak kol.
+          Tek tık: aç/kapa · Sürükle-bırak: en yakın duruma snap */}
       <button
         type="button"
         className="sidebar-toggle"
-        onClick={toggleCollapsed}
+        onPointerDown={onHandlePointerDown}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggleCollapsed();
+          }
+        }}
         aria-label={collapsed ? "Menüyü genişlet" : "Menüyü daralt"}
-        title={collapsed ? "Genişlet" : "Daralt"}
+        title="Tıkla ya da sürükle"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M15 6l-6 6 6 6" />
-        </svg>
-        <span className="nav-label">Menüyü daralt</span>
+        <ChevronLeft />
       </button>
     </aside>
   );

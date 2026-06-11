@@ -4,6 +4,7 @@ import { formatCurrency, formatDate } from "../../lib/format";
 import { ymd } from "../../lib/date";
 import { findCategory } from "../../lib/categories";
 import Sparkline from "../../components/ui/Sparkline";
+import { ChevronDown } from "lucide-react";
 
 // Bir ay için gelir/gider toplamı (ana para birimi, transfer hariç)
 function sumMonth(
@@ -170,9 +171,7 @@ export default async function GenelBakisPage() {
           <div key={m.key} className="metric">
             <div className="metric-label">
               {m.label}
-              <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M1 1.5 6 6.5l5-5" />
-              </svg>
+              <ChevronDown />
             </div>
             <div className={`metric-value ${m.cls}`}>
               {formatCurrency(m.value, currency)}

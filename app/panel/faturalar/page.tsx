@@ -2,8 +2,16 @@ import { createClient } from "../../../lib/supabase/server";
 import { getActiveProfile } from "../../../lib/supabase/profile";
 import FaturalarClient, { type Invoice } from "./FaturalarClient";
 
-export default async function FaturalarPage() {
+export default async function FaturalarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type?: string }>;
+}) {
   const supabase = await createClient();
+
+  const { type } = await searchParams;
+  const initialFilter: "all" | "income" | "expense" =
+    type === "income" ? "income" : type === "expense" ? "expense" : "all";
 
   const profile = await getActiveProfile();
 
@@ -28,6 +36,7 @@ export default async function FaturalarPage() {
       invoicePrefix={profile.invoice_prefix ?? "BPR"}
       invoiceNextNumber={profile.invoice_next_number ?? 1}
       invoices={(invoices as Invoice[]) ?? []}
+      initialFilter={initialFilter}
     />
   );
 }

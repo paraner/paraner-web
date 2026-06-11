@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
@@ -26,15 +26,21 @@ export default function FaturalarClient({
   invoicePrefix,
   invoiceNextNumber,
   invoices: initial,
+  initialFilter,
 }: {
   profileId: string;
   currency: string;
   invoicePrefix: string;
   invoiceNextNumber: number;
   invoices: Invoice[];
+  initialFilter: "all" | "income" | "expense";
 }) {
   const supabase = createClient();
   const [list, setList] = useState<Invoice[]>(initial);
+  // Liste filtresi (Tümü / Satış / Alış) — menüden gelen ?type= ile başlar
+  const [listFilter, setListFilter] = useState(initialFilter);
+  // Menüden satış↔alış geçişinde (aynı sayfa) URL değişince filtreyi güncelle
+  useEffect(() => setListFilter(initialFilter), [initialFilter]);
   const [nextNumber, setNextNumber] = useState(invoiceNextNumber);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -49,7 +55,7 @@ export default function FaturalarClient({
   const [paid, setPaid] = useState(false);
 
   function openNew() {
-    setType("income");
+    setType(listFilter === "expense" ? "expense" : "income");
     setCustomer("");
     setSubtotal("");
     setVatRate("20");
@@ -65,6 +71,16 @@ export default function FaturalarClient({
   const totalSales = sum(list.filter((i) => i.type === "income"));
   const totalPurchase = sum(list.filter((i) => i.type === "expense"));
   const totalUnpaid = sum(list.filter((i) => i.payment_status !== "paid"));
+
+  // Aktif filtreye göre liste + başlık
+  const filtered =
+    listFilter === "all" ? list : list.filter((i) => i.type === listFilter);
+  const head =
+    listFilter === "income"
+      ? { title: "Satış Faturaları", sub: "Kestiğin faturalar" }
+      : listFilter === "expense"
+      ? { title: "Alış Faturaları", sub: "Aldığın faturalar" }
+      : { title: "Faturalar", sub: "Kestiğin ve aldığın faturalar" };
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -134,8 +150,8 @@ export default function FaturalarClient({
   return (
     <>
       <PageHead
-        title="Faturalar"
-        sub="Kestiğin ve aldığın faturalar"
+        title={head.title}
+        sub={head.sub}
         action={
           <button className="btn btn-primary btn-sm" onClick={openNew}>
             + Fatura Oluştur
@@ -166,8 +182,34 @@ export default function FaturalarClient({
             </div>
           </div>
 
+          <div className="chip-seg" style={{ marginBottom: 14 }}>
+            <button
+              className={listFilter === "all" ? "active" : ""}
+              onClick={() => setListFilter("all")}
+            >
+              Tümü
+            </button>
+            <button
+              className={listFilter === "income" ? "active on-income" : ""}
+              onClick={() => setListFilter("income")}
+            >
+              Satış
+            </button>
+            <button
+              className={listFilter === "expense" ? "active on-expense" : ""}
+              onClick={() => setListFilter("expense")}
+            >
+              Alış
+            </button>
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="panel-empty">
+              Bu filtrede fatura yok.
+            </div>
+          ) : (
           <div className="tx-list">
-            {list.map((inv) => {
+            {filtered.map((inv) => {
             const isIncome = inv.type === "income";
             const isPaid = inv.payment_status === "paid";
             return (
@@ -209,6 +251,7 @@ export default function FaturalarClient({
             );
           })}
           </div>
+          )}
         </>
       )}
 

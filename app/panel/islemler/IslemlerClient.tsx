@@ -13,6 +13,7 @@ import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
+import { Search } from "lucide-react";
 
 export type Tx = {
   id: string;
@@ -179,10 +180,7 @@ export default function IslemlerClient({
         <>
           <div className="filter-row">
             <div className="chip-search">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="7" />
-                <path d="m21 21-4.3-4.3" />
-              </svg>
+              <Search />
               <input
                 type="text"
                 placeholder="İşlem ara…"

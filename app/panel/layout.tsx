@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getProfiles, profileAvatarUrl } from "../../lib/supabase/profile";
+import { getProfiles } from "../../lib/supabase/profile";
 import Sidebar from "./Sidebar";
-import LogoutButton from "./LogoutButton";
-import Avatar from "../../components/ui/Avatar";
+import { SparkleIcon, BellIcon, GearIcon } from "../../components/icons";
 
 // Panel uygulamanın içi — tüm /panel sayfaları arama motorlarına kapalı
 export const metadata: Metadata = {
@@ -29,11 +29,17 @@ export default async function PanelLayout({
       <Sidebar profiles={profiles} />
       <div className="panel-main">
         <header className="panel-topbar">
-          <div className="panel-topbar-title">
-            <Avatar name={active.profile_name} url={profileAvatarUrl(active)} small />
-            <span>{active.profile_name ?? "Profil"}</span>
+          <div className="panel-topbar-actions">
+            <button type="button" className="topbar-icon-btn" aria-label="AI Sohbet" title="AI Sohbet">
+              <SparkleIcon />
+            </button>
+            <button type="button" className="topbar-icon-btn" aria-label="Bildirimler" title="Bildirimler">
+              <BellIcon />
+            </button>
+            <Link href="/panel/ayarlar" className="topbar-icon-btn" aria-label="Ayarlar" title="Ayarlar">
+              <GearIcon />
+            </Link>
           </div>
-          <LogoutButton />
         </header>
         <div className="panel-content">{children}</div>
       </div>

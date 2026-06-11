@@ -1,18 +1,10 @@
-// Panelde tekrar eden çizgisel ikonlar — tek kaynak.
-// Kullanım: <TrashIcon />  (renk currentColor'dan gelir)
-
-export function TrashIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" />
-    </svg>
-  );
-}
-
-export function EditIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
-    </svg>
-  );
-}
+// Panelde kullanılan ikonlar — tek kaynak.
+// Lucide setine bağlandı: tutarlı 24px grid + 2px stroke → tüm ikonlar optik eşit,
+// premium ve temiz. Boyut, kullanıldıkları yerdeki CSS `svg { width/height }` ile gelir.
+export {
+  Trash2 as TrashIcon,
+  Pencil as EditIcon,
+  MessageCircle as SparkleIcon, // üst bar: AI sohbet
+  Bell as BellIcon, // üst bar: bildirimler
+  Settings as GearIcon, // üst bar: ayarlar
+} from "lucide-react";
