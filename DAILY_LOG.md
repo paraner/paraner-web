@@ -1,5 +1,30 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-12 — Cüzdanım canlandı (Truncgil) + sidebar + İşlemler çoklu para birimi
+
+**Hedef:** Cüzdanım'ı salt-okunurdan mobil seviyesine taşı (canlı piyasa fiyatı, değer/K-Z, ekle/sat); sidebar'daki eksik Cüzdanım'ı gider; İşlemler'e para birimi filtresi.
+
+### Cüzdanım — canlı Truncgil + tam işlevsel
+- **`lib/market.ts`:** Truncgil (`today.json`) **server tarafında** çekilir (CORS yok), Next `fetch` ile **5 dk cache**. Mobil `marketService` ile birebir: `parseTR`/`parsePct`, döviz (USD/EUR/GBP/CHF/SAR) + altın (gram/çeyrek/yarım/tam/cumhuriyet) eşlemeleri. Hata → boş + `isStale`.
+- **`lib/assets.ts`:** varlık kataloğu (TL/USD/EUR/GBP + 5 altın) + değerleme: `getTLValue`, `getUnitPrice`, `getChangePct`. Client-güvenli.
+- **`CuzdanimClient.tsx`:** portföy şeridi (Toplam Değer ₺ + kullanıcı para biriminde ≈, **Kâr/Zarar** % ile, **Bugün** günlük değişim) + saf-SVG **dağılım donut**'u + varlık listesi (güncel değer, günlük ▲▼, K/Z).
+- **İşlemler (mobil `savingsStore` mantığı):** ekle → aynı türde varsa **ağırlıklı ortalama maliyet**; sat → tam satış varlığı siler, kısmi satış ortalama maliyeti korur; her alış/satış `savings_asset_movements`'a hareket kaydı yazar (mobil ile ortak tablo, şemaya dokunulmadı). Düzenle/sil de var.
+- **Gerçek altın görselleri:** mobil `assets/gold/*.png` → `public/gold/`. Emoji yerine gerçek fotoğraflar (gram/çeyrek/yarım/tam/cumhuriyet birbirinden ayırt edilir).
+- **Varlık türü seçici:** native `<select>` görsel gösteremediği için kaldırıldı → trigger + **alt alta dikey açılır liste** (görselli satır + seçilide tik), fatura formundaki ödeme-durumu seçici hissi.
+
+### Sidebar — işletme üst menüsü
+- İşletmede üstte sadece Genel Bakış + İşlemler vardı, **Cüzdanım hiç görünmüyordu**. Üst menü artık her iki profil tipinde aynı çekirdek: **Genel Bakış · İşlemler · Hesaplar · Cüzdanım**. (Hesaplar ayrıca Finans bölümünde hızlı erişim olarak kalır.) Menüde sayfası olup linklenmemiş başka eksik yoktu — Cüzdanım tek açıktı.
+
+### İşlemler — çoklu para birimi çipi
+- Filtre satırına (arama·tür·kategori·ay yanına) **para birimi çipi**: `Tüm dövizler · TRY · USD …`. Yalnızca kullanıcının **>1 para biriminde** hesabı/işlemi varsa görünür (TRY-only'da gizli). Para birimleri hesaplar+işlemler birleşiminden otomatik.
+
+### Durum
+- `tsc` + production build temiz (her adımda). Cüzdanım + sidebar + altın + dikey seçici **push edildi** (Vercel canlı). İşlemler para birimi çipi bu commit'te.
+- **Workflow notu:** Mehmet artık geliştirmede dev'den kontrol ediyor → her değişikliği deploy etme, push "işi bitir"de (memory: dev-kontrol-push-etme).
+- **Bekleyen kontroller:** GOREVLER.md başındaki "⚠️ KONTROLLER" — bir dahaki işe başlada önce doğrulanacak (mobil↔web Cüzdanım çapraz kontrol vb.).
+
+---
+
 ## 2026-06-11 — İşlemler: düzenleme + ay filtresi + transfer + detay paneli (kaynak & dosya ekleme)
 
 **Hedef:** İşlemler modülünü mobil seviyesine yaklaştır: düzenleme, ay filtresi, hesaplar arası transfer, ve işleme tıklayınca açılan zengin detay paneli (nereden eklendi + dosya/fiş ekleri).

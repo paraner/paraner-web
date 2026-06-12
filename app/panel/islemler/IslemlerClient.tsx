@@ -145,6 +145,8 @@ export default function IslemlerClient({
   const [query, setQuery] = useState("");
   const [ftype, setFtype] = useState<"all" | "income" | "expense">("all");
   const [fcat, setFcat] = useState("");
+  // Para birimi filtresi ("" = tümü). Çip yalnızca >1 para birimi varsa gösterilir.
+  const [fcur, setFcur] = useState("");
   // Ay filtresi (YYYY-MM); boş = son 100 işlem. Doluysa DB'den o ay çekilir.
   const [month, setMonth] = useState("");
   const [loadingMonth, setLoadingMonth] = useState(false);
@@ -152,10 +154,20 @@ export default function IslemlerClient({
   const allCats = Array.from(
     new Map([...CATEGORIES, ...INCOME_CATEGORIES].map((c) => [c.id, c])).values()
   );
+  // Kullanıcının kullandığı para birimleri (hesaplar + işlemler). >1 ise çip çıkar.
+  const currencies = Array.from(
+    new Set([
+      ...accounts.map((a) => a.currency),
+      ...list.map((t) => t.currency || currency),
+    ])
+  ).filter(Boolean);
+  const multiCurrency = currencies.length > 1;
+
   const q = query.trim().toLocaleLowerCase("tr");
   const filtered = list.filter((t) => {
     if (ftype !== "all" && t.type !== ftype) return false;
     if (fcat && t.category !== fcat) return false;
+    if (fcur && (t.currency || currency) !== fcur) return false;
     if (q) {
       const hay = `${t.title} ${findCategory(t.category).label}`.toLocaleLowerCase("tr");
       if (!hay.includes(q)) return false;
@@ -517,6 +529,25 @@ export default function IslemlerClient({
                 Gider
               </button>
             </div>
+            {multiCurrency && (
+              <div className="chip-seg">
+                <button
+                  className={fcur === "" ? "active" : ""}
+                  onClick={() => setFcur("")}
+                >
+                  Tüm dövizler
+                </button>
+                {currencies.map((c) => (
+                  <button
+                    key={c}
+                    className={fcur === c ? "active" : ""}
+                    onClick={() => setFcur(c)}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            )}
             <select
               className="chip-select"
               value={fcat}

@@ -1,5 +1,24 @@
 # GÖREVLER — paraner-web
 
+## ⚠️ KONTROLLER — bir dahaki "işe başla"da ÖNCE bunları doğrula
+> Mehmet app tarafıyla ilgilenirken yapılan web işlerinin doğrulanması bekliyor. Önce bunları gözden geçir.
+
+**Cüzdanım (canlı Truncgil) — yeni**
+- [ ] Canlıda (app.paraner.com) Truncgil fiyatları geliyor mu? Toplam Değer / K-Z / Bugün dolu mu?
+- [ ] Web'den eklenen varlık **mobilde** görünüyor mu (ortak `savings_assets`)? Tersi de?
+- [ ] İkinci alış → **ağırlıklı ortalama maliyet** doğru mu? Satış: kısmi (maliyet korunur) / tam (varlık silinir) doğru mu?
+- [ ] `savings_asset_movements` hareket kaydı mobil ile uyumlu mu?
+- [ ] Altın görselleri canlıda doğru mu (gram/çeyrek/yarım/tam/cumhuriyet)? Varlık türü dikey açılır seçici düzgün mü?
+- [ ] İşletme profilinde Cüzdanım mantıklı çalışıyor mu?
+
+**Sidebar — yeni**
+- [ ] İşletme üst menü: Genel Bakış·İşlemler·Hesaplar·Cüzdanım. Hesaplar ayrıca Finans bölümünde — tekrar kafa karıştırıyor mu?
+
+**İşlemler — yeni**
+- [ ] Çoklu para birimi çipi: birden fazla para birimli hesapta çıkıyor mu, filtre doğru süzüyor mu? Tek para birimli kullanıcıda gizli mi?
+
+---
+
 ## Bekleyen
 
 ### Auth / hesap
@@ -10,6 +29,7 @@
 
 ### İşletme paneli — bölüm sayfaları (mobil ile tutarlı)
 - [x] **Sol menü** mobil accordion'a geçti + Favoriler + taşma/scroll-fade + Lucide ikonlar *(2026-06-11)*
+- [x] **Sol menü** işletme üst menüsü bireyselle birebir: Genel Bakış·İşlemler·Hesaplar·**Cüzdanım** (eskiden işletmede Cüzdanım hiç yoktu) *(2026-06-12)*
 - [x] **Stok & Ürünler** (urunler, stok), **Çalışanlar** (calisanlar/maaslar/harcamalar/izinler) *(2026-06-11)*
 - [x] **Finans** (duzenli-odemeler, cek-senet, borc-alacak, butceler, kdv) *(2026-06-11)*
 - [x] **Müşteriler** (musteriler, veresiye, mutabakat, vade) *(2026-06-11)*
@@ -20,9 +40,9 @@
 - [ ] Dış-entegrasyon "Yakında" öğeleri: Fiş Tara (OCR), Döviz & Altın (API), PDF Rapor, SGK, e-Defter, Muhasebeci
 
 ### Modül derinleştirme (mobilde var, web'de v1)
-- [ ] **Cüzdanım** tam işlevsel: piyasa fiyatı (Truncgil) entegrasyonu → varlık değeri + K/Z + ekleme/satış
+- [x] **Cüzdanım** tam işlevsel: Truncgil canlı fiyat (server fetch, 5dk cache) → değer + K/Z + günlük değişim + dağılım donut; ekle (ağırlıklı ort. maliyet)/düzenle/sat (tam→sil, kısmi→koru)/sil; gerçek altın görselleri; varlık türü dikey açılır seçici; `savings_asset_movements` hareket kaydı *(2026-06-11/12)*
 - [x] **İşlemler**: ay filtresi (DB'den o ay) — arama + tür + kategori filtresi de var *(2026-06-11)*
-- [ ] **İşlemler**: çoklu para birimi çipi (kaldı)
+- [x] **İşlemler**: çoklu para birimi çipi — filtre satırında, yalnız >1 para birimi varsa görünür *(2026-06-12)*
 - [x] **Hesaplar**: hesaplar arası transfer (mobil mantığı: transfer_out/in + ücret + bakiye senkronu, farklı para birimi engelli) *(2026-06-11)*
 - [x] İşlem **düzenleme** (modal ortak ekle/düzenle, bakiye mutabakatı); transfer satırı düzenlenemez, silince çift bacak birlikte gider *(2026-06-11)*
 
