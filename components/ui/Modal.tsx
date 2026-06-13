@@ -8,11 +8,13 @@ export default function Modal({
   title,
   onClose,
   busy = false,
+  wide = false,
   children,
 }: {
   title: string;
   onClose: () => void;
   busy?: boolean; // kaydederken kapatmayı engelle
+  wide?: boolean; // geniş varyant (ör. işlem ekleme — hesap kartları için)
   children: React.ReactNode;
 }) {
   // Esc ile kapat (kaydederken değil)
@@ -26,7 +28,10 @@ export default function Modal({
 
   return (
     <div className="modal-overlay" onClick={() => !busy && onClose()}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`modal-card${wide ? " modal-wide" : ""}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-head">
           <h2>{title}</h2>
           <button className="modal-close" onClick={onClose} aria-label="Kapat">

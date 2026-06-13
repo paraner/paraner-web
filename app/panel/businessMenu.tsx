@@ -3,7 +3,7 @@
 // `href: null` → "Yakında" (pasif). İkonlar Lucide.
 import {
   FileText, Wallet, Users, Briefcase, Package, BarChart3, Landmark,
-  PlusCircle, ArrowUpCircle, ArrowDownCircle, Repeat, ScanLine, Send, Files,
+  PlusCircle, ArrowUpCircle, ArrowDownCircle, Repeat, ScanLine, Files,
   ArrowLeftRight, TrendingUp, CircleDollarSign, Percent, PieChart, UserCircle,
   BookOpen, CircleCheck, Clock, Banknote, Receipt, CalendarDays, Tags, Layers,
   Download, FileBarChart, Share2, AlarmClock, ShieldCheck, Cloud,
@@ -36,8 +36,7 @@ export const BUSINESS_SECTIONS: BusinessMenuSection[] = [
       { label: "Alış Faturaları", icon: <ArrowDownCircle />, href: "/panel/faturalar?type=expense" },
       { label: "Düzenli Fatura", icon: <Repeat />, href: "/panel/duzenli-fatura" },
       { label: "Fiş / Makbuz Tara", icon: <ScanLine />, href: null },
-      { label: "Teklif / Proforma Oluştur", icon: <Send />, href: "/panel/teklifler" },
-      { label: "Tekliflerim", icon: <Files />, href: "/panel/teklifler" },
+      { label: "Teklifler", icon: <Files />, href: "/panel/teklifler" },
     ],
   },
   {
@@ -46,8 +45,6 @@ export const BUSINESS_SECTIONS: BusinessMenuSection[] = [
     icon: <Wallet />,
     color: "#1D9E75",
     items: [
-      { label: "Kasa & Banka Hesapları", icon: <Landmark />, href: "/panel/hesaplar" },
-      { label: "Gelir / Gider Özeti", icon: <BarChart3 />, href: "/panel/islemler" },
       { label: "Düzenli Ödemeler", icon: <Repeat />, href: "/panel/duzenli-odemeler" },
       { label: "Çek / Senet Takibi", icon: <CircleCheck />, href: "/panel/cek-senet" },
       { label: "Borç / Alacak", icon: <ArrowLeftRight />, href: "/panel/borc-alacak" },
@@ -112,7 +109,6 @@ export const BUSINESS_SECTIONS: BusinessMenuSection[] = [
     color: "#F97316",
     items: [
       { label: "Vergi Takvimi", icon: <AlarmClock />, href: "/panel/vergi-takvimi" },
-      { label: "KDV Beyanname Özeti", icon: <FileText />, href: "/panel/kdv-raporu" },
       { label: "SGK Bildirgeleri", icon: <ShieldCheck />, href: null },
       { label: "e-Defter / e-Fatura", icon: <Cloud />, href: null },
     ],

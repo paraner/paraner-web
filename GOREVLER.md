@@ -12,10 +12,15 @@
 - [ ] İşletme profilinde Cüzdanım mantıklı çalışıyor mu?
 
 **Sidebar — yeni**
-- [ ] İşletme üst menü: Genel Bakış·İşlemler·Hesaplar·Cüzdanım. Hesaplar ayrıca Finans bölümünde — tekrar kafa karıştırıyor mu?
-
-**İşlemler — yeni**
+- [x] Hesaplar tekrarı giderildi: Finans'taki "Kasa & Banka Hesapları" kaldırıldı (üst menüde Hesaplar var) *(2026-06-13)*
 - [ ] Çoklu para birimi çipi: birden fazla para birimli hesapta çıkıyor mu, filtre doğru süzüyor mu? Tek para birimli kullanıcıda gizli mi?
+
+**Dashboard + kartlar + kategoriler — yeni (2026-06-13)**
+- [ ] Genel Bakış dashboard: KPI'lar (Toplam Bakiye/Gelir/Gider/Net) doğru mu? Trend grafiği (hover tooltip) çalışıyor mu? Kategori donut + son işlemler dolu mu?
+- [ ] Hesap ekleme: kart tema seçici + canlı önizleme + para birimine göre IBAN/routing alanları doğru mu? Kart görselleri (em-ölçek) her boyutta düzgün mü (ızgara/önizleme/işlem-modalı mini)?
+- [ ] Web'de eklenen hesap **mobilde** doğru mu (card_theme/routing_no/account_no ortak kolonlar)? Tersi?
+- [ ] Kategori ikonları: temel kategoriler mobil ile aynı ikonu gösteriyor mu? Yeni özel kategori (ikon+renk) → işlem/liste/donut'ta doğru çiziliyor mu?
+- [ ] İşlem detayı açılınca liste sola kayıyor mu (drawer'ın altına girmiyor)?
 
 ---
 
@@ -54,10 +59,14 @@
 ### 📱 Mobil Claude'a iletilecek
 - [ ] Faturalar: `invoices-list` ekranı `?type=`'a göre başlık/filtre göstersin (2 ayrı ekran hissi olmasın)
 - [ ] `businessMenu.ts`: "Çalışan Listesi" ve "Harcama Kayıtları" ikisi de `/employee-expenses` — gerçek tekrar, ayrıştır
+- [ ] **Özel kategoriler cihaz-yerel** (mobil AsyncStorage, web localStorage) → cihazlar arası senkron OLMUYOR. İstenirse ortak DB tablosuna taşınır (şema için Mehmet'e sor). transactions.category id'si paylaşılır ama etiket/ikon/renk yerelde.
 
 ### Tasarım
 - [x] Panel Stripe-tarzı redesign'a geçti (koyu+teal): metrik düzeni + sparkline, gruplu/daralabilir sidebar, filtre çipleri, profil/işletme logosu, PARANER wordmark. *(2026-06-10)*
+- [x] **Genel Bakış → profesyonel dashboard**: 4 KPI + Shopify-tarzı LineChart (hover tooltip) + Kartlarım + Kategori donut + zengin Son İşlemler. Panel içeriği tam genişlik. *(2026-06-13)*
+- [x] **Hesaplar/İşlemler mobil seviyesinde**: gerçek kart görselleri (6 tema, em-ölçek), özel tarih/kategori seçici (portal), ikonlu kategoriler + özel kategori ekle/düzenle/sil. *(2026-06-13)*
 - [ ] Opsiyonel cila: sidebar aç/kapa fade efekti; native `confirm()` yerine özel onay diyaloğu + başarı toast'ı; gerçek mobil menü (drawer)
+- [ ] Opsiyonel: LineChart'a Shopify gibi kesik "önceki dönem" karşılaştırma çizgisi
 
 ## Sonraki Faz (lansman sonrası / v2 — şimdi DEĞİL)
 > Önce: arayüzler + ödeme altyapısı (Stripe) + app/web temel işler bitsin. Bunlar sonraki aşama.

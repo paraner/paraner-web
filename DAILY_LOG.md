@@ -1,5 +1,42 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-13 — Dashboard sıfırdan + hesap kartları + ikonlu kategoriler + seçiciler + menü temizliği
+
+**Hedef:** İşlem ekleme/hesap akışını mobil seviyesine taşı (gerçek kart görselleri, ikonlu kategoriler, özel tarih/kategori seçici); Genel Bakış'ı profesyonel bir dashboard'a çevir; menü tekrarlarını temizle. Her adım headless Chrome ekran görüntüsüyle gözle doğrulandı.
+
+### İşlem Ekle modalı (mobil ile hizalı)
+- **Gelir solda / Gider sağda** (mobil ile aynı); modal açılınca **varsayılan Gelir** seçili.
+- **Hesap seçimi:** açılır liste yerine **kaydırılabilir gerçek kart görselleri** (mini `AccountCard`); başta dar "Hesapsız" karosu. Hesap yoksa "Hesaplarını ekle" ipucu.
+- Modal **geniş varyant** (`Modal wide`, 560px) — kartlar ferah sığsın.
+
+### Özel tarih + kategori seçici (portal popover)
+- **`DatePicker`:** native `<input date>` yerine özel takvim — TR, Pazartesi başlangıçlı, ay/yıl ızgara gezinme, "Bugün"/"Temizle", body'e portal (modal overflow'undan kırpılmaz), yer yoksa yukarı açılır.
+- **`CategoryPicker`:** portal popover + `overscroll-behavior:contain` (kaydırma modala sıçramaz). Liste ikon+renk rozetli; **"Yeni kategori"** satır içi form: **ad + ikon (65) + renk (16)**. Özel kategorilerde **düzenle/sil**. Temel kategoriler (mobil ortak katalog) düzenlenemez.
+
+### Kategori ikonları (mobil ↔ web)
+- **`lib/categoryIcons.tsx`:** mobil Ionicons adlarını lucide bileşenlerine eşler (65 ikonun tamamı lucide'de mevcut, kontrol edildi). Temel kategorilere mobil ile **aynı ikon adları** eklendi. Özel kategoriler `{id,label,icon,color}` (localStorage, mobil de cihazda).
+
+### Hesaplar — mobil kart sistemi
+- **`AccountCard`:** 6 gradient tema (`lib/cardThemes`), köşe glow (yumuşak radial), PARANER wordmark, kasa/POS SVG illüstrasyonları (mobil port). **em-tabanlı ölçek** (`font-size:1cqw` ebeveynden, gerisi em) → ızgara/önizleme/mini her boyutta birebir tutarlı, kesilme yok.
+- Form: **kart tema seçici** (kaydırarak, canlı önizleme), **hesap türü segmenti** (Banka/Nakit/POS + ? bilgi), **para birimi çipleri** (bayraklı, `lib/currencies`), para birimine göre **IBAN / routing+hesap no** (USD/GBP). DB'ye dokunulmadı (`routing_no/account_no/card_theme` mobilde zaten var).
+
+### Genel Bakış → profesyonel dashboard
+- **4 KPI kartı** (Toplam Bakiye · Bu Ay Gelir · Bu Ay Gider · Net Akış) — ikon + delta çipi + sparkline.
+- **Shopify (Polaris Viz) tarzı `LineChart`** — yumuşak gelir/gider çizgileri + alan gradyanı, Y ekseni + ızgara, **hover'da dikey kılavuz + tooltip**. Bağımlılıksız saf SVG + küçük client etkileşimi. (Polaris Viz'i kurmadık: React 19/Next 16'da risk.)
+- **Kartlarım** (gerçek hesap kartları), **Kategori Analizi** (`Donut` + lejant), **zengin Son İşlemler** (ikon + hesap + saat). Tek render'da (1 transactions + 1 bank_accounts sorgusu, son 6 ay).
+- İşlem listesi **kategori ikonları** rozetli; **detay paneli açılınca liste sola kayar** (drawer'ın altına girmez).
+
+### Menü temizliği (aynı sayfaya giden tekrarlar)
+- Kaldırıldı: **Gelir/Gider Özeti** (=İşlemler), **Kasa & Banka Hesapları** (=Hesaplar üst menü), **KDV Beyanname Özeti** (=KDV Raporu); **Teklif Oluştur + Tekliflerim** → tek **Teklifler**. Kırık link yok.
+
+### Düzen
+- Panel içeriği **tam genişlik** (max-width kaldırıldı, 32px iç boşluk) — geniş ekranda sağdaki boşluk gitti.
+
+### Durum
+- `tsc` + production build **temiz** (EXIT 0). Yeni dosyalar: `DatePicker, CategoryPicker, AccountCard, Donut, LineChart` + `lib/cardThemes, currencies, customCategories, categoryIcons`. **Push edildi** (main → Vercel).
+
+---
+
 ## 2026-06-12 — Cüzdanım canlandı (Truncgil) + sidebar + İşlemler çoklu para birimi
 
 **Hedef:** Cüzdanım'ı salt-okunurdan mobil seviyesine taşı (canlı piyasa fiyatı, değer/K-Z, ekle/sat); sidebar'daki eksik Cüzdanım'ı gider; İşlemler'e para birimi filtresi.

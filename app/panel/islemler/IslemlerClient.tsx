@@ -15,14 +15,27 @@ import {
   CATEGORIES,
   INCOME_CATEGORIES,
   findCategory,
+  type Category,
 } from "../../../lib/categories";
+import {
+  loadCustomCategories,
+  saveCustomCategories,
+  uniqueCustomId,
+  type CustomCategory,
+} from "../../../lib/customCategories";
 import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
+import DatePicker from "../../../components/ui/DatePicker";
+import CategoryPicker from "../../../components/ui/CategoryPicker";
+import AccountCard from "../../../components/ui/AccountCard";
+import { CategoryIcon } from "../../../lib/categoryIcons";
+import { Wallet } from "lucide-react";
 import { TrashIcon, EditIcon } from "../../../components/icons";
 import {
   Search,
   X,
+  Plus,
   Smartphone,
   Monitor,
   UserCog,
@@ -52,6 +65,11 @@ export type Tx = {
 export type Account = {
   id: string;
   name: string;
+  type: string | null;
+  bank_name: string | null;
+  iban: string | null;
+  account_no: string | null;
+  card_theme: string | null;
   currency: string;
   balance: string;
 };
@@ -132,14 +150,52 @@ export default function IslemlerClient({
     accounts.find((a) => a.id === id)?.name ?? null;
 
   // Form
-  const [type, setType] = useState<"expense" | "income">("expense");
+  const [type, setType] = useState<"expense" | "income">("income");
   const [amount, setAmount] = useState("");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [date, setDate] = useState(todayStr());
   const [accountId, setAccountId] = useState("");
 
-  const cats = type === "income" ? INCOME_CATEGORIES : CATEGORIES;
+  // Özel kategoriler — mobil gibi yerelde (localStorage), profil bazında.
+  const [customCats, setCustomCats] = useState<CustomCategory[]>([]);
+  useEffect(() => {
+    setCustomCats(loadCustomCategories(profileId));
+  }, [profileId]);
+
+  // Kategori id → etiket+renk; önce özel kategoriler, sonra sabit katalog.
+  const customById = new Map(customCats.map((c) => [c.id, c as Category]));
+  const catOf = (id: string | null | undefined): Category =>
+    (id && customById.get(id)) || findCategory(id);
+
+  // Seçili türe ait kategoriler (sabit + özel) — modal seçicisi için.
+  const pickerCats: Category[] = [
+    ...(type === "income" ? INCOME_CATEGORIES : CATEGORIES),
+    ...customCats.filter((c) => c.type === type),
+  ];
+
+  function handleCreateCustom(label: string, color: string, icon: string): string {
+    const id = uniqueCustomId(label, customCats);
+    const next = [...customCats, { id, label, color, icon, type }];
+    setCustomCats(next);
+    saveCustomCategories(profileId, next);
+    return id;
+  }
+
+  function handleUpdateCustom(id: string, label: string, color: string, icon: string) {
+    const next = customCats.map((c) =>
+      c.id === id ? { ...c, label, color, icon } : c
+    );
+    setCustomCats(next);
+    saveCustomCategories(profileId, next);
+  }
+
+  function handleDeleteCustom(id: string) {
+    const next = customCats.filter((c) => c.id !== id);
+    setCustomCats(next);
+    saveCustomCategories(profileId, next);
+    if (category === id) setCategory(""); // seçili silindiyse temizle
+  }
 
   // Filtreler — anında, client-side
   const [query, setQuery] = useState("");
@@ -152,7 +208,9 @@ export default function IslemlerClient({
   const [loadingMonth, setLoadingMonth] = useState(false);
 
   const allCats = Array.from(
-    new Map([...CATEGORIES, ...INCOME_CATEGORIES].map((c) => [c.id, c])).values()
+    new Map(
+      [...CATEGORIES, ...INCOME_CATEGORIES, ...customCats].map((c) => [c.id, c])
+    ).values()
   );
   // Kullanıcının kullandığı para birimleri (hesaplar + işlemler). >1 ise çip çıkar.
   const currencies = Array.from(
@@ -169,7 +227,7 @@ export default function IslemlerClient({
     if (fcat && t.category !== fcat) return false;
     if (fcur && (t.currency || currency) !== fcur) return false;
     if (q) {
-      const hay = `${t.title} ${findCategory(t.category).label}`.toLocaleLowerCase("tr");
+      const hay = `${t.title} ${catOf(t.category).label}`.toLocaleLowerCase("tr");
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -217,7 +275,7 @@ export default function IslemlerClient({
 
   function openAdd() {
     setEditing(null);
-    setType("expense");
+    setType("income");
     setAmount("");
     setTitle("");
     setCategory("");
@@ -357,7 +415,7 @@ export default function IslemlerClient({
 
     const account = accounts.find((a) => a.id === accountId);
     const txCurrency = account?.currency || (editing?.currency ?? currency);
-    const catLabel = findCategory(category).label;
+    const catLabel = catOf(category).label;
     const payload = {
       title: title.trim() || catLabel,
       amount: amt,
@@ -483,6 +541,7 @@ export default function IslemlerClient({
 
   return (
     <>
+      <div className={`tx-area${selected ? " shifted" : ""}`}>
       <PageHead
         title="İşlemler"
         sub="Gelir ve giderlerin"
@@ -588,7 +647,7 @@ export default function IslemlerClient({
                 const isExpense = t.type === "expense";
                 const sign = isIncome ? "+" : isExpense ? "−" : "";
                 const cls = isIncome ? "pos" : isExpense ? "neg" : "";
-                const cat = findCategory(t.category);
+                const cat = catOf(t.category);
                 return (
                   <div
                     key={t.id}
@@ -599,7 +658,9 @@ export default function IslemlerClient({
                     }}
                   >
                     <div className="tx-main">
-                      <span className="tx-dot" style={{ background: cat.color }} />
+                      <span className="tx-cat-ic" style={{ background: `${cat.color}22` }}>
+                        <CategoryIcon name={cat.icon} color={cat.color} size={17} />
+                      </span>
                       <div className="tx-left">
                         <span className="tx-title">{t.title}</span>
                         <span className="tx-meta">
@@ -644,6 +705,7 @@ export default function IslemlerClient({
           )}
         </>
       )}
+      </div>
 
       {open && (
         <Modal
@@ -653,19 +715,10 @@ export default function IslemlerClient({
             setEditing(null);
           }}
           busy={saving}
+          wide
         >
           <form onSubmit={handleSave}>
             <div className="type-toggle">
-              <button
-                type="button"
-                className={type === "expense" ? "on-expense" : ""}
-                onClick={() => {
-                  setType("expense");
-                  setCategory("");
-                }}
-              >
-                Gider
-              </button>
               <button
                 type="button"
                 className={type === "income" ? "on-income" : ""}
@@ -675,6 +728,16 @@ export default function IslemlerClient({
                 }}
               >
                 Gelir
+              </button>
+              <button
+                type="button"
+                className={type === "expense" ? "on-expense" : ""}
+                onClick={() => {
+                  setType("expense");
+                  setCategory("");
+                }}
+              >
+                Gider
               </button>
             </div>
 
@@ -700,44 +763,62 @@ export default function IslemlerClient({
               />
             </Field>
 
+            <Field label="Hesap (opsiyonel)">
+              {accounts.length > 0 ? (
+                <div className="acct-card-row">
+                  <button
+                    type="button"
+                    className={`acct-pick none${accountId === "" ? " on" : ""}`}
+                    onClick={() => setAccountId("")}
+                  >
+                    <Wallet size={22} />
+                    <span className="acct-pick-none-t">Hesapsız</span>
+                    <span className="acct-pick-none-s">Hesaba bağlama</span>
+                  </button>
+                  {accounts.map((a) => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      className={`acct-pick${accountId === a.id ? " on" : ""}`}
+                      onClick={() => setAccountId(a.id)}
+                    >
+                      <AccountCard
+                        name={a.name}
+                        bankName={a.bank_name}
+                        iban={a.iban}
+                        accountNo={a.account_no}
+                        balance={Number(a.balance) || 0}
+                        currency={a.currency}
+                        type={(a.type as "bank" | "cash" | "pos") || "bank"}
+                        theme={a.card_theme}
+                      />
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <a href="/panel/hesaplar" className="field-empty-link">
+                  <Plus size={15} />
+                  Hesaplarını ekle, hangi hesaptan gittiğini takip et
+                </a>
+              )}
+            </Field>
+
             <div className="form-row">
               <Field label="Kategori">
-                <select
+                <CategoryPicker
                   value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                >
-                  <option value="">Seç</option>
-                  {cats.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Tarih">
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
+                  onChange={setCategory}
+                  categories={pickerCats}
+                  onCreate={handleCreateCustom}
+                  customIds={customCats.filter((c) => c.type === type).map((c) => c.id)}
+                  onUpdate={handleUpdateCustom}
+                  onDelete={handleDeleteCustom}
                 />
               </Field>
-            </div>
-
-            {accounts.length > 0 && (
-              <Field label="Hesap (opsiyonel)">
-                <select
-                  value={accountId}
-                  onChange={(e) => setAccountId(e.target.value)}
-                >
-                  <option value="">Hesapsız</option>
-                  {accounts.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name} ({a.currency})
-                    </option>
-                  ))}
-                </select>
+              <Field label="Tarih">
+                <DatePicker value={date} onChange={setDate} />
               </Field>
-            )}
+            </div>
 
             {!editing && (
               <Field label={`Fiş / Belge (opsiyonel · max ${MAX_RECEIPTS})`}>
@@ -814,7 +895,7 @@ export default function IslemlerClient({
           const isTransfer = t.type === "transfer";
           const sign = isIncome ? "+" : isExpense ? "−" : "";
           const cls = isIncome ? "pos" : isExpense ? "neg" : "";
-          const cat = findCategory(t.category);
+          const cat = catOf(t.category);
           const src = sourceMeta(t.source);
           const receipts = receiptList(t);
           const typeLabel = isIncome
@@ -849,7 +930,9 @@ export default function IslemlerClient({
                   <div className="drawer-row">
                     <span className="dr-k">Kategori</span>
                     <span className="dr-v">
-                      <span className="tx-dot" style={{ background: cat.color }} />
+                      <span className="tx-cat-ic" style={{ background: `${cat.color}22` }}>
+                        <CategoryIcon name={cat.icon} color={cat.color} size={15} />
+                      </span>
                       {cat.label}
                     </span>
                   </div>

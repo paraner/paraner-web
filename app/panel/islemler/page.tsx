@@ -17,7 +17,9 @@ export default async function IslemlerPage() {
   const [{ data: accounts }, { data: transactions }] = await Promise.all([
     supabase
       .from("bank_accounts")
-      .select("id, name, currency, balance")
+      .select(
+        "id, name, type, bank_name, iban, account_no, card_theme, currency, balance"
+      )
       .eq("user_id", profile.id)
       .order("created_at", { ascending: true }),
     supabase

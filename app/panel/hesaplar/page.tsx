@@ -13,13 +13,17 @@ export default async function HesaplarPage() {
 
   const { data: accounts } = await supabase
     .from("bank_accounts")
-    .select("id, name, type, bank_name, iban, balance, currency, is_default")
+    .select(
+      "id, name, type, bank_name, iban, routing_no, account_no, card_theme, balance, currency, is_default"
+    )
     .eq("user_id", profile.id)
     .order("created_at", { ascending: true });
 
   return (
     <HesaplarClient
       profileId={profile.id}
+      profileType={profile.profile_type ?? "individual"}
+      defaultCurrency={profile.currency ?? "TRY"}
       accounts={(accounts as Account[]) ?? []}
     />
   );
