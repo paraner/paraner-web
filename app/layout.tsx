@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { preload } from "react-dom";
 import { Inter } from "next/font/google";
-import SplashScreen from "../components/SplashScreen";
 import "./globals.css";
 
 // Inter — telefon uygulamasıyla aynı font ailesi
@@ -105,9 +103,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Splash wordmark'ı en erken flush'ta hazır olsun (panel cold load'unda logo anında gelsin)
-  preload("/paraner-wordmark.png", { as: "image" });
-
   return (
     <html lang="tr" className={inter.variable}>
       {/* suppressHydrationWarning: bazı tarayıcı eklentileri <body>'ye attribute
@@ -117,7 +112,6 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <SplashScreen />
         {children}
       </body>
     </html>

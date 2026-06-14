@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { preload } from "react-dom";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getProfiles } from "../../lib/supabase/profile";
 import Sidebar from "./Sidebar";
+import SplashScreen from "../../components/SplashScreen";
 import { SparkleIcon, BellIcon, GearIcon } from "../../components/icons";
 
 // Panel uygulamanın içi — tüm /panel sayfaları arama motorlarına kapalı
@@ -16,6 +18,9 @@ export default async function PanelLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Splash wordmark'ı erken yükle (siyah→logo gecikmesi olmasın).
+  preload("/paraner-wordmark.png", { as: "image" });
+
   // Oturum kontrolü zaten proxy.ts'te yapılıyor (girişsizi /giris'e atar).
   // getProfiles cache'li: sidebar + sayfalar aynı render içinde paylaşır → tek sorgu.
   const profiles = await getProfiles();
@@ -26,6 +31,7 @@ export default async function PanelLayout({
 
   return (
     <div className="panel-shell">
+      <SplashScreen />
       <Sidebar profiles={profiles} />
       <div className="panel-main">
         <header className="panel-topbar">
