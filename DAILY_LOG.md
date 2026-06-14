@@ -1,5 +1,21 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-15 — PWA ikonu düzeltildi (dock'taki siyah kare) + bekleyen kontroller kod tarafı doğrulandı
+
+**Sorun:** PWA (Chrome "yükle") ile kurunca dock'ta ikon **keskin köşeli, masif siyah kare** olarak çıkıyordu (Surfshark gibi yuvarlak/native durmuyordu). Sebep: `icon-512` kenardan kenara dolu, yuvarlatmasız, saf siyah PNG; Chrome PWA ikonu olduğu gibi kullanır, köşe yuvarlatmaz.
+
+**Çözüm:** `sharp` ile ikonlar yeniden üretildi (P şekli orijinalin yeşil kanalından maske olarak alındı → sadık):
+- **icon-512/192 + app/icon.png:** masif teal squircle (#00BFA6) + koyu P (#062B27), mac-stili yuvarlak köşe + şeffaf köşeler (`purpose: any`).
+- **app/apple-icon.png:** tam kare teal+P (iOS köşeyi kendi yuvarlar → şeffaflık konmaz).
+- **public/icon-maskable-512.png (yeni):** Android adaptive — P %72 güvenli alanda, kenarlar dolu (`purpose: maskable`).
+- **manifest.ts:** maskable eklendi, `purpose` belirtildi, `background/theme_color` saf siyah → koyu marka `#0B1F1C`.
+- Orijinaller `/tmp/paraner-icon-backup/` (geçici). Stil seçimi: Mehmet "Masif teal + koyu P" (Surfshark benzeri).
+- **Not:** Kurulu PWA ikonu kurulum anında cache'lenir → yeni ikon için **uygulamayı kaldırıp yeniden kur**; ayrıca ikon canlıdan çekildiği için **deploy gerekir**.
+
+**Ayrıca:** GOREVLER ⚠️ KONTROLLER listesinin **kod tarafı** baştan sona doğrulandı (Cüzdanım ort. maliyet/satış mantığı, Truncgil canlı API 200, Dashboard tek-sorgu türetimi, hesap ekleme mobil-ortak kolonlar, 24 kategori ikonu lucide eşleşmesi, detay paneli kayma CSS, para birimi çipi >1 koşulu). Geriye yalnız **cihaz/canlı göz kontrolü** kaldı (mobil↔web çapraz senkron, görsel teyitler).
+
+---
+
 ## 2026-06-13 — Dashboard sıfırdan + hesap kartları + ikonlu kategoriler + seçiciler + menü temizliği
 
 **Hedef:** İşlem ekleme/hesap akışını mobil seviyesine taşı (gerçek kart görselleri, ikonlu kategoriler, özel tarih/kategori seçici); Genel Bakış'ı profesyonel bir dashboard'a çevir; menü tekrarlarını temizle. Her adım headless Chrome ekran görüntüsüyle gözle doğrulandı.
