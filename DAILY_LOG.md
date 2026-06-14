@@ -12,6 +12,8 @@
 - Orijinaller `/tmp/paraner-icon-backup/` (geçici). Karar evrimi: "masif teal + koyu P" → Mehmet logo rengi korunsun dedi → "koyu zemin + teal P" → Mehmet Surfshark gibi canlı yeşil zemin istedi → **teal P korunup zemin g2 teal gradyan** yapıldı. KISIT: zemin P'den parlak olursa teal P kaybolur; en parlak okunabilir ton ~g2 (g3'te logo siliniyor).
 - **Not:** Kurulu PWA ikonu kurulum anında cache'lenir → yeni ikon için **uygulamayı kaldırıp yeniden kur**; ayrıca ikon canlıdan çekildiği için **deploy gerekir**.
 
+**Açılış (splash) ekranı — mobil ile aynı:** PWA açılırken/yüklenirken zemin **yeşil** görünüyordu. Sebep: `manifest.background_color/theme_color` = #0B1F1C (koyu teal → PWA açılış penceresi yeşil). Düzeltme: ikisi de **#000000** (siyah, mobil `Colors.dark.background` ile aynı). Ayrıca mobil `app/index.tsx` açılış animasyonu web'e taşındı: `components/SplashScreen.tsx` (client) — panel ilk yüklenince **siyah zemin + teal PARANER wordmark + soldan sağa beyaz shimmer** (wordmark CSS `mask`'i, `lib`siz saf CSS keyframe), ~0.9sn sonra yumuşak fade. Panel layout'a eklendi; yalnız hard load'da (PWA açılışı/yenileme) görünür, panel-içi soft navigasyonda tekrar tetiklenmez. (Panelde teal-glow `Background` zaten yok — yeşil tamamen manifest'tendi.)
+
 **Ayrıca:** GOREVLER ⚠️ KONTROLLER listesinin **kod tarafı** baştan sona doğrulandı (Cüzdanım ort. maliyet/satış mantığı, Truncgil canlı API 200, Dashboard tek-sorgu türetimi, hesap ekleme mobil-ortak kolonlar, 24 kategori ikonu lucide eşleşmesi, detay paneli kayma CSS, para birimi çipi >1 koşulu). Geriye yalnız **cihaz/canlı göz kontrolü** kaldı (mobil↔web çapraz senkron, görsel teyitler).
 
 ---

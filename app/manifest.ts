@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
       "Paranı yönet, geleceğini kur. AI destekli kişisel ve işletme finans asistanı.",
     start_url: "/",
     display: "standalone",
-    background_color: "#0B1F1C",
-    theme_color: "#0B1F1C",
+    background_color: "#000000",
+    theme_color: "#000000",
     icons: [
       {
         src: "/icon-192.png",
