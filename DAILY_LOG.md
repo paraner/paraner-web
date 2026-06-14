@@ -4,12 +4,12 @@
 
 **Sorun:** PWA (Chrome "yükle") ile kurunca dock'ta ikon **keskin köşeli, masif siyah kare** olarak çıkıyordu (Surfshark gibi yuvarlak/native durmuyordu). Sebep: `icon-512` kenardan kenara dolu, yuvarlatmasız, saf siyah PNG; Chrome PWA ikonu olduğu gibi kullanır, köşe yuvarlatmaz.
 
-**Çözüm:** `sharp` ile ikonlar yeniden üretildi (P şekli orijinalin yeşil kanalından maske olarak alındı → sadık):
-- **icon-512/192 + app/icon.png:** masif teal squircle (#00BFA6) + koyu P (#062B27), mac-stili yuvarlak köşe + şeffaf köşeler (`purpose: any`).
-- **app/apple-icon.png:** tam kare teal+P (iOS köşeyi kendi yuvarlar → şeffaflık konmaz).
-- **public/icon-maskable-512.png (yeni):** Android adaptive — P %72 güvenli alanda, kenarlar dolu (`purpose: maskable`).
+**Çözüm:** `sharp` ile ikonlar yeniden üretildi. **Logo rengi (teal) birebir korundu** — P pikselleri orijinalden alındı, yalnız zemin + köşe değişti (Mehmet: "logo rengimiz aynı kalmalı"):
+- **icon-512/192 + app/icon.png:** koyu-teal yuvarlak squircle zemin (#0B1F1C) + **orijinal teal P** (renk değişmedi), mac-stili yuvarlak köşe + şeffaf köşeler (`purpose: any`).
+- **app/apple-icon.png:** tam kare koyu zemin + teal P (iOS köşeyi kendi yuvarlar → şeffaflık konmaz).
+- **public/icon-maskable-512.png (yeni):** Android adaptive — P %72 güvenli alanda, koyu zemin dolu (`purpose: maskable`).
 - **manifest.ts:** maskable eklendi, `purpose` belirtildi, `background/theme_color` saf siyah → koyu marka `#0B1F1C`.
-- Orijinaller `/tmp/paraner-icon-backup/` (geçici). Stil seçimi: Mehmet "Masif teal + koyu P" (Surfshark benzeri).
+- Orijinaller `/tmp/paraner-icon-backup/` (geçici). Karar evrimi: önce "masif teal + koyu P" denendi → Mehmet logo rengi korunsun dedi → "koyu zemin + teal P"de karar kılındı (orijinal görünüm, sadece köşe yuvarlak + zemin koyu-teal).
 - **Not:** Kurulu PWA ikonu kurulum anında cache'lenir → yeni ikon için **uygulamayı kaldırıp yeniden kur**; ayrıca ikon canlıdan çekildiği için **deploy gerekir**.
 
 **Ayrıca:** GOREVLER ⚠️ KONTROLLER listesinin **kod tarafı** baştan sona doğrulandı (Cüzdanım ort. maliyet/satış mantığı, Truncgil canlı API 200, Dashboard tek-sorgu türetimi, hesap ekleme mobil-ortak kolonlar, 24 kategori ikonu lucide eşleşmesi, detay paneli kayma CSS, para birimi çipi >1 koşulu). Geriye yalnız **cihaz/canlı göz kontrolü** kaldı (mobil↔web çapraz senkron, görsel teyitler).
