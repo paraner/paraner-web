@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { preload } from "react-dom";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getProfiles } from "../../lib/supabase/profile";
@@ -17,6 +18,9 @@ export default async function PanelLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Açılış splash'ındaki wordmark anında gelsin (siyah→logo gecikmesi olmasın).
+  preload("/paraner-wordmark.png", { as: "image" });
+
   // Oturum kontrolü zaten proxy.ts'te yapılıyor (girişsizi /giris'e atar).
   // getProfiles cache'li: sidebar + sayfalar aynı render içinde paylaşır → tek sorgu.
   const profiles = await getProfiles();
