@@ -1,6 +1,6 @@
 // Paraner açılış service worker — SADECE boot.html'i cache'ler (anında açılış).
 // Uygulama sayfaları / API / veri CACHE'LENMEZ → bayat içerik riski yok, güvenli.
-const CACHE = "paraner-boot-v1";
+const CACHE = "paraner-boot-v2";
 const BOOT = "/boot.html";
 
 self.addEventListener("install", (e) => {

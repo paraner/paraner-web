@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { preload } from "react-dom";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getProfiles } from "../../lib/supabase/profile";
 import Sidebar from "./Sidebar";
-import SplashScreen from "../../components/SplashScreen";
 import ServiceWorkerRegister from "../../components/ServiceWorkerRegister";
 import { SparkleIcon, BellIcon, GearIcon } from "../../components/icons";
 
@@ -16,8 +14,8 @@ export const metadata: Metadata = {
 };
 
 // Profil verisini ÇEKEN parça — Suspense içinde stream edilir.
-// Böylece layout'un kabuğu (splash + üst bar) getProfiles'u BEKLEMEDEN anında boyanır;
-// splash sunucu yanıt verir vermez görünür, profiller/sayfa verisi arkadan akar.
+// Böylece layout'un kabuğu (üst bar) getProfiles'u BEKLEMEDEN anında boyanır;
+// profiller/sayfa verisi arkadan akar.
 async function ProfileSidebar() {
   // Oturum kontrolü zaten proxy.ts'te yapılıyor (girişsizi /giris'e atar).
   // getProfiles cache'li: sidebar + sayfalar aynı render içinde paylaşır → tek sorgu.
@@ -29,18 +27,14 @@ async function ProfileSidebar() {
   return <Sidebar profiles={profiles} />;
 }
 
-// Layout artık SENKRON (top-level await yok) → kabuk + splash ilk byte'ta stream edilir.
+// Layout artık SENKRON (top-level await yok) → kabuk ilk byte'ta stream edilir.
 export default function PanelLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Splash wordmark'ı erken yükle (siyah→logo gecikmesi olmasın).
-  preload("/paraner-wordmark.png", { as: "image" });
-
   return (
     <div className="panel-shell">
-      <SplashScreen />
       <ServiceWorkerRegister />
       {/* Sidebar profilleri beklerken splash (z-9999) üstte; fallback gizli kalır */}
       <Suspense fallback={null}>
