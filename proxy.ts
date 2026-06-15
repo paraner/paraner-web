@@ -89,8 +89,9 @@ function copyCookies(target: NextResponse, from: NextResponse) {
 }
 
 export const config = {
-  // Statik dosyalar ve görseller hariç tüm yollarda çalış
+  // Statik dosyalar, görseller, açılış splash'ı (boot.html) ve service worker (sw.js) hariç.
+  // boot.html + sw.js muaf → auth turu olmadan servis edilir (girişsiz kullanıcıda /giris'e atılmaz).
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|txt|xml|webmanifest)).*)",
+    "/((?!_next/static|_next/image|favicon.ico|boot.html|sw.js|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|txt|xml|webmanifest)).*)",
   ],
 };

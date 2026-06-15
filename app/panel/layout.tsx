@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { getProfiles } from "../../lib/supabase/profile";
 import Sidebar from "./Sidebar";
 import SplashScreen from "../../components/SplashScreen";
+import ServiceWorkerRegister from "../../components/ServiceWorkerRegister";
 import { SparkleIcon, BellIcon, GearIcon } from "../../components/icons";
 
 // Panel uygulamanın içi — tüm /panel sayfaları arama motorlarına kapalı
@@ -40,6 +41,7 @@ export default function PanelLayout({
   return (
     <div className="panel-shell">
       <SplashScreen />
+      <ServiceWorkerRegister />
       {/* Sidebar profilleri beklerken splash (z-9999) üstte; fallback gizli kalır */}
       <Suspense fallback={null}>
         <ProfileSidebar />
