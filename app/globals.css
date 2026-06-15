@@ -104,6 +104,12 @@ ul { list-style: none; }
   opacity: 1; transition: opacity 0.45s ease;
 }
 .splash-hide { opacity: 0; }
+/* Boot splash (/acilis) — arkada içerik yok: düz siyah, blur yok (logo keskin, anında) */
+.splash-boot {
+  background: #000;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
 .splash-word {
   width: 240px; height: 49px; position: relative; overflow: hidden;
   background: var(--teal);
