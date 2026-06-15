@@ -89,9 +89,8 @@ function copyCookies(target: NextResponse, from: NextResponse) {
 }
 
 export const config = {
-  // Statik dosyalar, görseller ve açılış splash'ı (/acilis) hariç tüm yollarda çalış.
-  // /acilis muaf → auth turu olmadan CDN'den anında servis edilir (dock'ta logo siyahsız anında gelir).
+  // Statik dosyalar ve görseller hariç tüm yollarda çalış
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|acilis|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|txt|xml|webmanifest)).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|txt|xml|webmanifest)).*)",
   ],
 };

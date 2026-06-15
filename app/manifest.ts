@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Paraner",
     description:
       "Paranı yönet, geleceğini kur. AI destekli kişisel ve işletme finans asistanı.",
-    start_url: "/acilis",
+    start_url: "/",
     display: "standalone",
     background_color: "#000000",
     theme_color: "#000000",
