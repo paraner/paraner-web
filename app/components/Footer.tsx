@@ -15,6 +15,7 @@ export default function Footer() {
           <a href="/#fiyatlar">Fiyatlar</a>
           <a href="/giris">Giriş Yap</a>
           <a href="/kayit">Kayıt Ol</a>
+          <a href="/gizlilik">Gizlilik</a>
         </div>
       </div>
       <div className="footer-inner" style={{ marginTop: 24 }}>
