@@ -26,6 +26,12 @@
 
 ## Bekleyen
 
+### App Store gönderimi (mobil) — web tarafı destek
+- [x] **Gizlilik Politikası sayfası** `/gizlilik` — App Store'un zorunlu Privacy Policy URL'i. Mobil `app/privacy.tsx` ile eşleşir; Footer + sitemap + KVKK maddesi. URL: `https://paraner.com/gizlilik` *(2026-06-19)*
+- [ ] **Privacy Nutrition Labels** — App Store Connect'te elle doldurulan anket (e-posta+finansal işlemler+ad → "uygulama işlevselliği", takip yok). Kod işi değil, panel işi.
+- [ ] **Reviewer demo hesabı** — App Review Information'a çalışan test e-posta+şifre (`admin@paraner.com` sim hesabı) + "işletme profili hazır" notu.
+- [ ] Mobil ileride gizlilik metnini değiştirirse `/gizlilik` (`app/gizlilik/page.tsx`) ile eşitle.
+
 ### Auth / hesap
 - [x] **Hesap ekleme** (max 3): switcher'da Bireysel/İşletme oluşturma + otomatik geçiş; **liquid-glass geçiş animasyonu** (PARANER soldan sağa beyaz→yeşil) *(2026-06-11)*
 - [ ] Web'de **kayıt akışı** (signUp + onboarding: para birimi / profil oluşturma) — şu an pasif, "önce giriş" denmişti

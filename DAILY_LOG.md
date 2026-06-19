@@ -1,5 +1,19 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-19 — Gizlilik Politikası sayfası (App Store gönderimi için)
+
+**Hedef:** App Store, zorunlu bir herkese-açık Privacy Policy URL'i istiyor. Mobildeki gizlilik metnini web'e uyarlayıp `https://paraner.com/gizlilik` adresinde yayınla.
+
+- **`app/gizlilik/page.tsx`** (yeni, server component): Background + Nav + Footer desenli; mobil `app/privacy.tsx` ile eşleşen metin (toplanan veriler, kullanım, güvenlik=Supabase/RevenueCat, Parla=Gemini+Claude anonim & model eğitiminde kullanılmaz, çerez/analitik, haklar, **KVKK m.11** + veri sorumlusu MGZR LLC, iletişim destek@paraner.com). "Son güncelleme: 19.06.2026". Metadata: title + `alternates.canonical: "/gizlilik"`.
+- **Çerez maddesi web'e uyarlandı:** mobil AsyncStorage + web yalnız zorunlu oturum çerezi, üçüncü taraf reklam/analitik yok (sitede analitik tespit edilmedi).
+- **`globals.css`:** `.legal` okuma stili (760px, teal linkler, responsive).
+- **`Footer.tsx`:** footer linklerine "Gizlilik". **`sitemap.ts`:** `/gizlilik` (monthly, 0.5). **`robots.ts`:** dokunulmadı — zaten `allow:"/"` altında taranabilir.
+- tsc temiz. Commit `ea58ab9` → push → Vercel deploy.
+
+**Sıradaki (App Store, kod işi DEĞİL):** Nutrition Labels anketi + reviewer demo hesabı (`admin@paraner.com`) App Store Connect panelinde doldurulacak. GOREVLER.md "App Store gönderimi" bölümünde.
+
+---
+
 ## 2026-06-15 — PWA ikonu düzeltildi (dock'taki siyah kare) + bekleyen kontroller kod tarafı doğrulandı
 
 **Sorun:** PWA (Chrome "yükle") ile kurunca dock'ta ikon **keskin köşeli, masif siyah kare** olarak çıkıyordu (Surfshark gibi yuvarlak/native durmuyordu). Sebep: `icon-512` kenardan kenara dolu, yuvarlatmasız, saf siyah PNG; Chrome PWA ikonu olduğu gibi kullanır, köşe yuvarlatmaz.
