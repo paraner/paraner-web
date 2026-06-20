@@ -1,5 +1,18 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-20 — favicon.ico (Google Search Console fix) + acilis kalıntı temizliği
+
+**Sorun:** `paraner.com/favicon.ico` 404 dönüyordu → Google klasik favicon yolunu bulamıyordu (Search Console favicon uyarısı).
+
+- **`app/favicon.ico`** (yeni): çok-boyutlu (16/32/48) ICO, mevcut teal P ikonundan `_gen-icons.js`/sharp ile üretildi. Next.js bunu `/favicon.ico` (200) olarak sunar → Google klasik yolu bulur. **Canlı doğrulandı:** `https://paraner.com/favicon.ico` → HTTP 200, `image/vnd.microsoft.icon` (önce 404'tü).
+- **`app/acilis/` silindi:** vazgeçilen boot splash kalıntısı (SW+boot.html hop'u zaten `56eb6ad`'de kaldırılmıştı). Hiçbir yerde referansı yoktu (grep temiz).
+- **`_gen-icons.js`** gitignore'a eklendi — yerel üretim scripti (kaynak `/tmp/paraner-icon-backup/`), repoya girmedi.
+- Commit `1fb78a0` → push → Vercel deploy → canlı.
+
+**Hatırlatma (kod işi DEĞİL):** Google favicon'u birkaç gün/hafta içinde tazeler. İstenirse Search Console → URL denetimi → paraner.com → "Dizine eklenmeyi iste".
+
+---
+
 ## 2026-06-19 — Gizlilik Politikası sayfası (App Store gönderimi için)
 
 **Hedef:** App Store, zorunlu bir herkese-açık Privacy Policy URL'i istiyor. Mobildeki gizlilik metnini web'e uyarlayıp `https://paraner.com/gizlilik` adresinde yayınla.
