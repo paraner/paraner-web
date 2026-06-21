@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Background from "../components/Background";
 import Logo from "../components/Logo";
+import SocialAuth from "../components/SocialAuth";
+import AuthVisual from "../components/AuthVisual";
 import { createClient } from "../../lib/supabase/client";
 
 export default function GirisPage() {
@@ -33,7 +35,6 @@ export default function GirisPage() {
       });
 
       if (error) {
-        // Supabase hata mesajlarını Türkçeleştir
         const msg = error.message.includes("Invalid login credentials")
           ? "E-posta veya şifre hatalı."
           : error.message.includes("Email not confirmed")
@@ -43,9 +44,6 @@ export default function GirisPage() {
         return;
       }
 
-      // Başarılı → panele git.
-      // Canlıda panel app.paraner.com'da → oraya geç (oturum .paraner.com cookie'siyle paylaşılır).
-      // Lokalde aynı host'ta kal (cookie subdomain'ler arası paylaşılmaz).
       const { protocol, hostname } = window.location;
       if (hostname.endsWith("paraner.com")) {
         window.location.assign(`${protocol}//app.paraner.com/`);
@@ -63,18 +61,20 @@ export default function GirisPage() {
   return (
     <>
       <Background />
-      <div className="auth-page">
-        <div className="auth-top">
+      <div className="auth-split">
+        <div className="auth-split-form">
           <Logo />
-        </div>
 
-        <div className="auth-card">
           <div className="auth-head">
             <h1>Tekrar hoş geldin</h1>
             <p>Hesabına giriş yap, kaldığın yerden devam et.</p>
           </div>
 
           {error && <div className="auth-msg error">{error}</div>}
+
+          <SocialAuth mode="giris" />
+
+          <div className="auth-divider">veya e-posta ile</div>
 
           <form onSubmit={handleSubmit}>
             <div className="field">
@@ -125,12 +125,12 @@ export default function GirisPage() {
             </button>
           </form>
 
-          <div className="auth-divider">veya</div>
-
           <p className="auth-alt">
             Hesabın yok mu? <Link href="/kayit">Kayıt ol</Link>
           </p>
         </div>
+
+        <AuthVisual />
       </div>
     </>
   );
