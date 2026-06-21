@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { getProfiles } from "../../lib/supabase/profile";
 import Sidebar from "./Sidebar";
 import { SparkleIcon, BellIcon, GearIcon } from "../../components/icons";
@@ -20,8 +19,9 @@ async function ProfileSidebar() {
   // getProfiles cache'li: sidebar + sayfalar aynı render içinde paylaşır → tek sorgu.
   const profiles = await getProfiles();
   const active = profiles.find((p) => p.is_active) ?? profiles[0] ?? null;
+  // Profil yoksa (yeni kayıt) sidebar yok — dashboard'daki kurulum modalı devralır.
   if (!active) {
-    redirect("/giris");
+    return null;
   }
   return <Sidebar profiles={profiles} />;
 }

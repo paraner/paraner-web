@@ -1,5 +1,6 @@
 import { createClient } from "../../lib/supabase/server";
 import { getActiveProfile } from "../../lib/supabase/profile";
+import OnboardingModal from "./OnboardingModal";
 import { formatCurrency, formatDate } from "../../lib/format";
 import { ymd } from "../../lib/date";
 import { findCategory } from "../../lib/categories";
@@ -52,7 +53,24 @@ function timeStr(iso: string | null): string {
 export default async function GenelBakisPage() {
   const supabase = await createClient();
   const profile = await getActiveProfile();
-  const currency = profile?.currency ?? "TRY";
+
+  // Kayıt sonrası kurulum bitmemişse (veya profil yoksa) → dashboard yerine kurulum modalı
+  if (!profile || !profile.onboarding_completed) {
+    const { data: { user } } = await supabase.auth.getUser();
+    return (
+      <OnboardingModal
+        profileId={profile?.id ?? null}
+        userId={user?.id ?? ""}
+        initialName={
+          (user?.user_metadata?.full_name as string) ||
+          (user?.user_metadata?.name as string) ||
+          ""
+        }
+      />
+    );
+  }
+
+  const currency = profile.currency ?? "TRY";
 
   const now = new Date();
   const monthLabel = new Intl.DateTimeFormat("tr-TR", { month: "long", year: "numeric" }).format(now);

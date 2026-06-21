@@ -12,6 +12,10 @@ export type ActiveProfile = {
   is_active: boolean;
   avatar_url?: string | null; // bireysel profil fotoğrafı
   company_logo_url?: string | null; // işletme logosu
+  // Onboarding durumu (web kurulum modalı için)
+  onboarding_completed?: boolean | null;
+  account_type?: string | null;
+  name?: string | null;
 };
 
 // Profil tipine göre gösterilecek avatar/logo URL'si.

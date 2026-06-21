@@ -13,7 +13,7 @@ export const getProfiles = cache(async (): Promise<ActiveProfile[]> => {
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, currency, profile_name, profile_type, invoice_prefix, invoice_next_number, is_active, avatar_url, company_logo_url"
+      "id, currency, profile_name, profile_type, invoice_prefix, invoice_next_number, is_active, avatar_url, company_logo_url, onboarding_completed, account_type, name"
     )
     .order("created_at", { ascending: true });
   return (data as ActiveProfile[]) ?? [];
