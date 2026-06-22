@@ -55,11 +55,8 @@ export default function OtpVerify({
           type: "email",
         });
         if (verifyError || !data.user) {
-          setError(
-            verifyError?.message.includes("expired")
-              ? "Kodun süresi doldu. Yeni kod iste."
-              : "Kod hatalı. Tekrar dene.",
-          );
+          // Supabase yanlış kod ile süresi dolmuş kodu aynı mesajla döner → birleşik göster
+          setError("Kod hatalı ya da süresi dolmuş. Tekrar dene ya da yeni kod iste.");
           setCode("");
           setLoading(false);
           inputRef.current?.focus();
@@ -128,7 +125,6 @@ export default function OtpVerify({
           autoComplete="one-time-code"
           maxLength={CODE_LENGTH}
           autoFocus
-          disabled={loading}
           aria-label="Doğrulama kodu"
         />
         <div className="otp-cells">
