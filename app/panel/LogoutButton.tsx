@@ -11,6 +11,8 @@ export default function LogoutButton() {
   async function handleLogout() {
     setLoading(true);
     const supabase = createClient();
+    // Aynı tarayıcıda tekrar girişte login-alert yeniden raporlasın diye guard'ı temizle
+    try { sessionStorage.removeItem("login_reported"); } catch { /* yoksay */ }
     await supabase.auth.signOut();
     router.push("/giris");
     router.refresh();
