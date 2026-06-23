@@ -10,11 +10,15 @@ export default function LoginReporter() {
   useEffect(() => {
     try {
       if (sessionStorage.getItem("login_reported")) return;
-      sessionStorage.setItem("login_reported", "1");
     } catch {
-      // sessionStorage erişilemezse yine de bir kez dene
+      // sessionStorage erişilemezse yine de dene
     }
-    reportLogin();
+    // Guard'ı SADECE rapor başarılı olursa set et → CORS/ağ hatasında oturum kilitlenmez, tekrar denenir.
+    reportLogin().then((ok) => {
+      if (ok) {
+        try { sessionStorage.setItem("login_reported", "1"); } catch { /* yoksay */ }
+      }
+    });
   }, []);
   return null;
 }

@@ -41,17 +41,19 @@ function deviceLabel(): string {
   return `${br} · ${os}`;
 }
 
-export async function reportLogin(): Promise<void> {
+// true → rapor başarıyla gitti (LoginReporter guard'ı SADECE bunda set eder → başarısız deneme
+// oturumu kilitlemez). false → oturum yok / hata (bir sonraki mount'ta tekrar denenir).
+export async function reportLogin(): Promise<boolean> {
   try {
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) return;
+    if (!session?.access_token) return false;
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-    if (!url) return;
+    if (!url) return false;
 
-    await fetch(`${url}/functions/v1/login-alert`, {
+    const res = await fetch(`${url}/functions/v1/login-alert`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -64,7 +66,8 @@ export async function reportLogin(): Promise<void> {
         platform: "web",
       }),
     });
+    return res.ok;
   } catch {
-    // fail-soft
+    return false; // fail-soft
   }
 }
