@@ -15,12 +15,24 @@ export type Profile = {
   invoice_next_number: number | null;
 };
 
+export type DeviceRow = {
+  id: string;
+  device_id: string;
+  device_name: string | null;
+  platform: string | null;
+  last_city: string | null;
+  first_seen: string;
+  last_seen: string;
+};
+
 export default function AyarlarClient({
   email,
   profiles,
+  devices,
 }: {
   email: string;
   profiles: Profile[];
+  devices: DeviceRow[];
 }) {
   const supabase = createClient();
   const router = useRouter();
@@ -143,11 +155,83 @@ export default function AyarlarClient({
         </div>
       )}
 
+      <DevicesSection devices={devices} />
+
       <div className="settings-block">
         <h3>Oturum</h3>
         <LogoutButton />
       </div>
     </>
+  );
+}
+
+/* ── Giriş Yapılan Cihazlar (güvenlik) ── */
+function DevicesSection({ devices }: { devices: DeviceRow[] }) {
+  const supabase = createClient();
+  const router = useRouter();
+  const [thisId, setThisId] = useState<string>("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    import("../../../lib/loginAlert").then((m) => setThisId(m.getWebDeviceId())).catch(() => {});
+  }, []);
+
+  const hasOthers = devices.some((d) => d.device_id !== thisId);
+
+  const fmt = (s?: string) => {
+    if (!s) return "";
+    try {
+      return new Date(s).toLocaleString("tr-TR", {
+        day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+      });
+    } catch {
+      return "";
+    }
+  };
+
+  const signOutOthers = async () => {
+    if (!confirm("Bu cihaz hariç tüm cihazlardan çıkış yapılacak. Devam edilsin mi?")) return;
+    setBusy(true);
+    try {
+      await supabase.auth.signOut({ scope: "others" });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id && thisId) {
+        await supabase.from("user_devices").delete().eq("user_id", user.id).neq("device_id", thisId);
+      }
+      router.refresh();
+    } catch {
+      // sessiz
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="settings-block">
+      <h3>Giriş Yapılan Cihazlar</h3>
+      {devices.length === 0 ? (
+        <p className="panel-sub" style={{ marginTop: 4 }}>Henüz kayıtlı cihaz yok.</p>
+      ) : (
+        <div className="tx-list">
+          {devices.map((d) => (
+            <div key={d.id} className="info-row" style={{ alignItems: "flex-start" }}>
+              <span className="k">
+                {d.device_name || "Bilinmeyen cihaz"}
+                {d.device_id === thisId ? " · Bu cihaz" : ""}
+              </span>
+              <span className="v" style={{ textAlign: "right", fontSize: 12, opacity: 0.85 }}>
+                {d.last_city ? `${d.last_city} · ` : ""}{fmt(d.last_seen)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+      {hasOthers && (
+        <button className="btn btn-sm" onClick={signOutOthers} disabled={busy} style={{ marginTop: 12, color: "#E24B4A" }}>
+          {busy ? "…" : "Diğer Tüm Cihazlardan Çıkış Yap"}
+        </button>
+      )}
+    </div>
   );
 }
 

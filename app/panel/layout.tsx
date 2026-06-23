@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { getProfiles } from "../../lib/supabase/profile";
 import Sidebar from "./Sidebar";
+import LoginReporter from "./LoginReporter";
 import { SparkleIcon, BellIcon, GearIcon } from "../../components/icons";
 
 // Panel uygulamanın içi — tüm /panel sayfaları arama motorlarına kapalı
@@ -34,6 +35,8 @@ export default function PanelLayout({
 }) {
   return (
     <div className="panel-shell">
+      {/* Girişten sonra (oturum başına bir kez) güvenlik: yeni cihaz/konum bildirimi */}
+      <LoginReporter />
       {/* Profiller stream edilir → kabuk beklemeden boyanır */}
       <Suspense fallback={null}>
         <ProfileSidebar />

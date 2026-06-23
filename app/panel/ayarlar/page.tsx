@@ -1,5 +1,5 @@
 import { createClient } from "../../../lib/supabase/server";
-import AyarlarClient, { type Profile } from "./AyarlarClient";
+import AyarlarClient, { type Profile, type DeviceRow } from "./AyarlarClient";
 
 export default async function AyarlarPage() {
   const supabase = await createClient();
@@ -15,10 +15,16 @@ export default async function AyarlarPage() {
     )
     .order("created_at", { ascending: true });
 
+  const { data: devices } = await supabase
+    .from("user_devices")
+    .select("id, device_id, device_name, platform, last_city, first_seen, last_seen")
+    .order("last_seen", { ascending: false });
+
   return (
     <AyarlarClient
       email={user?.email ?? "—"}
       profiles={(profiles as Profile[]) ?? []}
+      devices={(devices as DeviceRow[]) ?? []}
     />
   );
 }
