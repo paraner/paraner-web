@@ -17,6 +17,10 @@ export async function GET(request: Request) {
       }
       return NextResponse.redirect(`${origin}/panel`);
     }
+    // Takas başarısız (genelde eksik/eşleşmeyen PKCE verifier çerezi) — gerçek sebebi logla.
+    console.error("[auth/callback] exchangeCodeForSession başarısız:", error.message, error.status);
+  } else {
+    console.error("[auth/callback] code parametresi yok:", request.url);
   }
 
   return NextResponse.redirect(`${origin}/giris?error=oauth`);

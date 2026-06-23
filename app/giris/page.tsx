@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Background from "../components/Background";
@@ -21,6 +21,57 @@ export default function GirisPage() {
   const [error, setError] = useState<string | null>(null);
 
   const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
+
+  // Güvenlik ağı: OAuth kodu bir nedenle /auth/callback yerine /giris'e düşerse
+  // (gözlemlenen "kod /giris'te takılı kalıyor" durumu) onu burada tarayıcı tarafında
+  // takas et — verifier çerezi client'ta erişilebilir olduğu için server callback patlasa
+  // bile burada giriş tamamlanır. ?error=oauth da kullanıcı dostu bir mesaja çevrilir.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("error") === "oauth") {
+      setError("Google ile giriş tamamlanamadı. Lütfen tekrar dene.");
+      window.history.replaceState({}, "", "/giris");
+      return;
+    }
+    const code = params.get("code");
+    if (!code) return;
+    (async () => {
+      setLoading(true);
+      const supabase = createClient();
+      const goPanel = () => {
+        const { hostname, protocol } = window.location;
+        if (hostname.endsWith("paraner.com")) {
+          window.location.assign(`${protocol}//app.paraner.com/`);
+        } else {
+          router.push("/panel");
+          router.refresh();
+        }
+      };
+      try {
+        // detectSessionInUrl kodu zaten takas etmiş olabilir → önce oturuma bak.
+        const { data: pre } = await supabase.auth.getSession();
+        if (pre.session) { goPanel(); return; }
+
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!error) { goPanel(); return; }
+
+        // Hata: belki auto-exchange tam o an tamamladı → son bir kez kontrol et.
+        const { data: post } = await supabase.auth.getSession();
+        if (post.session) { goPanel(); return; }
+
+        setError("Google ile giriş tamamlanamadı. Lütfen tekrar dene.");
+        window.history.replaceState({}, "", "/giris");
+      } catch {
+        const { data: post } = await supabase.auth.getSession();
+        if (post.session) { goPanel(); return; }
+        setError("Google ile giriş tamamlanamadı. Lütfen tekrar dene.");
+        window.history.replaceState({}, "", "/giris");
+      } finally {
+        setLoading(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // OTP — e-postaya kod gönder, kod adımına geç
   async function handleSendOtp(e: React.FormEvent) {

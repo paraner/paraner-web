@@ -54,6 +54,7 @@ export async function proxy(request: NextRequest) {
 
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
@@ -64,8 +65,19 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  // Giriş yoksa → pazarlama domainindeki giriş sayfasına yönlendir
+  // Kullanıcı yoksa: ama oturum çerezi (sb-...-auth-token) HÂLÂ varsa, bu büyük ihtimalle
+  // geçici bir getUser hatası / token tazeleme gecikmesidir (ağ blibinde olur). Böyle durumda
+  // kullanıcıyı ATMA — içeride bırak, sayfa kendi oturumunu tazeler. SADECE hiç oturum çerezi
+  // yoksa (gerçekten çıkış yapılmış) girişe yönlendir. (Eskiden her getUser=null'da atıyordu →
+  // sayfa geçişlerinde durduk yere giriş ekranına düşüyordu.)
   if (!user) {
+    const hasAuthCookie = request.cookies
+      .getAll()
+      .some((c) => c.name.includes("-auth-token") && c.value);
+    if (hasAuthCookie && userError) {
+      // Geçici hata + oturum çerezi var → içeride bırak (atma yok).
+      return response;
+    }
     const url = request.nextUrl.clone();
     url.hostname = hostname.replace(/^app\./, ""); // app.paraner.com → paraner.com
     url.pathname = "/giris";
