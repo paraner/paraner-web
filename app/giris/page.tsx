@@ -28,6 +28,11 @@ export default function GirisPage() {
   // bile burada giriş tamamlanır. ?error=oauth da kullanıcı dostu bir mesaja çevrilir.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    if (params.get("closed") === "1") {
+      setError("Hesabınız kalıcı olarak kapatılmıştır. Bilgi için destek@paraner.com ile iletişime geçebilirsiniz.");
+      window.history.replaceState({}, "", "/giris");
+      return;
+    }
     if (params.get("error") === "oauth") {
       setError("Google ile giriş tamamlanamadı. Lütfen tekrar dene.");
       window.history.replaceState({}, "", "/giris");

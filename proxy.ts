@@ -71,6 +71,27 @@ export async function proxy(request: NextRequest) {
   // yoksa (gerçekten çıkış yapılmış) girişe yönlendir. (Eskiden her getUser=null'da atıyordu →
   // sayfa geçişlerinde durduk yere giriş ekranına düşüyordu.)
   if (!user) {
+    // KESİN silinme: getUser HTTP 403 → kullanıcı sunucuda yok (hesap kalıcı kapatılmış).
+    // Çerezleri temizle + girişe at + ?closed=1 ile bildir. (Geçici ağ hatası status
+    // vermez → aşağıdaki "içeride bırak" dalına düşer, ATMAZ — 23.06 kararlılık kuralı.)
+    if ((userError as { status?: number } | null)?.status === 403) {
+      const url = request.nextUrl.clone();
+      url.hostname = hostname.replace(/^app\./, "");
+      url.pathname = "/giris";
+      url.searchParams.set("closed", "1");
+      const redirect = copyCookies(NextResponse.redirect(url), response);
+      // Auth çerezlerini sil — yoksa /giris tekrar paneli açmaya çalışıp döngü yapar.
+      request.cookies.getAll().forEach((c) => {
+        if (c.name.includes("-auth-token")) {
+          redirect.cookies.set(c.name, "", {
+            ...(domain ? { domain } : {}),
+            maxAge: 0,
+            path: "/",
+          });
+        }
+      });
+      return redirect;
+    }
     const hasAuthCookie = request.cookies
       .getAll()
       .some((c) => c.name.includes("-auth-token") && c.value);
