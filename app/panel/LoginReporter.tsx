@@ -1,24 +1,48 @@
 "use client";
 
 import { useEffect } from "react";
+import { createClient } from "../../lib/supabase/client";
 import { reportLogin } from "../../lib/loginAlert";
 
 // Panel'e girince oturum başına BİR KEZ login-alert'i çağırır (her giriş yöntemi /panel'e düşer:
 // Google / e-posta OTP / şifre). Yeni cihaz/konumda kullanıcıya güvenlik maili + cihaz listesine kayıt.
-// sessionStorage guard → aynı tarayıcı oturumunda tekrar tekrar çağırmaz.
+//
+// Sağlamlık (kritik): rapor SADECE bir kez başarıyla gittiğinde guard set edilir (sessionStorage).
+//  - SIGNED_OUT → guard'ı temizle: uzaktan çıkış / normal çıkış sonrası AYNI tarayıcıda yeniden
+//    giriş yapılınca cihaz user_devices'a TEKRAR yazılsın (yoksa guard bayat kalıp raporu engelliyor,
+//    cihaz listede görünmüyordu).
+//  - SIGNED_IN → tekrar dene: ilk mount'ta oturum henüz hazır değilse (OAuth dönüşü gecikmesi)
+//    rapor kaçmasın.
 export default function LoginReporter() {
   useEffect(() => {
-    try {
-      if (sessionStorage.getItem("login_reported")) return;
-    } catch {
-      // sessionStorage erişilemezse yine de dene
-    }
-    // Guard'ı SADECE rapor başarılı olursa set et → CORS/ağ hatasında oturum kilitlenmez, tekrar denenir.
-    reportLogin().then((ok) => {
-      if (ok) {
-        try { sessionStorage.setItem("login_reported", "1"); } catch { /* yoksay */ }
+    const supabase = createClient();
+
+    const tryReport = () => {
+      try {
+        if (sessionStorage.getItem("login_reported")) return;
+      } catch {
+        // sessionStorage erişilemezse yine de dene
+      }
+      // Guard'ı SADECE rapor başarılı olursa set et → CORS/ağ/oturum-gecikmesi hatasında tekrar denenir.
+      reportLogin().then((ok) => {
+        if (ok) {
+          try { sessionStorage.setItem("login_reported", "1"); } catch { /* yoksay */ }
+        }
+      });
+    };
+
+    tryReport();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        try { sessionStorage.removeItem("login_reported"); } catch { /* yoksay */ }
+      } else if (event === "SIGNED_IN") {
+        tryReport();
       }
     });
+
+    return () => subscription.unsubscribe();
   }, []);
+
   return null;
 }
