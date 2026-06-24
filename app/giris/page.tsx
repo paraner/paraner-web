@@ -38,6 +38,11 @@ export default function GirisPage() {
       window.history.replaceState({}, "", "/giris");
       return;
     }
+    if (params.get("signedout") === "1") {
+      setError("Güvenliğin için bu cihazdan çıkış yapıldı. Lütfen tekrar giriş yap.");
+      window.history.replaceState({}, "", "/giris");
+      return;
+    }
     const code = params.get("code");
     if (!code) return;
     (async () => {

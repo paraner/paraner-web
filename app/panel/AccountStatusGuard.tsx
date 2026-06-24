@@ -2,6 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import { createClient } from "../../lib/supabase/client";
+import {
+  getWebDeviceId,
+  isWebDeviceRegistered,
+  markWebDeviceRegistered,
+  clearWebDeviceRegistered,
+} from "../../lib/loginAlert";
 
 /**
  * Hesabın sunucuda KALICI silinip silinmediğini denetler (mobildeki
@@ -33,6 +39,36 @@ export default function AccountStatusGuard() {
             /* signOut hatası önemsiz — yine de yönlendir */
           }
           window.location.href = "/giris?closed=1";
+          return;
+        }
+
+        // "Diğer tüm cihazlardan çıkış" kontrolü: başka bir cihazdan bu tarayıcının
+        // user_devices kaydı silindiyse → uzaktan çıkış yaptırıldı → çık.
+        // Yanlış-atma koruması: sorgu başarılı + kayıt yok + bu tarayıcı daha önce kayıtlıysa.
+        const uid = data?.user?.id;
+        if (uid) {
+          const myId = getWebDeviceId();
+          const { data: row, error: devErr } = await supabase
+            .from("user_devices")
+            .select("device_id")
+            .eq("user_id", uid)
+            .eq("device_id", myId)
+            .maybeSingle();
+          if (!devErr) {
+            if (row) {
+              markWebDeviceRegistered();
+            } else if (isWebDeviceRegistered()) {
+              handled.current = true;
+              clearWebDeviceRegistered();
+              try {
+                await supabase.auth.signOut();
+              } catch {
+                /* önemsiz */
+              }
+              window.location.href = "/giris?signedout=1";
+              return;
+            }
+          }
         }
       } catch {
         /* offline / ağ hatası — yok say */

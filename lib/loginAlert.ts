@@ -5,6 +5,20 @@ import { createClient } from "./supabase/client";
 // Tamamen fail-soft.
 
 const DEVICE_ID_KEY = "paraner_device_id";
+const DEVICE_REGISTERED_KEY = "paraner_device_registered";
+
+// "Bu tarayıcı user_devices listesine kaydedildi" işareti. AccountStatusGuard'ın
+// "kaydım uzaktan silindiyse çıkış yap" kontrolü yanlış-atma yapmasın diye (login-alert
+// fail-soft) — sadece kayıt gerçekten varken kontrol etsin.
+export function markWebDeviceRegistered(): void {
+  try { localStorage.setItem(DEVICE_REGISTERED_KEY, "1"); } catch { /* sessiz */ }
+}
+export function isWebDeviceRegistered(): boolean {
+  try { return localStorage.getItem(DEVICE_REGISTERED_KEY) === "1"; } catch { return false; }
+}
+export function clearWebDeviceRegistered(): void {
+  try { localStorage.removeItem(DEVICE_REGISTERED_KEY); } catch { /* sessiz */ }
+}
 
 // Tarayıcı başına kalıcı kimlik (localStorage).
 export function getWebDeviceId(): string {
@@ -66,6 +80,8 @@ export async function reportLogin(): Promise<boolean> {
         platform: "web",
       }),
     });
+    // 200 → bu tarayıcı user_devices'a yazıldı; "kaydım silindi → çıkış" kontrolü için işaretle.
+    if (res.ok) markWebDeviceRegistered();
     return res.ok;
   } catch {
     return false; // fail-soft
