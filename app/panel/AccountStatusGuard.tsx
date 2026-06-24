@@ -32,7 +32,10 @@ export default function AccountStatusGuard() {
       // uzaktan çıkış sonrası geri girişte cihaz listede görünmez).
       try { sessionStorage.removeItem("login_reported"); } catch { /* yoksay */ }
       try {
-        await supabase.auth.signOut();
+        // scope: 'local' — SADECE bu tarayıcıyı kapat. Varsayılan 'global' kullanıcının
+        // TÜM token'larını iptal eder → "tüm cihazlardan çıkış"ı başlatan cihaz (telefon)
+        // da durduk yere düşer.
+        await supabase.auth.signOut({ scope: "local" });
       } catch {
         /* önemsiz */
       }
@@ -74,7 +77,7 @@ export default function AccountStatusGuard() {
           handled.current = true;
           try { sessionStorage.removeItem("login_reported"); } catch { /* yoksay */ }
           try {
-            await supabase.auth.signOut();
+            await supabase.auth.signOut({ scope: "local" });
           } catch {
             /* önemsiz */
           }
