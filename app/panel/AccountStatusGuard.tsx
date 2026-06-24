@@ -26,6 +26,20 @@ export default function AccountStatusGuard() {
 
   useEffect(() => {
     const supabase = createClient();
+    const myId = getWebDeviceId();
+
+    // Uzaktan çıkış → tek-tip kick (hem foreground kontrolü hem Realtime çağırır).
+    const kickRemote = async () => {
+      if (handled.current) return;
+      handled.current = true;
+      clearWebDeviceRegistered();
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        /* önemsiz */
+      }
+      window.location.href = "/giris?signedout=1";
+    };
 
     const check = async () => {
       if (handled.current) return;
@@ -47,7 +61,6 @@ export default function AccountStatusGuard() {
         // Yanlış-atma koruması: sorgu başarılı + kayıt yok + bu tarayıcı daha önce kayıtlıysa.
         const uid = data?.user?.id;
         if (uid) {
-          const myId = getWebDeviceId();
           const { data: row, error: devErr } = await supabase
             .from("user_devices")
             .select("device_id")
@@ -58,14 +71,7 @@ export default function AccountStatusGuard() {
             if (row) {
               markWebDeviceRegistered();
             } else if (isWebDeviceRegistered()) {
-              handled.current = true;
-              clearWebDeviceRegistered();
-              try {
-                await supabase.auth.signOut();
-              } catch {
-                /* önemsiz */
-              }
-              window.location.href = "/giris?signedout=1";
+              await kickRemote();
               return;
             }
           }
@@ -74,6 +80,21 @@ export default function AccountStatusGuard() {
         /* offline / ağ hatası — yok say */
       }
     };
+
+    // L4 — Realtime: KENDİ tarayıcı kaydım silinince ANINDA çıkış (sekme açıkken bile).
+    // RLS gereği sadece kendi cihazlarımın olaylarını alırım; ayrıca device_id eşleşmesini
+    // kontrol ederim → yalnızca benim kaydım silinince çıkar (başka cihaz silinince DEĞİL).
+    const channel = supabase
+      .channel("user_devices_kick")
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "user_devices" },
+        (payload) => {
+          const deletedId = (payload.old as { device_id?: string })?.device_id;
+          if (deletedId && deletedId === myId) kickRemote();
+        },
+      )
+      .subscribe();
 
     check();
     const onVisible = () => {
@@ -84,6 +105,7 @@ export default function AccountStatusGuard() {
     return () => {
       window.removeEventListener("focus", check);
       document.removeEventListener("visibilitychange", onVisible);
+      supabase.removeChannel(channel);
     };
   }, []);
 
