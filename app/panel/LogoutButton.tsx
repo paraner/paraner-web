@@ -13,7 +13,9 @@ export default function LogoutButton() {
     const supabase = createClient();
     // Aynı tarayıcıda tekrar girişte login-alert yeniden raporlasın diye guard'ı temizle
     try { sessionStorage.removeItem("login_reported"); } catch { /* yoksay */ }
-    await supabase.auth.signOut();
+    // scope: 'local' — SADECE bu tarayıcıdan çık. Varsayılan 'global' kullanıcının
+    // TÜM cihazlarının token'ını iptal eder → başka cihaz (telefon) durduk yere düşer.
+    await supabase.auth.signOut({ scope: "local" });
     router.push("/giris");
     router.refresh();
   }
