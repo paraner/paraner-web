@@ -171,10 +171,22 @@ function DevicesSection({ devices }: { devices: DeviceRow[] }) {
   const router = useRouter();
   const [thisId, setThisId] = useState<string>("");
   const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     import("../../../lib/loginAlert").then((m) => setThisId(m.getWebDeviceId())).catch(() => {});
   }, []);
+
+  const copyDeviceId = async () => {
+    if (!thisId) return;
+    try {
+      await navigator.clipboard.writeText(thisId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // sessiz
+    }
+  };
 
   const hasOthers = devices.some((d) => d.device_id !== thisId);
 
@@ -230,6 +242,40 @@ function DevicesSection({ devices }: { devices: DeviceRow[] }) {
         <button className="btn btn-sm" onClick={signOutOthers} disabled={busy} style={{ marginTop: 12, color: "#E24B4A" }}>
           {busy ? "…" : "Diğer Tüm Cihazlardan Çıkış Yap"}
         </button>
+      )}
+
+      {/* Güvenli cihaz kimliği — bu tarayıcının kimliği (destek/güvenlik için, kopyalanabilir) */}
+      {thisId && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 14,
+            marginTop: 16,
+            padding: "12px 16px",
+            border: "1px solid var(--border)",
+            borderRadius: 12,
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <div className="panel-sub" style={{ margin: 0 }}>Güvenli cihaz kimliği</div>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                fontFamily: "var(--font-mono, ui-monospace, monospace)",
+                wordBreak: "break-all",
+                marginTop: 4,
+              }}
+            >
+              {thisId}
+            </div>
+          </div>
+          <button className="btn btn-sm" onClick={copyDeviceId} style={{ flexShrink: 0 }}>
+            {copied ? "Kopyalandı ✓" : "Kopyala"}
+          </button>
+        </div>
       )}
     </div>
   );
