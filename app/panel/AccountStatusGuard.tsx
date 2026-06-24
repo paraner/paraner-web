@@ -31,6 +31,16 @@ export default function AccountStatusGuard() {
       // YENİDEN yazılsın (sessionStorage full-reload'da silinmez; aksi halde
       // uzaktan çıkış sonrası geri girişte cihaz listede görünmez).
       try { sessionStorage.removeItem("login_reported"); } catch { /* yoksay */ }
+      // Mesajı doğru ver: hesap tamamen SİLİNMİŞSE "kapatıldı", sadece bu cihaz
+      // uzaktan ÇIKARILMIŞSA "uzaktan çıkış". (Çapraz-platform silmede cascade satır
+      // silinmesi getUser 403'ten önce tetikleyip yanlış mesaj verebiliyordu.)
+      let dest = "/giris?signedout=1";
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (error && (error as { status?: number }).status === 403 && !data?.user) {
+          dest = "/giris?closed=1";
+        }
+      } catch { /* ağ hatası → varsayılan uzaktan çıkış */ }
       try {
         // scope: 'local' — SADECE bu tarayıcıyı kapat. Varsayılan 'global' kullanıcının
         // TÜM token'larını iptal eder → "tüm cihazlardan çıkış"ı başlatan cihaz (telefon)
@@ -39,7 +49,7 @@ export default function AccountStatusGuard() {
       } catch {
         /* önemsiz */
       }
-      window.location.href = "/giris?signedout=1";
+      window.location.href = dest;
     };
 
     // "Kaydım uzaktan silindi mi" — çift teyit + sawRow ile güvenli.
