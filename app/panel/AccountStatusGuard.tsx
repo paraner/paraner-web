@@ -27,6 +27,10 @@ export default function AccountStatusGuard() {
     const kickRemote = async () => {
       if (handled.current) return;
       handled.current = true;
+      // Rapor bekçisini temizle → tekrar giriş yapınca cihaz user_devices'a
+      // YENİDEN yazılsın (sessionStorage full-reload'da silinmez; aksi halde
+      // uzaktan çıkış sonrası geri girişte cihaz listede görünmez).
+      try { sessionStorage.removeItem("login_reported"); } catch { /* yoksay */ }
       try {
         await supabase.auth.signOut();
       } catch {
@@ -68,6 +72,7 @@ export default function AccountStatusGuard() {
         const { data, error } = await supabase.auth.getUser();
         if (error && (error as { status?: number }).status === 403 && !data?.user) {
           handled.current = true;
+          try { sessionStorage.removeItem("login_reported"); } catch { /* yoksay */ }
           try {
             await supabase.auth.signOut();
           } catch {
