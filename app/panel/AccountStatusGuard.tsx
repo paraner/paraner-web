@@ -2,24 +2,19 @@
 
 import { useEffect, useRef } from "react";
 import { createClient } from "../../lib/supabase/client";
-import {
-  getWebDeviceId,
-  isWebDeviceRegistered,
-  markWebDeviceRegistered,
-  clearWebDeviceRegistered,
-} from "../../lib/loginAlert";
+import { getWebDeviceId } from "../../lib/loginAlert";
 
 /**
- * Hesabın sunucuda KALICI silinip silinmediğini denetler (mobildeki
- * AccountStatusGate'in web karşılığı). Panel açılışında ve sekme öne
- * geldiğinde `getUser()` ile sorar:
- *   - Kullanıcı silinmişse Supabase HTTP **403** döner → oturumu kapat +
- *     /giris?closed=1'e yönlendir ("Hesabınız kalıcı olarak kapatılmıştır").
- *   - **Sadece 403'te** aksiyon alınır. Ağ hatası / 401 / 5xx → DOKUNULMAZ
- *     (zayıf ağda kullanıcıyı atma — proxy ile aynı kural).
+ * Hesabın sunucuda KALICI silinip silinmediğini + bu tarayıcının uzaktan
+ * çıkış yaptırılıp yaptırılmadığını denetler (mobildeki AccountStatusGate'in
+ * web karşılığı).
+ *   - getUser HTTP 403 → hesap kalıcı silinmiş → /giris?closed=1.
+ *   - user_devices'taki kendi kaydım silinmiş → uzaktan çıkış → /giris?signedout=1.
  *
- * proxy.ts her gezinme/yenilemede sunucuda aynı kontrolü yapar; bu bileşen
- * ek olarak AÇIK DURAN sekmeyi de yakalar (gezinme olmadan).
+ * Yanlış-atma koruması (kritik): "kaydım yok → çık" kararı SADECE bu OTURUMDA
+ * kaydı bir kez GÖRDÜKTEN sonra kaybolursa verilir (in-memory sawRow) + 1.5sn
+ * arayla ÇİFT teyit. (Eski SecureStore/localStorage bayrağı oturumlar arası
+ * bayatlayıp durduk yere atıyordu.)
  */
 export default function AccountStatusGuard() {
   const handled = useRef(false);
@@ -27,18 +22,44 @@ export default function AccountStatusGuard() {
   useEffect(() => {
     const supabase = createClient();
     const myId = getWebDeviceId();
+    let sawRow = false;
 
-    // Uzaktan çıkış → tek-tip kick (hem foreground kontrolü hem Realtime çağırır).
     const kickRemote = async () => {
       if (handled.current) return;
       handled.current = true;
-      clearWebDeviceRegistered();
       try {
         await supabase.auth.signOut();
       } catch {
         /* önemsiz */
       }
       window.location.href = "/giris?signedout=1";
+    };
+
+    // "Kaydım uzaktan silindi mi" — çift teyit + sawRow ile güvenli.
+    const verifyDevice = async (knownUid?: string) => {
+      if (handled.current) return;
+      let uid = knownUid;
+      if (!uid) {
+        const { data: { user } } = await supabase.auth.getUser();
+        uid = user?.id;
+      }
+      if (!uid) return;
+      const q = () =>
+        supabase
+          .from("user_devices")
+          .select("device_id")
+          .eq("user_id", uid!)
+          .eq("device_id", myId)
+          .maybeSingle();
+      const { data: row, error } = await q();
+      if (error) return;                  // ağ hatası → dokunma
+      if (row) { sawRow = true; return; } // satır var → işaretle, ATMA
+      if (!sawRow) return;                // bu oturumda hiç görmedik → ATMA
+      await new Promise((r) => setTimeout(r, 1500));
+      if (handled.current) return;
+      const second = await q();
+      if (second.error || second.data) return; // ikinci teyit hata/satır bulduysa → ATMA
+      await kickRemote();
     };
 
     const check = async () => {
@@ -50,59 +71,24 @@ export default function AccountStatusGuard() {
           try {
             await supabase.auth.signOut();
           } catch {
-            /* signOut hatası önemsiz — yine de yönlendir */
+            /* önemsiz */
           }
           window.location.href = "/giris?closed=1";
           return;
         }
-
-        // "Diğer tüm cihazlardan çıkış" kontrolü: başka bir cihazdan bu tarayıcının
-        // user_devices kaydı silindiyse → uzaktan çıkış yaptırıldı → çık.
-        // Yanlış-atma koruması: sorgu başarılı + kayıt yok + bu tarayıcı daha önce kayıtlıysa.
-        const uid = data?.user?.id;
-        if (uid) {
-          const { data: row, error: devErr } = await supabase
-            .from("user_devices")
-            .select("device_id")
-            .eq("user_id", uid)
-            .eq("device_id", myId)
-            .maybeSingle();
-          if (!devErr) {
-            if (row) {
-              markWebDeviceRegistered();
-            } else if (isWebDeviceRegistered()) {
-              await kickRemote();
-              return;
-            }
-          }
-        }
+        if (data?.user?.id) await verifyDevice(data.user.id);
       } catch {
         /* offline / ağ hatası — yok say */
       }
     };
 
-    // L4 — Realtime: KENDİ tarayıcı kaydım silinince ANINDA çıkış (sekme açıkken bile).
-    // RLS gereği sadece kendi cihazlarımın olaylarını alırım; ayrıca device_id eşleşmesini
-    // kontrol ederim → yalnızca benim kaydım silinince çıkar (başka cihaz silinince DEĞİL).
+    // L4 — Realtime: kendi kaydım silinince teyit et (doğrudan kick YOK, verifyDevice ile).
     let channel: ReturnType<typeof supabase.channel> | null = null;
     (async () => {
-      // Realtime'ı oturum token'ıyla yetkilendir — YOKSA RLS tüm olayları süzer.
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.access_token) {
         try { supabase.realtime.setAuth(session.access_token); } catch { /* sessiz */ }
       }
-      const verifyAndKick = async () => {
-        if (handled.current) return;
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user?.id) return;
-        const { data: row, error } = await supabase
-          .from("user_devices")
-          .select("device_id")
-          .eq("user_id", user.id)
-          .eq("device_id", myId)
-          .maybeSingle();
-        if (!error && !row && isWebDeviceRegistered()) await kickRemote();
-      };
       channel = supabase
         .channel("user_devices_kick")
         .on(
@@ -110,11 +96,7 @@ export default function AccountStatusGuard() {
           { event: "DELETE", schema: "public", table: "user_devices" },
           (payload) => {
             const deletedId = (payload.old as { device_id?: string })?.device_id;
-            if (deletedId) {
-              if (deletedId === myId) kickRemote();
-            } else {
-              verifyAndKick();
-            }
+            if (!deletedId || deletedId === myId) verifyDevice();
           },
         )
         .subscribe();
@@ -126,7 +108,6 @@ export default function AccountStatusGuard() {
     };
     window.addEventListener("focus", check);
     document.addEventListener("visibilitychange", onVisible);
-    // Güvenlik ağı: realtime çalışmasa bile sekme açıkken her 30sn'de teyit.
     const pollTimer = setInterval(check, 30_000);
     return () => {
       window.removeEventListener("focus", check);
