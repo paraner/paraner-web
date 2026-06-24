@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
 import LogoutButton from "../LogoutButton";
-import ConfirmDialog from "../../components/ConfirmDialog";
+import { confirmDialog } from "../../components/confirm";
+import { showToast } from "../../components/toast";
 
 export type Profile = {
   id: string;
@@ -202,9 +203,15 @@ function DevicesSection({ devices }: { devices: DeviceRow[] }) {
     }
   };
 
-  const [confirmOthers, setConfirmOthers] = useState(false);
-
   const signOutOthers = async () => {
+    const ok = await confirmDialog({
+      title: "Diğer Cihazlardan Çıkış",
+      message: "Bu cihaz hariç tüm cihazlardan çıkış yapılacak. Tanımadığın bir giriş varsa bu işlem onu sonlandırır.",
+      confirmLabel: "Çıkış Yap",
+      cancelLabel: "Vazgeç",
+      danger: true,
+    });
+    if (!ok) return;
     setBusy(true);
     try {
       await supabase.auth.signOut({ scope: "others" });
@@ -212,12 +219,12 @@ function DevicesSection({ devices }: { devices: DeviceRow[] }) {
       if (user?.id && thisId) {
         await supabase.from("user_devices").delete().eq("user_id", user.id).neq("device_id", thisId);
       }
+      showToast({ title: "Çıkış yapıldı", message: "Diğer tüm cihazlardan çıkış yapıldı.", variant: "success" });
       router.refresh();
     } catch {
-      // sessiz
+      showToast({ title: "Hata", message: "İşlem tamamlanamadı, tekrar dene.", variant: "error" });
     } finally {
       setBusy(false);
-      setConfirmOthers(false);
     }
   };
 
@@ -242,22 +249,10 @@ function DevicesSection({ devices }: { devices: DeviceRow[] }) {
         </div>
       )}
       {hasOthers && (
-        <button className="btn btn-sm" onClick={() => setConfirmOthers(true)} disabled={busy} style={{ marginTop: 12, color: "#E24B4A" }}>
+        <button className="btn btn-sm" onClick={signOutOthers} disabled={busy} style={{ marginTop: 12, color: "#E24B4A" }}>
           {busy ? "…" : "Diğer Tüm Cihazlardan Çıkış Yap"}
         </button>
       )}
-
-      <ConfirmDialog
-        open={confirmOthers}
-        title="Diğer Cihazlardan Çıkış"
-        message="Bu cihaz hariç tüm cihazlardan çıkış yapılacak. Tanımadığın bir giriş varsa bu işlem onu sonlandırır."
-        confirmLabel="Çıkış Yap"
-        cancelLabel="Vazgeç"
-        danger
-        busy={busy}
-        onConfirm={signOutOthers}
-        onCancel={() => setConfirmOthers(false)}
-      />
 
       {/* Güvenli cihaz kimliği — bu tarayıcının kimliği (destek/güvenlik için, kopyalanabilir) */}
       {thisId && (

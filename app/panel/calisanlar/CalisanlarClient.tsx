@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
@@ -98,7 +99,7 @@ export default function CalisanlarClient({
   }
 
   async function handleDelete(emp: Employee) {
-    if (!confirm(`"${emp.name}" silinsin mi? Maaş/harcama/izin kayıtları da silinir.`)) return;
+    if (!(await confirmDialog({ message: `"${emp.name}" silinsin mi? Maaş/harcama/izin kayıtları da silinir.`, danger: true }))) return;
     const { error } = await supabase.from("employees").delete().eq("id", emp.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== emp.id));

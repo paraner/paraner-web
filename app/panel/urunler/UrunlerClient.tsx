@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useMemo, useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
@@ -166,7 +167,7 @@ export default function UrunlerClient({
   }
 
   async function handleDelete(p: Product) {
-    if (!confirm(`"${p.name}" katalogdan kaldırılsın mı?`)) return;
+    if (!(await confirmDialog({ message: `"${p.name}" katalogdan kaldırılsın mı?`, danger: true }))) return;
     // Soft delete (mobil ile aynı): is_active = false
     const { error } = await supabase
       .from("products")

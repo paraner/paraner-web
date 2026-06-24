@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
@@ -157,7 +158,7 @@ export default function TekliflerClient({
   }
 
   async function handleDelete(q: Quote) {
-    if (!confirm(`${q.quote_number ?? "Teklif"} silinsin mi?`)) return;
+    if (!(await confirmDialog({ message: `${q.quote_number ?? "Teklif"} silinsin mi?`, danger: true }))) return;
     const { error } = await supabase.from("quotes").delete().eq("id", q.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== q.id));

@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
@@ -98,7 +99,7 @@ export default function BorcAlacakClient({
   }
 
   async function handleDelete(x: Debt) {
-    if (!confirm("Bu kayıt silinsin mi?")) return;
+    if (!(await confirmDialog({ message: "Bu kayıt silinsin mi?", danger: true }))) return;
     const { error } = await supabase.from("debts").delete().eq("id", x.id);
     if (error) return;
     setList((prev) => prev.filter((d) => d.id !== x.id));

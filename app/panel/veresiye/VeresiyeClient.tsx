@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
@@ -133,7 +134,7 @@ export default function VeresiyeClient({
   }
 
   async function handleDelete(c: CreditCustomer) {
-    if (!confirm(`"${c.customer_name}" ve hareketleri silinsin mi?`)) return;
+    if (!(await confirmDialog({ message: `"${c.customer_name}" ve hareketleri silinsin mi?`, danger: true }))) return;
     const { error } = await supabase.from("credit_book").delete().eq("id", c.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== c.id));

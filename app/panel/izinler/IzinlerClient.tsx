@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -128,7 +129,7 @@ export default function IzinlerClient({
   }
 
   async function handleDelete(l: Leave) {
-    if (!confirm("Bu izin kaydı silinsin mi?")) return;
+    if (!(await confirmDialog({ message: "Bu izin kaydı silinsin mi?", danger: true }))) return;
     const { error } = await supabase.from("employee_leaves").delete().eq("id", l.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== l.id));

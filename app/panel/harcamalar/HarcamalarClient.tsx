@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -90,7 +91,7 @@ export default function HarcamalarClient({
   }
 
   async function handleDelete(x: Expense) {
-    if (!confirm("Bu harcama kaydı silinsin mi?")) return;
+    if (!(await confirmDialog({ message: "Bu harcama kaydı silinsin mi?", danger: true }))) return;
     const { error } = await supabase.from("employee_expenses").delete().eq("id", x.id);
     if (error) return;
     setList((prev) => prev.filter((e) => e.id !== x.id));

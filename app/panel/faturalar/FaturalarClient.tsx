@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useEffect, useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
@@ -141,7 +142,7 @@ export default function FaturalarClient({
   }
 
   async function handleDelete(inv: Invoice) {
-    if (!confirm(`${inv.invoice_number ?? "Fatura"} silinsin mi?`)) return;
+    if (!(await confirmDialog({ message: `${inv.invoice_number ?? "Fatura"} silinsin mi?`, danger: true }))) return;
     const { error } = await supabase.from("invoices").delete().eq("id", inv.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== inv.id));

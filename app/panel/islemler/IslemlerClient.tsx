@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
@@ -369,7 +370,7 @@ export default function IslemlerClient({
     const thumbs = [...(t.receipt_thumbnails ?? [])];
     const removed = urls[idx];
     if (!removed) return;
-    if (!confirm("Bu ek kaldırılsın mı?")) return;
+    if (!(await confirmDialog({ message: "Bu ek kaldırılsın mı?", danger: true }))) return;
     urls.splice(idx, 1);
     const removedThumb = thumbs.splice(idx, 1)[0] ?? null;
     setUploading(true);
@@ -502,7 +503,7 @@ export default function IslemlerClient({
   async function handleDelete(t: Tx) {
     // Transfer → iki bacak (+ varsa ücret) tek grupta; hepsi birlikte silinmeli
     if (t.type === "transfer" && t.transfer_group_id) {
-      if (!confirm("Bu bir transfer. Karşı bacağıyla birlikte silinsin mi?")) return;
+      if (!(await confirmDialog({ message: "Bu bir transfer. Karşı bacağıyla birlikte silinsin mi?", danger: true }))) return;
       const { data: legs } = await supabase
         .from("transactions")
         .select("id, amount, type, category, bank_account_id")
@@ -525,7 +526,7 @@ export default function IslemlerClient({
       return;
     }
 
-    if (!confirm("Bu işlem silinsin mi?")) return;
+    if (!(await confirmDialog({ message: "Bu işlem silinsin mi?", danger: true }))) return;
     const { error } = await supabase.from("transactions").delete().eq("id", t.id);
     if (error) return;
 

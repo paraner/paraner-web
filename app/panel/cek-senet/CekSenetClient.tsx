@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
@@ -157,7 +158,7 @@ export default function CekSenetClient({
   }
 
   async function handleDelete(x: CheckNote) {
-    if (!confirm("Bu kayıt silinsin mi?")) return;
+    if (!(await confirmDialog({ message: "Bu kayıt silinsin mi?", danger: true }))) return;
     const { error } = await supabase.from("checks_notes").delete().eq("id", x.id);
     if (error) return;
     setList((prev) => prev.filter((i) => i.id !== x.id));

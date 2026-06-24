@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
@@ -364,7 +365,7 @@ export default function HesaplarClient({
   }
 
   async function handleDelete(a: Account) {
-    if (!confirm(`"${a.name}" hesabı silinsin mi?`)) return;
+    if (!(await confirmDialog({ message: `"${a.name}" hesabı silinsin mi?`, danger: true }))) return;
     const { error } = await supabase.from("bank_accounts").delete().eq("id", a.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== a.id));

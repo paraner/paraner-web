@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
@@ -142,7 +143,7 @@ export default function MutabakatClient({
   }
 
   async function handleDelete(r: Reconciliation) {
-    if (!confirm(`"${r.account_name}" mutabakatı silinsin mi?`)) return;
+    if (!(await confirmDialog({ message: `"${r.account_name}" mutabakatı silinsin mi?`, danger: true }))) return;
     const { error } = await supabase.from("reconciliations").delete().eq("id", r.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== r.id));

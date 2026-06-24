@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
@@ -81,7 +82,7 @@ export default function CarilerClient({
   }
 
   async function handleDelete(c: Cari) {
-    if (!confirm(`"${c.name}" carisi silinsin mi?`)) return;
+    if (!(await confirmDialog({ message: `"${c.name}" carisi silinsin mi?`, danger: true }))) return;
     const { error } = await supabase.from("current_accounts").delete().eq("id", c.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== c.id));

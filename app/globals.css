@@ -1977,3 +1977,29 @@ ul { list-style: none; }
   from { opacity: 0; transform: scale(0.96) translateY(6px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
+
+/* === Bildirim (toast) — sağ üst, app GlobalToast diliyle === */
+.toast-host {
+  position: fixed; top: 20px; right: 20px; z-index: 300;
+  display: flex; flex-direction: column; gap: 10px;
+  max-width: 360px; width: calc(100vw - 40px); pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  display: flex; align-items: flex-start; gap: 12px;
+  background: #161618;
+  border: 1px solid var(--border-strong);
+  border-radius: 14px; padding: 13px 16px;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  animation: toastIn 0.26s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.toast-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.toast-success .toast-dot { background: var(--teal); box-shadow: 0 0 10px rgba(0, 191, 166, 0.5); }
+.toast-error .toast-dot { background: #E24B4A; box-shadow: 0 0 10px rgba(226, 75, 74, 0.5); }
+.toast-info .toast-dot { background: #8a8a8a; }
+.toast-body { min-width: 0; }
+.toast-title { font-size: 14px; font-weight: 600; color: #fff; }
+.toast-msg { font-size: 13px; color: rgba(255, 255, 255, 0.62); margin-top: 2px; line-height: 1.4; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+@media (max-width: 520px) { .toast-host { left: 20px; right: 20px; max-width: none; } }

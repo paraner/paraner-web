@@ -5,6 +5,8 @@ import { getProfiles } from "../../lib/supabase/profile";
 import Sidebar from "./Sidebar";
 import LoginReporter from "./LoginReporter";
 import AccountStatusGuard from "./AccountStatusGuard";
+import ToastHost from "../components/ToastHost";
+import ConfirmProvider from "../components/ConfirmProvider";
 import { SparkleIcon, BellIcon, GearIcon } from "../../components/icons";
 
 // Panel uygulamanın içi — tüm /panel sayfaları arama motorlarına kapalı
@@ -40,6 +42,9 @@ export default function PanelLayout({
       <LoginReporter />
       {/* Hesap kalıcı kapatıldıysa (sunucuda silindiyse) oturumu kapat + girişe at */}
       <AccountStatusGuard />
+      {/* Uygulama geneli bildirim + onay kutusu sistemi */}
+      <ToastHost />
+      <ConfirmProvider />
       {/* Profiller stream edilir → kabuk beklemeden boyanır */}
       <Suspense fallback={null}>
         <ProfileSidebar />

@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
@@ -99,7 +100,7 @@ export default function ButcelerClient({
   }
 
   async function handleDelete(b: Budget) {
-    if (!confirm(`${findCategory(b.category).label} bütçesi silinsin mi?`)) return;
+    if (!(await confirmDialog({ message: `${findCategory(b.category).label} bütçesi silinsin mi?`, danger: true }))) return;
     const { error } = await supabase.from("category_budgets").delete().eq("id", b.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== b.id));

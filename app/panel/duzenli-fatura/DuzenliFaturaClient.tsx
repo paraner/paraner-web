@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
@@ -163,7 +164,7 @@ export default function DuzenliFaturaClient({
   }
 
   async function handleDelete(r: RecurringInvoice) {
-    if (!confirm(`"${r.customer_name}" düzenli faturası silinsin mi?`)) return;
+    if (!(await confirmDialog({ message: `"${r.customer_name}" düzenli faturası silinsin mi?`, danger: true }))) return;
     const { error } = await supabase.from("recurring_invoices").delete().eq("id", r.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== r.id));

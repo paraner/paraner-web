@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useMemo, useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
@@ -143,7 +144,7 @@ export default function MusterilerClient({
   }
 
   async function handleDelete(c: Contact) {
-    if (!confirm(`"${c.name}" silinsin mi?`)) return;
+    if (!(await confirmDialog({ message: `"${c.name}" silinsin mi?`, danger: true }))) return;
     const { error } = await supabase.from("contacts").delete().eq("id", c.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== c.id));

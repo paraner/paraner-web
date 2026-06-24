@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
@@ -182,7 +183,7 @@ export default function DuzenliClient({
   }
 
   async function handleDelete(r: Recurring) {
-    if (!confirm(`"${r.title}" silinsin mi?`)) return;
+    if (!(await confirmDialog({ message: `"${r.title}" silinsin mi?`, danger: true }))) return;
     const { error } = await supabase.from("recurring_payments").delete().eq("id", r.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== r.id));

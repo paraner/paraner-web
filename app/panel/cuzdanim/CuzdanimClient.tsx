@@ -1,4 +1,5 @@
 "use client";
+import { confirmDialog } from "../../components/confirm";
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -350,7 +351,7 @@ export default function CuzdanimClient({
 
   // ── Sil ──
   async function handleDelete(a: Asset) {
-    if (!confirm(`${getAssetDef(a.asset_type).name} varlığı silinsin mi?`)) return;
+    if (!(await confirmDialog({ message: `${getAssetDef(a.asset_type).name} varlığı silinsin mi?`, danger: true }))) return;
     const prev = list;
     setList((s) => s.filter((x) => x.id !== a.id));
     const { error: err } = await supabase.from("savings_assets").delete().eq("id", a.id);
