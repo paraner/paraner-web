@@ -84,17 +84,41 @@ export default function AccountStatusGuard() {
     // L4 — Realtime: KENDİ tarayıcı kaydım silinince ANINDA çıkış (sekme açıkken bile).
     // RLS gereği sadece kendi cihazlarımın olaylarını alırım; ayrıca device_id eşleşmesini
     // kontrol ederim → yalnızca benim kaydım silinince çıkar (başka cihaz silinince DEĞİL).
-    const channel = supabase
-      .channel("user_devices_kick")
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "user_devices" },
-        (payload) => {
-          const deletedId = (payload.old as { device_id?: string })?.device_id;
-          if (deletedId && deletedId === myId) kickRemote();
-        },
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    (async () => {
+      // Realtime'ı oturum token'ıyla yetkilendir — YOKSA RLS tüm olayları süzer.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        try { supabase.realtime.setAuth(session.access_token); } catch { /* sessiz */ }
+      }
+      const verifyAndKick = async () => {
+        if (handled.current) return;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user?.id) return;
+        const { data: row, error } = await supabase
+          .from("user_devices")
+          .select("device_id")
+          .eq("user_id", user.id)
+          .eq("device_id", myId)
+          .maybeSingle();
+        if (!error && !row && isWebDeviceRegistered()) await kickRemote();
+      };
+      channel = supabase
+        .channel("user_devices_kick")
+        .on(
+          "postgres_changes",
+          { event: "DELETE", schema: "public", table: "user_devices" },
+          (payload) => {
+            const deletedId = (payload.old as { device_id?: string })?.device_id;
+            if (deletedId) {
+              if (deletedId === myId) kickRemote();
+            } else {
+              verifyAndKick();
+            }
+          },
+        )
+        .subscribe();
+    })();
 
     check();
     const onVisible = () => {
@@ -102,10 +126,13 @@ export default function AccountStatusGuard() {
     };
     window.addEventListener("focus", check);
     document.addEventListener("visibilitychange", onVisible);
+    // Güvenlik ağı: realtime çalışmasa bile sekme açıkken her 30sn'de teyit.
+    const pollTimer = setInterval(check, 30_000);
     return () => {
       window.removeEventListener("focus", check);
       document.removeEventListener("visibilitychange", onVisible);
-      supabase.removeChannel(channel);
+      clearInterval(pollTimer);
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
