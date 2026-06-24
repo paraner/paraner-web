@@ -29,7 +29,8 @@ export default function GirisPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("closed") === "1") {
-      setError("Hesabınız kalıcı olarak kapatılmıştır. Bilgi için destek@paraner.com ile iletişime geçebilirsiniz.");
+      // 403 = auth kullanıcısı yok = hesap KENDİ silinmiş → nötr "silindi" mesajı.
+      setError("Hesabın ve tüm verilerin kalıcı olarak silindi. Bizi tekrar denemek istersen yeni bir hesap oluşturabilirsin.");
       window.history.replaceState({}, "", "/giris");
       return;
     }
