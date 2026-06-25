@@ -413,17 +413,17 @@ ul { list-style: none; }
 .auth-card {
   position: relative;
   width: 100%; max-width: 2000px;
-  height: 100%; max-height: 1240px; /* biraz daha küçük — etrafında pay kalır */
-  display: grid; grid-template-columns: 1fr 1fr;
+  height: 100%; max-height: 1240px;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   border-radius: 28px; overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.08); /* ince dış hat (beyaz kart) */
-  background: #fff; /* kart beyaz — sol görsel inset, çevresi kesintisiz beyaz */
-  box-shadow: 0 40px 120px rgba(0,0,0,0.6);
+  border: none;
+  background: transparent; /* kart şeffaf — sol panel sayfa rengini gösterir */
+  box-shadow: 0 40px 120px rgba(0,0,0,0.5);
 }
-/* Sağ panel — kartın beyazıyla kesintisiz (form burada) */
+/* Sağ panel — beyaz form */
 .auth-card-form {
   display: flex; flex-direction: column; justify-content: center;
-  overflow-y: auto; background: transparent; color: #15171a;
+  overflow-y: auto; background: #fff; color: #15171a;
 }
 .auth-split-form {
   display: flex; flex-direction: column; justify-content: center;
@@ -474,9 +474,10 @@ ul { list-style: none; }
 .btn-social svg { flex-shrink: 0; }
 .btn-social .soon-tag { margin-left: 6px; font-size: 10px; font-weight: 700; color: var(--text-faint); border: 1px solid var(--border-strong); border-radius: 6px; padding: 1px 6px; }
 
-/* Sol canlı görsel — beyaz kart içinde inset koyu rounded panel (çevresi ince beyaz çizgi) */
-.auth-visual { position: relative; overflow: hidden; margin: 4px; border-radius: 24px;
-  background: linear-gradient(160deg, #07140f 0%, #030907 55%, #000 100%); }
+/* Sol panel — BOŞ + şeffaf (sayfa rengini gösterir); 4px beyaz çerçeve.
+   Sol köşeler yuvarlak; sağ taraf düz + beyaz formla kaynaşır (çentik yok) */
+.auth-visual { position: relative; overflow: hidden; background: transparent;
+  border: 4px solid #fff; border-radius: 24px 0 0 24px; }
 /* Sol panel üstündeki P logosu */
 .auth-visual .av-brand { position: absolute; top: 28px; left: 32px; z-index: 4; }
 .auth-visual .av-brand img { width: 40px; height: 40px; border-radius: 11px;

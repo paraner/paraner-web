@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import SocialAuth from "../components/SocialAuth";
-import AuthVisual from "../components/AuthVisual";
 import OtpVerify from "../components/OtpVerify";
 import { createClient } from "../../lib/supabase/client";
 
@@ -52,7 +51,7 @@ export default function KayitPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <AuthVisual />
+        <div className="auth-visual" aria-hidden="true" />
         <div className="auth-card-form">
           <div className="auth-split-form">
           {step === "code" ? (
