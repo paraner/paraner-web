@@ -1,5 +1,15 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Auth kartı büyütüldü + ölü kod temizliği
+
+**Ölü kod temizliği (GOREVLER bekleyeni):** `app/components/AuthVisual.tsx` silindi (hiçbir yerden import edilmiyordu; sol panel `AuthSideVideo`'ya geçeli beri ölüydü). `globals.css`'ten ilgili ~50 satır kaldırıldı: `.av-brand/.av-glow/.av-noise/.av-slogan/.av-cards`, `.fin-card`, `.fc-*` + yalnız bunlara ait `finFloat/finShimmer/avGlow` keyframe'leri + `prefers-reduced-motion` satırı. **Kullanılan** video stilleri (`.auth-visual`, `.auth-visual-video`, `.auth-visual-overlay`) korundu. grep ile sıfır kalıntı doğrulandı.
+
+**Giriş/kayıt kartı büyütüldü (Mehmet isteği — "her cihazda sayfaya tam oturmasın ama büyük olsun"):** [globals.css](app/globals.css) `.auth-card` sınırları **`1440×820` → `1680×1000`**. Nefes payı `.auth-page` padding'inden (`clamp(20px,2.6vw,52px)`) korunuyor → kart ekranı doldurmaz, ortalı, bu sınırlara kadar büyür. Özellikle büyük/4K ekranda kart artık çok daha dolgun. Form içeriği max-width 620px aynı (sağ panelde ferah boşluk — premium his).
+
+**Doğrulama (gerçek render):** headless Chrome (`--headless=new`) ile masaüstü 2560×1440 + 1440×900, giriş **ve** kayıt modu → kart büyük, kenarda nefes payı, taşma/dikey zıplama yok. Mobil için CLI screenshot'ı yanıltıcı "yatay taşma" gösterdi (eski headless viewport'u yanlış uyguluyor); **CDP cihaz metrikleriyle** (390×844, mobile:true) ölçülünce `innerWidth=scrollWidth=390`, `.auth-card=390`, `.social-auth=column` → taşma YOK, mobil zaten sağlam. tsc + `next build` temiz (43/43).
+
+---
+
 ## 2026-06-25 — Auth switcher dikey zıplama (layout shift) fix
 
 **Belirti (kullanıcı):** `/giris`'te üstteki Giriş/Kayıt switcher'a basınca form "yukarıdan bir şey iniyormuş gibi" hızlıca/hafifçe zıplıyordu.

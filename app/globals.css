@@ -412,10 +412,10 @@ ul { list-style: none; }
 }
 .auth-card {
   position: relative;
-  /* Sabit makul boyut → her ekranda (4K monitör / MacBook / küçük laptop) AYNI kompozisyon,
-     ortalı; büyük ekranda dev gibi büyümez, küçükte orantılı küçülür. */
-  width: 100%; max-width: 1440px;
-  height: 100%; max-height: 820px;
+  /* Büyük ama ekranı doldurmayan kart → her ekranda (4K monitör / MacBook / küçük laptop)
+     etrafında nefes payı kalır (.auth-page padding), bu sınırlara kadar büyür; ortalı. */
+  width: 100%; max-width: 1680px;
+  height: 100%; max-height: 1000px;
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   border-radius: 28px; overflow: hidden;
   border: 4px solid #fff; /* tüm kartı saran tek parça beyaz çerçeve (sol+sağ kesintisiz) */
@@ -546,56 +546,6 @@ ul { list-style: none; }
 /* Koyu overlay — videoyu temaya oturtur (parlama yumuşar, derinlik) */
 .auth-visual-overlay { position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.30) 45%, rgba(0,191,166,0.10) 100%); }
-/* Sol panel üstündeki P logosu */
-.auth-visual .av-brand { position: absolute; top: 28px; left: 32px; z-index: 4; }
-.auth-visual .av-brand img { width: 40px; height: 40px; border-radius: 11px;
-  box-shadow: 0 4px 14px rgba(0,191,166,0.35); }
-/* Yumuşak ışımalar — büyük blur + çok durak = banding yok */
-.auth-visual .av-glow { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
-  width: 820px; height: 820px; top: -16%; right: -240px;
-  background: radial-gradient(circle, rgba(0,191,166,0.20) 0%, rgba(0,191,166,0.09) 34%, rgba(0,191,166,0.02) 58%, transparent 72%);
-  filter: blur(90px); animation: avGlow 12s ease-in-out infinite alternate; }
-.auth-visual .av-glow-2 { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
-  width: 560px; height: 560px; top: auto; right: auto; bottom: -10%; left: -180px;
-  background: radial-gradient(circle, rgba(0,232,202,0.10) 0%, rgba(0,191,166,0.04) 45%, transparent 70%);
-  filter: blur(80px); animation: avGlow 14s ease-in-out infinite alternate-reverse; }
-/* İnce grain → gradient basamaklarını dağıtır (dithering) */
-.auth-visual .av-noise { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0.5; mix-blend-mode: soft-light;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-.auth-visual .av-slogan { position: absolute; left: 48px; bottom: 56px; right: 48px; z-index: 3; }
-.auth-visual .av-slogan h2 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.25; }
-.auth-visual .av-slogan p { color: var(--text-dim); font-size: 14px; margin-top: 8px; }
-.av-cards { position: absolute; inset: 0; z-index: 2; }
-.fin-card {
-  position: absolute; border-radius: 18px; padding: 16px 18px;
-  background: rgba(255,255,255,0.055); border: 1px solid rgba(255,255,255,0.12);
-  backdrop-filter: blur(14px); box-shadow: 0 18px 50px rgba(0,0,0,0.45);
-  color: var(--text); overflow: hidden; will-change: transform;
-}
-.fin-card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.10) 50%, transparent 70%); transform: translateX(-120%); animation: finShimmer 6s ease-in-out infinite; }
-.fc-balance { top: 12%; left: 12%; width: 240px; animation: finFloat 7s ease-in-out infinite; }
-.fc-balance .fc-label { font-size: 12px; color: var(--text-dim); }
-.fc-balance .fc-amount { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin-top: 4px; }
-.fc-balance .fc-up { color: var(--teal); font-size: 12px; font-weight: 700; margin-top: 6px; }
-.fc-donut { top: 9%; right: 10%; width: 130px; display: flex; flex-direction: column; align-items: center; gap: 8px; animation: finFloat 8s ease-in-out infinite 0.6s; }
-.fc-donut .donut { width: 78px; height: 78px; border-radius: 50%; background: conic-gradient(var(--teal) 0 62%, #BA7517 62% 82%, #E24B4A 82% 100%); -webkit-mask: radial-gradient(circle 24px at center, transparent 98%, #000 100%); mask: radial-gradient(circle 24px at center, transparent 98%, #000 100%); }
-.fc-donut .fc-cap { font-size: 11px; color: var(--text-dim); }
-.fc-tx { bottom: 30%; left: 18%; width: 250px; animation: finFloat 7.5s ease-in-out infinite 0.3s; }
-.fc-tx .tx-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; font-size: 13px; }
-.fc-tx .tx-row + .tx-row { border-top: 1px solid rgba(255,255,255,0.07); }
-.fc-tx .tx-name { color: rgba(255,255,255,0.8); }
-.fc-tx .pos { color: var(--teal); font-weight: 700; }
-.fc-tx .neg { color: var(--danger-soft); font-weight: 700; }
-.fc-parla { top: 40%; right: 12%; width: 230px; display: flex; gap: 10px; align-items: flex-start; animation: finFloat 8.5s ease-in-out infinite 0.9s; }
-.fc-parla .parla-dot { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--teal), var(--teal-2)); flex-shrink: 0; }
-.fc-parla .parla-text { font-size: 13px; line-height: 1.4; color: rgba(255,255,255,0.85); }
-.fc-parla .parla-text b { color: var(--teal); }
-
-@keyframes finFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
-@keyframes finShimmer { 0%,55%,100% { transform: translateX(-120%); } 75% { transform: translateX(120%); } }
-@keyframes avGlow { 0% { transform: translateY(0) scale(1); opacity: 0.8; } 100% { transform: translateY(30px) scale(1.1); opacity: 1; } }
-
-@media (prefers-reduced-motion: reduce) { .fin-card, .av-glow { animation: none !important; } .fin-card::after { display: none; } }
 /* Tablet / küçük laptop / telefon → sıkışık iki sütun yerine temiz tek sütun form */
 @media (max-width: 1024px) {
   .auth-page { padding: 0; }
