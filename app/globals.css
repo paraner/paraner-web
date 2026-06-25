@@ -316,15 +316,8 @@ ul { list-style: none; }
 @media (max-width: 560px) { .legal { padding: 72px 20px 48px; } .legal-head h1 { font-size: 28px; } }
 
 /* ─── AUTH (GİRİŞ / KAYIT) ─── */
-.auth-page { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 32px 20px 60px; }
-.auth-top { width: 100%; max-width: var(--max); margin-bottom: 40px; }
-.auth-card {
-  width: 100%; max-width: 420px; margin: auto;
-  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border);
-  border-radius: 24px; padding: 36px 30px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-}
+/* Not: asıl .auth-page / .auth-card (yüzen beyaz kart düzeni) aşağıda tanımlı.
+   Eski tek-sütun cam kart kuralları (padding/margin sızdırıyordu) kaldırıldı. */
 .auth-head { text-align: center; margin-bottom: 28px; }
 .auth-head h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
 .auth-head p { color: var(--text-dim); font-size: 14px; }
