@@ -1,5 +1,18 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Auth canlı geri bildirim turu (placeholder + Google/Apple eşit + geçiş kayması + OTP caret)
+
+Mehmet canlıda baktı, 4 düzeltme:
+
+1. **Input placeholder'ları kaldırıldı** (`AuthForm.tsx`): "Adın Soyadın", "ornek@eposta.com" (×3), "••••••••" → temiz inputlar (etiketler üstte kalıyor).
+2. **Google + Apple birebir eşit + aralarında boşluk:** Sorun — GIS kişiselleştirilmiş butonu kendi container genişliğini ele geçirip Apple'dan farklı oluyordu (CDP ölçüm: gsi 221 vs apple 263). Çözüm: `.gsi-wrap`+`.btn-social` → `flex: 0 0 calc(50% - 8px)` (tam %50, gap 16px), GIS butonu artık container'ın gerçek genişliğine render edilir (`btnRef.clientWidth`; eski `(pw-16)/2` stale ölçümle şaşıyordu). Apple `height:44px`→`min-height:44px` + `.social-auth align-items:stretch` → Apple, GIS yüksekliğine uyar (eşit ebat). gap 12→**16px**. Ölçüm sonrası: **gsi 242 = apple 242, ikisi de 44px**.
+3. **Giriş↔Kayıt geçişinde dikey kayma giderildi (kalıcı):** Önceki min-height(720) fix'i canlıda yetmiyordu çünkü GIS kişiselleştirilmiş butonu fallback'ten uzun → kayıt içeriği rezervi aşıp dikey-ortalı blok yeniden ortalanıyordu. **Sağlam çözüm:** ortalama YOK — `.auth-card-form justify-content: flex-start`, `.auth-split-form` min-height kaldırıldı, `padding-top: clamp(40px,14vh,150px)` → wordmark/switcher her modda SABİT konumda (CDP: wordmarkTop=106 giriş=kayıt), içerik aşağı uzar. 14vh üst boşluk giriş formunu büyük ekranda görsel olarak ortalı gösterir, kısa ekranda taşmaz.
+4. **OTP "Kodu gir" — aktif hücre belirsizdi + caret yoktu:** Kök sebep — açık temada `.auth-card-form .otp-cell` (gri kenar) `.otp-cell.active` teal kenarını eziyordu (eşit specificity, sonra geliyor) → aktif hücre gri görünüyordu. Fix: `.auth-card-form .otp-cell.active/.filled` teal override (specificity 0,0,3) + aktif hücreye **yanıp sönen teal caret** (`::after` + `@keyframes otpCaret`, `prefers-reduced-motion` kapalı) + teal halka (box-shadow). Artık imlecin nerede olduğu net.
+
+Doğrulama: CDP (DevTools cihaz metrikleri) ile masaüstü 1600×1000 giriş+kayıt + mobil 390 + enjekte edilmiş OTP adımı screenshot'landı. tsc + `next build` temiz (43/43).
+
+---
+
 ## 2026-06-26 — Auth kartı büyütüldü + ölü kod temizliği
 
 **Ölü kod temizliği (GOREVLER bekleyeni):** `app/components/AuthVisual.tsx` silindi (hiçbir yerden import edilmiyordu; sol panel `AuthSideVideo`'ya geçeli beri ölüydü). `globals.css`'ten ilgili ~50 satır kaldırıldı: `.av-brand/.av-glow/.av-noise/.av-slogan/.av-cards`, `.fin-card`, `.fc-*` + yalnız bunlara ait `finFloat/finShimmer/avGlow` keyframe'leri + `prefers-reduced-motion` satırı. **Kullanılan** video stilleri (`.auth-visual`, `.auth-visual-video`, `.auth-visual-overlay`) korundu. grep ile sıfır kalıntı doğrulandı.

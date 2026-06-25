@@ -110,10 +110,9 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
         context: mode === "kayit" ? "signup" : "signin",
       });
 
-      // Yan yana düzen: konteynerin yarısı (gap çıkarılmış); dar ekranda (alt alta) tam genişlik.
-      const pw = btnRef.current.parentElement?.clientWidth ?? 320;
-      const stacked = window.innerWidth <= 420;
-      const target = stacked ? pw : (pw - 12) / 2;
+      // gsi-wrap genişliği CSS ile sabit (%50 - 8px); GIS butonunu tam o genişliğe render et
+      // → Apple ile birebir eşit yarım. (Eski (pw-16)/2 hesabı stale ölçümle şaşıyordu.)
+      const target = btnRef.current.clientWidth || 240;
       const width = Math.round(Math.min(400, Math.max(200, target)));
       window.google.accounts.id.renderButton(btnRef.current, {
         type: "standard",

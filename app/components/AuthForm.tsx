@@ -218,12 +218,12 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
             <form onSubmit={handleSignup}>
               <div className="field">
                 <label htmlFor="name">Ad Soyad</label>
-                <input id="name" type="text" placeholder="Adın Soyadın" autoComplete="name"
+                <input id="name" type="text" autoComplete="name"
                   value={name} onChange={(e) => setName(e.target.value)} disabled={loading} />
               </div>
               <div className="field">
                 <label htmlFor="email">E-posta</label>
-                <input id="email" type="email" placeholder="ornek@eposta.com" autoComplete="email"
+                <input id="email" type="email" autoComplete="email"
                   value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
               </div>
               <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
@@ -237,13 +237,13 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
             <form onSubmit={handlePasswordLogin}>
               <div className="field">
                 <label htmlFor="email">E-posta</label>
-                <input id="email" type="email" placeholder="ornek@eposta.com" autoComplete="email"
+                <input id="email" type="email" autoComplete="email"
                   value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
               </div>
               <div className="field">
                 <label htmlFor="password">Şifre</label>
                 <div className="input-wrap">
-                  <input id="password" type={showPw ? "text" : "password"} placeholder="••••••••"
+                  <input id="password" type={showPw ? "text" : "password"}
                     autoComplete="current-password" value={password}
                     onChange={(e) => setPassword(e.target.value)} disabled={loading} />
                   <button type="button" className="toggle-pw" onClick={() => setShowPw((s) => !s)}>
@@ -266,7 +266,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
             <form onSubmit={handleSendOtp}>
               <div className="field">
                 <label htmlFor="email">E-posta</label>
-                <input id="email" type="email" placeholder="ornek@eposta.com" autoComplete="email"
+                <input id="email" type="email" autoComplete="email"
                   value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
               </div>
               <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
