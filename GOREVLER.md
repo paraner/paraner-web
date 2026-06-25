@@ -33,8 +33,10 @@
 - [ ] Mobil ileride gizlilik metnini değiştirirse `/gizlilik` (`app/gizlilik/page.tsx`) ile eşitle.
 
 ### Auth / hesap
+- [x] **Giriş/kayıt (auth) redesign** *(2026-06-25)*: `/giris`+`/kayit` tek `components/AuthForm` (in-place mod geçişi + URL); üstte Paraner wordmark; iOS tarzı **sürüklenebilir premium switcher** (animasyonlu teal gradient çerçeve); alt "hesabın var mı/yok mu" linkleri kaldırıldı; **sol panele finans videosu** (`AuthSideVideo`, Mixkit 606KB); Google+Apple **yan yana** eşit pill; input + Devam Et tam pill; kart sabit 1440×820 (her ekranda tutarlı). Detay: DAILY_LOG 2026-06-25.
+- [ ] **Ölü kod temizliği:** `components/AuthVisual.tsx` + `.av-*`/`.fin-card`/`.fc-*` CSS (sol panel videoya geçti, artık import edilmiyor)
 - [x] **Hesap ekleme** (max 3): switcher'da Bireysel/İşletme oluşturma + otomatik geçiş; **liquid-glass geçiş animasyonu** (PARANER soldan sağa beyaz→yeşil) *(2026-06-11)*
-- [ ] Web'de **kayıt akışı** (signUp + onboarding: para birimi / profil oluşturma) — şu an pasif, "önce giriş" denmişti
+- [ ] Web'de **kayıt akışı** (signUp + onboarding: para birimi / profil oluşturma) — kayıt OTP + OnboardingModal var; ek onboarding adımları gözden geçirilecek
 - [ ] **Şifremi unuttum** (parola sıfırlama e-postası) — link var, işlev yok
 - [ ] İşletme hesabı eklemede **Stripe ödeme/trial kapısı** (şimdilik direkt açılıyor; altyapı sonra)
 

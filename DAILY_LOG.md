@@ -1,5 +1,23 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-25 — Giriş/kayıt (auth) redesign: wordmark + sürüklenebilir switcher + sol panel finans videosu
+
+**Hedef:** `/giris` + `/kayit` sağ formunu yeniden düzenle; sol siyah panele finans videosu. Önce sol panel çerçeve/köşe işi, sonra içerik.
+
+- **Sol panel köşe/çerçeve:** Kart artık tek parça **4px beyaz çerçeve** (`.auth-card` border, sol+sağ kesintisiz). Sol panel (`.auth-visual`) = `var(--bg)` (arka planla AYNI siyah, tek değişkenden değişir), sağ köşeleri yuvarlatıldı (`border-radius: 0 24px 24px 0`); kart içi `#fff` olduğundan yuvarlatılan köşeden beyaz görünür (siyah panel 4 köşesi yuvarlak durur).
+- **Birleşik `app/components/AuthForm.tsx`** (YENİ): `/giris` ve `/kayit` artık AYNI bileşeni farklı `initialMode` ile render eder (`giris/page.tsx` + `kayit/page.tsx` = ince sarmalayıcı). Mod **yerinde** değişir (sayfa yenilenmez), `history.replaceState` ile URL de /giris↔/kayit güncellenir. Tüm mantık korundu: şifresiz OTP, şifre fallback (giriş), Google GIS, OAuth `?code` yakalama, `?closed/error/signedout` mesajları, kayıt OTP.
+- **Üstte Paraner wordmark** (`/paraner-wordmark.png`, ortalı 152×31, teal).
+- **iOS UISegmentedControl tarzı switcher** (`AuthSwitch`, AuthForm içinde): Giriş Yap | Kayıt Ol; **tıkla veya sürükle** geçiş (pointer events, tap pozisyona göre, drag eşiği 3px), thumb CSS transition ile kayar. **Premium:** animasyonlu teal gradient çerçeve (mask halka `switchBorder` 4.5s), yumuşak gölge, yaylı geçiş. Genişlik = form içeriği.
+- **Alttaki "zaten hesabın var mı / yok mu" linkleri KALDIRILDI** (switcher onların yerine geçti).
+- **Sol panel finans videosu** (`app/components/AuthSideVideo.tsx`, YENİ): Mixkit ücretsiz forex klibi (koyu/teal, lisans: ticari+atıfsız), web için sıkıştırıldı **6.8MB→606KB** (`public/paraner-auth-bg.mp4`, muted/loop/autoPlay/playsInline + faststart) + poster (`public/paraner-auth-bg.jpg`). `object-fit:cover`; panel `overflow:hidden`+yuvarlak köşeli → video köşelere kırpılır. Üstüne koyu→teal overlay (parlama yumuşar).
+- **Google + Apple YAN YANA** (`SocialAuth.tsx` + `.social-auth` flex row wrap): eşit yarımlar, tam pill; etiketler kısaltıldı (Google/Apple), GIS genişliği konteynerin yarısına göre hesaplanır (`window.innerWidth<=420` → alt alta). Input + Devam Et butonu da tam pill (999px). OTP buton metni **"Devam Et"**.
+- **Kart sabit boyut** (`.auth-card` `max-width:1440px` `max-height:820px`, ortalı) → her ekranda (4K/MacBook/telefon) AYNI kompozisyon (önce 1080×720 yapıldı, "yapışık" deyince büyütüldü). Tek-sütun eşiği 900→**1024px**; form içeriği `max-width:620px`.
+- `globals.css` auth bölümü elden geçti. tsc + `next build` temiz. Kod commit `379f184` → push → Vercel. Bu doc commit'i ayrı.
+
+**Not (kalan/ölü kod):** `app/components/AuthVisual.tsx` + `.av-glow/.av-noise/.av-cards/.fin-card/.fc-*` CSS bloğu artık **KULLANILMIYOR** (sol panel videoya geçti; AuthVisual oturum öncesinden beri import edilmiyordu) → ileride temizlenebilir. **Şifremi unuttum** hâlâ işlevsiz (link /giris'e gider). Google GIS butonu yarım genişlikte kendi metnini ("Continue with Google" / kişiselleştirilmiş hesap) gösterir → Apple ile birebir aynı yazı değil (kabul edildi; istenirse ikon-only yapılır).
+
+---
+
 ## 2026-06-20 — favicon.ico (Google Search Console fix) + acilis kalıntı temizliği
 
 **Sorun:** `paraner.com/favicon.ico` 404 dönüyordu → Google klasik favicon yolunu bulamıyordu (Search Console favicon uyarısı).

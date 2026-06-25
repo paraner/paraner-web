@@ -16,7 +16,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ```
 app/
-  page.tsx, giris/, kayit/   — pazarlama + auth
+  page.tsx, giris/, kayit/   — pazarlama + auth (giris/kayit = ince sarmalayıcı → components/AuthForm)
+  components/                — AuthForm (birleşik giriş/kayıt: wordmark + sürüklenebilir switcher,
+                               in-place mod + URL) · AuthSideVideo (sol panel finans videosu) ·
+                               SocialAuth (Google GIS + Apple) · OtpVerify. (AuthVisual = ÖLÜ, kullanılmıyor)
   panel/                     — app.paraner.com (sol menü + içerik)
     layout.tsx               — shell (Sidebar + üst bar, auth guard, noindex)
     Sidebar.tsx, LogoutButton.tsx
