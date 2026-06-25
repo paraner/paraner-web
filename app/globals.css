@@ -407,13 +407,13 @@ ul { list-style: none; }
   position: relative; z-index: 1;
   height: 100vh; height: 100dvh;
   display: flex; align-items: center; justify-content: center;
-  /* İnce ve tutarlı pay — kart neredeyse ekranı doldurur (referans gibi) */
-  padding: clamp(14px, 1.8vw, 28px); background: #000;
+  /* Pay — kart ekranı doldurmasın, etrafında nefes kalsın */
+  padding: clamp(20px, 2.6vw, 52px); background: #000;
 }
 .auth-card {
   position: relative;
-  width: 100%; max-width: 2200px;
-  height: 100%; max-height: 1400px; /* yüksekliği de doldurur (referans gibi) */
+  width: 100%; max-width: 2000px;
+  height: 100%; max-height: 1240px; /* biraz daha küçük — etrafında pay kalır */
   display: grid; grid-template-columns: 1fr 1fr;
   border-radius: 28px; overflow: hidden;
   border: 1px solid rgba(0,0,0,0.08); /* ince dış hat (beyaz kart) */
@@ -475,8 +475,12 @@ ul { list-style: none; }
 .btn-social .soon-tag { margin-left: 6px; font-size: 10px; font-weight: 700; color: var(--text-faint); border: 1px solid var(--border-strong); border-radius: 6px; padding: 1px 6px; }
 
 /* Sol canlı görsel — beyaz kart içinde inset koyu rounded panel (çevresi ince beyaz çizgi) */
-.auth-visual { position: relative; overflow: hidden; margin: 2px; border-radius: 26px;
+.auth-visual { position: relative; overflow: hidden; margin: 4px; border-radius: 24px;
   background: linear-gradient(160deg, #07140f 0%, #030907 55%, #000 100%); }
+/* Sol panel üstündeki P logosu */
+.auth-visual .av-brand { position: absolute; top: 28px; left: 32px; z-index: 4; }
+.auth-visual .av-brand img { width: 40px; height: 40px; border-radius: 11px;
+  box-shadow: 0 4px 14px rgba(0,191,166,0.35); }
 /* Yumuşak ışımalar — büyük blur + çok durak = banding yok */
 .auth-visual .av-glow { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
   width: 820px; height: 820px; top: -16%; right: -240px;

@@ -1,11 +1,18 @@
-// Giriş/kayıt sağ paneli — Paraner marka renkleriyle animasyonlu finans kartları.
+// Giriş/kayıt sol paneli — Paraner marka renkleriyle animasyonlu finans kartları.
 // Saf sunum (CSS animasyonları globals.css'te). Mobilde gizlenir.
+import Image from "next/image";
+
 export default function AuthVisual() {
   return (
     <div className="auth-visual" aria-hidden="true">
       <div className="av-glow" />
       <div className="av-glow av-glow-2" />
       <div className="av-noise" />
+
+      {/* Marka — sol panel üstünde P logosu */}
+      <div className="av-brand">
+        <Image src="/paraner-logo.png" alt="Paraner" width={40} height={40} priority />
+      </div>
 
       <div className="av-cards">
         {/* Bakiye */}
