@@ -1,16 +1,173 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
 
-// Google ile giriş (aktif) + Apple ile giriş (pasif placeholder — Apple eklenince
-// `appleEnabled` true yapılır, tek satır). Hem giriş hem kayıt sayfasında kullanılır.
+// Google Web Client ID (public — mobil app ile aynı, Supabase Google provider'da kayıtlı).
+const GOOGLE_CLIENT_ID =
+  "108116742316-mng0v121kl33sju0mb0ecruak83qmbbs.apps.googleusercontent.com";
+
+// Google Identity Services (GIS) tipleri — sadece kullandığımız kadar.
+type GoogleCredentialResponse = { credential: string };
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (cfg: Record<string, unknown>) => void;
+          renderButton: (el: HTMLElement, opts: Record<string, unknown>) => void;
+          prompt: () => void;
+          cancel: () => void;
+        };
+      };
+    };
+  }
+}
+
+// Google ile giriş + Apple (pasif placeholder). Hem giriş hem kayıt sayfasında kullanılır.
+//
+// Google: artık GIS "One Tap" + kişiselleştirilmiş buton. Tarayıcıda Google oturumu
+// açıksa "Paraner olarak devam et · admin@paraner.com" şeklinde hesabı gösterir
+// (signInWithIdToken — sayfadan çıkmadan giriş). GIS yüklenmezse eski signInWithOAuth
+// redirect butonuna güvenli şekilde düşülür.
 export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
   const verb = mode === "kayit" ? "kayıt ol" : "devam et";
   const appleEnabled = false; // Apple ile Giriş eklenince true
 
-  async function handleGoogle() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [gisReady, setGisReady] = useState(false); // GIS butonu render edildi mi
+  const btnRef = useRef<HTMLDivElement>(null);
+  const rawNonceRef = useRef<string>(""); // signInWithIdToken'a ham nonce gider
+
+  // Başarılı girişten sonra yönlendirme (şifre/OTP akışıyla aynı).
+  const goAfterLogin = useCallback(() => {
+    const { protocol, hostname } = window.location;
+    if (hostname.endsWith("paraner.com")) {
+      window.location.assign(`${protocol}//app.paraner.com/`);
+    } else {
+      router.push("/panel");
+      router.refresh();
+    }
+  }, [router]);
+
+  // Google credential geldi → Supabase oturumu aç (ham nonce ile).
+  const handleCredential = useCallback(
+    async (resp: GoogleCredentialResponse) => {
+      setError(null);
+      setLoading(true);
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: resp.credential,
+          nonce: rawNonceRef.current,
+        });
+        if (error) {
+          setLoading(false);
+          setError("Google ile giriş tamamlanamadı. Lütfen tekrar dene.");
+          return;
+        }
+        goAfterLogin();
+      } catch {
+        setLoading(false);
+        setError("Bağlantı hatası. İnternetini kontrol et.");
+      }
+    },
+    [goAfterLogin]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function initGis() {
+      if (cancelled || !window.google || !btnRef.current) return;
+
+      // nonce: Google'a SHA-256 hash'li, Supabase'e ham versiyonu verilir (güvenlik şartı).
+      const bytes = crypto.getRandomValues(new Uint8Array(32));
+      const rawNonce = btoa(String.fromCharCode(...Array.from(bytes)));
+      const hashBuf = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(rawNonce)
+      );
+      const hashedNonce = Array.from(new Uint8Array(hashBuf))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+      rawNonceRef.current = rawNonce;
+
+      if (cancelled || !window.google || !btnRef.current) return;
+
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredential,
+        nonce: hashedNonce,
+        use_fedcm_for_prompt: true, // One Tap kartı — Chrome cookie kaldırmasına uyum
+        use_fedcm_for_button: true, // Kişiselleştirilmiş "Continue as" butonu (cookie'siz)
+        itp_support: true, // Safari ITP
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        context: mode === "kayit" ? "signup" : "signin",
+      });
+
+      const width = Math.min(
+        400,
+        Math.max(200, btnRef.current.parentElement?.clientWidth ?? 320)
+      );
+      window.google.accounts.id.renderButton(btnRef.current, {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        text: "continue_with",
+        shape: "pill",
+        logo_alignment: "left",
+        width,
+      });
+      setGisReady(true);
+
+      // One Tap kişiselleştirilmiş kart (Google oturumu açıksa belirir).
+      window.google.accounts.id.prompt();
+    }
+
+    // GIS script'ini bir kez yükle.
+    const existing = document.getElementById(
+      "google-gsi-script"
+    ) as HTMLScriptElement | null;
+    if (window.google) {
+      initGis();
+    } else if (!existing) {
+      const s = document.createElement("script");
+      s.id = "google-gsi-script";
+      s.src = "https://accounts.google.com/gsi/client";
+      s.async = true;
+      s.defer = true;
+      s.onload = () => {
+        if (!cancelled) initGis();
+      };
+      document.head.appendChild(s);
+    } else {
+      existing.addEventListener(
+        "load",
+        () => {
+          if (!cancelled) initGis();
+        },
+        { once: true }
+      );
+    }
+
+    return () => {
+      cancelled = true;
+      try {
+        window.google?.accounts.id.cancel();
+      } catch {
+        /* GIS yüklü değilse yoksay */
+      }
+    };
+  }, [handleCredential, mode]);
+
+  // GIS yüklenmezse — eski OAuth redirect yedeği.
+  async function handleGoogleFallback() {
     setLoading(true);
     try {
       const supabase = createClient();
@@ -20,26 +177,38 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
       });
       if (error) {
         setLoading(false);
-        alert("Google ile bağlanılamadı. Lütfen tekrar dene.");
+        setError("Google ile bağlanılamadı. Lütfen tekrar dene.");
       }
       // Başarılıysa tarayıcı Google'a yönlenir.
     } catch {
       setLoading(false);
-      alert("Bağlantı hatası. İnternetini kontrol et.");
+      setError("Bağlantı hatası. İnternetini kontrol et.");
     }
   }
 
   return (
     <div className="social-auth">
-      <button
-        type="button"
-        className="btn btn-social btn-google"
-        onClick={handleGoogle}
-        disabled={loading}
-      >
-        <GoogleIcon />
-        {loading ? "Yönlendiriliyor…" : `Google ile ${verb}`}
-      </button>
+      {error && <div className="auth-msg error">{error}</div>}
+
+      {/* Google kişiselleştirilmiş buton (GIS render eder) */}
+      <div
+        ref={btnRef}
+        className={`gsi-wrap${gisReady ? "" : " gsi-hidden"}`}
+        aria-busy={loading}
+      />
+
+      {/* Yedek custom buton — GIS hazır değilse */}
+      {!gisReady && (
+        <button
+          type="button"
+          className="btn btn-social btn-google"
+          onClick={handleGoogleFallback}
+          disabled={loading}
+        >
+          <GoogleIcon />
+          {loading ? "Yönlendiriliyor…" : `Google ile ${verb}`}
+        </button>
+      )}
 
       <button
         type="button"

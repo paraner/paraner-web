@@ -420,6 +420,9 @@ ul { list-style: none; }
 .auth-split-form .auth-divider { margin: 18px 0; }
 
 .social-auth { display: flex; flex-direction: column; gap: 10px; }
+/* GIS (Google Identity Services) kişiselleştirilmiş buton kabı */
+.gsi-wrap { display: flex; justify-content: center; min-height: 44px; }
+.gsi-wrap.gsi-hidden { display: none; }
 .btn-social {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   width: 100%; padding: 13px 20px; border-radius: 14px; font-size: 15px; font-weight: 600;
