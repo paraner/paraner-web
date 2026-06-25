@@ -33,7 +33,6 @@ declare global {
 // redirect butonuna güvenli şekilde düşülür.
 export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
   const router = useRouter();
-  const verb = mode === "kayit" ? "kayıt ol" : "devam et";
   const appleEnabled = false; // Apple ile Giriş eklenince true
 
   const [loading, setLoading] = useState(false);
@@ -111,10 +110,11 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
         context: mode === "kayit" ? "signup" : "signin",
       });
 
-      const width = Math.min(
-        400,
-        Math.max(200, btnRef.current.parentElement?.clientWidth ?? 320)
-      );
+      // Yan yana düzen: konteynerin yarısı (gap çıkarılmış); dar ekranda (alt alta) tam genişlik.
+      const pw = btnRef.current.parentElement?.clientWidth ?? 320;
+      const stacked = window.innerWidth <= 420;
+      const target = stacked ? pw : (pw - 12) / 2;
+      const width = Math.round(Math.min(400, Math.max(200, target)));
       window.google.accounts.id.renderButton(btnRef.current, {
         type: "standard",
         theme: "outline",
@@ -206,7 +206,7 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
           disabled={loading}
         >
           <GoogleIcon />
-          {loading ? "Yönlendiriliyor…" : `Google ile ${verb}`}
+          {loading ? "…" : "Google"}
         </button>
       )}
 
@@ -217,7 +217,7 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
         title="Apple ile Giriş yakında"
       >
         <AppleIcon />
-        Apple ile {verb}
+        Apple
         {!appleEnabled && <span className="soon-tag">YAKINDA</span>}
       </button>
     </div>
