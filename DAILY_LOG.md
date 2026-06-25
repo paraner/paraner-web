@@ -1,5 +1,12 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-25 — Auth switcher dikey zıplama (layout shift) fix
+
+**Belirti (kullanıcı):** `/giris`'te üstteki Giriş/Kayıt switcher'a basınca form "yukarıdan bir şey iniyormuş gibi" hızlıca/hafifçe zıplıyordu.
+- **Kök sebep:** Masaüstünde form alanı (`.auth-card-form` + `.auth-split-form`) dikey ORTALI; giriş (~564px) ile kayıt (~696px — ekstra Ad Soyad alanı + şartlar metni) farklı yükseklikte → mod değişince ortalanan blok yeniden hizalanıp ~75px DİKEY zıplıyordu (switcher in-place çalışıyor, navigasyon/remount değil; saf CSS layout shift).
+- **Fix (`app/globals.css`):** `.auth-split-form` → **`min-height: min(720px, 100%)`** (en uzun moda göre sabit yer ayır; `min(...,100%)` kapağı kısa laptop ekranında taşmayı önler) + `justify-content: flex-start` (içerik üstten hizalı) → wordmark/switcher/başlık iki modda da AYNI konumda kalır, zıplama biter; blok yine kartta ortalı görünür. `.auth-card-form` → `justify-content: safe center` (içerik karttan uzunsa üstten KIRPILMAZ — sağlamlık). Mobil (≤1024) `min-height: 0` ile sıfırlandı (zaten tek sütun + üstten hizalı, etkilenmez).
+- **Doğrulama:** localde (`next dev` :3137) headless Chrome 1440×900 ile iki modun öncesi/sonrası screenshot'ı alındı → sonrası wordmark her iki modda aynı hizada, geçişte zıplama yok. tsc temiz → push → Vercel.
+
 ## 2026-06-25 — Giriş/kayıt (auth) redesign: wordmark + sürüklenebilir switcher + sol panel finans videosu
 
 **Hedef:** `/giris` + `/kayit` sağ formunu yeniden düzenle; sol siyah panele finans videosu. Önce sol panel çerçeve/köşe işi, sonra içerik.

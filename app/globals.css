@@ -424,11 +424,17 @@ ul { list-style: none; }
 }
 /* Sağ panel — beyaz form */
 .auth-card-form {
-  display: flex; flex-direction: column; justify-content: center;
+  display: flex; flex-direction: column; justify-content: safe center;
   overflow-y: auto; background: #fff; color: #15171a;
 }
+/* Giriş/kayıt modları farklı yükseklikte (kayıtta ekstra Ad Soyad + şartlar). Form dikey
+   ortalı olduğu için switcher'a basınca blok yeniden ortalanıp ~75px DİKEY ZIPLIYORDU.
+   Çözüm: en uzun moda göre sabit min-yükseklik ayır + içeriği üstten hizala → wordmark/
+   switcher iki modda da AYNI konumda kalır, blok yine kartta ortalı görünür. min(720px,100%)
+   kapağı kısa ekranlarda (laptop) taşmayı önler. (Mobilde min-height sıfırlanır, aşağıda.) */
 .auth-split-form {
-  display: flex; flex-direction: column; justify-content: center;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  min-height: min(720px, 100%);
   padding: 48px 60px; max-width: 620px; width: 100%; margin: 0 auto;
 }
 
@@ -599,7 +605,7 @@ ul { list-style: none; }
     border: none; border-radius: 0; box-shadow: none;
   }
   .auth-visual { display: none; }
-  .auth-split-form { padding: 32px 24px 60px; justify-content: flex-start; padding-top: 56px; }
+  .auth-split-form { padding: 32px 24px 60px; justify-content: flex-start; padding-top: 56px; min-height: 0; }
   .auth-split-form .auth-head { text-align: center; }
 }
 
