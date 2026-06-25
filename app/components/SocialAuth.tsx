@@ -40,6 +40,8 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
   const [gisReady, setGisReady] = useState(false); // GIS butonu render edildi mi
   const btnRef = useRef<HTMLDivElement>(null);
   const rawNonceRef = useRef<string>(""); // signInWithIdToken'a ham nonce gider
+  const modeRef = useRef(mode); // GIS init'te context için (mod değişince RE-INIT YOK → titreme yok)
+  modeRef.current = mode;
 
   // Başarılı girişten sonra yönlendirme (şifre/OTP akışıyla aynı).
   const goAfterLogin = useCallback(() => {
@@ -107,7 +109,7 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
         itp_support: true, // Safari ITP
         auto_select: false,
         cancel_on_tap_outside: true,
-        context: mode === "kayit" ? "signup" : "signin",
+        context: modeRef.current === "kayit" ? "signup" : "signin",
       });
 
       // gsi-wrap genişliği CSS ile sabit (%50 - 8px); GIS butonunu tam o genişliğe render et
@@ -163,7 +165,9 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
         /* GIS yüklü değilse yoksay */
       }
     };
-  }, [handleCredential, mode]);
+    // mode KASITLI olarak yok — mod değişiminde GIS re-init etme (Google butonu titremesin)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleCredential]);
 
   // GIS yüklenmezse — eski OAuth redirect yedeği.
   async function handleGoogleFallback() {

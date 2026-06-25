@@ -16,6 +16,7 @@ type Mode = "giris" | "kayit";
 export default function AuthForm({ initialMode }: { initialMode: Mode }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(initialMode);
+  const [dir, setDir] = useState<"fwd" | "back">("fwd"); // geçiş animasyon yönü (kayıt=sağdan, giriş=soldan)
   const [step, setStep] = useState<"input" | "code">("input");
 
   const [pwMode, setPwMode] = useState(false); // giriş: false = OTP, true = şifre
@@ -30,6 +31,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
 
   // Mod değiştir (switcher) — alanları sıfırla + URL'yi (/giris ↔ /kayit) güncelle.
   const switchTo = useCallback((next: Mode) => {
+    setDir(next === "kayit" ? "fwd" : "back");
     setMode(next);
     setStep("input");
     setPwMode(false);
@@ -199,7 +201,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
         <>
           <AuthSwitch mode={mode} onSwitch={switchTo} />
 
-          <div className="auth-head">
+          <div key={`head-${mode}`} className={`auth-anim auth-anim-${dir} auth-head`}>
             <h1>{mode === "kayit" ? "Hesap oluştur" : "Tekrar hoş geldin"}</h1>
             <p>
               {mode === "kayit"
@@ -210,20 +212,19 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
 
           {error && <div className="auth-msg error">{error}</div>}
 
-          <SocialAuth mode={mode} />
+          <SocialAuth key="social" mode={mode} />
 
           <div className="auth-divider">veya e-posta ile</div>
 
+          <div key={`form-${mode}`} className={`auth-anim auth-anim-${dir}`}>
           {mode === "kayit" ? (
             <form onSubmit={handleSignup}>
               <div className="field">
-                <label htmlFor="name">Ad Soyad</label>
-                <input id="name" type="text" autoComplete="name"
+                <input id="name" type="text" placeholder="Ad Soyad" aria-label="Ad Soyad" autoComplete="name"
                   value={name} onChange={(e) => setName(e.target.value)} disabled={loading} />
               </div>
               <div className="field">
-                <label htmlFor="email">E-posta</label>
-                <input id="email" type="email" autoComplete="email"
+                <input id="email" type="email" placeholder="E-posta" aria-label="E-posta" autoComplete="email"
                   value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
               </div>
               <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
@@ -236,14 +237,12 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
           ) : pwMode ? (
             <form onSubmit={handlePasswordLogin}>
               <div className="field">
-                <label htmlFor="email">E-posta</label>
-                <input id="email" type="email" autoComplete="email"
+                <input id="email" type="email" placeholder="E-posta" aria-label="E-posta" autoComplete="email"
                   value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
               </div>
               <div className="field">
-                <label htmlFor="password">Şifre</label>
                 <div className="input-wrap">
-                  <input id="password" type={showPw ? "text" : "password"}
+                  <input id="password" type={showPw ? "text" : "password"} placeholder="Şifre" aria-label="Şifre"
                     autoComplete="current-password" value={password}
                     onChange={(e) => setPassword(e.target.value)} disabled={loading} />
                   <button type="button" className="toggle-pw" onClick={() => setShowPw((s) => !s)}>
@@ -265,8 +264,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
           ) : (
             <form onSubmit={handleSendOtp}>
               <div className="field">
-                <label htmlFor="email">E-posta</label>
-                <input id="email" type="email" autoComplete="email"
+                <input id="email" type="email" placeholder="E-posta" aria-label="E-posta" autoComplete="email"
                   value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
               </div>
               <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
@@ -278,6 +276,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
               </button>
             </form>
           )}
+          </div>
         </>
       )}
     </div>

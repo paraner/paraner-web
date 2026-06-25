@@ -1,5 +1,17 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Auth: label→placeholder (input içi) + geçiş animasyonu + titreme fix
+
+Mehmet canlı geri bildirim (2. tur):
+
+1. **Etiketler input içine taşındı:** `<label>` üst etiketleri kaldırıldı, metin artık input içinde **placeholder** ("Ad Soyad", "E-posta", "Şifre") + erişilebilirlik için `aria-label`. (Bir önceki turda placeholder'ları kaldırmıştık; Mehmet bu sefer metni input İÇİNDE istedi.)
+2. **Giriş ⇄ Kayıt geçiş animasyonu (Dribbble signup tarzı):** head + form blokları `key={mode}` ile sarıldı → her geçişte **yumuşak kayıp belirme** (`authInFwd/Back`, 0.40s, kayıt sağdan / giriş soldan; `prefers-reduced-motion` kapalı). Switcher thumb zaten CSS transition ile kayıyordu.
+3. **Sekme geçişindeki TİTREME giderildi:** Kök sebep — `SocialAuth` `useEffect` deps'inde `mode` vardı → her mod değişiminde GIS **yeniden init** olup Google butonunu yeniden render ediyordu (titreme). Fix: GIS **bir kez** init (deps `[handleCredential]`, context için `modeRef`), `SocialAuth`'a sabit `key="social"` (geçişte remount YOK), ve animasyon DIŞINDA tutuldu (head/form animasyonlu, social sabit) → Google/Apple bloğu hiç titremiyor.
+
+Doğrulama: CDP ile giriş + mid-transition (anim class `auth-anim auth-anim-fwd` doğrulandı) + kayıt screenshot; placeholder'lar input içinde, Google/Apple geçişte sabit. tsc + `next build` temiz (43/43). dev log temiz.
+
+---
+
 ## 2026-06-26 — Auth canlı geri bildirim turu (placeholder + Google/Apple eşit + geçiş kayması + OTP caret)
 
 Mehmet canlıda baktı, 4 düzeltme:
