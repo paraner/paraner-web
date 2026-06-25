@@ -409,11 +409,59 @@ ul { list-style: none; }
 /* ═══════════════════════════════════════════════
    AUTH SPLIT (giriş/kayıt) — sol form + sağ canlı görsel
    ═══════════════════════════════════════════════ */
-.auth-split { position: relative; z-index: 1; min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+/* Ortalanmış yüzen auth kartı — siyah zemin. Sol: app görseli (ileride video). Sağ: form. */
+.auth-page {
+  position: relative; z-index: 1;
+  height: 100vh; height: 100dvh;
+  display: flex; align-items: center; justify-content: center;
+  /* İnce ve tutarlı pay — kart neredeyse ekranı doldurur (referans gibi) */
+  padding: clamp(14px, 1.8vw, 28px); background: #000;
+}
+.auth-card {
+  position: relative;
+  width: 100%; max-width: 2200px;
+  height: 100%; max-height: 1400px; /* yüksekliği de doldurur (referans gibi) */
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-radius: 28px; overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.08); /* ince dış hat (beyaz kart) */
+  background: #fff; /* kart beyaz — sol görsel inset, çevresi kesintisiz beyaz */
+  box-shadow: 0 40px 120px rgba(0,0,0,0.6);
+}
+/* Sağ panel — kartın beyazıyla kesintisiz (form burada) */
+.auth-card-form {
+  display: flex; flex-direction: column; justify-content: center;
+  overflow-y: auto; background: transparent; color: #15171a;
+}
 .auth-split-form {
   display: flex; flex-direction: column; justify-content: center;
-  padding: 40px 7%; max-width: 560px; width: 100%; margin: 0 auto;
+  padding: 48px 60px; max-width: 560px; width: 100%; margin: 0 auto;
 }
+
+/* ─── Sağ panel açık tema (beyaz zemin) — yalnızca auth formu ─── */
+.auth-card-form .logo-text { color: #15171a; }
+.auth-card-form .auth-head h1 { color: #0c0e10; }
+.auth-card-form .auth-head p { color: #5b6168; }
+.auth-card-form .field label { color: #2b2f34; }
+.auth-card-form .field input,
+.auth-card-form .field select { background: #fff; border-color: #d8dce1; color: #15171a; }
+.auth-card-form .field input::placeholder { color: #9aa0a6; }
+.auth-card-form .field input:focus,
+.auth-card-form .field select:focus { border-color: var(--teal); background: #fff; }
+.auth-card-form .input-wrap .toggle-pw { color: #6b7178; }
+.auth-card-form .auth-divider { color: #9aa0a6; }
+.auth-card-form .auth-divider::before,
+.auth-card-form .auth-divider::after { background: #e4e7eb; }
+.auth-card-form .auth-alt { color: #5b6168; }
+.auth-card-form .auth-terms { color: #9aa0a6; }
+.auth-card-form .auth-terms a { color: #5b6168; }
+.auth-card-form .btn-social { background: #fff; border-color: #d8dce1; color: #15171a; }
+.auth-card-form .btn-social:hover:not(:disabled) { background: #f4f5f7; }
+.auth-card-form .btn-social .soon-tag { color: #9aa0a6; border-color: #d8dce1; }
+.auth-card-form .otp-cell { background: #fff; border-color: #d8dce1; color: #15171a; }
+.auth-card-form .otp-loading,
+.auth-card-form .otp-resend,
+.auth-card-form .otp-back { color: #5b6168; }
+.auth-card-form .otp-back:hover { color: #15171a; }
 .auth-split-form .logo { margin-bottom: 40px; }
 .auth-split-form .auth-head { text-align: left; margin-bottom: 24px; }
 .auth-split-form .auth-head h1 { font-size: 30px; }
@@ -433,8 +481,9 @@ ul { list-style: none; }
 .btn-social svg { flex-shrink: 0; }
 .btn-social .soon-tag { margin-left: 6px; font-size: 10px; font-weight: 700; color: var(--text-faint); border: 1px solid var(--border-strong); border-radius: 6px; padding: 1px 6px; }
 
-/* Sağ canlı görsel — animasyonlu finans kartları */
-.auth-visual { position: relative; overflow: hidden; background: linear-gradient(160deg, #07140f 0%, #030907 55%, #000 100%); }
+/* Sol canlı görsel — beyaz kart içinde inset koyu rounded panel (çevresi ince beyaz çizgi) */
+.auth-visual { position: relative; overflow: hidden; margin: 2px; border-radius: 26px;
+  background: linear-gradient(160deg, #07140f 0%, #030907 55%, #000 100%); }
 /* Yumuşak ışımalar — büyük blur + çok durak = banding yok */
 .auth-visual .av-glow { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
   width: 820px; height: 820px; top: -16%; right: -240px;
@@ -482,7 +531,12 @@ ul { list-style: none; }
 
 @media (prefers-reduced-motion: reduce) { .fin-card, .av-glow { animation: none !important; } .fin-card::after { display: none; } }
 @media (max-width: 900px) {
-  .auth-split { grid-template-columns: 1fr; }
+  .auth-page { padding: 0; }
+  .auth-card {
+    grid-template-columns: 1fr; max-width: 480px;
+    min-height: 100dvh; max-height: none;
+    border: none; border-radius: 0; box-shadow: none;
+  }
   .auth-visual { display: none; }
   .auth-split-form { padding: 32px 24px 60px; }
   .auth-split-form .auth-head { text-align: center; }

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Background from "../components/Background";
 import Logo from "../components/Logo";
 import SocialAuth from "../components/SocialAuth";
 import AuthVisual from "../components/AuthVisual";
@@ -52,11 +51,12 @@ export default function KayitPage() {
   }
 
   return (
-    <>
-      <Background />
-      <div className="auth-split">
-        <div className="auth-split-form">
-          <Logo />
+    <div className="auth-page">
+      <div className="auth-card">
+        <AuthVisual />
+        <div className="auth-card-form">
+          <div className="auth-split-form">
+            <Logo />
 
           {step === "code" ? (
             <OtpVerify email={email.trim()} mode="kayit" onBack={() => setStep("form")} />
@@ -101,9 +101,8 @@ export default function KayitPage() {
             </>
           )}
         </div>
-
-        <AuthVisual />
+        </div>
       </div>
-    </>
+    </div>
   );
 }

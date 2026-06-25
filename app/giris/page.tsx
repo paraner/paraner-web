@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Background from "../components/Background";
 import Logo from "../components/Logo";
 import SocialAuth from "../components/SocialAuth";
 import AuthVisual from "../components/AuthVisual";
@@ -154,11 +153,12 @@ export default function GirisPage() {
   }
 
   return (
-    <>
-      <Background />
-      <div className="auth-split">
-        <div className="auth-split-form">
-          <Logo />
+    <div className="auth-page">
+      <div className="auth-card">
+        <AuthVisual />
+        <div className="auth-card-form">
+          <div className="auth-split-form">
+            <Logo />
 
           {step === "code" ? (
             <OtpVerify email={email.trim()} mode="giris" onBack={() => setStep("email")} />
@@ -259,9 +259,8 @@ export default function GirisPage() {
             </>
           )}
         </div>
-
-        <AuthVisual />
+        </div>
       </div>
-    </>
+    </div>
   );
 }
