@@ -1,5 +1,15 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-27 — 3D küp: görünmezken duraklat (CPU/fan) + beyaz flaş fix
+
+Mehmet'in iki bildirimi: (1) Mac fanı açılıyor, (2) sayfa yenilenince küp bölgesi önce bembeyaz, küp gelince düzeliyor. İkisi de `AuthCube3D.tsx`.
+
+- **Duraklatma (CPU/GPU/pil):** Küp `requestAnimationFrame` döngüsü artık sadece görünürken çalışır. `visibilitychange` (sekme arka plana geçince) + `IntersectionObserver` (küp ekrandan çıkınca) → `tabVisible && onScreen` değilse `pause()` (rAF iptal), geri görününce `resume()` (`last` sıfırlanır, dt sıçramaz). Önceden döngü yalnız unmount'ta duruyordu → sayfa açık kaldıkça boşuna render. Cleanup'a listener/observer disconnect eklendi.
+- **Beyaz flaş fix:** Sebep — boş WebGL canvas'ın ilk paint'i (Chrome'un yeni GPU katmanında beyaz kare). Canvas `opacity:0` + `transition` ile başlatılır; ilk `render()` olunca `opacity=1` (`shown` bayrağı) → boş/beyaz an görünmez, küp yumuşak belirir (intro büyümesiyle uyumlu). Arka plan zaten koyu (banner) doğrulandı; flaş canvas'tandı.
+- Doğrulama: tsc + build temiz. CDP — görünürlük override'ıyla küp render ediyor, canvas opacity 0→1 (t=300ms'de 1), küp net çizildi. (rAF sayım testi headless createTarget'ta sekme "hidden" olduğundan duraklatmayı teyit etti.) Push → Vercel.
+
+---
+
 ## 2026-06-27 — Hero başlık: harf harf blur-in-up (Magic UI blurInUp/by-character → saf CSS)
 
 Mehmet Magic UI `TextAnimate animation="blurInUp" by="character"` örneğini beğendi (Pro'ya gerek yok — saf CSS ile yaptık).

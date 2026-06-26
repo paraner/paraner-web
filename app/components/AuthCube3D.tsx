@@ -55,7 +55,10 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
       renderer.setSize(W0, H0);
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.12;
-      renderer.domElement.style.cssText = "width:100%;height:100%;display:block;cursor:grab;touch-action:none;";
+      // opacity:0 başla → boş canvas'ın ilk paint'indeki beyaz flaş görünmez;
+      // ilk kare render olunca yumuşakça belirir (aşağıda style.opacity="1").
+      renderer.domElement.style.cssText =
+        "width:100%;height:100%;display:block;cursor:grab;touch-action:none;opacity:0;transition:opacity .5s ease;";
       el.appendChild(renderer.domElement);
 
       const scene = new THREE.Scene();
@@ -397,6 +400,8 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
       const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
       let last = performance.now();
       let raf = 0;
+      let paused = false;
+      let shown = false; // ilk kare render olunca canvas'ı görünür yap (flaş önleme)
       const animate = () => {
         const now = performance.now();
         const dt = Math.min((now - last) / 1000, 0.05);
@@ -444,9 +449,49 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
         }
 
         renderer.render(scene, camera);
+        if (!shown) {
+          shown = true;
+          renderer.domElement.style.opacity = "1";
+        }
+        if (!paused) raf = requestAnimationFrame(animate);
+      };
+
+      // ── Görünmezken render'ı duraklat (CPU/GPU/pil tasarrufu) ──
+      // Sekme arka plana geçince (visibilitychange) VEYA küp ekrandan çıkınca
+      // (IntersectionObserver) döngü durur; geri görününce kaldığı yerden devam eder.
+      const resume = () => {
+        if (!paused) return;
+        paused = false;
+        last = performance.now(); // dt sıçramasın
         raf = requestAnimationFrame(animate);
       };
+      const pause = () => {
+        if (paused) return;
+        paused = true;
+        cancelAnimationFrame(raf);
+      };
+      let tabVisible = !document.hidden;
+      let onScreen = true;
+      const updateRunning = () => {
+        if (tabVisible && onScreen) resume();
+        else pause();
+      };
+      const onVisibility = () => {
+        tabVisible = !document.hidden;
+        updateRunning();
+      };
+      document.addEventListener("visibilitychange", onVisibility);
+      const io = new IntersectionObserver(
+        (entries) => {
+          onScreen = entries[0]?.isIntersecting ?? true;
+          updateRunning();
+        },
+        { threshold: 0 }
+      );
+      io.observe(el);
+
       animate();
+      updateRunning(); // yüklenince görünür değilse hemen duraklat
 
       const ro = new ResizeObserver(() => {
         const Wn = el.clientWidth;
@@ -460,6 +505,8 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
 
       cleanup = () => {
         cancelAnimationFrame(raf);
+        document.removeEventListener("visibilitychange", onVisibility);
+        io.disconnect();
         ro.disconnect();
         dom.removeEventListener("pointerdown", onDown);
         dom.removeEventListener("pointermove", onMove);
