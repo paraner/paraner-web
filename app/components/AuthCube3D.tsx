@@ -6,86 +6,17 @@ import type { Group } from "three";
 // Sol panel (masaüstü) — sıfırdan, üst düzey Three.js küp (ÖZGÜN).
 //  • Eğimli cubie'ler + yüz-başına kakma panel: parlak lake · karbon · fırçalı gri · ızgara · satin
 //  • Filmik ışık (ACES) + önden dolgu + ortam yansıması; her yüzde damga para birimi
-//  • Giriş: tam ortadan uzaktan gelir, oturmaya yakın dönmeye başlar; ekrana çarpınca cam kırılır
+//  • Giriş: tam ortadan uzaktan gelir, oturmaya yakın dönmeye başlar
 //  • Sürükle → küp itilen yöne döner (momentumlu); boşta yavaş çok-eksenli tumble
 //  • reduced-motion → durur. ≤1024px sol panel gizli; three dinamik import; WebGL yoksa CSS arka planı.
 export default function AuthCube3D() {
   const ref = useRef<HTMLDivElement>(null);
-  const crackRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     let disposed = false;
     let cleanup = () => {};
-    let crackTimer: ReturnType<typeof setTimeout> | undefined;
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    // ── Cam kırılma çizimi (overlay canvas) ──
-    const drawCracks = () => {
-      const cv = crackRef.current;
-      if (!cv || !cv.parentElement) return;
-      const dpr = Math.min(window.devicePixelRatio, 2);
-      const Wd = cv.parentElement.clientWidth;
-      const Hd = cv.parentElement.clientHeight;
-      cv.width = Wd * dpr;
-      cv.height = Hd * dpr;
-      const g = cv.getContext("2d");
-      if (!g) return;
-      g.scale(dpr, dpr);
-      g.clearRect(0, 0, Wd, Hd);
-      const cx = Wd * 0.5;
-      const cy = Hd * 0.46;
-      const R = Math.max(Wd, Hd);
-      g.lineCap = "round";
-      g.shadowColor = "rgba(150,210,255,0.5)";
-      g.shadowBlur = 5;
-      const rays = 16;
-      for (let i = 0; i < rays; i++) {
-        const a = (i / rays) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
-        const len = R * (0.45 + Math.random() * 0.5);
-        g.strokeStyle = `rgba(255,255,255,${0.5 + Math.random() * 0.4})`;
-        g.lineWidth = 0.7 + Math.random() * 1.3;
-        g.beginPath();
-        g.moveTo(cx, cy);
-        const steps = 5 + ((Math.random() * 3) | 0);
-        for (let s = 1; s <= steps; s++) {
-          const r = len * (s / steps);
-          const jit = (Math.random() - 0.5) * 18;
-          g.lineTo(cx + Math.cos(a) * r + jit, cy + Math.sin(a) * r + jit * 0.6);
-        }
-        g.stroke();
-        if (Math.random() < 0.6) {
-          const ba = a + (Math.random() - 0.5) * 0.8;
-          g.beginPath();
-          g.moveTo(cx + Math.cos(a) * len * 0.4, cy + Math.sin(a) * len * 0.4);
-          g.lineTo(cx + Math.cos(ba) * len * 0.5, cy + Math.sin(ba) * len * 0.5);
-          g.stroke();
-        }
-      }
-      for (let ring = 0; ring < 3; ring++) {
-        const rr = 22 + ring * 24 + Math.random() * 10;
-        g.strokeStyle = `rgba(255,255,255,${0.32 - ring * 0.08})`;
-        g.lineWidth = 0.6;
-        g.beginPath();
-        for (let i = 0; i <= rays; i++) {
-          const a = (i / rays) * Math.PI * 2;
-          const r = rr + (Math.random() - 0.5) * 8;
-          const x = cx + Math.cos(a) * r;
-          const y = cy + Math.sin(a) * r;
-          i === 0 ? g.moveTo(x, y) : g.lineTo(x, y);
-        }
-        g.closePath();
-        g.stroke();
-      }
-      g.shadowBlur = 0;
-      const rad = g.createRadialGradient(cx, cy, 0, cx, cy, 42);
-      rad.addColorStop(0, "rgba(255,255,255,0.9)");
-      rad.addColorStop(1, "rgba(255,255,255,0)");
-      g.fillStyle = rad;
-      g.beginPath();
-      g.arc(cx, cy, 42, 0, Math.PI * 2);
-      g.fill();
-    };
 
     (async () => {
       const THREE = await import("three");
@@ -392,14 +323,6 @@ export default function AuthCube3D() {
       };
       animate();
 
-      // ── Ekrana çarpma → cam kırılma (giriş sonuna doğru) ──
-      if (!reduce) {
-        drawCracks();
-        crackTimer = setTimeout(() => {
-          crackRef.current?.classList.add("cube-crack-go");
-        }, INTRO_DUR * 1000 * 0.7);
-      }
-
       const ro = new ResizeObserver(() => {
         const Wn = el.clientWidth;
         const Hn = el.clientHeight;
@@ -435,7 +358,6 @@ export default function AuthCube3D() {
 
     return () => {
       disposed = true;
-      if (crackTimer) clearTimeout(crackTimer);
       cleanup();
     };
   }, []);
@@ -443,7 +365,6 @@ export default function AuthCube3D() {
   return (
     <div className="auth-visual auth-cube" aria-hidden="true">
       <div ref={ref} className="cube-stage" />
-      <canvas ref={crackRef} className="cube-crack" />
     </div>
   );
 }
