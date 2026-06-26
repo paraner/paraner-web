@@ -264,12 +264,12 @@ ul { list-style: none; }
   .hero-text { text-align: center; max-width: none; }
   .hero-text .hero-sub { margin-left: auto; margin-right: auto; }
   .hero-text .hero-cta, .hero-text .stores { justify-content: center; }
-  /* Mobilde küp metnin altında, akış içinde (mutlak değil) — kendi küpümüz mobilde de oynar */
+  /* Mobilde küp metnin ÜSTÜNDE (order: -1), akış içinde (mutlak değil) — kendi küpümüz mobilde de oynar */
   .hero-visual {
     display: block; position: relative; inset: auto;
     top: auto; right: auto; transform: none;
     width: 100%; max-width: 340px; height: 320px;
-    margin: 22px auto 0;
+    margin: 0 auto 26px; order: -1;
   }
 }
 .eyebrow {
