@@ -258,8 +258,8 @@ ul { list-style: none; }
 /* Küp sağda, geniş kutu → ortadan bölünmez, sol tarafı kırpılmaz */
 .hero-visual {
   position: absolute; top: 50%; transform: translateY(-50%);
-  right: clamp(-24px, -1vw, 8px);
-  width: min(56%, 760px); height: clamp(440px, 80svh, 820px);
+  right: clamp(-40px, -2vw, 0px);
+  width: min(60%, 880px); height: clamp(520px, 92svh, 980px);
   z-index: 1;
 }
 .hero-cube { position: absolute; inset: 0; }

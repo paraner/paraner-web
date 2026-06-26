@@ -86,7 +86,7 @@ export default function Home() {
         </div>
 
         <div className="hero-visual">
-          <AuthCube3D className="hero-cube" playIntro={false} zoom={1.28} />
+          <AuthCube3D className="hero-cube" playIntro={false} zoom={1.5} />
         </div>
       </section>
 
