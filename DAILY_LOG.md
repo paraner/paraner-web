@@ -1,5 +1,16 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-27 — Hero metin giriş animasyonu (Resend tarzı)
+
+Mehmet: banner yazıları Resend gibi animasyonlu girsin ("sen yap"). Resend HTML'inde efekt `animate-hero-text-slide-up-fade` (aşağıdan kayma + fade) tespit edildi.
+
+- **`.hero-text > *`:** `heroRise` keyframe — `translateY(26px)` + `blur(10px)` + opacity 0 → net, `cubic-bezier(.16,1,.3,1)` 0.75s, `both` (CLS yok; transform/filter/opacity). Öğeler **stagger**: eyebrow .06s · h1 .16s · sub .30s · cta .42s · stores .52s · note .60s.
+- **Başlık sheen:** `.hero h1::after` — diagonal beyaz bant, `mix-blend-mode:screen`, giriş bitince (0.95s) bir kez soldan sağa geçer (`heroSheen`). Resting h1 gradyanı değişmedi (::after ayrı katman).
+- `prefers-reduced-motion: reduce` → animasyonlar kapalı.
+- Doğrulama: CDP 1440px — erken kare (üst öğeler girmiş, alt öğeler sönük/bulanık = stagger çalışıyor) + dinlenme (hepsi net/opak). tsc + build temiz. Push → Vercel.
+
+---
+
 ## 2026-06-26 — Mobil logo "ARANER → P arkasına kayar" + arka plan siyah
 
 - **Mobil logo slide:** Mehmet: kaydırınca wordmark "ARANER" kısmı **sola kayıp P'nin arkasına gidip kaybolsun**, sadece P kalsın (mobil; masaüstü wordmark aynı). `Logo.tsx`'e P geri eklendi. CSS: `.logo` `overflow:hidden`, mobilde genişlik 108→17px (`.nav.scrolled`); `.logo-wordmark` (z1) `translateX(-90px)`+fade ile sola kayar, `.logo-p` (z2, üstte) belirir. Masaüstü: `.logo-p { display:none }` → sadece wordmark, swap yok.

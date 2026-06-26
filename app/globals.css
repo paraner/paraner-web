@@ -397,6 +397,31 @@ ul { list-style: none; }
 .hero-text .hero-sub { margin: 0 0 34px; max-width: 480px; }
 .hero-text .hero-cta { justify-content: flex-start; }
 .hero-text .stores { justify-content: flex-start; }
+
+/* ─── HERO metin girişi — Resend tarzı: aşağıdan kayma + blur-in, öğeler sırayla (stagger) ─── */
+@keyframes heroRise {
+  from { opacity: 0; transform: translateY(26px); filter: blur(10px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.hero-text > * { animation: heroRise 0.75s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.hero-text > .eyebrow { animation-delay: 0.06s; }
+.hero-text > h1 { animation-delay: 0.16s; }
+.hero-text > .hero-sub { animation-delay: 0.30s; }
+.hero-text > .hero-cta { animation-delay: 0.42s; }
+.hero-text > .stores { animation-delay: 0.52s; }
+.hero-text > .hero-note { animation-delay: 0.60s; }
+/* Başlık üstünden BİR KEZ geçen titanyum ışık (giriş bitince) */
+.hero h1 { position: relative; isolation: isolate; }
+.hero h1::after {
+  content: ""; position: absolute; inset: -12% -6%; pointer-events: none;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.22) 50%, transparent 58%);
+  transform: translateX(-130%); mix-blend-mode: screen;
+  animation: heroSheen 1.15s cubic-bezier(0.4, 0, 0.2, 1) 0.95s 1 both;
+}
+@keyframes heroSheen { to { transform: translateX(130%); } }
+@media (prefers-reduced-motion: reduce) {
+  .hero-text > *, .hero h1::after { animation: none; }
+}
 /* Küp sağda, geniş kutu → ortadan bölünmez, sol tarafı kırpılmaz */
 .hero-visual {
   position: absolute; top: 50%; transform: translateY(-50%);
