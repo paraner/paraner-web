@@ -489,10 +489,9 @@ ul { list-style: none; }
   display: flex; align-items: center; justify-content: center;
   /* Pay — kart ekranı doldurmasın, etrafında nefes kalsın */
   padding: clamp(20px, 2.6vw, 52px);
-  /* Resend tarzı koyu arka plan: düz siyah yerine yumuşak degrade + üst-sağdan hafif ışık */
+  /* Koyu nötr arka plan: yumuşak degrade + üst-sağdan hafif ışık (yeşil/teal YOK) */
   background:
     radial-gradient(120% 90% at 78% 12%, rgba(255, 255, 255, 0.06), transparent 55%),
-    radial-gradient(100% 100% at 50% 100%, rgba(0, 191, 166, 0.05), transparent 60%),
     linear-gradient(165deg, #111214 0%, #0a0a0b 50%, #060607 100%);
 }
 .auth-card {
@@ -666,8 +665,7 @@ ul { list-style: none; }
    WebGL canvas (alpha) bunun üstüne biner; WebGL yoksa bu görünür kalır. */
 .auth-cube {
   background:
-    radial-gradient(58% 50% at 50% 42%, rgba(255, 255, 255, 0.08), transparent 70%),
-    radial-gradient(90% 80% at 72% 82%, rgba(0, 191, 166, 0.07), transparent 62%),
+    radial-gradient(58% 50% at 50% 42%, rgba(255, 255, 255, 0.07), transparent 70%),
     linear-gradient(160deg, #101113 0%, #08090a 55%, #050506 100%);
 }
 .auth-cube canvas { position: absolute; inset: 0; }

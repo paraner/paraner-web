@@ -33,8 +33,6 @@ export default function AuthCube3D() {
       renderer.setSize(W0, H0);
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.12;
-      renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.domElement.style.cssText = "width:100%;height:100%;display:block;cursor:grab;touch-action:none;";
       el.appendChild(renderer.domElement);
 
@@ -48,35 +46,14 @@ export default function AuthCube3D() {
       // ── Işık ──
       const key = new THREE.DirectionalLight(0xffffff, 3.0);
       key.position.set(6, 10, 7);
-      key.castShadow = true;
-      key.shadow.mapSize.set(1024, 1024);
-      key.shadow.camera.near = 1;
-      key.shadow.camera.far = 40;
-      key.shadow.camera.left = -4;
-      key.shadow.camera.right = 4;
-      key.shadow.camera.top = 4;
-      key.shadow.camera.bottom = -4;
-      key.shadow.bias = -0.0006;
-      key.shadow.radius = 6;
       scene.add(key);
-      const rim = new THREE.DirectionalLight(0xbfeae1, 1.8); // arka-yan rim (hafif teal kenar)
+      const rim = new THREE.DirectionalLight(0xd7e4f2, 1.7); // arka-yan rim (nötr-serin kenar, yeşil yok)
       rim.position.set(-7, 3, -8);
       scene.add(rim);
       const spec = new THREE.PointLight(0xffffff, 22, 50, 1.8);
       spec.position.set(5, -1, 6);
       scene.add(spec);
-      const teal = new THREE.PointLight(0x00bfa6, 12, 40, 1.6);
-      teal.position.set(-4, 2.5, 5);
-      scene.add(teal);
-      scene.add(new THREE.AmbientLight(0xffffff, 0.13));
-
-      // ── Yumuşak düşen gölge (shadow-catcher) ──
-      const shadowMat = new THREE.ShadowMaterial({ opacity: 0.38 });
-      const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), shadowMat);
-      shadowPlane.rotation.x = -Math.PI / 2;
-      shadowPlane.position.y = -1.55;
-      shadowPlane.receiveShadow = true;
-      scene.add(shadowPlane);
+      scene.add(new THREE.AmbientLight(0xffffff, 0.14));
 
       // ── Dokular ──
       const tex = (n: number, rep: number, draw: (g: CanvasRenderingContext2D, n: number) => void) => {
@@ -132,36 +109,43 @@ export default function AuthCube3D() {
       const pSatin = new THREE.MeshStandardMaterial({ color: 0x0a0b0d, metalness: 0.5, roughness: 0.64 });
       const facePool = [pGloss, pGloss, pGloss, pCarbon, pCarbon, pBrushed, pBrushed, pGrille, pSatin];
       const frameMat = new THREE.MeshStandardMaterial({ color: 0x070708, metalness: 0.9, roughness: 0.4 });
-      const ownedMats = [pGloss, pCarbon, pBrushed, pGrille, pSatin, frameMat, shadowMat];
+      const ownedMats = [pGloss, pCarbon, pBrushed, pGrille, pSatin, frameMat];
 
-      // ── İşlemeli para birimi (silik, marka) ──
+      // ── Damga/kabartma para birimi: aynı doku hem alphaMap (şekil) hem bumpMap (kabartma)
+      //    → metale basılmış, hafif taşan rölyef. Hafif blur = yumuşak kenar rampası. ──
       const symTex = (ch: string) => {
         const c = document.createElement("canvas");
         c.width = c.height = 256;
         const g = c.getContext("2d")!;
-        g.clearRect(0, 0, 256, 256);
-        g.fillStyle = "#fff";
-        g.font = "800 150px -apple-system, 'Segoe UI', Arial, sans-serif";
+        g.fillStyle = "#000"; // siyah = kabartmanın düz tabanı
+        g.fillRect(0, 0, 256, 256);
+        g.filter = "blur(1.4px)";
+        g.fillStyle = "#fff"; // beyaz = yükselen (kabarık) bölge
+        g.font = "800 156px -apple-system, 'Segoe UI', Arial, sans-serif";
         g.textAlign = "center";
         g.textBaseline = "middle";
-        g.fillText(ch, 128, 140);
+        g.fillText(ch, 128, 142);
+        g.filter = "none";
         const t = new THREE.CanvasTexture(c);
         t.anisotropy = 4;
         return t;
       };
-      const symMats = ["$", "€", "£", "₺", "¥"].map(
-        (ch) =>
-          new THREE.MeshStandardMaterial({
-            color: 0x595e66,
-            metalness: 0.85,
-            roughness: 0.4,
-            transparent: true,
-            alphaMap: symTex(ch),
-            depthWrite: false,
-            polygonOffset: true,
-            polygonOffsetFactor: -2,
-          })
-      );
+      const symMats = ["$", "€", "£", "₺", "¥"].map((ch) => {
+        const t = symTex(ch);
+        return new THREE.MeshStandardMaterial({
+          color: 0x2b2f37, // küple uyumlu metal — damga aynı metalden basılmış gibi
+          metalness: 0.92,
+          roughness: 0.3,
+          bumpMap: t, // kabartma rölyefi → ışıkta öne çıkar
+          bumpScale: 0.07,
+          alphaMap: t, // yalnız sembol görünür
+          transparent: true,
+          depthWrite: false,
+          polygonOffset: true,
+          polygonOffsetFactor: -2,
+          envMapIntensity: 1.1,
+        });
+      });
 
       // ── Küp kümesi ──
       const SIZE = 0.98;
@@ -221,7 +205,7 @@ export default function AuthCube3D() {
       controls.dampingFactor = 0.07;
       controls.rotateSpeed = 0.7;
       controls.autoRotate = !reduce;
-      controls.autoRotateSpeed = 0.5;
+      controls.autoRotateSpeed = 0.3; // yavaş, sürekli (hiç durmaz)
       controls.target.set(0, -0.1, 0);
 
       const dom = renderer.domElement;
@@ -235,8 +219,8 @@ export default function AuthCube3D() {
       type Part = { axis: "x" | "y" | "z"; angle: number; pivot: InstanceType<typeof THREE.Group>; members: Group[] };
       let move: { dur: number; t: number; parts: Part[] } | null = null;
       let restTimer = reduce ? Infinity : 1.4;
-      // yumuşak ama hafif yaylı (premium his)
-      const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+      // easeInOutCubic — başta ve sonda yumuşak (sert/ani değil)
+      const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
       const coin = () => (Math.random() < 0.5 ? 1 : -1);
 
       function makePart(axis: "x" | "y" | "z", layer: number, angle: number): Part {
@@ -252,15 +236,18 @@ export default function AuthCube3D() {
         let parts: Part[];
         let dur: number;
         if (r < 0.46) {
+          // tek katman 90° — sakin
           parts = [makePart(axis, coin(), (coin() * Math.PI) / 2)];
-          dur = 0.55 + Math.random() * 0.2;
+          dur = 1.1 + Math.random() * 0.3;
         } else if (r < 0.68) {
+          // tek katman 180° (iki kez) — daha ağır
           parts = [makePart(axis, coin(), coin() * Math.PI)];
-          dur = 0.85;
+          dur = 1.8;
         } else {
+          // ALT+ÜST ters — artık sert değil, ağırdan
           const a = Math.random() < 0.5 ? Math.PI / 2 : Math.PI;
           parts = [makePart(axis, 1, a), makePart(axis, -1, -a)];
-          dur = 0.46;
+          dur = a > Math.PI / 2 ? 1.6 : 1.0;
         }
         move = { dur, t: 0, parts };
       }
@@ -320,7 +307,6 @@ export default function AuthCube3D() {
         boxGeo.dispose();
         panelGeo.dispose();
         symGeo.dispose();
-        shadowPlane.geometry.dispose();
         [carbonTex, brushedTex, grilleTex].forEach((t) => t.dispose());
         ownedMats.forEach((m) => m.dispose());
         symMats.forEach((m) => {
