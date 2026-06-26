@@ -1,5 +1,16 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Auth sol panel: interaktif 3D küp (Resend tarzı) + koyu degrade arka plan
+
+Mehmet Resend'in banner'ındaki sürüklenebilir 3D küpü istedi. (Resend'in `cube.mp4`'ü telifli → birebir ALINMADI; bize ait özgün Three.js sahnesi yapıldı, aynı "tut-döndür" deneyimi.)
+
+- **`three` kuruldu** (^0.185). **`AuthCube3D.tsx`** (yeni, client): vanilla Three.js + OrbitControls + RoomEnvironment (HDR'siz metal yansıması) + RoundedBoxGeometry. **3×3×3 koyu metalik küp kümesi** (yuvarlatılmış kenar, `metalness 0.96 / roughness 0.34`), nötr key/fill ışık + **hafif teal rim** (marka). **Mouse ile tut-döndür** (OrbitControls, zoom/pan kapalı) + boşta yavaş **otomatik dönüş**; `prefers-reduced-motion` → otomatik dönüş kapalı (yine sürüklenir). three **dinamik import** → panel bundle'ı etkilenmez. ResizeObserver + tam cleanup (dispose). Sol panel zaten ≤1024px gizli → küp masaüstüne özel; WebGL yoksa CSS degrade görünür kalır.
+- **`AuthSideVideo.tsx` silindi** (+ `.auth-visual-video`/`.auth-visual-overlay` CSS kaldırıldı); `giris/page.tsx`+`kayit/page.tsx` artık `AuthCube3D` render eder. (Eski `paraner-auth-bg.mp4/.jpg` public'te kaldı, kullanılmıyor.)
+- **Resend tarzı koyu arka plan:** `.auth-page` düz siyah yerine yumuşak degrade (üst-sağdan hafif ışık + alttan faint teal); `.auth-cube` küpün arkasında yumuşak spotlight + teal glow + koyu zemin (WebGL canvas alpha ile üstüne biner).
+- Doğrulama: CDP (swiftshader WebGL) ile `/giris` render'ı — küp çiziliyor (`.auth-cube canvas` mevcut), kompozisyon Resend havasında. tsc + `next build` temiz.
+
+---
+
 ## 2026-06-26 — Primary buton (Devam Et) premium hâle getirildi
 
 Mehmet "gölgeli güzel buton" istedi; 21st.dev Magnetize (mıknatıs+parçacık) referansına baktık ama finans tonuna fazla oyuncak → daha rafine yönde karar verildi. `.btn-primary`: teal yumuşak **glow gölge** + üstte **cam iç-parlaması** (inset highlight) + hover'da **yukarı kalkma** & glow artışı + **active oturma** + disabled gölgesiz. Ayrıca hover'da butonun üstünden **bir kez geçen ışıltı** (`::before` shine sweep, marka logosu shine ile uyumlu; `overflow:hidden` köşe kırpar; `prefers-reduced-motion` kapalı). CDP ile rest/hover/shine frame doğrulandı (metin okunur). Tüm primary butonları (auth + panel) etkiler — tutarlı. Commit: `9949b95` (glow) + `e8ede40` (shine).

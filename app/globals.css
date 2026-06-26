@@ -488,7 +488,12 @@ ul { list-style: none; }
   height: 100vh; height: 100dvh;
   display: flex; align-items: center; justify-content: center;
   /* Pay — kart ekranı doldurmasın, etrafında nefes kalsın */
-  padding: clamp(20px, 2.6vw, 52px); background: var(--bg);
+  padding: clamp(20px, 2.6vw, 52px);
+  /* Resend tarzı koyu arka plan: düz siyah yerine yumuşak degrade + üst-sağdan hafif ışık */
+  background:
+    radial-gradient(120% 90% at 78% 12%, rgba(255, 255, 255, 0.06), transparent 55%),
+    radial-gradient(100% 100% at 50% 100%, rgba(0, 191, 166, 0.05), transparent 60%),
+    linear-gradient(165deg, #111214 0%, #0a0a0b 50%, #060607 100%);
 }
 .auth-card {
   position: relative;
@@ -653,16 +658,19 @@ ul { list-style: none; }
 .btn-social svg { flex-shrink: 0; }
 .btn-social .soon-tag { margin-left: 6px; font-size: 10px; font-weight: 700; color: var(--text-faint); border: 1px solid var(--border-strong); border-radius: 6px; padding: 1px 6px; }
 
-/* Sol panel — tamamen BOŞ, net siyah (arka planla aynı). Sol köşeler dış .auth-card'ın
-   radius'undan gelir; sağ köşeler burada yuvarlanır → beyaz kart zemini görünür. */
+/* Sol panel — interaktif 3D küp (AuthCube3D) burada render edilir. Sol köşeler dış
+   .auth-card radius'undan; sağ köşeler burada yuvarlanır. */
 .auth-visual { position: relative; overflow: hidden; background: var(--bg);
   border-radius: 0 24px 24px 0; }
-/* Arka plan finans videosu — paneli kaplar, köşeler overflow:hidden ile kırpılır */
-.auth-visual-video { position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; display: block; }
-/* Koyu overlay — videoyu temaya oturtur (parlama yumuşar, derinlik) */
-.auth-visual-overlay { position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.30) 45%, rgba(0,191,166,0.10) 100%); }
+/* Resend tarzı arka plan: küpün arkasında yumuşak ışık + hafif teal glow + koyu zemin.
+   WebGL canvas (alpha) bunun üstüne biner; WebGL yoksa bu görünür kalır. */
+.auth-cube {
+  background:
+    radial-gradient(58% 50% at 50% 42%, rgba(255, 255, 255, 0.08), transparent 70%),
+    radial-gradient(90% 80% at 72% 82%, rgba(0, 191, 166, 0.07), transparent 62%),
+    linear-gradient(160deg, #101113 0%, #08090a 55%, #050506 100%);
+}
+.auth-cube canvas { position: absolute; inset: 0; }
 /* Tablet / küçük laptop / telefon → sıkışık iki sütun yerine temiz tek sütun form */
 @media (max-width: 1024px) {
   .auth-page { padding: 0; }
