@@ -45,10 +45,6 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
       if (disposed || !ref.current) return;
 
       const el = ref.current;
-      // Yüklenirken GEÇİCİ koyu zemin → şeffaf WebGL canvas'ın GPU'da beyaz
-      // görünmesini önler. Küp ilk kareyi çizince şeffafa döner (banner geri gelir).
-      el.style.backgroundColor = "#000";
-      el.style.transition = "background-color 0.45s ease";
       const W0 = el.clientWidth || 600;
       const H0 = el.clientHeight || 800;
 
@@ -63,7 +59,8 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
       // ilk kare render olunca yumuşakça belirir (aşağıda style.opacity="1").
       renderer.domElement.style.cssText =
         "width:100%;height:100%;display:block;cursor:grab;touch-action:none;opacity:0;transition:opacity .5s ease;";
-      el.appendChild(renderer.domElement);
+      // NOT: canvas'ı DOM'a burada EKLEMEYİZ — ilk kare çizildikten sonra eklenir
+      // (aşağıda). Böylece boş/şeffaf WebGL katmanı hiç compositlenmez → beyaz flaş yok.
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(32, W0 / H0, 0.1, 100);
@@ -456,7 +453,6 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
         if (!shown) {
           shown = true;
           renderer.domElement.style.opacity = "1";
-          el.style.backgroundColor = "transparent"; // küp geldi → banner geri görünür
         }
         if (!paused) raf = requestAnimationFrame(animate);
       };
@@ -494,6 +490,11 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
         { threshold: 0 }
       );
       io.observe(el);
+
+      // İlk kareyi DOM dışında çiz, sonra canvas'ı ekle → ekrana girdiğinde
+      // içinde küp var; boş/beyaz WebGL katmanı hiç görünmez (ara sıra beyaz flaş fix).
+      renderer.render(scene, camera);
+      el.appendChild(renderer.domElement);
 
       animate();
       updateRunning(); // yüklenince görünür değilse hemen duraklat
