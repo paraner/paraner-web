@@ -9,7 +9,7 @@ import type { Group } from "three";
 //  • Giriş: tam ortadan uzaktan gelir, oturmaya yakın dönmeye başlar
 //  • Sürükle → küp itilen yöne döner (momentumlu); boşta yavaş çok-eksenli tumble
 //  • reduced-motion → durur. ≤1024px sol panel gizli; three dinamik import; WebGL yoksa CSS arka planı.
-export default function AuthCube3D({ className, playIntro = true }: { className?: string; playIntro?: boolean } = {}) {
+export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { className?: string; playIntro?: boolean; zoom?: number } = {}) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -39,6 +39,7 @@ export default function AuthCube3D({ className, playIntro = true }: { className?
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(32, W0 / H0, 0.1, 100);
       camera.position.set(5.6, 4.2, 7.2);
+      camera.position.multiplyScalar(1 / zoom); // zoom>1 → kamera yakınlaşır → küp büyür
       camera.lookAt(0, -0.1, 0);
 
       const pmrem = new THREE.PMREMGenerator(renderer);

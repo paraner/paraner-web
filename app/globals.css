@@ -251,7 +251,7 @@ ul { list-style: none; }
 .hero-text .hero-sub { margin: 0 0 34px; max-width: 500px; }
 .hero-text .hero-cta { justify-content: flex-start; }
 .hero-text .stores { justify-content: flex-start; }
-.hero-visual { position: relative; width: 100%; height: clamp(380px, 58svh, 640px); }
+.hero-visual { position: relative; width: 100%; height: clamp(440px, 72svh, 760px); }
 .hero-cube { position: absolute; inset: 0; }
 @media (max-width: 900px) {
   .hero.wrap { grid-template-columns: 1fr; gap: 8px; min-height: 0;
