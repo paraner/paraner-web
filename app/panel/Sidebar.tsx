@@ -410,7 +410,7 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
         {/* Açık: tam PARANER wordmark · Daraltılmış: aynı wordmark'tan kırpılmış temiz P.
             P birebir aynı (aynı kaynak), A sızması/kesilme olmaz. */}
         <Image
-          src="/paraner-wordmark.png"
+          src="/paraner-wordmark-titan.png"
           alt="Paraner"
           width={118}
           height={24}
@@ -418,7 +418,7 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
           priority
         />
         <Image
-          src="/paraner-p.png"
+          src="/paraner-p-titan.png"
           alt="Paraner"
           width={19}
           height={24}
