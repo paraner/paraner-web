@@ -33,6 +33,15 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
       const { RoundedBoxGeometry } = await import("three/examples/jsm/geometries/RoundedBoxGeometry.js");
       if (disposed || !ref.current) return;
 
+      // Marka ikonu (şeffaf PNG) — bazı küp yüzlerinde para sembolü yerine kabartma olarak işlenir.
+      const logoImg = await new Promise<HTMLImageElement | null>((res) => {
+        const im = new Image();
+        im.onload = () => res(im);
+        im.onerror = () => res(null);
+        im.src = "/mgzr-icon.png";
+      });
+      if (disposed || !ref.current) return;
+
       const el = ref.current;
       const W0 = el.clientWidth || 600;
       const H0 = el.clientHeight || 800;
@@ -143,9 +152,34 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
         t.anisotropy = 4;
         return t;
       };
-      const symMats = ["$", "€", "£", "₺", "¥"].map((ch) => {
-        const t = symTex(ch);
-        return new THREE.MeshStandardMaterial({
+      // Marka ikonu → para sembolleriyle aynı kabartma dokusu (beyaz siluet · blur · siyah zemin)
+      const logoTex = () => {
+        if (!logoImg) return null;
+        const c = document.createElement("canvas");
+        c.width = c.height = 256;
+        const g = c.getContext("2d")!;
+        // ikonu beyaz siluete çevir (şeffaf zemin korunur)
+        const sil = document.createElement("canvas");
+        sil.width = sil.height = 256;
+        const sg = sil.getContext("2d")!;
+        const m = 30;
+        sg.drawImage(logoImg, m, m, 256 - 2 * m, 256 - 2 * m);
+        sg.globalCompositeOperation = "source-in";
+        sg.fillStyle = "#fff";
+        sg.fillRect(0, 0, 256, 256);
+        // siyah zemine kabartma için blur'lu bas
+        g.fillStyle = "#000";
+        g.fillRect(0, 0, 256, 256);
+        g.filter = "blur(1.4px)";
+        g.drawImage(sil, 0, 0);
+        g.filter = "none";
+        const t = new THREE.CanvasTexture(c);
+        t.anisotropy = 4;
+        return t;
+      };
+
+      const mkSymMat = (t: InstanceType<typeof THREE.CanvasTexture>) =>
+        new THREE.MeshStandardMaterial({
           color: 0x2b2f37,
           metalness: 0.92,
           roughness: 0.3,
@@ -158,7 +192,13 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
           polygonOffsetFactor: -2,
           envMapIntensity: 1.1,
         });
-      });
+
+      const symMats = ["$", "€", "£", "₺", "¥"].map((ch) => mkSymMat(symTex(ch)));
+      const lTex = logoTex();
+      if (lTex) {
+        // logo birkaç kez eklenir → bazı yüzlerde belirgin görünür (yine de para sembolleri çoğunlukta)
+        symMats.push(mkSymMat(lTex), mkSymMat(lTex));
+      }
 
       // ── Küp kümesi ──
       const SIZE = 0.98;
