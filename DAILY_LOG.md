@@ -1,5 +1,18 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Üst bar: banner'a gömülü → kaydırınca iOS Liquid Glass pill (mgzrmedia sistemi)
+
+Mehmet kendi sitesi **mgzrmedia.com**'un üst barını referans verdi: ayrı bar olmasın, banner'a gömülü dursun; kullanıcı kaydırınca **liquid glass** pill'e dönüşsün; açılışta tam wordmark, kaydırınca **sadece P**. Giriş/Kayıt korunsun. (mgzr mekanizması incelendi: `.navbar.scrolled` → `.nav-container` `max-width:1100` pill + `backdrop-filter blur(40) saturate(200%)` + beyaz cam, `cubic-bezier(.16,1,.3,1)`.)
+
+- **`Nav.tsx` → client component:** scroll listener `scrollY>30` → `.scrolled` toggle. `solid` prop'u (banner'ı olmayan sayfalar, ör. `/gizlilik` → en baştan pill). Yapı `position: fixed` (akıştan çıktı, banner üstüne biner); hero `min-height: 100svh` + `padding-top:96px`.
+- **Logo wordmark ⇄ P:** `Logo.tsx` iki titanyum PNG (`paraner-wordmark-titan` + `paraner-p-titan`) üst üste; `.nav.scrolled` → wordmark opacity 0 / P opacity 1 + `.logo` genişliği 120→26px animasyonlu. Footer (`.nav` dışı) hep wordmark.
+- **Liquid Glass pill (`.nav.scrolled .nav-inner`):** ortalı `max-width:1080` + `border-radius:100px`. Arka plan koyu temada okunur olsun diye **beyaz tint değil koyu cam**: `rgba(10,12,15,0.86)` taban (içerik sızmaz) + üst beyaz sheen gradyan + `blur(28px) saturate(160%)` + inset speküler ışık + güçlü alt gölge. (Mehmet "biraz daha koyu" → 0.72→0.86.)
+- **Butonlar:** Giriş Yap/Kayıt Ol her durumda **tam pill** (`.nav .btn` radius 999px → pille girince köşe sıçraması yok); scrolled'da hafif küçülür. Pill yüksekliği düşürüldü (iç padding 8→5px), P 30→24px.
+- **Menü linkleri** ortada (absolute center), banner üstünde text-shadow ile okunur. Mobil ≤760px linkler gizli, pill tam genişlik.
+- Doğrulama: tsc + build temiz; CDP ile tepe (şeffaf+wordmark) / kaydırılmış (koyu cam pill+P) / hero üstü (içerik frost) / gizlilik (solid) / mobil ekran görüntülendi. Push → Vercel.
+
+---
+
 ## 2026-06-26 — Marka logosu: yeşil → titanyum (auth'ta gunmetal)
 
 Mehmet: artık yeşil logo kullanılmayacak; küple uyumlu titanyuma geçilecek (hem web hem app). Önce 11 premium metalik varyant üretildi (`~/Desktop/paraner-logo-renkler/`, her biri wordmark+P, siyah zemin, sharp ile gerçek logodan alfa-maske + dikey metalik gradyan). Mehmet **Titanyum (01)** seçti; auth giriş/kayıt **beyaz form** zemininde titanyum kaybolacağı için orada **Gunmetal (03)**.

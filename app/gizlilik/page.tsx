@@ -42,7 +42,7 @@ export default function GizlilikPage() {
   return (
     <>
       <Background />
-      <Nav />
+      <Nav solid />
 
       <main className="legal">
         <div className="legal-head">
