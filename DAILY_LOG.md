@@ -1,5 +1,17 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Ana sayfa: tam ekran banner + titanyum (yeşilsiz) + sağ-üst ışık + küp intro kapalı
+
+Mehmet: banner her ekranda ilk görünüm olsun (tam ekran), içerik geniş ama kenara yapışık değil; arka planda sağ-üstten küpe vuran "titanyum ışık" hissi; **yeşil renk hiç olmasın** (her şey küple uyumlu monokrom/titanyum); ana sayfada küp uzaktan gelmesin.
+
+- **Tam ekran hero:** `.hero.wrap` `min-height: calc(100svh - 68px)`, `max-width 1500px`, `padding clamp(24,5vw,72)` → her ekranda ilk bakışta banner; içerik geniş, kenara yapışmaz, dikey ortalı. Mobilde tek sütun (küp gizli).
+- **Arka plan titanyum ışık:** `.bg-base` sağ-üstten (`82% 16%`) yumuşak beyaz radial + altta hafif → küpe ışık vuruyor hissi (renk yok).
+- **Yeşil kaldırıldı (marketing monokrom/titanyum):** eyebrow nötr; `h1 em` gümüş gradient; `.logo-mark` `filter: grayscale brightness` (titanyum monogram) + nötr gölge; **titanyum butonlar** (`.nav/.hero/.cta-band .btn-primary` gümüş gradient + koyu metin, scope'lu → panel/auth teal'i etkilenmez); price featured/badge/check + cta-band nötr. (Panel/auth/onboarding teal'i KASITLI korundu.)
+- **Küp intro opsiyonel:** `AuthCube3D playIntro` prop'u; ana sayfa `playIntro={false}` → uzaktan gelme yok, direkt yerinde döner. Auth'ta intro açık kalır.
+- Doğrulama: CDP 1440×900 + 1920×1080 — banner tam ekran oturuyor, titanyum/yeşilsiz, küp sağda ışıklı. tsc + build temiz.
+
+---
+
 ## 2026-06-26 — Ana sayfa (paraner.com): koyu/siyah zemin + hero'da 3D küp + minimal bölümler
 
 Mehmet: ana sayfa Resend gibi siyah olsun, 3D küp hero'da sağda dursun, bölümler daha minimal. (İçerik tamamen Paraner'e ait — Resend içeriği KOPYALANMADI; yalnız koyu/minimal stil yönü.)

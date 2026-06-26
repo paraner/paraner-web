@@ -9,7 +9,7 @@ import type { Group } from "three";
 //  • Giriş: tam ortadan uzaktan gelir, oturmaya yakın dönmeye başlar
 //  • Sürükle → küp itilen yöne döner (momentumlu); boşta yavaş çok-eksenli tumble
 //  • reduced-motion → durur. ≤1024px sol panel gizli; three dinamik import; WebGL yoksa CSS arka planı.
-export default function AuthCube3D({ className }: { className?: string } = {}) {
+export default function AuthCube3D({ className, playIntro = true }: { className?: string; playIntro?: boolean } = {}) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -156,7 +156,8 @@ export default function AuthCube3D({ className }: { className?: string } = {}) {
       const SCALE = 0.8;
       const group = new THREE.Group();
       group.rotation.set(0.32, 0.62, 0.06);
-      group.scale.setScalar(reduce ? SCALE : SCALE * 0.05); // giriş: küçük başla (konum ORİJİN = ortadan)
+      const noIntro = reduce || !playIntro;
+      group.scale.setScalar(noIntro ? SCALE : SCALE * 0.05); // giriş: küçük başla (ana sayfada kapalı)
       scene.add(group);
 
       const boxGeo = new RoundedBoxGeometry(SIZE, SIZE, SIZE, 5, RAD);
@@ -280,7 +281,7 @@ export default function AuthCube3D({ className }: { className?: string } = {}) {
       }
 
       // ── Giriş + render ──
-      let intro = reduce ? 1 : 0;
+      let intro = noIntro ? 1 : 0;
       const INTRO_DUR = 1.25;
       const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
       let last = performance.now();

@@ -62,16 +62,18 @@ ul { list-style: none; }
 
 /* ─── ARKA PLAN KATMANLARI ─── */
 .bg-layer { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-/* Resend tarzı koyu/siyah zemin: renk ışıması yok, sadece üstten çok hafif nötr ışık */
+/* Koyu/siyah zemin — renk ışıması YOK. Sağ-üstten küpe vuran "titanyum ışık" hissi +
+   altta hafif yansıma; sexy ama nötr (yeşil yok). */
 .bg-base {
   position: absolute; inset: 0;
   background:
-    radial-gradient(120% 85% at 75% 6%, rgba(255, 255, 255, 0.05) 0%, transparent 52%),
-    linear-gradient(180deg, #0c0d0f 0%, #08090a 52%, #060607 100%);
+    radial-gradient(58% 48% at 82% 16%, rgba(255, 255, 255, 0.08) 0%, transparent 60%),
+    radial-gradient(60% 45% at 50% 106%, rgba(255, 255, 255, 0.035) 0%, transparent 60%),
+    linear-gradient(180deg, #0a0b0d 0%, #08090a 55%, #050506 100%);
 }
 .bg-ambient {
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse 60% 45% at 50% 102%, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+  background: radial-gradient(40% 35% at 86% 22%, rgba(255, 255, 255, 0.04) 0%, transparent 65%);
   animation: drift 30s ease-in-out infinite alternate;
 }
 @keyframes drift {
@@ -155,7 +157,9 @@ ul { list-style: none; }
 .logo { display: inline-flex; align-items: center; gap: 10px; }
 .logo-mark {
   width: 30px; height: 30px; border-radius: 9px;
-  box-shadow: 0 4px 14px rgba(0, 191, 166, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  /* yeşil monogramı titanyum/gümüşe çevir (marka geneli monokrom) */
+  filter: grayscale(1) brightness(1.65) contrast(1.05);
 }
 .logo-text { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
 
@@ -195,6 +199,19 @@ ul { list-style: none; }
 .btn-primary:disabled { box-shadow: none; transform: none; }
 @media (prefers-reduced-motion: reduce) { .btn-primary:hover::before { animation: none; } }
 
+/* Marketing (nav + hero + cta) — TİTANYUM buton: gümüş gradient, koyu metin (yeşil yok).
+   Panel/auth .btn-primary'sine dokunmaz (scope'lu). */
+.nav .btn-primary, .hero .btn-primary, .cta-band .btn-primary {
+  background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
+  color: #0a0b0d;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.18);
+}
+.nav .btn-primary:hover, .hero .btn-primary:hover, .cta-band .btn-primary:hover {
+  box-shadow: 0 11px 28px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.22);
+}
+
 /* ─── Auth "Devam Et" — neumorphism (hover.dev tarzı) ───
    Kart beyazından hafif ayrışan yumuşak KABARIK pill + teal metin; hover'da İÇE BASILI
    (inset) + teal parlar; basınca daha derin inset. Yalnız auth kartında (açık tema);
@@ -222,17 +239,23 @@ ul { list-style: none; }
 .btn-lg { padding: 14px 26px; font-size: 15px; border-radius: 14px; }
 .btn-block { width: 100%; }
 
-/* ─── HERO (iki sütun: sol metin, sağ 3D küp) ─── */
-.hero { display: grid; grid-template-columns: 1.05fr 0.95fr; align-items: center;
-  gap: 48px; padding: 72px 24px 56px; }
+/* ─── HERO — tam ekran banner (her ekran boyutunda ilk görünüm), iki sütun ─── */
+.hero.wrap {
+  max-width: 1500px; margin: 0 auto; /* geniş ama kenara yapışık değil */
+  display: grid; grid-template-columns: 1.05fr 0.95fr; align-items: center;
+  gap: clamp(32px, 5vw, 80px);
+  min-height: calc(100svh - 68px); /* ilk ekranı doldurur */
+  padding: 32px clamp(24px, 5vw, 72px) 56px;
+}
 .hero-text { text-align: left; }
 .hero-text .hero-sub { margin: 0 0 34px; max-width: 500px; }
 .hero-text .hero-cta { justify-content: flex-start; }
 .hero-text .stores { justify-content: flex-start; }
-.hero-visual { position: relative; width: 100%; height: 480px; }
+.hero-visual { position: relative; width: 100%; height: clamp(380px, 58svh, 640px); }
 .hero-cube { position: absolute; inset: 0; }
 @media (max-width: 900px) {
-  .hero { grid-template-columns: 1fr; gap: 8px; padding: 64px 24px 48px; text-align: center; }
+  .hero.wrap { grid-template-columns: 1fr; gap: 8px; min-height: 0;
+    padding: 56px 24px 48px; text-align: center; }
   .hero-text { text-align: center; }
   .hero-text .hero-sub { margin-left: auto; margin-right: auto; }
   .hero-text .hero-cta, .hero-text .stores { justify-content: center; }
@@ -240,12 +263,12 @@ ul { list-style: none; }
 }
 .eyebrow {
   display: inline-flex; align-items: center; gap: 7px;
-  background: rgba(0, 191, 166, 0.1); border: 1px solid rgba(0, 191, 166, 0.25);
-  color: var(--teal); font-size: 11px; font-weight: 700;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.72); font-size: 11px; font-weight: 700;
   letter-spacing: 0.12em; text-transform: uppercase;
   padding: 6px 16px; border-radius: 20px; margin-bottom: 26px;
 }
-.eyebrow::before { content: "✦"; opacity: 0.7; }
+.eyebrow::before { content: "✦"; opacity: 0.5; }
 .hero h1 {
   font-size: clamp(40px, 6.5vw, 72px); font-weight: 800;
   letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 22px;
@@ -254,7 +277,7 @@ ul { list-style: none; }
 }
 .hero h1 em {
   font-style: normal;
-  background: linear-gradient(135deg, var(--teal), var(--teal-2));
+  background: linear-gradient(135deg, #ffffff, #b9bdc3);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 .hero-sub {
@@ -319,11 +342,11 @@ ul { list-style: none; }
 }
 .price-card:hover { border-color: rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.035); }
 .price-card.featured {
-  background: rgba(0, 191, 166, 0.05); border-color: rgba(0, 191, 166, 0.28);
+  background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.22);
 }
 .price-badge {
   position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
-  background: linear-gradient(135deg, var(--teal), #00d4b8); color: #000;
+  background: linear-gradient(180deg, #eef0f2, #b9bdc3); color: #0a0b0d;
   font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
   padding: 4px 16px; border-radius: 20px; white-space: nowrap;
 }
@@ -334,16 +357,16 @@ ul { list-style: none; }
 .price-features { display: flex; flex-direction: column; gap: 10px; }
 .price-features li { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; color: rgba(255, 255, 255, 0.72); line-height: 1.4; }
 .price-features li::before {
-  content: "✓"; color: var(--teal); font-size: 10px; font-weight: 900; flex-shrink: 0;
-  background: rgba(0, 191, 166, 0.15); border-radius: 50%;
+  content: "✓"; color: #d4d8dd; font-size: 10px; font-weight: 900; flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.1); border-radius: 50%;
   width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; margin-top: 1px;
 }
 
 /* ─── CTA BAND ─── */
 .cta-band {
   text-align: center; padding: 64px 32px; margin: 40px 0 0;
-  background: rgba(0, 191, 166, 0.06); border: 1px solid rgba(0, 191, 166, 0.2);
-  border-radius: 28px; backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
 }
 .cta-band h2 { font-size: clamp(26px, 4vw, 40px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 14px; }
 .cta-band p { color: var(--text-dim); font-size: 16px; margin-bottom: 28px; }
