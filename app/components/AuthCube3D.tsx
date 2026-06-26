@@ -48,7 +48,14 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
       const W0 = el.clientWidth || 600;
       const H0 = el.clientHeight || 800;
 
-      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      // preserveDrawingBuffer: buffer present sonrası temizlenmez → compositor
+      // canvas'ı ne zaman okursa son çizilen küp orada olur; boş/beyaz kare okunmaz
+      // (harici monitör/Windows compositor zamanlama yarışı için ek güvence).
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        preserveDrawingBuffer: true,
+      });
       // Mobilde pixelRatio'yu düşük tut → bellek/GPU yükü azalır (mobilde küpü oynatabilmek için)
       const onMobile = window.matchMedia("(max-width: 900px)").matches;
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, onMobile ? 1.5 : 2));
