@@ -48,8 +48,9 @@ export default function Home() {
       <Background />
       <Nav />
 
-      {/* ─── HERO ─── */}
-      <section className="hero wrap">
+      {/* ─── HERO / BANNER ─── */}
+      <section className="hero-banner">
+      <div className="hero wrap">
         <div className="hero-text">
           <span className="eyebrow">AI Destekli Finans Asistanı</span>
           <h1>
@@ -88,6 +89,7 @@ export default function Home() {
         <div className="hero-visual">
           <AuthCube3D className="hero-cube" playIntro={false} zoom={1.28} />
         </div>
+      </div>
       </section>
 
       {/* ─── ÖZELLİKLER ─── */}

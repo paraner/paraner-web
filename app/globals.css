@@ -62,11 +62,10 @@ ul { list-style: none; }
 
 /* ─── ARKA PLAN KATMANLARI ─── */
 .bg-layer { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-/* Arka plan = markaya özel görsel (paraner-bg.jpg, 4K). Tam ekranı kaplar, tek bütün
-   (sayfa ikiye bölünmüş görünmez). Görselin sağ-üstünde titanyum ışık zaten var. */
+/* Genel site zemini — sade koyu (yeşil yok). Banner görseli SADECE hero'da (.hero-banner). */
 .bg-base {
   position: absolute; inset: 0;
-  background: #060607 url("/paraner-bg.jpg") center center / cover no-repeat;
+  background: linear-gradient(180deg, #0a0b0d 0%, #08090a 55%, #060607 100%);
 }
 .bg-ambient { display: none; }
 @keyframes drift {
@@ -231,6 +230,12 @@ ul { list-style: none; }
 .btn-ghost:hover { background: rgba(255, 255, 255, 0.1); }
 .btn-lg { padding: 14px 26px; font-size: 15px; border-radius: 14px; }
 .btn-block { width: 100%; }
+
+/* ─── BANNER — markaya özel görsel SADECE burada (tam genişlik), site geneli koyu ─── */
+.hero-banner {
+  position: relative;
+  background: #060607 url("/paraner-bg.jpg") center center / cover no-repeat;
+}
 
 /* ─── HERO — tam ekran banner; ORTADAN BÖLME YOK. Metin solda (üstte katman),
    küp sağda serbest ve büyük (kendi kutusuna sığar, kırpılmaz). ─── */
