@@ -210,7 +210,7 @@ export default function AuthCube3D() {
       controls.dampingFactor = 0.07;
       controls.rotateSpeed = 0.7;
       controls.autoRotate = !reduce;
-      controls.autoRotateSpeed = 0.3; // yavaş, sürekli (hiç durmaz)
+      controls.autoRotateSpeed = 0.6; // sürekli dönüş (hiç durmaz)
       controls.target.set(0, -0.1, 0);
 
       const dom = renderer.domElement;
