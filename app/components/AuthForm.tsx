@@ -163,7 +163,9 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
     if (!isValidEmail(email)) return setError("Önce e-posta adresini gir, sonra Şifremi unuttum'a bas.");
     setLoading(true);
     try {
-      const supabase = createClient();
+      // implicit flow → e-postadaki token düz token_hash olur (pkce_ değil) → /sifre-sifirla
+      // verifyOtp ile doğrular, farklı cihaz/tarayıcıda da açılır.
+      const supabase = createClient({ implicit: true });
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/sifre-sifirla`,
       });

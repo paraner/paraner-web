@@ -1,5 +1,12 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Şifre sıfırlama: implicit flow (pkce_ token bug fix) + markalı mail
+
+Canlı test: yeni markalı şablonla Gmail phishing uyarısı KALKTI. Ama e-posta linki `token_hash=pkce_...` ile geliyordu → `verifyOtp` pkce_ token kabul etmez (link "geçersiz" olur + sadece aynı tarayıcı). **Fix:** `createClient({implicit:true})` eklendi; `handleForgotPassword` reset mailini implicit flow ile gönderiyor → e-postadaki {{ .TokenHash }} DÜZ token_hash olur → /sifre-sifirla verifyOtp çalışır, farklı cihaz/tarayıcıda da. Logo URL canlıda 200 (image/png) — broken ikonu önceki flagged maillerin Gmail görsel-engeli cache'i, temiz mailde düzelir. Kalan manuel: Supabase mail Subject'ini Türkçe yap (gövde ayrı, konu hâlâ "Reset Your Password").
+
+---
+
+
 ## 2026-06-26 — Şifremi unuttum akışı (mobil paritesi)
 
 Mehmet "A) gerçek sıfırlama" seçti.
