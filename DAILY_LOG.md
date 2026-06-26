@@ -1,5 +1,22 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Marka logosu: yeşil → titanyum (auth'ta gunmetal)
+
+Mehmet: artık yeşil logo kullanılmayacak; küple uyumlu titanyuma geçilecek (hem web hem app). Önce 11 premium metalik varyant üretildi (`~/Desktop/paraner-logo-renkler/`, her biri wordmark+P, siyah zemin, sharp ile gerçek logodan alfa-maske + dikey metalik gradyan). Mehmet **Titanyum (01)** seçti; auth giriş/kayıt **beyaz form** zemininde titanyum kaybolacağı için orada **Gunmetal (03)**.
+
+- **Yeni şeffaf PNG'ler:** `public/paraner-wordmark-titan.png` + `paraner-p-titan.png` (titanyum dikey sheen). Sidebar `<Image>` src'leri bunlara çevrildi (panel koyu zemin → premium gümüş).
+- **CSS mask wordmark'lar** (PNG = alfa maske, renk CSS background'tan):
+  - `.splash-word` (koyu splash) → titanyum gradyan.
+  - `.auth-wordmark` (beyaz form) → **gunmetal** gradyan. Üstündeki beyaz shimmer korundu.
+  - `.reset-card .auth-wordmark` (koyu kart) → titanyum override.
+  - `.switch-word` hesap-geçişi liquid-glass: yeşil dolum → nötr **titanyum sweep** (taban orta-gümüş, dolum parlak titanyum); `.switch-card` teal tint + teal drop-shadow nötrleştirildi.
+- **Zaten titanyum (dokunulmadı):** Nav/Footer `.logo-mark` (grayscale+brightness filtresi, yeşilsiz). **Dokunulmadı (marka değil):** AuthCube3D yüz görselleri.
+- tsc + build temiz (44/44). CDP ile auth (gunmetal wordmark beyazda okunur) + nav (gümüş monogram) + sidebar önizleme doğrulandı. Commit `36322be` → push → Vercel.
+
+**Kalan:** (1) **App (mobil) tarafı** logo rengi — ayrı repo, henüz yapılmadı. (2) Web **favicon.ico + PWA install ikonları** (icon-512/192, apple-icon, manifest, `paraner-logo.png`) hâlâ teal tabanlı — bunlar siyah sayfada değil, kendi renkli kutusunda (OS app ikonu); titanyuma çevrilsin mi Mehmet'e sorulacak.
+
+---
+
 ## 2026-06-26 — Ana sayfa banner FINAL: markaya özel görsel (sadece hero) + titanyum + küp sağda
 
 Mehmet'in ardışık geri bildirimleriyle ana sayfa hero netleşti (final durum):
