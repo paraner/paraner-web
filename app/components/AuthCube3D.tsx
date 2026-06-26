@@ -128,42 +128,27 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
           g.stroke();
         }
       });
-      // Karbon fiber dokuma (plain weave): satranç düzeninde dik/yatay demetler + filament çizgileri
-      // + her demette boyuna sheen → gerçek karbon görünümü. Çerçeve (cubie gövdesi) için.
-      const carbonTex = mkTex(256, 3, (g, n) => {
-        const cells = 4; // tile başına dokuma hücresi
-        const cell = n / cells;
-        g.fillStyle = "#0a0a0c";
+      // Çerçeve (cubie gövdesi) için AYRI, daha sık XDR delikli kafes dokusu (MGZR arka planı gibi).
+      // matMgzr ile aynı teknik; kendi repeat'i (4) → ince çerçeve şeritlerinde delikler net görünür.
+      const frameXdrTex = mkTex(256, 4, (g, n) => {
+        g.fillStyle = "#9a9a9a";
         g.fillRect(0, 0, n, n);
-        for (let r = 0; r < cells; r++) {
-          for (let c = 0; c < cells; c++) {
-            const x = c * cell;
-            const y = r * cell;
-            const horiz = (r + c) % 2 === 0; // satranç → demet yönü alternatif
-            const grd = horiz
-              ? g.createLinearGradient(x, y, x, y + cell)
-              : g.createLinearGradient(x, y, x + cell, y);
-            grd.addColorStop(0, "#101116");
-            grd.addColorStop(0.5, "#33363d"); // demet ortası sheen (parlak)
-            grd.addColorStop(1, "#101116");
+        const r = 13;
+        const sx = r * 2.15;
+        const sy = sx * 0.866;
+        for (let row = 0, y = -sy; y < n + sy; y += sy, row++) {
+          const off = row % 2 ? sx / 2 : 0;
+          for (let x = -sx; x < n + sx; x += sx) {
+            const cx = x + off;
+            const grd = g.createRadialGradient(cx, y, 1, cx, y, r);
+            grd.addColorStop(0, "#101010");
+            grd.addColorStop(0.55, "#4a4a4a");
+            grd.addColorStop(0.86, "#d0d0d0");
+            grd.addColorStop(1, "#7a7a7a");
             g.fillStyle = grd;
-            g.fillRect(x, y, cell, cell);
-            // demet boyunca filament çizgileri
-            g.strokeStyle = "rgba(0,0,0,0.32)";
-            g.lineWidth = 0.6;
-            const steps = 7;
-            for (let i = 1; i < steps; i++) {
-              const f = (i / steps) * cell;
-              g.beginPath();
-              if (horiz) {
-                g.moveTo(x, y + f);
-                g.lineTo(x + cell, y + f);
-              } else {
-                g.moveTo(x + f, y);
-                g.lineTo(x + f, y + cell);
-              }
-              g.stroke();
-            }
+            g.beginPath();
+            g.arc(cx, y, r, 0, Math.PI * 2);
+            g.fill();
           }
         }
       });
@@ -176,7 +161,7 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
       const matBtc = new THREE.MeshStandardMaterial({ color: 0x20242b, metalness: 1, roughness: 0.26, envMapIntensity: 1.35 }); // nötr cilalı çelik (soğuk monokrom)
       const matMgzr = new THREE.MeshStandardMaterial({ color: 0x141619, metalness: 0.85, roughness: 0.42, bumpMap: xdrTex, bumpScale: 0.12, envMapIntensity: 1.1 }); // XDR delikli titanyum kafes (sadece MGZR)
       const matParaner = new THREE.MeshPhysicalMaterial({ color: 0x06140f, metalness: 1, roughness: 0.2, clearcoat: 0.7, clearcoatRoughness: 0.2, envMapIntensity: 1.3 }); // koyu teal-siyah (marka fısıltısı, gloss)
-      const frameMat = new THREE.MeshPhysicalMaterial({ map: carbonTex, bumpMap: carbonTex, bumpScale: 0.05, metalness: 0.55, roughness: 0.42, clearcoat: 1, clearcoatRoughness: 0.16, envMapIntensity: 1.2 }); // şık karbon fiber (dokuma + clearcoat parlaklık)
+      const frameMat = new THREE.MeshStandardMaterial({ color: 0x0c0d10, metalness: 0.7, roughness: 0.56, bumpMap: frameXdrTex, bumpScale: 0.16, envMapIntensity: 0.9 }); // koyu premium XDR delikli kafes (MGZR arka planı gibi, mat)
       const ownedMats = [matDollar, matEuro, matPound, matLira, matBtc, matMgzr, matParaner, frameMat];
 
       // ── Damga/kabartma para birimi ──
@@ -482,7 +467,7 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
         boxGeo.dispose();
         panelGeo.dispose();
         symGeo.dispose();
-        [xdrTex, brushedTex, carbonTex].forEach((t) => t.dispose());
+        [xdrTex, brushedTex, frameXdrTex].forEach((t) => t.dispose());
         ownedMats.forEach((m) => m.dispose());
         stamps.forEach((s) => {
           s.sym.alphaMap?.dispose();
