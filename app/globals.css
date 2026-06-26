@@ -670,7 +670,7 @@ ul { list-style: none; }
     radial-gradient(90% 80% at 72% 82%, rgba(0, 191, 166, 0.07), transparent 62%),
     linear-gradient(160deg, #101113 0%, #08090a 55%, #050506 100%);
 }
-.auth-cube canvas { position: absolute; inset: 0; }
+.auth-cube-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 /* Tablet / küçük laptop / telefon → sıkışık iki sütun yerine temiz tek sütun form */
 @media (max-width: 1024px) {
   .auth-page { padding: 0; }

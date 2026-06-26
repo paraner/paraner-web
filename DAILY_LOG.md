@@ -1,5 +1,17 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Auth sol panel: markaya özel cube videosu (Three.js yerine)
+
+Mehmet 3D modelci arkadaşına markaya özel bir küp videosu yaptırdı (kendi/özgün varlık). Desktop sol panele bu video konuldu; interaktif Three.js sahnesi bırakıldı.
+
+- `public/paraner-cube.mp4` (ffmpeg `+faststart`, 400×400, ~670KB) + `public/paraner-cube.jpg` (poster).
+- `AuthCube3D.tsx` sadeleşti: Three.js kaldırıldı → `<video>` (autoplay/loop/muted/playsInline, poster). `.auth-cube-video` `object-fit:cover` ile paneli kaplar (siyah zeminle dikişsiz). ≤1024px panel zaten gizli → masaüstüne özel.
+- `three` artık **kullanılmıyor** (import yok → bundle'a girmez); package.json'da duruyor, istenirse kaldırılır.
+- ⚠️ **Çözünürlük notu:** video 400×400 → büyük/retina ekranda yukarı ölçeklenince yumuşak görünebilir; net olması için ≥1000×1000 export önerildi.
+- tsc + build temiz (44/44). CDP ile desktop render doğrulandı (video panele oturuyor).
+
+---
+
 ## 2026-06-26 — Auth küp v4: Resend hamle sistemi + yüz-başına malzeme + filmik ışık
 
 Mehmet: Resend yavaş döner ama bazen ANİ hızlı hamle yapar — alt+üst katmanları TERS yönde çevirir, bazen bir tarafı 2 kez (180°). Malzeme yüz-başına olsun (karbon↔gri↔parlak net), ışık vuruşu üst düzey olsun.
