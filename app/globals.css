@@ -381,7 +381,8 @@ ul { list-style: none; }
 /* ─── BANNER — markaya özel görsel SADECE burada (tam genişlik), site geneli koyu ─── */
 .hero-banner {
   position: relative;
-  background: #060607 url("/paraner-bg.jpg") center center / cover no-repeat;
+  /* WebP (880KB JPG → 79KB, kalite aynı). #060607 = WebP desteklenmezse fallback. */
+  background: #060607 url("/paraner-bg.webp") center center / cover no-repeat;
 }
 
 /* ─── HERO — tam ekran banner; ORTADAN BÖLME YOK. Metin solda (üstte katman),
