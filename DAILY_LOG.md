@@ -10,6 +10,7 @@ Mehmet kendi sitesi **mgzrmedia.com**'un üst barını referans verdi: ayrı bar
 - **Butonlar:** Giriş Yap/Kayıt Ol her durumda **tam pill** (`.nav .btn` radius 999px → pille girince köşe sıçraması yok); scrolled'da hafif küçülür. Pill yüksekliği düşürüldü (iç padding 8→5px), P 30→24px.
 - **Menü linkleri** ortada (absolute center), banner üstünde text-shadow ile okunur. Mobil ≤760px linkler gizli, pill tam genişlik.
 - Doğrulama: tsc + build temiz; CDP ile tepe (şeffaf+wordmark) / kaydırılmış (koyu cam pill+P) / hero üstü (içerik frost) / gizlilik (solid) / mobil ekran görüntülendi. Push → Vercel.
+- **Pill genişliği hero ile hizalandı (düzeltme):** sabit 1080px → geniş ekranda hero içeriğinden (max 1500px) dar kalıyordu. `max-width: calc(1500px - 2*clamp(24px,5vw,72px))` + `.nav.scrolled` yan padding `clamp(24,5vw,72)` (hero.wrap ile aynı) → pill kenarları her ekranda metin+küp ile **birebir** hizalı (1920'de ikisi de sol kenar 282px; CDP doğrulandı).
 
 ---
 

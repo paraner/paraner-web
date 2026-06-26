@@ -154,10 +154,12 @@ ul { list-style: none; }
     border-radius 0.5s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
-/* Kaydırınca → ortalı Liquid Glass pill (mgzrmedia tarzı, cam + speküler ışık) */
-.nav.scrolled { padding: 10px 16px; }
+/* Kaydırınca → Liquid Glass pill (mgzrmedia tarzı, cam + speküler ışık).
+   Genişlik + kenarlar hero içerik kutusuyla (.hero.wrap: max 1500px, yan
+   padding clamp(24,5vw,72)) BİREBİR hizalı → her ekranda metin+küp ile eşit. */
+.nav.scrolled { padding: 10px clamp(24px, 5vw, 72px); }
 .nav.scrolled .nav-inner {
-  max-width: 1080px;
+  max-width: calc(1500px - 2 * clamp(24px, 5vw, 72px));
   padding: 5px 8px 5px 20px;
   gap: 18px;
   /* Koyu temada okunur buzlu cam: yarı-opak koyu taban + üstte ince beyaz sheen
