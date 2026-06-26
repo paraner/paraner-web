@@ -53,6 +53,9 @@ export default function AuthCube3D() {
       const spec = new THREE.PointLight(0xffffff, 22, 50, 1.8);
       spec.position.set(5, -1, 6);
       scene.add(spec);
+      const front = new THREE.DirectionalLight(0xffffff, 0.95); // karşıdan ince dolgu → ön yüzler kararmaz
+      front.position.set(0, 1.5, 9);
+      scene.add(front);
       scene.add(new THREE.AmbientLight(0xffffff, 0.14));
 
       // ── Dokular ──
@@ -152,8 +155,10 @@ export default function AuthCube3D() {
       const RAD = 0.08;
       const SCALE = 0.8;
       const group = new THREE.Group();
-      group.scale.setScalar(SCALE);
       group.rotation.set(0.32, 0.62, 0.06);
+      // Giriş animasyonu başlangıcı: uzakta + küçük (reduced-motion'da direkt yerinde)
+      group.scale.setScalar(reduce ? SCALE : SCALE * 0.05);
+      group.position.z = reduce ? 0 : -8;
       scene.add(group);
 
       const boxGeo = new RoundedBoxGeometry(SIZE, SIZE, SIZE, 5, RAD);
@@ -264,6 +269,11 @@ export default function AuthCube3D() {
         restTimer = Math.random() < 0.2 ? 0.14 : 0.9 + Math.random() * 1.9;
       }
 
+      // ── Giriş animasyonu (uzaktan/küçük → öne gelip yumuşak durur) ──
+      let intro = reduce ? 1 : 0;
+      const INTRO_DUR = 1.2;
+      const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+
       // ── Render ──
       let last = performance.now();
       let raf = 0;
@@ -271,7 +281,14 @@ export default function AuthCube3D() {
         const now = performance.now();
         const dt = Math.min((now - last) / 1000, 0.05);
         last = now;
-        if (!reduce) {
+        if (intro < 1) {
+          // ekrana atılmış gibi: uzaktan küçük gelir, öne çıkar, yavaşlayarak oturur
+          intro = Math.min(1, intro + dt / INTRO_DUR);
+          const e = easeOut(intro);
+          group.scale.setScalar(SCALE * (0.05 + 0.95 * e));
+          group.position.z = -8 * (1 - e);
+          group.rotation.y += dt * (1 - e) * 2.0; // girişte ekstra fırıl, sona doğru söner
+        } else if (!reduce) {
           if (move) {
             move.t = Math.min(1, move.t + dt / move.dur);
             const e = ease(move.t);
