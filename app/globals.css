@@ -62,18 +62,21 @@ ul { list-style: none; }
 
 /* ─── ARKA PLAN KATMANLARI ─── */
 .bg-layer { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-/* Koyu/siyah zemin — renk ışıması YOK. Sağ-üstten küpe vuran "titanyum ışık" hissi +
-   altta hafif yansıma; sexy ama nötr (yeşil yok). */
+/* Koyu zemin — sağ-üstten PARLAK SİYAH TİTANYUM sheen (gümüş metal ışık, düz beyaz değil) +
+   grain (bg-noise) ile titanyum dokusu. Renk yok. */
 .bg-base {
   position: absolute; inset: 0;
   background:
-    radial-gradient(58% 48% at 82% 16%, rgba(255, 255, 255, 0.08) 0%, transparent 60%),
-    radial-gradient(60% 45% at 50% 106%, rgba(255, 255, 255, 0.035) 0%, transparent 60%),
+    radial-gradient(38% 28% at 88% 9%, rgba(255, 255, 255, 0.11) 0%, transparent 55%),
+    radial-gradient(56% 46% at 82% 15%, rgba(206, 212, 220, 0.12) 0%, rgba(120, 126, 134, 0.05) 38%, transparent 64%),
+    radial-gradient(70% 55% at 92% 30%, rgba(150, 156, 165, 0.06) 0%, transparent 62%),
+    radial-gradient(55% 45% at 50% 107%, rgba(170, 176, 184, 0.035) 0%, transparent 60%),
     linear-gradient(180deg, #0a0b0d 0%, #08090a 55%, #050506 100%);
 }
 .bg-ambient {
   position: absolute; inset: 0;
-  background: radial-gradient(40% 35% at 86% 22%, rgba(255, 255, 255, 0.04) 0%, transparent 65%);
+  /* yumuşak gezen metalik sheen (sağ-üst) → titanyum parlaması canlansın */
+  background: radial-gradient(34% 30% at 86% 18%, rgba(220, 225, 232, 0.06) 0%, transparent 64%);
   animation: drift 30s ease-in-out infinite alternate;
 }
 @keyframes drift {
@@ -83,7 +86,7 @@ ul { list-style: none; }
   100% { transform: translate(1%, -2%) scale(1.03); }
 }
 .bg-noise {
-  position: absolute; inset: 0; opacity: 0.03;
+  position: absolute; inset: 0; opacity: 0.05;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 180px;
 }
@@ -239,24 +242,31 @@ ul { list-style: none; }
 .btn-lg { padding: 14px 26px; font-size: 15px; border-radius: 14px; }
 .btn-block { width: 100%; }
 
-/* ─── HERO — tam ekran banner (her ekran boyutunda ilk görünüm), iki sütun ─── */
+/* ─── HERO — tam ekran banner; ORTADAN BÖLME YOK. Metin solda (üstte katman),
+   küp sağda serbest ve büyük (kendi kutusuna sığar, kırpılmaz). ─── */
 .hero.wrap {
-  max-width: 1500px; margin: 0 auto; /* geniş ama kenara yapışık değil */
-  display: grid; grid-template-columns: 1.05fr 0.95fr; align-items: center;
-  gap: clamp(32px, 5vw, 80px);
-  min-height: calc(100svh - 68px); /* ilk ekranı doldurur */
+  max-width: 1500px; margin: 0 auto;
+  position: relative; display: flex; align-items: center;
+  min-height: calc(100svh - 68px);
   padding: 32px clamp(24px, 5vw, 72px) 56px;
+  overflow: visible;
 }
-.hero-text { text-align: left; }
-.hero-text .hero-sub { margin: 0 0 34px; max-width: 500px; }
+.hero-text { position: relative; z-index: 2; max-width: 520px; text-align: left; }
+.hero-text .hero-sub { margin: 0 0 34px; max-width: 480px; }
 .hero-text .hero-cta { justify-content: flex-start; }
 .hero-text .stores { justify-content: flex-start; }
-.hero-visual { position: relative; width: 100%; height: clamp(440px, 72svh, 760px); }
+/* Küp sağda, geniş kutu → ortadan bölünmez, sol tarafı kırpılmaz */
+.hero-visual {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  right: clamp(-24px, -1vw, 8px);
+  width: min(56%, 760px); height: clamp(440px, 80svh, 820px);
+  z-index: 1;
+}
 .hero-cube { position: absolute; inset: 0; }
 @media (max-width: 900px) {
-  .hero.wrap { grid-template-columns: 1fr; gap: 8px; min-height: 0;
-    padding: 56px 24px 48px; text-align: center; }
-  .hero-text { text-align: center; }
+  .hero.wrap { flex-direction: column; justify-content: center; text-align: center;
+    min-height: 0; padding: 56px 24px 48px; }
+  .hero-text { text-align: center; max-width: none; }
   .hero-text .hero-sub { margin-left: auto; margin-right: auto; }
   .hero-text .hero-cta, .hero-text .stores { justify-content: center; }
   .hero-visual { display: none; } /* küp masaüstüne özel (perf) */
