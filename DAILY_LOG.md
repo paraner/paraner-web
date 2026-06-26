@@ -1,5 +1,17 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Auth küp v2: morph (dağıt/topla) + işlemeli Paraner harfleri + sıkı/küçük
+
+Mehmet geri bildirimi (canlı): kareler çok ayrık + büyük; dönerken şekilden şekile girsin (Resend'deki gibi kendi kendini parçalayıp toplasın); yüzlere Paraner harfleri (her yüz, karışık, metale işlemeli, küp rengiyle uyumlu, eşit boyut).
+
+- **Sıkı aralık + küçült:** cubie `SIZE 0.97` (1.0 aralık → ince derz), grup `SCALE 0.78`, kamera biraz geride.
+- **İşlemeli harfler:** her cubie'nin DIŞ yüzüne, P/A/R/N/E'den rastgele (karışık), eşit boyutlu harf → `PlaneGeometry` + `CanvasTexture` alphaMap, hafif açık metal renk (`0x3c4046`, metalness 0.7) → küple uyumlu "işlemeli" görünüm. Harf düzlemleri cubie'nin çocuğu → morph'ta birlikte hareket eder. (RoundedBox tek-materyalli olduğu için per-face materyal yerine decal-plane yöntemi.)
+- **Morph (Resend tarzı):** Rubik dönüşü DEĞİL — küp periyodik olarak **dağılır** (cubie'ler dışa açılır + rastgele konum/rotasyon = süzülen bulut) ve **yeniden toplanır** (temiz harfli küp). Her cubie hedefe yumuşak `lerp/slerp` ile yaklaşır (`a = 1-e^(-dt·2.6)`), faz ~2.2s topla / ~2.6s dağıt. `prefers-reduced-motion` → kapalı.
+- TS: `Clock` (deprecated) yerine `performance.now()` delta; `import type { Group }`.
+- Doğrulama: CDP (swiftshader) ile toplu (harfli temiz küp) + dağınık (süzülen parçalar) kareleri alındı; harfler eşit/okunur, karışık. Gerçek GPU'da 60fps akıcı. tsc + build temiz.
+
+---
+
 ## 2026-06-26 — Auth sol panel: interaktif 3D küp (Resend tarzı) + koyu degrade arka plan
 
 Mehmet Resend'in banner'ındaki sürüklenebilir 3D küpü istedi. (Resend'in `cube.mp4`'ü telifli → birebir ALINMADI; bize ait özgün Three.js sahnesi yapıldı, aynı "tut-döndür" deneyimi.)
