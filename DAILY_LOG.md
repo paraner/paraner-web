@@ -1,5 +1,19 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Auth küp v5: sıfırdan üst düzey Three.js (özgün) — geri dönüş
+
+Mehmet: videoyu bırak, sıfırdan en kaliteli küpü biz yapalım (Resend kalitesinde, özgün). Para birimi HER yüzde, malzeme yüz-başına güçlü kontrast.
+
+- **Geri Three.js'e dönüldü** (video kaldı `public/`'te, kullanılmıyor). `AuthCube3D` üst düzey sahne:
+  - **Eğimli cubie'ler** (`RoundedBoxGeometry`) + **yüz-başına kakma panel**: parlak lake (`MeshPhysicalMaterial` clearcoat) · karbon (twill bump) · fırçalı metal gri (roughnessMap) · delikli ızgara · satin. Kenar pahları çerçeve gibi ışık tutar.
+  - **HER yüzde** para birimi ($ € £ ₺ ¥, karışık, işlemeli metalik gri).
+  - **Filmik ışık** (ACES) + key(gölge) + arka rim(teal kenar) + specular + teal point; **yumuşak düşen gölge** (ShadowMaterial catcher, PCFSoft).
+  - **Hamle motoru:** yavaş dönüş + tek 90° / 180° / ALT+ÜST ters (easeOutCubic); küp dağılmaz.
+  - Mouse tut-döndür (OrbitControls), reduced-motion → durur, three dinamik import.
+- Doğrulama: CDP (swiftshader) — her yüzde sembol, yüz çeşitliliği + ışık/gölge belirgin, premium. tsc + build temiz (44/44).
+
+---
+
 ## 2026-06-26 — Auth sol panel: markaya özel cube videosu (Three.js yerine)
 
 Mehmet 3D modelci arkadaşına markaya özel bir küp videosu yaptırdı (kendi/özgün varlık). Desktop sol panele bu video konuldu; interaktif Three.js sahnesi bırakıldı.
