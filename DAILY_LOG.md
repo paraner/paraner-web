@@ -1,5 +1,14 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Mobil logo "ARANER → P arkasına kayar" + arka plan siyah
+
+- **Mobil logo slide:** Mehmet: kaydırınca wordmark "ARANER" kısmı **sola kayıp P'nin arkasına gidip kaybolsun**, sadece P kalsın (mobil; masaüstü wordmark aynı). `Logo.tsx`'e P geri eklendi. CSS: `.logo` `overflow:hidden`, mobilde genişlik 108→17px (`.nav.scrolled`); `.logo-wordmark` (z1) `translateX(-90px)`+fade ile sola kayar, `.logo-p` (z2, üstte) belirir. Masaüstü: `.logo-p { display:none }` → sadece wordmark, swap yok.
+  - ⚠️ **Önemli fix:** mobil swap kuralları önce uygulanmıyordu — base `.logo*` kuralları `@media`'dan SONRA tanımlıydı, eşit specificity'de sonraki kazanıyordu (wordmark 24px, P display:none kalıyordu). Base logo bloğu `@media`'dan ÖNCE'ye taşındı.
+- **Genel arka plan siyah:** `.bg-base` koyu gradyan (`#0a0b0d→#060607`) → **`#000000`**. `--bg`/body zaten siyahtı. Hero banner görseli (`paraner-bg.jpg`) korundu.
+- Doğrulama: tsc + build temiz; CDP (393px) + element ölçümleri — tepe wordmark 98.5px tam, scrolled P 16px (wordmark opacity 0, slide). Push → Vercel.
+
+---
+
 ## 2026-06-26 — Mobil menü düzeltmeleri + P-swap kaldırma + buton hizası
 
 Mehmet'in mobil geri bildirimleri:

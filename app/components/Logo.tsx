@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 
-// Paraner wordmark (titanyum). Ana sayfaya götürür. (P-swap animasyonu kaldırıldı.)
+// Paraner wordmark + P. Masaüstünde sadece wordmark; mobilde kaydırınca "ARANER"
+// kayarak P'nin arkasına gider, sadece P kalır (CSS .nav.scrolled tetikler).
 export default function Logo() {
   return (
     <Link href="/" className="logo" aria-label="Paraner ana sayfa">
@@ -12,6 +13,14 @@ export default function Logo() {
         height={24}
         className="logo-wordmark"
         priority
+      />
+      <Image
+        src="/paraner-p-titan.png"
+        alt=""
+        aria-hidden
+        width={16}
+        height={20}
+        className="logo-p"
       />
     </Link>
   );

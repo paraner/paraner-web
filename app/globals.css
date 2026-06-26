@@ -65,7 +65,7 @@ ul { list-style: none; }
 /* Genel site zemini — sade koyu (yeşil yok). Banner görseli SADECE hero'da (.hero-banner). */
 .bg-base {
   position: absolute; inset: 0;
-  background: linear-gradient(180deg, #0a0b0d 0%, #08090a 55%, #060607 100%);
+  background: #000000;
 }
 .bg-ambient { display: none; }
 @keyframes drift {
@@ -199,6 +199,14 @@ ul { list-style: none; }
 }
 .nav-burger svg { width: 24px; height: 24px; display: block; }
 
+/* ─── LOGO — masaüstü: sadece wordmark (P gizli). Mobil swap @media'da (altta). ─── */
+.logo { position: relative; display: flex; align-items: center; flex-shrink: 0; }
+.logo-wordmark {
+  height: 24px; width: auto; display: block;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.45));
+}
+.logo-p { display: none; }
+
 @media (min-width: 761px) { .mobile-menu { display: none !important; } }
 @media (max-width: 760px) {
   /* Mobil üst bar masaüstünden BAĞIMSIZ: sade, alçak, pill YOK */
@@ -206,7 +214,6 @@ ul { list-style: none; }
   .nav-actions { display: none; }
   .nav-burger { display: inline-flex; }
   .nav { padding: 11px 0; }
-  .logo-wordmark { height: 20px; }
   /* scroll'da yalnız sade blur bar (pill değil) */
   .nav.scrolled { padding: 11px 0; background: rgba(8, 9, 11, 0.82);
     backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
@@ -215,13 +222,27 @@ ul { list-style: none; }
     background: none; backdrop-filter: none; -webkit-backdrop-filter: none;
     border-color: transparent; border-radius: 0; box-shadow: none;
   }
-}
-
-/* ─── LOGO — wordmark (kaydırınca P'ye dönüşme animasyonu KALDIRILDI) ─── */
-.logo { display: flex; align-items: center; flex-shrink: 0; }
-.logo-wordmark {
-  height: 24px; width: auto; display: block;
-  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.45));
+  /* LOGO mobil: kaydırınca "ARANER" sola kayıp P'nin arkasına gider, P kalır.
+     .logo kutusu wordmark genişliğinden P genişliğine daralır (overflow clip);
+     wordmark sola öteler (slide), P üstte (z2) belirir. */
+  .logo {
+    width: 108px; height: 22px; overflow: hidden;
+    transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .logo-wordmark {
+    position: absolute; left: 0; top: 50%; height: 20px; width: auto; z-index: 1;
+    transform: translateY(-50%);
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease 0.1s;
+  }
+  .logo-p {
+    display: block; position: absolute; left: 0; top: 50%; height: 20px; width: auto; z-index: 2;
+    transform: translateY(-50%); opacity: 0;
+    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.45));
+    transition: opacity 0.3s ease 0.12s;
+  }
+  .nav.scrolled .logo { width: 17px; }
+  .nav.scrolled .logo-wordmark { transform: translateY(-50%) translateX(-90px); opacity: 0; }
+  .nav.scrolled .logo-p { opacity: 1; }
 }
 
 /* ─── MOBİL TAM EKRAN MENÜ (Resend tarzı, yumuşak açılış) ─── */
