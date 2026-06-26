@@ -1,5 +1,17 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Ana sayfa (paraner.com): koyu/siyah zemin + hero'da 3D küp + minimal bölümler
+
+Mehmet: ana sayfa Resend gibi siyah olsun, 3D küp hero'da sağda dursun, bölümler daha minimal. (İçerik tamamen Paraner'e ait — Resend içeriği KOPYALANMADI; yalnız koyu/minimal stil yönü.)
+
+- **Arka plan koyulaştı:** `.bg-base`/`.bg-ambient` teal+mor ışımalar kaldırıldı → nötr koyu degrade (üstten çok hafif beyaz ışık), site geneline yayılır. Cam kırılma efekti (auth küpünden) zaten kaldırılmıştı.
+- **Hero iki sütun:** sol metin (eyebrow/başlık/alt/CTA/mağaza), sağda **3D küpümüz** (`AuthCube3D`, `className` prop'u eklendi → `.hero-cube` şeffaf kap). Mobilde (≤900) tek sütun + küp gizli (perf; küp masaüstüne özel).
+- **Bölümler minimal:** feature/price kartları düz koyu yüzey (`rgba(255,255,255,0.02)`) + ince kenar, nötr ikon kutusu (teal kutu yerine), abartısız hover (translate yok). Öne çıkan plan teal vurgusu sade kaldı.
+- `AuthCube3D` artık hem auth sol panelinde hem ana sayfa hero'sunda kullanılıyor (className ile).
+- Doğrulama: CDP — hero (sol metin + sağ küp + siyah zemin) ve bölümler (minimal kartlar) ekran görüntülendi. tsc + build temiz.
+
+---
+
 ## 2026-06-26 — Auth küp v6: ortadan giriş + sürükle-yön + cam kırılma + yavaş tumble
 
 Mehmet ince ayarları:

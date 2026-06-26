@@ -9,7 +9,7 @@ import type { Group } from "three";
 //  • Giriş: tam ortadan uzaktan gelir, oturmaya yakın dönmeye başlar
 //  • Sürükle → küp itilen yöne döner (momentumlu); boşta yavaş çok-eksenli tumble
 //  • reduced-motion → durur. ≤1024px sol panel gizli; three dinamik import; WebGL yoksa CSS arka planı.
-export default function AuthCube3D() {
+export default function AuthCube3D({ className }: { className?: string } = {}) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -363,7 +363,7 @@ export default function AuthCube3D() {
   }, []);
 
   return (
-    <div className="auth-visual auth-cube" aria-hidden="true">
+    <div className={className ?? "auth-visual auth-cube"} aria-hidden="true">
       <div ref={ref} className="cube-stage" />
     </div>
   );

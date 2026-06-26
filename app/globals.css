@@ -62,20 +62,17 @@ ul { list-style: none; }
 
 /* ─── ARKA PLAN KATMANLARI ─── */
 .bg-layer { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+/* Resend tarzı koyu/siyah zemin: renk ışıması yok, sadece üstten çok hafif nötr ışık */
 .bg-base {
   position: absolute; inset: 0;
   background:
-    radial-gradient(ellipse 90% 70% at 10% 15%, rgba(0, 191, 166, 0.2) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 60% at 90% 80%, rgba(99, 102, 241, 0.16) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 55% 45%, rgba(0, 191, 166, 0.07) 0%, transparent 65%),
-    #000;
+    radial-gradient(120% 85% at 75% 6%, rgba(255, 255, 255, 0.05) 0%, transparent 52%),
+    linear-gradient(180deg, #0c0d0f 0%, #08090a 52%, #060607 100%);
 }
 .bg-ambient {
   position: absolute; inset: 0;
-  background:
-    radial-gradient(ellipse 55% 50% at 15% 85%, rgba(0, 191, 166, 0.13) 0%, transparent 60%),
-    radial-gradient(ellipse 65% 55% at 82% 12%, rgba(139, 92, 246, 0.11) 0%, transparent 60%);
-  animation: drift 26s ease-in-out infinite alternate;
+  background: radial-gradient(ellipse 60% 45% at 50% 102%, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+  animation: drift 30s ease-in-out infinite alternate;
 }
 @keyframes drift {
   0%   { transform: translate(0, 0) scale(1); }
@@ -225,8 +222,22 @@ ul { list-style: none; }
 .btn-lg { padding: 14px 26px; font-size: 15px; border-radius: 14px; }
 .btn-block { width: 100%; }
 
-/* ─── HERO ─── */
-.hero { text-align: center; padding: 96px 24px 64px; }
+/* ─── HERO (iki sütun: sol metin, sağ 3D küp) ─── */
+.hero { display: grid; grid-template-columns: 1.05fr 0.95fr; align-items: center;
+  gap: 48px; padding: 72px 24px 56px; }
+.hero-text { text-align: left; }
+.hero-text .hero-sub { margin: 0 0 34px; max-width: 500px; }
+.hero-text .hero-cta { justify-content: flex-start; }
+.hero-text .stores { justify-content: flex-start; }
+.hero-visual { position: relative; width: 100%; height: 480px; }
+.hero-cube { position: absolute; inset: 0; }
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; gap: 8px; padding: 64px 24px 48px; text-align: center; }
+  .hero-text { text-align: center; }
+  .hero-text .hero-sub { margin-left: auto; margin-right: auto; }
+  .hero-text .hero-cta, .hero-text .stores { justify-content: center; }
+  .hero-visual { display: none; } /* küp masaüstüne özel (perf) */
+}
 .eyebrow {
   display: inline-flex; align-items: center; gap: 7px;
   background: rgba(0, 191, 166, 0.1); border: 1px solid rgba(0, 191, 166, 0.25);
@@ -283,16 +294,16 @@ ul { list-style: none; }
 @media (max-width: 880px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .features-grid { grid-template-columns: 1fr; } }
 .feature-card {
-  background: var(--card); border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: var(--radius-lg); padding: 26px 24px;
-  backdrop-filter: blur(16px); transition: border-color 0.2s, transform 0.16s;
+  transition: border-color 0.2s, background 0.2s;
 }
-.feature-card:hover { border-color: var(--border-strong); transform: translateY(-3px); }
+.feature-card:hover { border-color: rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.035); }
 .feature-ico {
-  width: 46px; height: 46px; border-radius: 13px;
-  background: rgba(0, 191, 166, 0.12); border: 1px solid rgba(0, 191, 166, 0.22);
+  width: 42px; height: 42px; border-radius: 11px;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.09);
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px; margin-bottom: 16px;
+  font-size: 20px; margin-bottom: 16px;
 }
 .feature-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
 .feature-card p { color: var(--text-dim); font-size: 14px; line-height: 1.55; }
@@ -302,14 +313,13 @@ ul { list-style: none; }
 @media (max-width: 840px) { .price-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; } }
 .price-card {
   position: relative;
-  background: var(--card); border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: var(--radius-lg); padding: 30px 24px;
-  backdrop-filter: blur(16px); transition: border-color 0.2s, transform 0.16s;
+  transition: border-color 0.2s, background 0.2s;
 }
-.price-card:hover { border-color: var(--border-strong); transform: translateY(-3px); }
+.price-card:hover { border-color: rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.035); }
 .price-card.featured {
-  background: rgba(0, 191, 166, 0.055); border-color: rgba(0, 191, 166, 0.32);
-  box-shadow: 0 0 0 1px rgba(0, 191, 166, 0.18), 0 12px 48px rgba(0, 191, 166, 0.1);
+  background: rgba(0, 191, 166, 0.05); border-color: rgba(0, 191, 166, 0.28);
 }
 .price-badge {
   position: absolute; top: -13px; left: 50%; transform: translateX(-50%);

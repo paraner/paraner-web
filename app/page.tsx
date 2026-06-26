@@ -2,6 +2,7 @@ import Link from "next/link";
 import Background from "./components/Background";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
+import AuthCube3D from "./components/AuthCube3D";
 
 // ─── İçerik verisi (kolay düzenlenebilsin diye dosyanın başında) ───
 
@@ -49,38 +50,44 @@ export default function Home() {
 
       {/* ─── HERO ─── */}
       <section className="hero wrap">
-        <span className="eyebrow">AI Destekli Finans Asistanı</span>
-        <h1>
-          Paranı yönet,
-          <br />
-          <em>geleceğini kur.</em>
-        </h1>
-        <p className="hero-sub">
-          Kişisel ve işletme finanslarını tek yerden yönet. Bütçe yap, hedef koy,
-          yapay zeka koçun Parla ile akıllı kararlar al.
-        </p>
-        <div className="hero-cta">
-          <Link href="/kayit" className="btn btn-primary btn-lg">Ücretsiz Başla</Link>
-          <Link href="/giris" className="btn btn-ghost btn-lg">Giriş Yap</Link>
+        <div className="hero-text">
+          <span className="eyebrow">AI Destekli Finans Asistanı</span>
+          <h1>
+            Paranı yönet,
+            <br />
+            <em>geleceğini kur.</em>
+          </h1>
+          <p className="hero-sub">
+            Kişisel ve işletme finanslarını tek yerden yönet. Bütçe yap, hedef koy,
+            yapay zeka koçun Parla ile akıllı kararlar al.
+          </p>
+          <div className="hero-cta">
+            <Link href="/kayit" className="btn btn-primary btn-lg">Ücretsiz Başla</Link>
+            <Link href="/giris" className="btn btn-ghost btn-lg">Giriş Yap</Link>
+          </div>
+
+          <div className="stores">
+            <span className="store-badge">
+              <span className="store-icon"></span>
+              <span>
+                <span className="store-small" style={{ display: "block" }}>İndir</span>
+                <span className="store-big">App Store<span className="soon"> yakında</span></span>
+              </span>
+            </span>
+            <span className="store-badge">
+              <span className="store-icon">▶</span>
+              <span>
+                <span className="store-small" style={{ display: "block" }}>İndir</span>
+                <span className="store-big">Google Play<span className="soon"> yakında</span></span>
+              </span>
+            </span>
+          </div>
+          <p className="hero-note">Kart gerekmez · İstediğin zaman iptal et</p>
         </div>
 
-        <div className="stores">
-          <span className="store-badge">
-            <span className="store-icon"></span>
-            <span>
-              <span className="store-small" style={{ display: "block" }}>İndir</span>
-              <span className="store-big">App Store<span className="soon"> yakında</span></span>
-            </span>
-          </span>
-          <span className="store-badge">
-            <span className="store-icon">▶</span>
-            <span>
-              <span className="store-small" style={{ display: "block" }}>İndir</span>
-              <span className="store-big">Google Play<span className="soon"> yakında</span></span>
-            </span>
-          </span>
+        <div className="hero-visual">
+          <AuthCube3D className="hero-cube" />
         </div>
-        <p className="hero-note">Kart gerekmez · İstediğin zaman iptal et</p>
       </section>
 
       {/* ─── ÖZELLİKLER ─── */}
