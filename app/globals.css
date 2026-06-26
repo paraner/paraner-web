@@ -496,8 +496,27 @@ ul { list-style: none; }
 .auth-split-form .auth-head h1 { font-size: 30px; }
 .auth-split-form .auth-divider { margin: 18px 0; }
 
-/* Üst wordmark — ortalı */
-.auth-wordmark { display: block; width: auto; height: 31px; margin: 0 auto 26px; }
+/* Üst wordmark — ortalı, paraner.com linki + üstünden geçen ışıltı (paraner-app
+   AnimatedWordmark ile aynı: wordmark PNG MASKE, teal taban + hareketli beyaz parıltı). */
+.auth-wordmark {
+  display: block; width: 152px; height: 31px; margin: 0 auto 26px;
+  position: relative; overflow: hidden;
+  background: var(--teal);
+  -webkit-mask: url("/paraner-wordmark.png") center / contain no-repeat;
+  mask: url("/paraner-wordmark.png") center / contain no-repeat;
+}
+.auth-wordmark::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 38%, rgba(255, 255, 255, 0.9) 50%, transparent 62%);
+  transform: translateX(-75%);
+  animation: auth-wordmark-shine 2.4s ease-in-out infinite;
+}
+@keyframes auth-wordmark-shine {
+  0% { transform: translateX(-75%); }
+  58% { transform: translateX(75%); }
+  100% { transform: translateX(75%); }
+}
+@media (prefers-reduced-motion: reduce) { .auth-wordmark::after { animation: none; } }
 
 /* iOS UISegmentedControl tarzı Giriş/Kayıt switcher (beyaz panel) — premium */
 .auth-switch {

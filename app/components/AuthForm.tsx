@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import SocialAuth from "./SocialAuth";
 import OtpVerify from "./OtpVerify";
@@ -186,13 +185,10 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
 
   return (
     <div className="auth-split-form">
-      <Image
-        src="/paraner-wordmark.png"
-        alt="Paraner"
-        width={152}
-        height={31}
-        priority
+      <a
+        href="https://paraner.com"
         className="auth-wordmark"
+        aria-label="Paraner — ana sayfaya git"
       />
 
       {step === "code" ? (

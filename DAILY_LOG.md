@@ -1,5 +1,14 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Auth wordmark: paraner.com linki + ışıltı animasyonu (paraner-app ile aynı)
+
+- **Logo paraner.com linki:** Auth wordmark `<Image>` → `<a href="https://paraner.com">` (aria-label'lı). Image importu kaldırıldı.
+- **Üstünden geçen ışıltı (shimmer):** paraner-app `components/AnimatedWordmark.tsx` efekti web'e taşındı — wordmark PNG **maske**, teal taban + hareketli beyaz parıltı `::after` (`auth-wordmark-shine`, 2.4s, 1.4s sweep + bekleme; `prefers-reduced-motion` kapalı). Web'deki `.splash-word` ile aynı teknik. CDP ile doğrulandı (teal maske düzgün, ışık harflerin üstünde görünüyor; href=paraner.com, `<a>` 152×31). tsc + build temiz.
+
+**Şifremi unuttum — durum tespiti (Mehmet ile akışı konuşulacak):** Akış **hiç yok**. `Şifremi unuttum` linki sadece `/giris`'e gidiyor (no-op). Şifre sıfırlama route'u YOK, `resetPasswordForEmail`/`updateUser`/recovery işleme YOK, `auth/callback` yalnız OAuth `code` işliyor (recovery değil). Not: ana giriş zaten **şifresiz OTP** (e-posta kodu); şifre sadece fallback. Seçenekler Mehmet'e sunuldu (bkz. sohbet).
+
+---
+
 ## 2026-06-26 — Auth: label→placeholder (input içi) + geçiş animasyonu + titreme fix
 
 Mehmet canlı geri bildirim (2. tur):
