@@ -668,7 +668,18 @@ ul { list-style: none; }
     radial-gradient(58% 50% at 50% 42%, rgba(255, 255, 255, 0.07), transparent 70%),
     linear-gradient(160deg, #101113 0%, #08090a 55%, #050506 100%);
 }
-.auth-cube canvas { position: absolute; inset: 0; }
+.cube-stage { position: absolute; inset: 0; }
+.cube-stage canvas { position: absolute; inset: 0; }
+/* Cam kırılma overlay'i — küp "ekrana çarpınca" parlar, sonra kaybolur */
+.cube-crack { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
+  opacity: 0; z-index: 2; mix-blend-mode: screen; }
+.cube-crack-go { animation: cubeCrack 1.1s ease-out forwards; }
+@keyframes cubeCrack {
+  0% { opacity: 0; transform: scale(1.05); }
+  9% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) { .cube-crack-go { animation: none; } }
 /* Tablet / küçük laptop / telefon → sıkışık iki sütun yerine temiz tek sütun form */
 @media (max-width: 1024px) {
   .auth-page { padding: 0; }

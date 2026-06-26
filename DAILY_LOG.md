@@ -1,5 +1,16 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Auth küp v6: ortadan giriş + sürükle-yön + cam kırılma + yavaş tumble
+
+Mehmet ince ayarları:
+- **Dönüş yavaşlatıldı** + **çok-eksenli** (SPIN_Y 0.36 / SPIN_X 0.22).
+- **Sürükle → küp itilen yöne döner** (custom pointer drag, OrbitControls kaldırıldı): `rotateOnWorldAxis` ile anlık + bırakınca **momentum** (velY/velX → boşta SPIN'e damping ile oturur).
+- **Giriş tam ortadan:** z-ötelemesi kaldırıldı, grup ORİJİNDE sadece **scale** 0.05→1 (kamera hedefi merkez → ortadan uzaktan gelir). **Oturmadan dönmeye başlar:** spin, giriş %55'inden sonra rampa (`spinF`). Morph twist'leri giriş bitince.
+- **Cam kırılma efekti:** `<canvas class="cube-crack">` overlay (radial çatlak + dallar + halkalar + impact flaşı, `mix-blend-mode:screen`), giriş ~%70'inde (`INTRO_DUR*0.7`) tetiklenir, `cubeCrack` keyframe ile parlar→söner. reduced-motion → yok. (Prosedürel, özgün.)
+- Yapı: `.auth-cube` içinde `.cube-stage` (three canvas) + `.cube-crack`. Doğrulama: CDP — cracks çiziliyor (nonEmpty>0), zorla görünümde efekt net; küp + para birimleri + ışık tamam. tsc + build temiz.
+
+---
+
 ## 2026-06-26 — Auth küp v5: sıfırdan üst düzey Three.js (özgün) — geri dönüş
 
 Mehmet: videoyu bırak, sıfırdan en kaliteli küpü biz yapalım (Resend kalitesinde, özgün). Para birimi HER yüzde, malzeme yüz-başına güçlü kontrast.

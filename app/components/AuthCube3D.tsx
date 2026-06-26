@@ -3,22 +3,92 @@
 import { useEffect, useRef } from "react";
 import type { Group } from "three";
 
-// Sol panel (masaüstü) — sıfırdan, üst düzey Three.js küp (Resend kalitesinde, ÖZGÜN).
+// Sol panel (masaüstü) — sıfırdan, üst düzey Three.js küp (ÖZGÜN).
 //  • Eğimli cubie'ler + yüz-başına kakma panel: parlak lake · karbon · fırçalı gri · ızgara · satin
-//  • Filmik ışık (ACES) + yumuşak düşen gölge + ortam yansıması (clearcoat lake)
-//  • Hareket: yavaş döner; arada tek 90° / 180° / ALT+ÜST ters hamle (rafine easing)
-//  • Mouse ile TUT-DÖNDÜR. Birkaç yüzde silik işlemeli para birimi (marka). reduced-motion → durur.
-//  • ≤1024px sol panel gizli → masaüstüne özel; three dinamik import; WebGL yoksa CSS arka planı.
+//  • Filmik ışık (ACES) + önden dolgu + ortam yansıması; her yüzde damga para birimi
+//  • Giriş: tam ortadan uzaktan gelir, oturmaya yakın dönmeye başlar; ekrana çarpınca cam kırılır
+//  • Sürükle → küp itilen yöne döner (momentumlu); boşta yavaş çok-eksenli tumble
+//  • reduced-motion → durur. ≤1024px sol panel gizli; three dinamik import; WebGL yoksa CSS arka planı.
 export default function AuthCube3D() {
   const ref = useRef<HTMLDivElement>(null);
+  const crackRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     let disposed = false;
     let cleanup = () => {};
+    let crackTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // ── Cam kırılma çizimi (overlay canvas) ──
+    const drawCracks = () => {
+      const cv = crackRef.current;
+      if (!cv || !cv.parentElement) return;
+      const dpr = Math.min(window.devicePixelRatio, 2);
+      const Wd = cv.parentElement.clientWidth;
+      const Hd = cv.parentElement.clientHeight;
+      cv.width = Wd * dpr;
+      cv.height = Hd * dpr;
+      const g = cv.getContext("2d");
+      if (!g) return;
+      g.scale(dpr, dpr);
+      g.clearRect(0, 0, Wd, Hd);
+      const cx = Wd * 0.5;
+      const cy = Hd * 0.46;
+      const R = Math.max(Wd, Hd);
+      g.lineCap = "round";
+      g.shadowColor = "rgba(150,210,255,0.5)";
+      g.shadowBlur = 5;
+      const rays = 16;
+      for (let i = 0; i < rays; i++) {
+        const a = (i / rays) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
+        const len = R * (0.45 + Math.random() * 0.5);
+        g.strokeStyle = `rgba(255,255,255,${0.5 + Math.random() * 0.4})`;
+        g.lineWidth = 0.7 + Math.random() * 1.3;
+        g.beginPath();
+        g.moveTo(cx, cy);
+        const steps = 5 + ((Math.random() * 3) | 0);
+        for (let s = 1; s <= steps; s++) {
+          const r = len * (s / steps);
+          const jit = (Math.random() - 0.5) * 18;
+          g.lineTo(cx + Math.cos(a) * r + jit, cy + Math.sin(a) * r + jit * 0.6);
+        }
+        g.stroke();
+        if (Math.random() < 0.6) {
+          const ba = a + (Math.random() - 0.5) * 0.8;
+          g.beginPath();
+          g.moveTo(cx + Math.cos(a) * len * 0.4, cy + Math.sin(a) * len * 0.4);
+          g.lineTo(cx + Math.cos(ba) * len * 0.5, cy + Math.sin(ba) * len * 0.5);
+          g.stroke();
+        }
+      }
+      for (let ring = 0; ring < 3; ring++) {
+        const rr = 22 + ring * 24 + Math.random() * 10;
+        g.strokeStyle = `rgba(255,255,255,${0.32 - ring * 0.08})`;
+        g.lineWidth = 0.6;
+        g.beginPath();
+        for (let i = 0; i <= rays; i++) {
+          const a = (i / rays) * Math.PI * 2;
+          const r = rr + (Math.random() - 0.5) * 8;
+          const x = cx + Math.cos(a) * r;
+          const y = cy + Math.sin(a) * r;
+          i === 0 ? g.moveTo(x, y) : g.lineTo(x, y);
+        }
+        g.closePath();
+        g.stroke();
+      }
+      g.shadowBlur = 0;
+      const rad = g.createRadialGradient(cx, cy, 0, cx, cy, 42);
+      rad.addColorStop(0, "rgba(255,255,255,0.9)");
+      rad.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = rad;
+      g.beginPath();
+      g.arc(cx, cy, 42, 0, Math.PI * 2);
+      g.fill();
+    };
 
     (async () => {
       const THREE = await import("three");
-      const { OrbitControls } = await import("three/examples/jsm/controls/OrbitControls.js");
       const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
       const { RoundedBoxGeometry } = await import("three/examples/jsm/geometries/RoundedBoxGeometry.js");
       if (disposed || !ref.current) return;
@@ -26,7 +96,6 @@ export default function AuthCube3D() {
       const el = ref.current;
       const W0 = el.clientWidth || 600;
       const H0 = el.clientHeight || 800;
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -39,6 +108,7 @@ export default function AuthCube3D() {
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(32, W0 / H0, 0.1, 100);
       camera.position.set(5.6, 4.2, 7.2);
+      camera.lookAt(0, -0.1, 0);
 
       const pmrem = new THREE.PMREMGenerator(renderer);
       scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.05).texture;
@@ -47,19 +117,19 @@ export default function AuthCube3D() {
       const key = new THREE.DirectionalLight(0xffffff, 3.0);
       key.position.set(6, 10, 7);
       scene.add(key);
-      const rim = new THREE.DirectionalLight(0xd7e4f2, 1.7); // arka-yan rim (nötr-serin kenar, yeşil yok)
+      const rim = new THREE.DirectionalLight(0xd7e4f2, 1.7);
       rim.position.set(-7, 3, -8);
       scene.add(rim);
       const spec = new THREE.PointLight(0xffffff, 22, 50, 1.8);
       spec.position.set(5, -1, 6);
       scene.add(spec);
-      const front = new THREE.DirectionalLight(0xffffff, 0.95); // karşıdan ince dolgu → ön yüzler kararmaz
+      const front = new THREE.DirectionalLight(0xffffff, 0.95);
       front.position.set(0, 1.5, 9);
       scene.add(front);
       scene.add(new THREE.AmbientLight(0xffffff, 0.14));
 
       // ── Dokular ──
-      const tex = (n: number, rep: number, draw: (g: CanvasRenderingContext2D, n: number) => void) => {
+      const mkTex = (n: number, rep: number, draw: (g: CanvasRenderingContext2D, n: number) => void) => {
         const c = document.createElement("canvas");
         c.width = c.height = n;
         draw(c.getContext("2d")!, n);
@@ -68,23 +138,23 @@ export default function AuthCube3D() {
         t.repeat.set(rep, rep);
         return t;
       };
-      const carbonTex = tex(128, 3, (g, n) => {
-        // 2x2 twill karbon dokusu
+      const carbonTex = mkTex(128, 3, (g, n) => {
         const s = 8;
         for (let y = 0; y < n; y += s)
           for (let x = 0; x < n; x += s) {
-            const d = ((x / s + y / s) % 2) === 0;
+            const d = (x / s + y / s) % 2 === 0;
             g.fillStyle = d ? "#2a2a2a" : "#0a0a0a";
             g.fillRect(x, y, s, s);
             g.fillStyle = d ? "#3a3a3a" : "#161616";
             g.fillRect(x, y, s, s / 2);
           }
       });
-      const brushedTex = tex(128, 2, (g, n) => {
+      const brushedTex = mkTex(128, 2, (g, n) => {
         g.fillStyle = "#777";
         g.fillRect(0, 0, n, n);
         for (let i = 0; i < 900; i++) {
-          g.strokeStyle = `rgba(${Math.random() < 0.5 ? 40 : 200},${Math.random() < 0.5 ? 40 : 200},${Math.random() < 0.5 ? 40 : 200},0.08)`;
+          const v = Math.random() < 0.5 ? 40 : 200;
+          g.strokeStyle = `rgba(${v},${v},${v},0.08)`;
           const y = Math.random() * n;
           g.beginPath();
           g.moveTo(0, y);
@@ -92,7 +162,7 @@ export default function AuthCube3D() {
           g.stroke();
         }
       });
-      const grilleTex = tex(96, 3, (g, n) => {
+      const grilleTex = mkTex(96, 3, (g, n) => {
         g.fillStyle = "#bbb";
         g.fillRect(0, 0, n, n);
         g.fillStyle = "#000";
@@ -114,16 +184,15 @@ export default function AuthCube3D() {
       const frameMat = new THREE.MeshStandardMaterial({ color: 0x070708, metalness: 0.9, roughness: 0.4 });
       const ownedMats = [pGloss, pCarbon, pBrushed, pGrille, pSatin, frameMat];
 
-      // ── Damga/kabartma para birimi: aynı doku hem alphaMap (şekil) hem bumpMap (kabartma)
-      //    → metale basılmış, hafif taşan rölyef. Hafif blur = yumuşak kenar rampası. ──
+      // ── Damga/kabartma para birimi ──
       const symTex = (ch: string) => {
         const c = document.createElement("canvas");
         c.width = c.height = 256;
         const g = c.getContext("2d")!;
-        g.fillStyle = "#000"; // siyah = kabartmanın düz tabanı
+        g.fillStyle = "#000";
         g.fillRect(0, 0, 256, 256);
         g.filter = "blur(1.4px)";
-        g.fillStyle = "#fff"; // beyaz = yükselen (kabarık) bölge
+        g.fillStyle = "#fff";
         g.font = "800 156px -apple-system, 'Segoe UI', Arial, sans-serif";
         g.textAlign = "center";
         g.textBaseline = "middle";
@@ -136,12 +205,12 @@ export default function AuthCube3D() {
       const symMats = ["$", "€", "£", "₺", "¥"].map((ch) => {
         const t = symTex(ch);
         return new THREE.MeshStandardMaterial({
-          color: 0x2b2f37, // küple uyumlu metal — damga aynı metalden basılmış gibi
+          color: 0x2b2f37,
           metalness: 0.92,
           roughness: 0.3,
-          bumpMap: t, // kabartma rölyefi → ışıkta öne çıkar
+          bumpMap: t,
           bumpScale: 0.07,
-          alphaMap: t, // yalnız sembol görünür
+          alphaMap: t,
           transparent: true,
           depthWrite: false,
           polygonOffset: true,
@@ -156,9 +225,7 @@ export default function AuthCube3D() {
       const SCALE = 0.8;
       const group = new THREE.Group();
       group.rotation.set(0.32, 0.62, 0.06);
-      // Giriş animasyonu başlangıcı: uzakta + küçük (reduced-motion'da direkt yerinde)
-      group.scale.setScalar(reduce ? SCALE : SCALE * 0.05);
-      group.position.z = reduce ? 0 : -8;
+      group.scale.setScalar(reduce ? SCALE : SCALE * 0.05); // giriş: küçük başla (konum ORİJİN = ortadan)
       scene.add(group);
 
       const boxGeo = new RoundedBoxGeometry(SIZE, SIZE, SIZE, 5, RAD);
@@ -183,16 +250,12 @@ export default function AuthCube3D() {
           for (let z = -1; z <= 1; z++) {
             const cubie = new THREE.Group();
             cubie.position.set(x, y, z);
-            const box = new THREE.Mesh(boxGeo, frameMat);
-            box.castShadow = true;
-            box.receiveShadow = true;
-            cubie.add(box);
+            cubie.add(new THREE.Mesh(boxGeo, frameMat));
             faceDef.forEach((f) => {
               const panel = new THREE.Mesh(panelGeo, pick(facePool));
               panel.position.set(f.p[0] * fo, f.p[1] * fo, f.p[2] * fo);
               panel.rotation.set(...f.r);
               cubie.add(panel);
-              // HER yüze para birimi (karışık)
               const sym = new THREE.Mesh(symGeo, pick(symMats));
               sym.position.set(f.p[0] * so, f.p[1] * so, f.p[2] * so);
               sym.rotation.set(...f.r);
@@ -202,31 +265,51 @@ export default function AuthCube3D() {
             cubies.push(cubie);
           }
 
-      // ── OrbitControls ──
-      const controls = new OrbitControls(camera, renderer.domElement);
-      controls.enableZoom = false;
-      controls.enablePan = false;
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.07;
-      controls.rotateSpeed = 0.7;
-      controls.autoRotate = false; // dönüş artık grup üzerinde çok-eksenli (aşağıda)
-      controls.target.set(0, -0.1, 0);
-
+      // ── Sürükle → küp itilen yöne döner (momentumlu) ──
+      const WORLD_Y = new THREE.Vector3(0, 1, 0);
+      const WORLD_X = new THREE.Vector3(1, 0, 0);
+      const SPIN_Y = 0.36; // boşta yatay (yavaşlatıldı)
+      const SPIN_X = 0.22; // boşta dikey takla
+      const SENS = 0.006;
+      let dragging = false;
+      let lx = 0;
+      let ly = 0;
+      let velY = SPIN_Y;
+      let velX = SPIN_X;
       const dom = renderer.domElement;
-      const grab = () => (dom.style.cursor = "grabbing");
-      const release = () => (dom.style.cursor = "grab");
-      dom.addEventListener("pointerdown", grab);
-      window.addEventListener("pointerup", release);
+      const onDown = (e: PointerEvent) => {
+        dragging = true;
+        lx = e.clientX;
+        ly = e.clientY;
+        dom.setPointerCapture?.(e.pointerId);
+        dom.style.cursor = "grabbing";
+      };
+      const onMove = (e: PointerEvent) => {
+        if (!dragging) return;
+        const dx = e.clientX - lx;
+        const dy = e.clientY - ly;
+        lx = e.clientX;
+        ly = e.clientY;
+        group.rotateOnWorldAxis(WORLD_Y, dx * SENS);
+        group.rotateOnWorldAxis(WORLD_X, dy * SENS);
+        velY = dx * SENS * 60; // bırakınca momentum bu yönde sürer
+        velX = dy * SENS * 60;
+      };
+      const onUp = () => {
+        dragging = false;
+        dom.style.cursor = "grab";
+      };
+      dom.addEventListener("pointerdown", onDown);
+      dom.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
 
       // ── Hamle motoru ──
       const AXES: Array<"x" | "y" | "z"> = ["x", "y", "z"];
       type Part = { axis: "x" | "y" | "z"; angle: number; pivot: InstanceType<typeof THREE.Group>; members: Group[] };
       let move: { dur: number; t: number; parts: Part[] } | null = null;
-      let restTimer = reduce ? Infinity : 1.4;
-      // easeInOutCubic — başta ve sonda yumuşak (sert/ani değil)
+      let restTimer = 1.4;
       const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
       const coin = () => (Math.random() < 0.5 ? 1 : -1);
-
       function makePart(axis: "x" | "y" | "z", layer: number, angle: number): Part {
         const pivot = new THREE.Group();
         group.add(pivot);
@@ -240,15 +323,12 @@ export default function AuthCube3D() {
         let parts: Part[];
         let dur: number;
         if (r < 0.46) {
-          // tek katman 90° — sakin
           parts = [makePart(axis, coin(), (coin() * Math.PI) / 2)];
           dur = 1.1 + Math.random() * 0.3;
         } else if (r < 0.68) {
-          // tek katman 180° (iki kez) — daha ağır
           parts = [makePart(axis, coin(), coin() * Math.PI)];
           dur = 1.8;
         } else {
-          // ALT+ÜST ters — artık sert değil, ağırdan
           const a = Math.random() < 0.5 ? Math.PI / 2 : Math.PI;
           parts = [makePart(axis, 1, a), makePart(axis, -1, -a)];
           dur = a > Math.PI / 2 ? 1.6 : 1.0;
@@ -268,67 +348,74 @@ export default function AuthCube3D() {
         restTimer = Math.random() < 0.2 ? 0.14 : 0.9 + Math.random() * 1.9;
       }
 
-      // ── Giriş animasyonu (uzaktan/küçük → öne gelip yumuşak durur) ──
+      // ── Giriş + render ──
       let intro = reduce ? 1 : 0;
-      const INTRO_DUR = 1.2;
+      const INTRO_DUR = 1.25;
       const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
-
-      // Çok-eksenli sürekli dönüş (sağa + yukarı/aşağı eşzamanlı)
-      const WORLD_Y = new THREE.Vector3(0, 1, 0);
-      const WORLD_X = new THREE.Vector3(1, 0, 0);
-      const SPIN_Y = 0.55; // yatay (sağa)
-      const SPIN_X = 0.34; // dikey (yukarı/aşağı takla)
-
-      // ── Render ──
       let last = performance.now();
       let raf = 0;
       const animate = () => {
         const now = performance.now();
         const dt = Math.min((now - last) / 1000, 0.05);
         last = now;
+
         if (intro < 1) {
-          // ekrana atılmış gibi: uzaktan küçük gelir, öne çıkar, yavaşlayarak oturur
+          // tam ortadan (orijin) uzaktan gelir, büyüyerek oturur
           intro = Math.min(1, intro + dt / INTRO_DUR);
-          const e = easeOut(intro);
-          group.scale.setScalar(SCALE * (0.05 + 0.95 * e));
-          group.position.z = -8 * (1 - e);
-          group.rotation.y += dt * (1 - e) * 2.0; // girişte ekstra fırıl, sona doğru söner
-        } else if (!reduce) {
-          // çok-eksenli sürekli dönüş (sağa + yukarı/aşağı eşzamanlı)
-          group.rotateOnWorldAxis(WORLD_Y, SPIN_Y * dt);
-          group.rotateOnWorldAxis(WORLD_X, SPIN_X * dt);
-          if (move) {
-            move.t = Math.min(1, move.t + dt / move.dur);
-            const e = ease(move.t);
-            move.parts.forEach((p) => (p.pivot.rotation[p.axis] = e * p.angle));
-            if (move.t >= 1) finishMove();
-          } else {
-            restTimer -= dt;
-            if (restTimer <= 0) pickMove();
+          group.scale.setScalar(SCALE * (0.05 + 0.95 * easeOut(intro)));
+        }
+
+        if (!reduce) {
+          // oturmaya yakın dönmeye başla (giriş %55'inden sonra rampa)
+          const spinF = Math.max(0, Math.min(1, (intro - 0.55) / 0.45));
+          if (!dragging) {
+            velY += (SPIN_Y - velY) * (1 - Math.exp(-dt * 1.2));
+            velX += (SPIN_X - velX) * (1 - Math.exp(-dt * 1.2));
+            group.rotateOnWorldAxis(WORLD_Y, velY * dt * spinF);
+            group.rotateOnWorldAxis(WORLD_X, velX * dt * spinF);
+          }
+          if (intro >= 1) {
+            if (move) {
+              move.t = Math.min(1, move.t + dt / move.dur);
+              const e = ease(move.t);
+              move.parts.forEach((p) => (p.pivot.rotation[p.axis] = e * p.angle));
+              if (move.t >= 1) finishMove();
+            } else {
+              restTimer -= dt;
+              if (restTimer <= 0) pickMove();
+            }
           }
         }
-        controls.update();
+
         renderer.render(scene, camera);
         raf = requestAnimationFrame(animate);
       };
       animate();
 
+      // ── Ekrana çarpma → cam kırılma (giriş sonuna doğru) ──
+      if (!reduce) {
+        drawCracks();
+        crackTimer = setTimeout(() => {
+          crackRef.current?.classList.add("cube-crack-go");
+        }, INTRO_DUR * 1000 * 0.7);
+      }
+
       const ro = new ResizeObserver(() => {
-        const W = el.clientWidth;
-        const H = el.clientHeight;
-        if (!W || !H) return;
-        camera.aspect = W / H;
+        const Wn = el.clientWidth;
+        const Hn = el.clientHeight;
+        if (!Wn || !Hn) return;
+        camera.aspect = Wn / Hn;
         camera.updateProjectionMatrix();
-        renderer.setSize(W, H);
+        renderer.setSize(Wn, Hn);
       });
       ro.observe(el);
 
       cleanup = () => {
         cancelAnimationFrame(raf);
         ro.disconnect();
-        controls.dispose();
-        dom.removeEventListener("pointerdown", grab);
-        window.removeEventListener("pointerup", release);
+        dom.removeEventListener("pointerdown", onDown);
+        dom.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
         boxGeo.dispose();
         panelGeo.dispose();
         symGeo.dispose();
@@ -348,9 +435,15 @@ export default function AuthCube3D() {
 
     return () => {
       disposed = true;
+      if (crackTimer) clearTimeout(crackTimer);
       cleanup();
     };
   }, []);
 
-  return <div ref={ref} className="auth-visual auth-cube" aria-hidden="true" />;
+  return (
+    <div className="auth-visual auth-cube" aria-hidden="true">
+      <div ref={ref} className="cube-stage" />
+      <canvas ref={crackRef} className="cube-crack" />
+    </div>
+  );
 }
