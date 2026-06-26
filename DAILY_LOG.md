@@ -1,5 +1,11 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Primary buton (Devam Et) premium hâle getirildi
+
+Mehmet "gölgeli güzel buton" istedi; 21st.dev Magnetize (mıknatıs+parçacık) referansına baktık ama finans tonuna fazla oyuncak → daha rafine yönde karar verildi. `.btn-primary`: teal yumuşak **glow gölge** + üstte **cam iç-parlaması** (inset highlight) + hover'da **yukarı kalkma** & glow artışı + **active oturma** + disabled gölgesiz. Ayrıca hover'da butonun üstünden **bir kez geçen ışıltı** (`::before` shine sweep, marka logosu shine ile uyumlu; `overflow:hidden` köşe kırpar; `prefers-reduced-motion` kapalı). CDP ile rest/hover/shine frame doğrulandı (metin okunur). Tüm primary butonları (auth + panel) etkiler — tutarlı. Commit: `9949b95` (glow) + `e8ede40` (shine).
+
+---
+
 ## 2026-06-26 — Şifre sıfırlama: implicit flow (pkce_ token bug fix) + markalı mail
 
 Canlı test: yeni markalı şablonla Gmail phishing uyarısı KALKTI. Ama e-posta linki `token_hash=pkce_...` ile geliyordu → `verifyOtp` pkce_ token kabul etmez (link "geçersiz" olur + sadece aynı tarayıcı). **Fix:** `createClient({implicit:true})` eklendi; `handleForgotPassword` reset mailini implicit flow ile gönderiyor → e-postadaki {{ .TokenHash }} DÜZ token_hash olur → /sifre-sifirla verifyOtp çalışır, farklı cihaz/tarayıcıda da. Logo URL canlıda 200 (image/png) — broken ikonu önceki flagged maillerin Gmail görsel-engeli cache'i, temiz mailde düzelir. Kalan manuel: Supabase mail Subject'ini Türkçe yap (gövde ayrı, konu hâlâ "Reset Your Password").
