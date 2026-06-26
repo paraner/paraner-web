@@ -319,6 +319,7 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
       type Part = { axis: "x" | "y" | "z"; angle: number; pivot: InstanceType<typeof THREE.Group>; members: Group[] };
       let move: { dur: number; t: number; parts: Part[] } | null = null;
       let restTimer = 1.4;
+      let firstMove = true; // oturur oturmaz: garantili 180° tek-kenar hamlesi (bekleme yok)
       const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
       const coin = () => (Math.random() < 0.5 ? 1 : -1);
       function makePart(axis: "x" | "y" | "z", layer: number, angle: number): Part {
@@ -328,8 +329,13 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
         members.forEach((c) => pivot.attach(c));
         return { axis, angle, pivot, members };
       }
-      function pickMove() {
+      function pickMove(first = false) {
         const axis = AXES[(Math.random() * 3) | 0];
+        if (first) {
+          // Oturur oturmaz ilk hamle: bir kenarı 2 kez (180°) döndür
+          move = { dur: 1.2, t: 0, parts: [makePart(axis, coin(), coin() * Math.PI)] };
+          return;
+        }
         const r = Math.random();
         let parts: Part[];
         let dur: number;
@@ -395,12 +401,17 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
             group.rotateOnWorldAxis(WORLD_Y, velY * dt);
             group.rotateOnWorldAxis(WORLD_X, velX * dt);
           }
-          if (intro >= 1) {
+          // Hamleler küp OTURUR OTURMAZ başlar (intro=1 büyüme bitişini beklemez):
+          // ilk hamle anında 180° tek-kenar, sonrası restTimer'lı normal akış.
+          if (seated) {
             if (move) {
               move.t = Math.min(1, move.t + dt / move.dur);
               const e = ease(move.t);
               move.parts.forEach((p) => (p.pivot.rotation[p.axis] = e * p.angle));
               if (move.t >= 1) finishMove();
+            } else if (firstMove) {
+              firstMove = false;
+              pickMove(true);
             } else {
               restTimer -= dt;
               if (restTimer <= 0) pickMove();
