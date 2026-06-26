@@ -14,11 +14,20 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
 
   useEffect(() => {
     let disposed = false;
+    let started = false;
     let cleanup = () => {};
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    (async () => {
+    // Küp mobilde CSS ile gizli (display:none). Görünmezken three.js'i YÜKLEME:
+    // mobil tarayıcıda gereksiz WebGL context + sonsuz render döngüsü sekmeyi
+    // çökertip "sayfa açılmıyor"a yol açıyordu. Sadece container gerçekten görünürse başlat.
+    const visible = () => {
+      const el = ref.current;
+      return !!el && el.offsetParent !== null && el.clientWidth > 0 && el.clientHeight > 0;
+    };
+
+    const init = async () => {
       const THREE = await import("three");
       const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
       const { RoundedBoxGeometry } = await import("three/examples/jsm/geometries/RoundedBoxGeometry.js");
@@ -354,12 +363,25 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
         renderer.dispose();
         if (dom.parentElement === el) el.removeChild(dom);
       };
-    })().catch(() => {
-      /* WebGL yok → CSS arka planı görünür kalır */
-    });
+    };
+
+    const tryStart = () => {
+      if (started || disposed || !visible()) return;
+      started = true;
+      window.removeEventListener("resize", tryStart);
+      init().catch(() => {
+        /* WebGL yok → CSS arka planı görünür kalır */
+      });
+    };
+
+    // Görünürse hemen başlat; değilse (mobilde gizli) görünür olana dek (yön/boyut
+    // değişimi) bekle — three.js böylece mobilde HİÇ yüklenmez.
+    tryStart();
+    if (!started) window.addEventListener("resize", tryStart);
 
     return () => {
       disposed = true;
+      window.removeEventListener("resize", tryStart);
       cleanup();
     };
   }, []);
