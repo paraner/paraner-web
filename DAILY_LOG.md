@@ -1,5 +1,18 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Mobil üst bar + tam ekran menü (Resend tarzı)
+
+Mehmet: mobilde liquid-glass pill OLMASIN; sade bar + 3-çizgi menü, **Resend.com**'un mobil menüsü gibi (ekran görüntüleri verdi). Logo mobilde **P değil PARANER wordmark** (minimal/temiz).
+
+- **`Nav.tsx`:** `menuOpen` state + `.nav-burger` (☰, yalnız ≤760px) + tam ekran `.mobile-menu` (role=dialog). Body scroll-lock + Esc kapatma; her link tıklayınca kapanır.
+- **Mobil bar (kapalı):** PARANER wordmark (sol) + ☰ (sağ). `.nav-actions` (Giriş/Kayıt) mobilde gizli → menüye taşındı.
+- **Açılan panel (Resend düzeni):** üstte wordmark + ✕ · büyük **Kayıt Ol** (titanyum pill, `.mm-cta`) · ortada **Giriş Yap** (`.mm-login`) · satırlar **Özellikler →/Fiyatlar →** (`.mm-row`, divider + chevron; alt paneller sonra) · en altta **App Store + Google Play** yan yana (`.mm-stores`, Apple + Play SVG, "İndir/…"). Arka plan **opak** `#07080a` (içerik sızmaz). Açılış: opacity fade + gövde hafif yukarıdan iner (seamless).
+- **Mobilde pill nötr:** `@media (max-width:760px)` → `.nav.scrolled` pill yerine sade tam-genişlik blur bar; logo hep wordmark (P-swap kapalı). `@media (min-width:761px)` → `.mobile-menu` display:none.
+- Doğrulama: tsc + build temiz; CDP (393px, mobile) kapalı (wordmark+☰) + açık (opak panel, tüm öğeler) görüntülendi. Push → Vercel.
+- **Sonraki (Mehmet'in notu):** menü satırlarına alt-panel (Fiyatlar/Özellikler → Resend'deki kartlı alt-sayfa gibi) — sayfalar ayarlanınca.
+
+---
+
 ## 2026-06-26 — Üst bar: banner'a gömülü → kaydırınca iOS Liquid Glass pill (mgzrmedia sistemi)
 
 Mehmet kendi sitesi **mgzrmedia.com**'un üst barını referans verdi: ayrı bar olmasın, banner'a gömülü dursun; kullanıcı kaydırınca **liquid glass** pill'e dönüşsün; açılışta tam wordmark, kaydırınca **sadece P**. Giriş/Kayıt korunsun. (mgzr mekanizması incelendi: `.navbar.scrolled` → `.nav-container` `max-width:1100` pill + `backdrop-filter blur(40) saturate(200%)` + beyaz cam, `cubic-bezier(.16,1,.3,1)`.)
