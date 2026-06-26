@@ -1,5 +1,19 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Ana sayfa banner FINAL: markaya özel görsel (sadece hero) + titanyum + küp sağda
+
+Mehmet'in ardışık geri bildirimleriyle ana sayfa hero netleşti (final durum):
+- **Banner arka planı = markaya özel görsel** `public/paraner-bg.jpg` (Mehmet'in hazırladığı 4K görsel, PNG 3.2MB → JPG 880KB). **Yalnız `.hero-banner`'da** (tam genişlik); site geneli (`bg-base`) sade koyu kaldı — görsel her yere YAYILMAZ.
+- **Düzen:** ortadan 2-sütun bölme YOK. `.hero.wrap` tek katman flex; metin solda (`z-index:2`, max 520), küp sağda `position:absolute` geniş kutuda (`min(52%,720)×clamp(440,74svh,780)`) → küp kırpılmaz, sayfa bölünmüş görünmez.
+- **Küp:** `AuthCube3D` `zoom` prop'u (kamera yaklaştırma) = `1.28`; boyu metin bloğuyla (başlık↔App/Play butonları) eşit. `playIntro={false}` → ana sayfada uzaktan gelme yok (auth'ta intro açık).
+- **Yeşil tamamen kaldırıldı (marketing monokrom/titanyum):** eyebrow/h1-em/logo titanyum, titanyum butonlar (`.nav/.hero/.cta-band .btn-primary` scope'lu), price/cta nötr. Panel/auth teal'i KASITLI korundu.
+- **Hero tam ekran** (`min-height: calc(100svh - 68px)`) → her ekran boyutunda ilk bakışta banner.
+- Doğrulama: CDP 1440/1280/1920 — banner görselli + alt bölümler koyu, küp sağda metinle eşit, yeşil yok. tsc + build temiz (44/44).
+
+**Kalan (ileride, opsiyonel):** kullanılmayan eski varlıklar `public/paraner-auth-bg.mp4/.jpg` + `paraner-cube.mp4/.jpg` (artık referans yok) temizlenebilir. Auth/panel teal → istenirse titanyuma çekilebilir (şimdilik korundu).
+
+---
+
 ## 2026-06-26 — Ana sayfa: tam ekran banner + titanyum (yeşilsiz) + sağ-üst ışık + küp intro kapalı
 
 Mehmet: banner her ekranda ilk görünüm olsun (tam ekran), içerik geniş ama kenara yapışık değil; arka planda sağ-üstten küpe vuran "titanyum ışık" hissi; **yeşil renk hiç olmasın** (her şey küple uyumlu monokrom/titanyum); ana sayfada küp uzaktan gelmesin.
