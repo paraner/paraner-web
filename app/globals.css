@@ -438,7 +438,9 @@ ul { list-style: none; }
   width: min(52%, 720px); height: clamp(440px, 74svh, 780px);
   z-index: 1;
 }
-.hero-cube { position: absolute; inset: 0; }
+/* Koyu zemin: yüklenirken şeffaf WebGL canvas'ın GPU'da beyaz görünmesini önler
+   (auth'taki .auth-cube koyu zeminli olduğu için orada beyaz hiç olmuyordu). */
+.hero-cube { position: absolute; inset: 0; background: #000; }
 @media (max-width: 900px) {
   .hero.wrap { flex-direction: column; justify-content: center; text-align: center;
     min-height: 0; padding: 56px 24px 48px; }
