@@ -1,5 +1,16 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Auth küp v3: Rubik dönüş (dağılma yok) + para birimi sembolleri + karbon/gri karışım
+
+Mehmet (canlı): dağılma istemiyor — küp **kendini çevirsin** (Resend'deki katman dönüşü gibi, küp formu korunur). Harfleri kaldır → **para birimleri** ($ € £ ₺ ¥), kalın. Küp **siyah + karbon + metalik gri karışım**, semboller her yüzde, metalik gri/karbon ton.
+
+- **Morph değişti:** scatter (dağıt/topla) KALDIRILDI → **Rubik katman dönüşü** (pivot + `attach` ile dış katman seçip 90° döndür, `easeInOut`, bitince konumları yuvarla/bake; ~0.7s twist + 0.45-1.15s ara). Küp hiç dağılmaz, kendini çevirir. reduced-motion → kapalı.
+- **Harfler → para birimleri:** P/A/R/N/E kaldırıldı; `$ € £ ₺ ¥` (kalın `900` font, ₺ dahil render), her dış yüzde rastgele (karışık), eşit boyut; sembol malzemesi metalik gri (`0x5a5f66`) → işlemeli görünüm.
+- **Karbon + gri karışım:** cubie başına rastgele malzeme havuzu — siyah parlak (`0x111214`) · karbon (bumpMap nokta dokusu, `0x131418`) · metalik gri (`0x2b2e34`), ~%40/%40/%20.
+- Doğrulama: CDP ile toplu kare (semboller her yüzde, karışık) + dönüş sonrası kare (katman çevrilmiş, dağılmamış). tsc + build temiz (44/44). (Not: tek seferlik "Turbopack 7 hata" build+dev eşzamanlı çalışınca çıktı; izole build temiz.)
+
+---
+
 ## 2026-06-26 — Auth küp v2: morph (dağıt/topla) + işlemeli Paraner harfleri + sıkı/küçük
 
 Mehmet geri bildirimi (canlı): kareler çok ayrık + büyük; dönerken şekilden şekile girsin (Resend'deki gibi kendi kendini parçalayıp toplasın); yüzlere Paraner harfleri (her yüz, karışık, metale işlemeli, küp rengiyle uyumlu, eşit boyut).

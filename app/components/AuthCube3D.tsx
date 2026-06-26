@@ -4,9 +4,9 @@ import { useEffect, useRef } from "react";
 import type { Group } from "three";
 
 // Sol panel — Resend tarzı interaktif 3D küp.
-//  • 3×3 koyu metalik küp kümesi (yuvarlatılmış kenar, sıkı aralık)
-//  • Her dış yüzde EŞİT boyutlu, küp rengiyle uyumlu "işlemeli" Paraner harfi (P A R N E, karışık)
-//  • Boştayken küp kendi kendini DAĞITIP yeniden toplar (Resend gibi şekilden şekile) + yavaş döner
+//  • 3×3 küp kümesi (yuvarlatılmış kenar, sıkı aralık), siyah + karbon + metalik gri KARIŞIM
+//  • Her dış yüzde EŞİT boyutlu, kalın PARA BİRİMİ sembolü ($ € £ ₺ ¥), metalik gri/karbon ton
+//  • Boştayken Rubik tarzı KATMAN DÖNÜŞÜ ile kendini çevirir (dağılmaz) + yavaş döner
 //  • Mouse ile TUT-DÖNDÜR (OrbitControls). prefers-reduced-motion → morph/otomatik dönüş kapalı.
 //  • three dinamik import → panel bundle'ı etkilenmez. ≤1024px sol panel gizli (masaüstüne özel).
 export default function AuthCube3D() {
@@ -47,35 +47,68 @@ export default function AuthCube3D() {
       const fill = new THREE.DirectionalLight(0xffffff, 0.5);
       fill.position.set(-7, -3, -5);
       scene.add(fill);
-      const teal = new THREE.PointLight(0x00bfa6, 20, 40, 1.6);
+      const teal = new THREE.PointLight(0x00bfa6, 18, 40, 1.6);
       teal.position.set(-4, 2.5, 5);
       scene.add(teal);
       scene.add(new THREE.AmbientLight(0xffffff, 0.12));
 
-      // ── Harf dokuları (eşit boyut, beyaz harf → alphaMap) ──
-      const letterTex = (ch: string) => {
+      // ── Karbon dokusu (ince nokta dokusu → bumpMap) ──
+      const carbonTex = (() => {
+        const c = document.createElement("canvas");
+        c.width = c.height = 64;
+        const g = c.getContext("2d")!;
+        g.fillStyle = "#000";
+        g.fillRect(0, 0, 64, 64);
+        g.fillStyle = "#888";
+        const step = 8;
+        for (let y = 0; y < 64; y += step)
+          for (let x = 0; x < 64; x += step) {
+            g.beginPath();
+            g.arc(x + step / 2, y + step / 2, 1.6, 0, Math.PI * 2);
+            g.fill();
+          }
+        const tx = new THREE.CanvasTexture(c);
+        tx.wrapS = tx.wrapT = THREE.RepeatWrapping;
+        tx.repeat.set(4, 4);
+        return tx;
+      })();
+
+      // ── Küp malzeme havuzu: siyah parlak · karbon · metalik gri (cubie başına karışık) ──
+      const matBlack = new THREE.MeshStandardMaterial({ color: 0x111214, metalness: 0.96, roughness: 0.32 });
+      const matCarbon = new THREE.MeshStandardMaterial({
+        color: 0x131418,
+        metalness: 0.8,
+        roughness: 0.55,
+        bumpMap: carbonTex,
+        bumpScale: 0.015,
+      });
+      const matGray = new THREE.MeshStandardMaterial({ color: 0x2b2e34, metalness: 0.95, roughness: 0.28 });
+      const matPool = [matBlack, matBlack, matCarbon, matCarbon, matGray]; // ~ %40 siyah / %40 karbon / %20 gri
+
+      // ── Para birimi sembolleri (eşit boyut, kalın → alphaMap) ──
+      const symTex = (ch: string) => {
         const c = document.createElement("canvas");
         c.width = c.height = 256;
         const g = c.getContext("2d")!;
         g.clearRect(0, 0, 256, 256);
         g.fillStyle = "#fff";
-        g.font = "bold 150px Arial, sans-serif";
+        g.font = "900 168px -apple-system, 'Segoe UI', Arial, sans-serif";
         g.textAlign = "center";
         g.textBaseline = "middle";
-        g.fillText(ch, 128, 138);
+        g.fillText(ch, 128, 140);
         const tx = new THREE.CanvasTexture(c);
         tx.anisotropy = 4;
         return tx;
       };
-      const LETTERS = ["P", "A", "R", "N", "E"];
-      const letterMats = LETTERS.map(
+      const SYMBOLS = ["$", "€", "£", "₺", "¥"];
+      const symMats = SYMBOLS.map(
         (ch) =>
           new THREE.MeshStandardMaterial({
-            color: 0x3c4046, // küple uyumlu, hafif açık metal → işlemeli görünüm
-            metalness: 0.7,
-            roughness: 0.45,
+            color: 0x5a5f66, // metalik gri / karbon ton — küple uyumlu, işlemeli
+            metalness: 0.8,
+            roughness: 0.4,
             transparent: true,
-            alphaMap: letterTex(ch),
+            alphaMap: symTex(ch),
             depthWrite: false,
             polygonOffset: true,
             polygonOffsetFactor: -2,
@@ -83,16 +116,15 @@ export default function AuthCube3D() {
       );
 
       // ── Küp kümesi ──
-      const SIZE = 0.97; // 1.0 aralıkta → ince derz (kareler birbirine yakın)
-      const SCALE = 0.78; // genel küçültme
+      const SIZE = 0.97;
+      const SCALE = 0.78;
       const group = new THREE.Group();
       group.scale.setScalar(SCALE);
       group.rotation.set(0.12, 0.5, 0);
       scene.add(group);
 
       const boxGeo = new RoundedBoxGeometry(SIZE, SIZE, SIZE, 4, 0.06);
-      const metalMat = new THREE.MeshStandardMaterial({ color: 0x121315, metalness: 0.96, roughness: 0.34 });
-      const planeGeo = new THREE.PlaneGeometry(SIZE * 0.55, SIZE * 0.55);
+      const planeGeo = new THREE.PlaneGeometry(SIZE * 0.6, SIZE * 0.6);
       const off = SIZE / 2 + 0.012;
       const faces: Array<{ k: "x" | "y" | "z"; s: number; pos: [number, number, number]; rot: [number, number, number] }> = [
         { k: "x", s: 1, pos: [off, 0, 0], rot: [0, Math.PI / 2, 0] },
@@ -104,17 +136,16 @@ export default function AuthCube3D() {
       ];
 
       const cubies: Group[] = [];
-      const homes: InstanceType<typeof THREE.Vector3>[] = [];
       for (let x = -1; x <= 1; x++)
         for (let y = -1; y <= 1; y++)
           for (let z = -1; z <= 1; z++) {
             const cubie = new THREE.Group();
             cubie.position.set(x, y, z);
-            cubie.add(new THREE.Mesh(boxGeo, metalMat));
+            cubie.add(new THREE.Mesh(boxGeo, matPool[(Math.random() * matPool.length) | 0]));
             const coord = { x, y, z };
             faces.forEach((f) => {
               if (coord[f.k] === f.s) {
-                const pl = new THREE.Mesh(planeGeo, letterMats[(Math.random() * letterMats.length) | 0]);
+                const pl = new THREE.Mesh(planeGeo, symMats[(Math.random() * symMats.length) | 0]);
                 pl.position.set(...f.pos);
                 pl.rotation.set(...f.rot);
                 cubie.add(pl);
@@ -122,7 +153,6 @@ export default function AuthCube3D() {
             });
             group.add(cubie);
             cubies.push(cubie);
-            homes.push(new THREE.Vector3(x, y, z));
           }
 
       // ── OrbitControls ──
@@ -133,7 +163,7 @@ export default function AuthCube3D() {
       controls.dampingFactor = 0.08;
       controls.rotateSpeed = 0.7;
       controls.autoRotate = !reduce;
-      controls.autoRotateSpeed = 0.6;
+      controls.autoRotateSpeed = 0.55;
       controls.target.set(0, 0, 0);
 
       const dom = renderer.domElement;
@@ -142,29 +172,38 @@ export default function AuthCube3D() {
       dom.addEventListener("pointerdown", grab);
       window.addEventListener("pointerup", release);
 
-      // ── Morph: dağıt ↔ topla (Resend tarzı) ──
-      const targPos = homes.map((h) => h.clone());
-      const targQuat = cubies.map(() => new THREE.Quaternion());
-      const rnd = (a: number) => (Math.random() - 0.5) * 2 * a;
-      let assembled = true;
-      let phaseTimer = 1.6;
-      function scatter() {
-        cubies.forEach((_, i) => {
-          const h = homes[i];
-          const exp = 1.5 + Math.random() * 0.7; // dışa doğru aç
-          targPos[i].set(h.x * exp + rnd(0.6), h.y * exp + rnd(0.6), h.z * exp + rnd(0.6));
-          targQuat[i].setFromEuler(new THREE.Euler(rnd(Math.PI), rnd(Math.PI), rnd(Math.PI)));
-        });
-        assembled = false;
-        phaseTimer = 2.6;
+      // ── Morph: Rubik katman dönüşü (küp kendini çevirir, DAĞILMAZ) ──
+      const AXES: Array<"x" | "y" | "z"> = ["x", "y", "z"];
+      const pivot = new THREE.Group();
+      group.add(pivot);
+      let twisting = false;
+      let twAxis: "x" | "y" | "z" = "x";
+      let twTarget = 0;
+      let twProg = 0;
+      let twMembers: Group[] = [];
+      let restTimer = reduce ? Infinity : 1.0;
+      const TW_DUR = 0.7;
+      const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+
+      function startTwist() {
+        twAxis = AXES[(Math.random() * 3) | 0];
+        const layer = Math.random() < 0.5 ? -1 : 1; // dış katman
+        const dir = Math.random() < 0.5 ? 1 : -1;
+        twTarget = (dir * Math.PI) / 2;
+        twProg = 0;
+        pivot.rotation.set(0, 0, 0);
+        twMembers = cubies.filter((c) => Math.round(c.position[twAxis]) === layer);
+        twMembers.forEach((c) => pivot.attach(c));
+        twisting = true;
       }
-      function assemble() {
-        cubies.forEach((_, i) => {
-          targPos[i].copy(homes[i]);
-          targQuat[i].identity();
+      function finishTwist() {
+        twMembers.forEach((c) => {
+          group.attach(c);
+          c.position.set(Math.round(c.position.x), Math.round(c.position.y), Math.round(c.position.z));
         });
-        assembled = true;
-        phaseTimer = 2.2;
+        pivot.rotation.set(0, 0, 0);
+        twisting = false;
+        restTimer = 0.45 + Math.random() * 0.7;
       }
 
       // ── Render döngüsü ──
@@ -175,13 +214,14 @@ export default function AuthCube3D() {
         const dt = Math.min((now - last) / 1000, 0.05);
         last = now;
         if (!reduce) {
-          phaseTimer -= dt;
-          if (phaseTimer <= 0) (assembled ? scatter : assemble)();
-          const a = 1 - Math.exp(-dt * 2.6); // yumuşak yaklaşma
-          cubies.forEach((c, i) => {
-            c.position.lerp(targPos[i], a);
-            c.quaternion.slerp(targQuat[i], a);
-          });
+          if (twisting) {
+            twProg = Math.min(1, twProg + dt / TW_DUR);
+            pivot.rotation[twAxis] = easeInOut(twProg) * twTarget;
+            if (twProg >= 1) finishTwist();
+          } else {
+            restTimer -= dt;
+            if (restTimer <= 0) startTwist();
+          }
         }
         controls.update();
         renderer.render(scene, camera);
@@ -207,8 +247,9 @@ export default function AuthCube3D() {
         window.removeEventListener("pointerup", release);
         boxGeo.dispose();
         planeGeo.dispose();
-        metalMat.dispose();
-        letterMats.forEach((m) => {
+        carbonTex.dispose();
+        [matBlack, matCarbon, matGray].forEach((m) => m.dispose());
+        symMats.forEach((m) => {
           m.alphaMap?.dispose();
           m.dispose();
         });
