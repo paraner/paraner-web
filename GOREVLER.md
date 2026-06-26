@@ -37,7 +37,7 @@
 - [x] **Ölü kod temizliği:** `components/AuthVisual.tsx` + `.av-*`/`.fin-card`/`.fc-*` CSS silindi (sol panel videoya geçmişti, import edilmiyordu) *(2026-06-26)*
 - [x] **Hesap ekleme** (max 3): switcher'da Bireysel/İşletme oluşturma + otomatik geçiş; **liquid-glass geçiş animasyonu** (PARANER soldan sağa beyaz→yeşil) *(2026-06-11)*
 - [ ] Web'de **kayıt akışı** (signUp + onboarding: para birimi / profil oluşturma) — kayıt OTP + OnboardingModal var; ek onboarding adımları gözden geçirilecek
-- [ ] **Şifremi unuttum** (parola sıfırlama e-postası) — link var, işlev yok
+- [x] **Şifremi unuttum** (parola sıfırlama) *(2026-06-26)*: `resetPasswordForEmail` → `/sifre-sifirla` sayfası (recovery oturumu PKCE `?code`/`token_hash` + auto-detect dayanıklı → yeni şifre → `updateUser` → panele). Mobil paritesi. ⚠️ **Supabase config:** Auth → URL Configuration → Redirect URLs'e `https://paraner.com/sifre-sifirla` (+ dev için `http://localhost:3137/sifre-sifirla`) EKLENMELİ, yoksa link reddedilir.
 - [ ] İşletme hesabı eklemede **Stripe ödeme/trial kapısı** (şimdilik direkt açılıyor; altyapı sonra)
 
 ### İşletme paneli — bölüm sayfaları (mobil ile tutarlı)

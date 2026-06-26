@@ -346,7 +346,9 @@ ul { list-style: none; }
   background: none; border: none; color: var(--text-dim); font-size: 13px; font-weight: 600; padding: 4px;
 }
 .auth-row { display: flex; justify-content: flex-end; margin: -4px 0 18px; }
-.auth-row a { color: var(--teal); font-size: 13px; font-weight: 600; }
+.auth-row a,
+.auth-row button { color: var(--teal); font-size: 13px; font-weight: 600; background: none; border: none; cursor: pointer; padding: 0; }
+.auth-row button:disabled { opacity: 0.55; cursor: not-allowed; }
 .auth-divider { display: flex; align-items: center; gap: 14px; margin: 22px 0; color: var(--text-faint); font-size: 12px; }
 .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 .auth-alt { text-align: center; font-size: 14px; color: var(--text-dim); margin-top: 4px; }
@@ -375,6 +377,27 @@ ul { list-style: none; }
   display: block; width: 100%; text-align: center; margin-top: 16px;
   background: none; border: none; color: var(--teal); font-size: 14px; font-weight: 600; cursor: pointer;
 }
+
+/* ─── Şifre sıfırlama sayfası (/sifre-sifirla) — recovery linki sonrası yeni şifre ─── */
+.reset-page {
+  position: relative; z-index: 1; min-height: 100vh; min-height: 100dvh;
+  display: flex; align-items: center; justify-content: center;
+  padding: clamp(20px, 4vw, 48px); background: var(--bg);
+}
+.reset-card {
+  width: 100%; max-width: 460px; text-align: center;
+  background: var(--surface-modal); border: 1px solid var(--border-strong);
+  border-radius: 24px; padding: clamp(28px, 4vw, 44px) clamp(24px, 4vw, 40px);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+}
+.reset-card .auth-wordmark { margin-bottom: 22px; }
+.reset-card h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+.reset-card > p { color: var(--text-dim); font-size: 14px; margin: 10px 0 24px; line-height: 1.55; }
+.reset-card form { text-align: left; }
+.reset-card .field input { border-radius: 999px; padding-left: 18px; padding-right: 18px; }
+.reset-card .btn-lg { border-radius: 999px; }
+.reset-card a.btn { text-decoration: none; }
+.reset-state { color: var(--text-dim); font-size: 14px; padding: 16px 0 4px; }
 
 /* OTP kod adımı */
 .otp-step { display: flex; flex-direction: column; }

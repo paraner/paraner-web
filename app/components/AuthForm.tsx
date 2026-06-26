@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import SocialAuth from "./SocialAuth";
 import OtpVerify from "./OtpVerify";
 import { createClient } from "../../lib/supabase/client";
@@ -25,6 +24,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetMsg, setResetMsg] = useState<string | null>(null); // şifre sıfırlama bağlantısı gönderildi
 
   const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
 
@@ -35,6 +35,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
     setStep("input");
     setPwMode(false);
     setError(null);
+    setResetMsg(null);
     setPassword("");
     if (typeof window !== "undefined") {
       window.history.replaceState(null, "", next === "kayit" ? "/kayit" : "/giris");
@@ -154,6 +155,34 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
     }
   }
 
+  // Şifremi unuttum — Supabase şifre sıfırlama bağlantısı gönder (mobil ile aynı akış).
+  // Link → /sifre-sifirla (recovery oturumu → yeni şifre). E-posta önce girilmeli.
+  async function handleForgotPassword() {
+    setError(null);
+    setResetMsg(null);
+    if (!isValidEmail(email)) return setError("Önce e-posta adresini gir, sonra Şifremi unuttum'a bas.");
+    setLoading(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/sifre-sifirla`,
+      });
+      if (error) {
+        setError(
+          error.message.includes("rate limit") || error.message.includes("after")
+            ? "Çok fazla deneme. Biraz bekleyip tekrar dene."
+            : "Sıfırlama bağlantısı gönderilemedi. Lütfen tekrar dene.",
+        );
+        return;
+      }
+      setResetMsg(`${email.trim()} adresine şifre sıfırlama bağlantısı gönderildi. E-postanı kontrol et.`);
+    } catch {
+      setError("Bağlantı hatası. İnternetini kontrol et.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   // Kayıt — doğrulama kodu gönder (şifresiz OTP)
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -247,13 +276,16 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
                 </div>
               </div>
               <div className="auth-row">
-                <Link href="/giris">Şifremi unuttum</Link>
+                <button type="button" onClick={handleForgotPassword} disabled={loading}>
+                  Şifremi unuttum
+                </button>
               </div>
+              {resetMsg && <div className="auth-msg success">{resetMsg}</div>}
               <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
                 {loading ? "Giriş yapılıyor…" : "Giriş Yap"}
               </button>
               <button type="button" className="auth-text-link"
-                onClick={() => { setPwMode(false); setError(null); }}>
+                onClick={() => { setPwMode(false); setError(null); setResetMsg(null); }}>
                 Kod ile giriş yap
               </button>
             </form>
@@ -267,7 +299,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
                 {loading ? "Gönderiliyor…" : "Devam Et"}
               </button>
               <button type="button" className="auth-text-link"
-                onClick={() => { setPwMode(true); setError(null); }}>
+                onClick={() => { setPwMode(true); setError(null); setResetMsg(null); }}>
                 Şifre ile giriş yap
               </button>
             </form>

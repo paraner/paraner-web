@@ -1,5 +1,18 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Şifremi unuttum akışı (mobil paritesi)
+
+Mehmet "A) gerçek sıfırlama" seçti.
+
+- **`AuthForm`:** şifre giriş modundaki "Şifremi unuttum" linki → buton; `resetPasswordForEmail(email, { redirectTo: origin+'/sifre-sifirla' })` (e-posta önce girilmeli) → başarı mesajı (`.auth-msg.success`). `Link` importu kalktı. Mod/pwMode değişiminde `resetMsg` temizlenir.
+- **`/sifre-sifirla` (yeni):** `app/sifre-sifirla/page.tsx` (noindex) + `app/components/ResetPasswordClient.tsx`. Recovery oturumunu kurar — **PKCE `?code`** (`exchangeCodeForSession`) veya **`token_hash`+`type`** (`verifyOtp`) veya detectSessionInUrl auto-takas (1.2s bekle + `getSession`) → hepsine dayanıklı, `onAuthStateChange(PASSWORD_RECOVERY)` da dinlenir. Sonra yeni şifre formu (min 6 + eşleşme) → `updateUser({password})` → 1.5s sonra panele (`app.paraner.com`). Hâller: doğrulanıyor / form / başarılı / geçersiz-link. Koyu kart (`.reset-card`, surface-modal), teal wordmark (linkli+ışıltılı), pill inputlar.
+- **`proxy.ts`:** `PUBLIC_PATHS`'e `/sifre-sifirla` eklendi (app domaininde de korumasız). Pazarlama domaininde zaten korumasız.
+- ⚠️ **Supabase config (kod DEĞİL):** Auth → URL Configuration → Redirect URLs'e `https://paraner.com/sifre-sifirla` (+ dev `http://localhost:3137/sifre-sifirla`) eklenmeli; yoksa Supabase redirect'i reddeder ve link çalışmaz. Reset e-posta şablonu Supabase'de varsayılan geliyor.
+
+CDP ile geçersiz-link + form (enjekte) hâlleri doğrulandı. tsc + build temiz (`/sifre-sifirla` ○ static).
+
+---
+
 ## 2026-06-26 — Auth wordmark: paraner.com linki + ışıltı animasyonu (paraner-app ile aynı)
 
 - **Logo paraner.com linki:** Auth wordmark `<Image>` → `<a href="https://paraner.com">` (aria-label'lı). Image importu kaldırıldı.

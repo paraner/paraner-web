@@ -60,7 +60,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Giriş/kayıt gibi herkese açık sayfalar korumadan muaf (yoksa /giris kendine döngü yapar)
-  const PUBLIC_PATHS = ["/giris", "/kayit"];
+  const PUBLIC_PATHS = ["/giris", "/kayit", "/sifre-sifirla"];
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     return response;
   }
