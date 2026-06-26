@@ -47,7 +47,9 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
       const H0 = el.clientHeight || 800;
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      // Mobilde pixelRatio'yu düşük tut → bellek/GPU yükü azalır (mobilde küpü oynatabilmek için)
+      const onMobile = window.matchMedia("(max-width: 900px)").matches;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, onMobile ? 1.5 : 2));
       renderer.setSize(W0, H0);
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.12;

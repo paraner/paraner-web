@@ -264,7 +264,13 @@ ul { list-style: none; }
   .hero-text { text-align: center; max-width: none; }
   .hero-text .hero-sub { margin-left: auto; margin-right: auto; }
   .hero-text .hero-cta, .hero-text .stores { justify-content: center; }
-  .hero-visual { display: none; } /* küp masaüstüne özel (perf) */
+  /* Mobilde küp metnin altında, akış içinde (mutlak değil) — kendi küpümüz mobilde de oynar */
+  .hero-visual {
+    display: block; position: relative; inset: auto;
+    top: auto; right: auto; transform: none;
+    width: 100%; max-width: 340px; height: 320px;
+    margin: 22px auto 0;
+  }
 }
 .eyebrow {
   display: inline-flex; align-items: center; gap: 7px;
