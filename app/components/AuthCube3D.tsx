@@ -45,6 +45,10 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
       if (disposed || !ref.current) return;
 
       const el = ref.current;
+      // Yüklenirken GEÇİCİ koyu zemin → şeffaf WebGL canvas'ın GPU'da beyaz
+      // görünmesini önler. Küp ilk kareyi çizince şeffafa döner (banner geri gelir).
+      el.style.backgroundColor = "#000";
+      el.style.transition = "background-color 0.45s ease";
       const W0 = el.clientWidth || 600;
       const H0 = el.clientHeight || 800;
 
@@ -452,6 +456,7 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
         if (!shown) {
           shown = true;
           renderer.domElement.style.opacity = "1";
+          el.style.backgroundColor = "transparent"; // küp geldi → banner geri görünür
         }
         if (!paused) raf = requestAnimationFrame(animate);
       };
