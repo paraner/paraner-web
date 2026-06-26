@@ -209,8 +209,7 @@ export default function AuthCube3D() {
       controls.enableDamping = true;
       controls.dampingFactor = 0.07;
       controls.rotateSpeed = 0.7;
-      controls.autoRotate = !reduce;
-      controls.autoRotateSpeed = 0.6; // sürekli dönüş (hiç durmaz)
+      controls.autoRotate = false; // dönüş artık grup üzerinde çok-eksenli (aşağıda)
       controls.target.set(0, -0.1, 0);
 
       const dom = renderer.domElement;
@@ -274,6 +273,12 @@ export default function AuthCube3D() {
       const INTRO_DUR = 1.2;
       const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
+      // Çok-eksenli sürekli dönüş (sağa + yukarı/aşağı eşzamanlı)
+      const WORLD_Y = new THREE.Vector3(0, 1, 0);
+      const WORLD_X = new THREE.Vector3(1, 0, 0);
+      const SPIN_Y = 0.55; // yatay (sağa)
+      const SPIN_X = 0.34; // dikey (yukarı/aşağı takla)
+
       // ── Render ──
       let last = performance.now();
       let raf = 0;
@@ -289,6 +294,9 @@ export default function AuthCube3D() {
           group.position.z = -8 * (1 - e);
           group.rotation.y += dt * (1 - e) * 2.0; // girişte ekstra fırıl, sona doğru söner
         } else if (!reduce) {
+          // çok-eksenli sürekli dönüş (sağa + yukarı/aşağı eşzamanlı)
+          group.rotateOnWorldAxis(WORLD_Y, SPIN_Y * dt);
+          group.rotateOnWorldAxis(WORLD_X, SPIN_X * dt);
           if (move) {
             move.t = Math.min(1, move.t + dt / move.dur);
             const e = ease(move.t);
