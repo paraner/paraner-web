@@ -410,9 +410,27 @@ ul { list-style: none; }
 .hero-text > .hero-cta { animation-delay: 0.42s; }
 .hero-text > .stores { animation-delay: 0.52s; }
 .hero-text > .hero-note { animation-delay: 0.60s; }
+/* Başlık satır-bazlı animasyona girmesin — harf harf (HeroTitle) yönetiyor */
+.hero-text > .hero-title { animation: none; }
 @media (prefers-reduced-motion: reduce) {
   .hero-text > * { animation: none; }
 }
+
+/* ─── HERO BAŞLIK — harf harf blur-in-up (HeroTitle); gradyan korunur ─── */
+@keyframes hcRise {
+  from { opacity: 0; transform: translateY(0.45em); filter: blur(7px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.hero-title .hc {
+  display: inline-block; white-space: pre;
+  animation: hcRise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  background: linear-gradient(160deg, #fff 45%, rgba(255, 255, 255, 0.6));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+/* background-image kullan — `background` kısayolu background-clip:text'i sıfırlardı */
+.hero-title .hc-em { background-image: linear-gradient(135deg, #fff, #b9bdc3); }
+@media (prefers-reduced-motion: reduce) { .hero-title .hc { animation: none; } }
 /* Küp sağda, geniş kutu → ortadan bölünmez, sol tarafı kırpılmaz */
 .hero-visual {
   position: absolute; top: 50%; transform: translateY(-50%);

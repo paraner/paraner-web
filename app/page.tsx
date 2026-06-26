@@ -3,6 +3,7 @@ import Background from "./components/Background";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import AuthCube3D from "./components/AuthCube3D";
+import HeroTitle from "./components/HeroTitle";
 
 // ─── İçerik verisi (kolay düzenlenebilsin diye dosyanın başında) ───
 
@@ -53,11 +54,7 @@ export default function Home() {
       <div className="hero wrap">
         <div className="hero-text">
           <span className="eyebrow">AI Destekli Finans Asistanı</span>
-          <h1>
-            Paranı yönet,
-            <br />
-            <em>geleceğini kur.</em>
-          </h1>
+          <HeroTitle />
           <p className="hero-sub">
             Kişisel ve işletme finanslarını tek yerden yönet. Bütçe yap, hedef koy,
             yapay zeka koçun Parla ile akıllı kararlar al.

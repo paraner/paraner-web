@@ -1,5 +1,16 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-27 — Hero başlık: harf harf blur-in-up (Magic UI blurInUp/by-character → saf CSS)
+
+Mehmet Magic UI `TextAnimate animation="blurInUp" by="character"` örneğini beğendi (Pro'ya gerek yok — saf CSS ile yaptık).
+
+- **`HeroTitle.tsx`** (yeni, server): başlık metni harflere bölünür, her harf `.hc` inline-block span + gecikmeli `hcRise` (translateY(0.45em)+blur(7px)+fade, 0.5s). `START 0.1s`, `STEP 0.025s`. Erişilebilirlik: h1 `aria-label`, harfler `aria-hidden`. `page.tsx`'te `<h1>` → `<HeroTitle/>`.
+- **Gradyan korundu:** her harf `background-clip:text` ile kendi gradyanı. ⚠️ **Tuzak:** `.hc-em` ilk `background:` KISAYOLU `background-clip:text`'i `border-box`'a resetliyordu → 2. satır dolu gümüş kutu çıktı. `background-image:` ile düzeltildi.
+- Başlık satır-bazlı `heroRise`'tan çıkarıldı (`.hero-text > .hero-title { animation:none }`); kalan öğeler (eyebrow/sub/cta/stores) eski stagger'da. `prefers-reduced-motion` kapalı.
+- Doğrulama: CDP — erken kare (2. satır harfleri soldan blur'dan beliriyor) + dinlenme (gradyan net) + mobil (ortalı, sarma sorunu yok). tsc + build temiz. Push → Vercel.
+
+---
+
 ## 2026-06-27 — Hero metin giriş animasyonu (Resend tarzı)
 
 Mehmet: banner yazıları Resend gibi animasyonlu girsin ("sen yap"). Resend HTML'inde efekt `animate-hero-text-slide-up-fade` (aşağıdan kayma + fade) tespit edildi.
