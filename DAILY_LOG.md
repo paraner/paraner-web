@@ -1,5 +1,17 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Auth küp v4: Resend hamle sistemi + yüz-başına malzeme + filmik ışık
+
+Mehmet: Resend yavaş döner ama bazen ANİ hızlı hamle yapar — alt+üst katmanları TERS yönde çevirir, bazen bir tarafı 2 kez (180°). Malzeme yüz-başına olsun (karbon↔gri↔parlak net), ışık vuruşu üst düzey olsun.
+
+- **Hamle motoru (Resend tarzı):** tek dış katman **90°** (%45) · **180°** iki-kez (%23) · **ALT+ÜST ters yön** ani/hızlı kesme (%32, dur 0.42s — çarpıcı). Çok-parçalı hamle: aynı eksende layer +1 ve −1 ayrı pivot, zıt açı, eşzamanlı. Bitince bake (round). Ara süre çoğunlukla sakin (0.7–2.4s), %22 art-arda seri. Küp DAĞILMAZ.
+- **Yüz-başına malzeme:** `RoundedBox`→`BoxGeometry` (6 yüz grubu → materyal dizisi). Havuz: parlak siyah · satin siyah · karbon (bumpMap nokta) · metalik gri · delikli ızgara (bumpMap iri delik); her yüze rastgele → güçlü kontrast.
+- **Filmik ışık:** `ACESFilmicToneMapping` (exposure 1.15) + güçlü key + arka-yan **rim** (hafif teal, kenarlar parlar) + ön specular point + marka teal point + düşük ambient + RoomEnvironment (envMapIntensity yüz-bazlı). Metal yüzeylerde güçlü vuruş.
+- **Para birimleri:** her yüz değil, ~%32 yüzde ($ € £ ₺ ¥, kalın 900, metalik gri) → doku ile harman.
+- Doğrulama: CDP kareleri — yüz çeşitliliği + ışık vuruşu belirgin, semboller seyrek/karışık, küp katı kalıp katmanları çeviriyor. tsc + build temiz (44/44).
+
+---
+
 ## 2026-06-26 — Auth küp v3: Rubik dönüş (dağılma yok) + para birimi sembolleri + karbon/gri karışım
 
 Mehmet (canlı): dağılma istemiyor — küp **kendini çevirsin** (Resend'deki katman dönüşü gibi, küp formu korunur). Harfleri kaldır → **para birimleri** ($ € £ ₺ ¥), kalın. Küp **siyah + karbon + metalik gri karışım**, semboller her yüzde, metalik gri/karbon ton.
