@@ -13,7 +13,9 @@ Mehmet: artık yeşil logo kullanılmayacak; küple uyumlu titanyuma geçilecek 
 - **Zaten titanyum (dokunulmadı):** Nav/Footer `.logo-mark` (grayscale+brightness filtresi, yeşilsiz). **Dokunulmadı (marka değil):** AuthCube3D yüz görselleri.
 - tsc + build temiz (44/44). CDP ile auth (gunmetal wordmark beyazda okunur) + nav (gümüş monogram) + sidebar önizleme doğrulandı. Commit `36322be` → push → Vercel.
 
-**Kalan:** (1) **App (mobil) tarafı** logo rengi — ayrı repo, henüz yapılmadı. (2) Web **favicon.ico + PWA install ikonları** (icon-512/192, apple-icon, manifest, `paraner-logo.png`) hâlâ teal tabanlı — bunlar siyah sayfada değil, kendi renkli kutusunda (OS app ikonu); titanyuma çevrilsin mi Mehmet'e sorulacak.
+**Web favicon + PWA ikonları (TAMAM):** `icon-512/192`, `app/icon`, `icon-maskable-512`, `apple-icon`, `favicon.ico` — teal P → dikey titanyum gradyan (koyu kare/şekil/konum korundu). Teal piksel tespiti (`min(g,b)-r`) + titanyum gradyan; favicon.ico PNG-gömülü elle yazıldı (ico paketi yok). Commit `f763e03`.
+
+**App (mobil) tarafı (TAMAM — paraner-app repo, commit `dc4c322`):** `assets/icon · icon-ios-light · android-icon-foreground · favicon · paraner-wordmark` PNG'leri teal→titanyum; `AnimatedWordmark` teal taban → titanyum LinearGradient (splash + auth başlıkları). Native `ios/android` gitignore'lı (prebuild kaynaktan üretir) → kaynak asset'ler güncellendi; ayrıca mevcut baked AppIcon/splash/mipmap'ler de doğrudan recolor edildi (rebuild'siz tutarlılık). **Görmek için:** uygulama-içi logo yeni JS bundle ile; **app ikonu + native splash yeni native build gerektirir** (prebuild recolored kaynağı okur) + store gönderimi.
 
 ---
 
