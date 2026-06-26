@@ -3,6 +3,9 @@
 ## ⚠️ KONTROLLER — bir dahaki "işe başla"da ÖNCE bunları doğrula
 > Mehmet app tarafıyla ilgilenirken yapılan web işlerinin doğrulanması bekliyor. Önce bunları gözden geçir.
 
+**Pazarlama sitesi — ana sayfa küp (2026-06-27)**
+- [ ] **Harici monitörde küp beyaz flaşı gitti mi?** (Dahili Mac panelinde zaten yoktu; harici DisplayPort + Windows'ta ara sıra çıkıyordu.) Nihai fix: `appendChild` ilk render'dan sonra + `preserveDrawingBuffer:true`. Sürerse son çare: opak koyu canvas. Detay: DAILY_LOG 2026-06-27.
+
 **Cüzdanım (canlı Truncgil) — yeni**
 - [ ] Canlıda (app.paraner.com) Truncgil fiyatları geliyor mu? Toplam Değer / K-Z / Bugün dolu mu?
 - [ ] Web'den eklenen varlık **mobilde** görünüyor mu (ortak `savings_assets`)? Tersi de?

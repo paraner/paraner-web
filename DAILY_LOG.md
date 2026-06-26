@@ -1,6 +1,20 @@
 # DAILY LOG — paraner-web
 
-## 2026-06-27 — 3D küp: görünmezken duraklat (CPU/fan) + beyaz flaş fix
+## 2026-06-27 — Küp beyaz flaş (NİHAİ teşhis+çözüm) + performans (banner WebP)
+
+**Beyaz flaş — kök sebep netleşti:** Yalnız **harici DisplayPort monitör + Windows**'ta, **ara sıra** çıkıyor; MacBook M5 dahili panelinde HİÇ çıkmıyor (Mehmet test etti). Yani GPU **compositor zamanlama yarışı** — yeni WebGL katmanı, ilk 3D kare çizilmeden compositlenirse o frame beyaz; harici/ikincil ekran hattının vsync'i farklı olduğundan orada yüzeye çıkıyor. (Benim headless yazılım+Metal render'ımda hiç üremedi → görsel teyit edilemedi, kademeli sağlamlaştırıldı.) İzlenen yol (hepsi `AuthCube3D.tsx`):
+1. canvas `opacity:0` → ilk render'da 1 (yetmedi, harici ekranda sürdü).
+2. `.hero-cube` koyu zemin denendi → **kalıcı siyah kutu** banner üstünde (geri alındı).
+3. cube-stage'e GEÇİCİ koyu zemin → yine yetmedi (geri alındı).
+4. **`renderer.render()` BİR KEZ yapıp canvas'ı öyle `appendChild`** → DOM'a içinde küp varken girer (boş katman compositlenmez).
+5. **`preserveDrawingBuffer: true`** → buffer hep dolu, compositor boş kare okuyamaz. **(4+5 nihai çözüm; harici monitörde test bekliyor.)**
+   - Eğer çok nadiren sürerse son çare: opak koyu canvas (alpha kapat) + banner'ı o bölgede koyulaştır (kutu izi olmadan) — beyaz teknik olarak imkânsız olur.
+
+**Performans (Mehmet "site yavaş mı"):** Ölçüm — TTFB ~0.2s, FCP **0.85s**, JS 428KB → genel **hızlı, sorun yok**. Tek darboğaz: **`paraner-bg.jpg` 4K, 880KB** (en ağır dosya). `sharp` ile **WebP q88'e** çevrildi → **79KB (%91↓)**, JPG ile yan yana banding/kalite kaybı YOK. `.hero-banner` CSS webp'ye geçti (`#060607` fallback). JPG kaynak olarak public'te duruyor. Canlı doğrulandı (webp 200, 79KB). (Konsoldaki "WebGL context could not be created" = yalnız headless GPU-kapalı artefaktı, gerçek değil.)
+
+---
+
+## 2026-06-27 — 3D küp: görünmezken duraklat (CPU/fan) + beyaz flaş (ilk deneme)
 
 Mehmet'in iki bildirimi: (1) Mac fanı açılıyor, (2) sayfa yenilenince küp bölgesi önce bembeyaz, küp gelince düzeliyor. İkisi de `AuthCube3D.tsx`.
 
