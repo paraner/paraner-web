@@ -1,5 +1,16 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-26 — Mobil menü düzeltmeleri + P-swap kaldırma + buton hizası
+
+Mehmet'in mobil geri bildirimleri:
+- **BUG: kaydırınca menü şeffaf açılıyordu.** Kök sebep: `.nav.scrolled` mobilde `backdrop-filter` alıyor; menü `.nav` İÇİNDE olduğu için ata öğede filter olunca `position:fixed` çocuk viewport yerine `.nav`'a (ince bar) sabitleniyordu → tam ekranı kaplamıyordu. **Fix:** `Nav` artık `<>…</>` döndürüyor, `.mobile-menu` `.nav` DIŞINDA kardeş → her zaman viewport-fixed + opak (`#07080a`).
+- **Regresyon (fix sonrası) düzeltildi:** menü `.nav` dışına çıkınca titanyum buton scope'u (`​.nav .btn-primary`) düşüp **Kayıt Ol teal** oldu → scope'a `.mobile-menu .btn-primary` eklendi (titanyum geri geldi), `.mm-cta` pill (999px).
+- **Logo→P animasyonu tamamen kaldırıldı** (masaüstü pill dahil): `Logo.tsx` sadece wordmark; `.logo` sadeleşti, `.logo-p` + `.nav.scrolled .logo*` swap kuralları silindi. Pill'de artık hep wordmark.
+- **Mobil bar masaüstünden bağımsız + minimal:** wordmark 20px (☰ ile dengeli), bar padding 11px, ☰ ve ✕ **24px**; ikisi de `margin-right:-8` + aynı yatay padding → **✕ tam ☰'ın yerinde** (eski "✕ biraz sağda" giderildi). `.mobile-menu` padding-top 11 + `.mm-head` height 24 → menü açılınca wordmark/✕ bar ile aynı konumda (seamless).
+- Doğrulama: tsc + build temiz; CDP (393px) kapalı bar + kaydır→aç (opak) + ☰/✕ hiza karşılaştırma + masaüstü pill (wordmark kalıyor) görüntülendi. Push → Vercel.
+
+---
+
 ## 2026-06-26 — Mobil üst bar + tam ekran menü (Resend tarzı)
 
 Mehmet: mobilde liquid-glass pill OLMASIN; sade bar + 3-çizgi menü, **Resend.com**'un mobil menüsü gibi (ekran görüntüleri verdi). Logo mobilde **P değil PARANER wordmark** (minimal/temiz).

@@ -193,23 +193,21 @@ ul { list-style: none; }
 .nav.scrolled .btn { padding: 7px 16px; font-size: 13px; }
 .nav-burger {
   display: none; flex-shrink: 0;
-  background: none; border: none; padding: 8px; margin: -8px -6px -8px 0;
+  background: none; border: none; padding: 8px; margin: -8px -8px -8px 0;
   color: rgba(255, 255, 255, 0.92); cursor: pointer;
   filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.4));
 }
-.nav-burger svg { width: 26px; height: 26px; display: block; }
+.nav-burger svg { width: 24px; height: 24px; display: block; }
 
 @media (min-width: 761px) { .mobile-menu { display: none !important; } }
 @media (max-width: 760px) {
+  /* Mobil üst bar masaüstünden BAĞIMSIZ: sade, alçak, pill YOK */
   .nav-links { display: none; }
   .nav-actions { display: none; }
   .nav-burger { display: inline-flex; }
-  .nav-burger svg { width: 23px; height: 23px; }
-  /* Daha alçak bar + daha küçük/minimal wordmark */
   .nav { padding: 11px 0; }
-  .logo { width: 98px; height: 24px; }
-  .logo-wordmark { height: 19px; }
-  /* Mobilde pill YOK: bar tam genişlik, logo hep wordmark; scroll'da sade blur bar */
+  .logo-wordmark { height: 20px; }
+  /* scroll'da yalnız sade blur bar (pill değil) */
   .nav.scrolled { padding: 11px 0; background: rgba(8, 9, 11, 0.82);
     backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
   .nav.scrolled .nav-inner {
@@ -217,44 +215,31 @@ ul { list-style: none; }
     background: none; backdrop-filter: none; -webkit-backdrop-filter: none;
     border-color: transparent; border-radius: 0; box-shadow: none;
   }
-  .nav.scrolled .logo { width: 98px; }
-  .nav.scrolled .logo-wordmark { opacity: 1; }
-  .nav.scrolled .logo-p { opacity: 0; }
 }
 
-/* ─── LOGO — wordmark ⇄ P çapraz geçişi (.nav.scrolled tetikler) ─── */
-.logo {
-  position: relative; flex-shrink: 0;
-  display: flex; align-items: center;
-  height: 30px; width: 120px;
-  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.nav.scrolled .logo { width: 26px; }
-.logo-wordmark, .logo-p {
-  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-  width: auto;
+/* ─── LOGO — wordmark (kaydırınca P'ye dönüşme animasyonu KALDIRILDI) ─── */
+.logo { display: flex; align-items: center; flex-shrink: 0; }
+.logo-wordmark {
+  height: 24px; width: auto; display: block;
   filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.45));
-  transition: opacity 0.35s ease;
 }
-.logo-wordmark { height: 24px; opacity: 1; }
-.logo-p { height: 24px; opacity: 0; }
-.nav.scrolled .logo-wordmark { opacity: 0; }
-.nav.scrolled .logo-p { opacity: 1; }
 
 /* ─── MOBİL TAM EKRAN MENÜ (Resend tarzı, yumuşak açılış) ─── */
 .mobile-menu {
   position: fixed; inset: 0; z-index: 60;
   display: flex; flex-direction: column;
-  padding: 16px clamp(20px, 4vw, 40px) calc(28px + env(safe-area-inset-bottom, 0px));
+  /* padding-top = bar padding (11px) → wordmark/✕ bar ile AYNI konumda açılır */
+  padding: 11px clamp(20px, 4vw, 40px) calc(28px + env(safe-area-inset-bottom, 0px));
   background: #07080a;
   opacity: 0; visibility: hidden;
   transition: opacity 0.32s ease, visibility 0.32s ease;
 }
 .mobile-menu.open { opacity: 1; visibility: visible; }
-.mm-head { display: flex; align-items: center; justify-content: space-between; height: 32px; }
+/* bar içerik yüksekliğiyle (≈24px) aynı → ✕ tam ☰'ın yerinde */
+.mm-head { display: flex; align-items: center; justify-content: space-between; height: 24px; }
 .mm-close {
-  background: none; border: none; padding: 8px; margin: -8px;
-  color: rgba(255, 255, 255, 0.7); cursor: pointer;
+  background: none; border: none; padding: 8px; margin: -8px -8px -8px auto;
+  color: rgba(255, 255, 255, 0.92); cursor: pointer;
 }
 .mm-close svg { width: 24px; height: 24px; display: block; }
 
@@ -267,7 +252,7 @@ ul { list-style: none; }
 }
 .mobile-menu.open .mm-body { opacity: 1; transform: none; }
 
-.mm-cta { width: 100%; padding: 16px; font-size: 16px; }
+.mm-cta { width: 100%; padding: 16px; font-size: 16px; border-radius: 999px; }
 .mm-login {
   display: block; text-align: center; padding: 16px 0 6px;
   color: rgba(255, 255, 255, 0.72); font-size: 15px; font-weight: 600;
@@ -334,13 +319,13 @@ ul { list-style: none; }
 
 /* Marketing (nav + hero + cta) — TİTANYUM buton: gümüş gradient, koyu metin (yeşil yok).
    Panel/auth .btn-primary'sine dokunmaz (scope'lu). */
-.nav .btn-primary, .hero .btn-primary, .cta-band .btn-primary {
+.nav .btn-primary, .hero .btn-primary, .cta-band .btn-primary, .mobile-menu .btn-primary {
   background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
   color: #0a0b0d;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.85),
     inset 0 -1px 1px rgba(0, 0, 0, 0.18);
 }
-.nav .btn-primary:hover, .hero .btn-primary:hover, .cta-band .btn-primary:hover {
+.nav .btn-primary:hover, .hero .btn-primary:hover, .cta-band .btn-primary:hover, .mobile-menu .btn-primary:hover {
   box-shadow: 0 11px 28px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.92),
     inset 0 -1px 1px rgba(0, 0, 0, 0.22);
 }

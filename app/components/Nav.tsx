@@ -36,33 +36,35 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
   const close = () => setMenuOpen(false);
 
   return (
-    <header className={`nav${scrolled ? " scrolled" : ""}`}>
-      <div className="nav-inner">
-        <Logo />
-        <nav className="nav-links">
-          <a href="/#ozellikler">Özellikler</a>
-          <a href="/#fiyatlar">Fiyatlar</a>
-        </nav>
-        <div className="nav-actions">
-          <Link href="/giris" className="btn btn-ghost">Giriş Yap</Link>
-          <Link href="/kayit" className="btn btn-primary">Kayıt Ol</Link>
+    <>
+      <header className={`nav${scrolled ? " scrolled" : ""}`}>
+        <div className="nav-inner">
+          <Logo />
+          <nav className="nav-links">
+            <a href="/#ozellikler">Özellikler</a>
+            <a href="/#fiyatlar">Fiyatlar</a>
+          </nav>
+          <div className="nav-actions">
+            <Link href="/giris" className="btn btn-ghost">Giriş Yap</Link>
+            <Link href="/kayit" className="btn btn-primary">Kayıt Ol</Link>
+          </div>
+          <button
+            className="nav-burger"
+            aria-label="Menü"
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+            onClick={() => setMenuOpen(true)}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6.5" x2="21" y2="6.5" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="17.5" x2="21" y2="17.5" />
+            </svg>
+          </button>
         </div>
-        <button
-          className="nav-burger"
-          aria-label="Menü"
-          aria-expanded={menuOpen}
-          aria-controls="mobile-menu"
-          onClick={() => setMenuOpen(true)}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <line x1="3" y1="7" x2="21" y2="7" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="17" x2="21" y2="17" />
-          </svg>
-        </button>
-      </div>
+      </header>
 
-      {/* ─── MOBİL TAM EKRAN MENÜ ─── */}
+      {/* ─── MOBİL TAM EKRAN MENÜ — .nav DIŞINDA (backdrop-filter ata sorunu olmasın) ─── */}
       <div id="mobile-menu" className={`mobile-menu${menuOpen ? " open" : ""}`} role="dialog" aria-modal="true">
         <div className="mm-head">
           <Logo />
@@ -106,6 +108,6 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
           </div>
         </div>
       </div>
-    </header>
+    </>
   );
 }
