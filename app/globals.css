@@ -62,23 +62,13 @@ ul { list-style: none; }
 
 /* ─── ARKA PLAN KATMANLARI ─── */
 .bg-layer { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-/* Koyu zemin — sağ-üstten PARLAK SİYAH TİTANYUM sheen (gümüş metal ışık, düz beyaz değil) +
-   grain (bg-noise) ile titanyum dokusu. Renk yok. */
+/* Arka plan = markaya özel görsel (paraner-bg.jpg, 4K). Tam ekranı kaplar, tek bütün
+   (sayfa ikiye bölünmüş görünmez). Görselin sağ-üstünde titanyum ışık zaten var. */
 .bg-base {
   position: absolute; inset: 0;
-  background:
-    radial-gradient(38% 28% at 88% 9%, rgba(255, 255, 255, 0.11) 0%, transparent 55%),
-    radial-gradient(56% 46% at 82% 15%, rgba(206, 212, 220, 0.12) 0%, rgba(120, 126, 134, 0.05) 38%, transparent 64%),
-    radial-gradient(70% 55% at 92% 30%, rgba(150, 156, 165, 0.06) 0%, transparent 62%),
-    radial-gradient(55% 45% at 50% 107%, rgba(170, 176, 184, 0.035) 0%, transparent 60%),
-    linear-gradient(180deg, #0a0b0d 0%, #08090a 55%, #050506 100%);
+  background: #060607 url("/paraner-bg.jpg") center center / cover no-repeat;
 }
-.bg-ambient {
-  position: absolute; inset: 0;
-  /* yumuşak gezen metalik sheen (sağ-üst) → titanyum parlaması canlansın */
-  background: radial-gradient(34% 30% at 86% 18%, rgba(220, 225, 232, 0.06) 0%, transparent 64%);
-  animation: drift 30s ease-in-out infinite alternate;
-}
+.bg-ambient { display: none; }
 @keyframes drift {
   0%   { transform: translate(0, 0) scale(1); }
   33%  { transform: translate(2%, 3%) scale(1.05); }
@@ -258,8 +248,8 @@ ul { list-style: none; }
 /* Küp sağda, geniş kutu → ortadan bölünmez, sol tarafı kırpılmaz */
 .hero-visual {
   position: absolute; top: 50%; transform: translateY(-50%);
-  right: clamp(-40px, -2vw, 0px);
-  width: min(60%, 880px); height: clamp(520px, 92svh, 980px);
+  right: clamp(-24px, -1vw, 8px);
+  width: min(52%, 720px); height: clamp(440px, 74svh, 780px);
   z-index: 1;
 }
 .hero-cube { position: absolute; inset: 0; }
