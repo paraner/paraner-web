@@ -1,15 +1,14 @@
 # GÖREVLER — paraner-web
 
-## 🔥 ŞİMDİ — mobil uyum (öncelik)
-> Mehmet: masaüstü görünüm iyi, ama **telefonda uyum sorunları var** → önce bunları ele alacağız.
 - [ ] **Mağaza rozetleri (3'lü) mobilde:** masaüstü tek satır iyi ama telefonda düzgün otursun (taşma/sarma/hiza). Ana sayfa hero + auth altı rozetler.
 - [ ] Genel mobil tarama: ana sayfa + auth ekranlarında telefonda taşma/bozulma var mı, tek tek bak.
 
 ## 📌 İLERİDE
 - [ ] **Toast sistemini iyileştir:** mevcut Sonner-tarzı çalışıyor; Mehmet araştırıp daha iyi bir görünüm/UX isteyecek. Önce temel sistem otursun, sonra ele alınacak.
+- [ ] **Mobil auth (giriş/kayıt) yeniden tasarımı:** masaüstü görsel arka planlı (KALICI, iyi); mobil şu an **orijinal beyaz forma geri alındı** (resend-tarzı koyu deneme klavye + logo sorunları yüzünden iptal). Tekrar ele alınırsa **adım adım + her adım Mehmet onayıyla.** iOS dersleri DAILY_LOG 2026-06-28'de (background-attachment:fixed bozuk, dvh→svh, input 16px zoom, mask+filter Safari görünmezliği, fixed-bg+klavye yatay kayma → muhtemelen visualViewport JS gerek).
 
-## ⚠️ KONTROLLER — bir dahaki "işe başla"da ÖNCE bunları doğrula
-> Mehmet app tarafıyla ilgilenirken yapılan web işlerinin doğrulanması bekliyor. Önce bunları gözden geçir.
+> ✅ 2026-06-28 **Masaüstü auth görsel arka planı** tamam (görsel bg + sol panel görseli + yuvarlak köşeler + beyaz çerçeve) — Mehmet onayladı, kalıcı.
+
 
 > ✅ 2026-06-27 doğrulandı (Mehmet): auth koyu mod (çıkış→paraner.com, sol siyah panel, parlak siyah switcher/butonlar, yeşil temizliği, buton loading metinleri), Sonner toast, beam input→otomatik kod, onboarding Ad Soyad, kayıt formu (sadece e-posta), **Google One Tap** (Gmail açıkken paraner.com'da "Continue as Paraner" kartı çıkıyor) — hepsi sorunsuz.
 > ✅ 2026-06-27 **Hesap birleşme** doğrulandı: aynı e-posta hem kod hem Google ile → Supabase tek hesapta birleştiriyor (Email+Google tek UID), veri bölünmüyor. Çift hesap riski yok.

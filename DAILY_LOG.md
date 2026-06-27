@@ -1,5 +1,18 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-28 — Auth: masaüstü görsel arka plan (kalıcı) + mobil koyu deneme → İLK HALİNE geri alındı
+
+**Masaüstü giriş/kayıt (KALICI, Mehmet onayladı):**
+- `.auth-page` arka planı markaya özel koyu görsel `public/auth-bg.webp` (`cover`). NOT: bu dosya resend.com/signup'ın `background-auth.jpg`'siyle **birebir aynı** (Mehmet indirip vermiş; indirip karşılaştırdım — aynı 1920×1080). İleride lansmanda telifsiz muadille değiştirilebilir.
+- Sol panel **içi boşaltıldı** → arkadaki görsel görünür; beyaz çerçeve (`.auth-card` 4px border) korundu; sağ köşeler yuvarlatıldı (`border-radius:0 24 24 0`, çentikte kartın beyazı). Panel görseli `.auth-cube { background: url(auth-bg) cover fixed }` → sayfa bg'siyle kesintisiz. `.auth-card` background `#fff`.
+
+**Mobil (≤560) koyu/resend denemesi → TAMAMEN GERİ ALINDI:** Mehmet mobili resend.com/signup gibi (koyu görsel bg + koyu form + alt alta sosyal butonlar + custom Google + 3-nokta yükleme + sabit arka plan) istedi. Çok tur denendi ama **iki sorun çözülemedi** ve Mehmet "ilk haline al" dedi:
+  - **Klavye:** iOS'ta sürekli sorun — `position:fixed` bg + klavye = yatay kayma; `dvh` klavyeyle oynayıp alt boşluk/sıfırlanmama; iç scroll kabı klavye kapanınca scroll'u sıfırlamıyor. (Denenenler: fixed katman, scroll-kabı, `svh`, doğal akış — hiçbiri tam temiz olmadı.)
+  - **Logo görünmüyor:** `.auth-wordmark` CSS-mask+gradient mobil Safari'de görünmedi (özellikle `filter: drop-shadow` + `-webkit-mask` = tamamen görünmez, bilinen Safari bug'ı). Titanyum PNG'ye geçiş de Mehmet'in gördüğü sürümde çözmedi.
+  - **Çözüm:** `@media (max-width:560px)` auth bloğu **komple silindi** → mobil, `≤1024` bloğundaki **orijinal tek-sütun BEYAZ formu** kullanıyor (logo gunmetal-mask beyazda çalışıyor, ilk günkü hâl). `SocialAuth` mobil değişiklikleri (isMobile/custom Google/dot loader/Apple metni) + `html overflow-x` + `.btn-dots` CSS geri alındı.
+
+> ⚠️ Mobil auth'a TEKRAR dokunulacaksa (ileride): iOS dersleri — `background-attachment:fixed` iOS'ta BOZUK; sabit bg için `position:fixed` katman ama o da klavyeyle yatay kayma yapabiliyor; `dvh` klavyede değişken → `svh` daha stabil; input `font-size:16px` yoksa odakta zoom; CSS `mask`+`filter` Safari'de görünmezlik. En sağlam mobil "fixed bg + scroll" muhtemelen `visualViewport` JS API gerektirir. Adım adım + her adım Mehmet onayıyla ilerle.
+
 ## 2026-06-27 — Giriş/kayıt sayfası arka planı: düz koyu → markaya özel görsel
 
 Mehmet markaya özel koyu/gri saten görsel verdi (`~/Downloads/background-auth.webp`, 205KB, zaten webp/optimize). Giriş/kayıt sayfasının düz koyu degrade arka planı bu görselle değiştirildi.
