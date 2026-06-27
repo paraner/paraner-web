@@ -48,8 +48,6 @@ Mehmet: hesap silinince kullanıcıya "hesabınız silindi" maili gitsin — (1)
 
 **Onboarding "Hazırlanıyor…" sonsuz takılma — FIX:** `OnboardingModal.finish()` profili DB'ye yazıyordu (başarılı) ama ekranı kapatmak için `router.refresh()` kullanıyordu; server yeni profili her zaman hemen görmüyor → modal açık kalıp buton kalıcı "Hazırlanıyor…"da takılıyordu (Mehmet canlıda ~2dk bekledi, manuel yenileyince düzeldi). **Çözüm:** bitişte `router.refresh()` yerine `window.location.assign("/panel")` (tam yönlendirme) → server profili sıfırdan taze okur, modal %100 kapanır. Onboarding tek seferlik akış → tam reload sorun değil. Kullanılmayan `useRouter` importu temizlendi. tsc + build temiz (44/44).
 
-> Not: üretim DB'sinde 3 test kullanıcısı kaldı (`mediamgzr`, `theparaner`, `thepavnero`) — Mehmet sonra Supabase Danger zone'dan silecek.
-
 ---
 
 ## 2026-06-27 — Auth koyu mod cilası (yeşil temizliği) + parlak siyah butonlar + Sonner toast + çıkış yönlendirme
