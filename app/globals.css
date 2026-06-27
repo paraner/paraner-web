@@ -1160,9 +1160,14 @@ ul { list-style: none; }
   .auth-card-form .otp-cell.active { border-color: rgba(255, 255, 255, 0.6); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12); }
   .auth-card-form .otp-cell.active::after { background: var(--text); }
 
-  /* Wordmark: koyu (siyah) zeminde okunur titanyum. (filter+mask Safari'de görünmez
-     yaptığı için drop-shadow KULLANILMADI — siyah zeminde gölgeye gerek de yok.) */
-  .auth-wordmark { background: linear-gradient(180deg, #ffffff 0%, #cdd2d8 34%, #9aa0a8 64%, #d8dce1 100%); }
+  /* Wordmark: mobilde HAZIR titanyum PNG'yi doğrudan arka plan görseli olarak kullan
+     (CSS mask+gradient yaklaşımı mobilde görünmüyordu → kesin çözüm: gerçek görsel).
+     Mask + shimmer (::after) kapatılır, yoksa mask'sız ::after dikdörtgen olarak görünür. */
+  .auth-wordmark {
+    background: url('/paraner-wordmark-titan.png') center / contain no-repeat;
+    -webkit-mask: none; mask: none;
+  }
+  .auth-wordmark::after { display: none; }
   /* Store badge'leri koyu zeminde ayırt edilsin diye ince kenar */
   .auth-stores .store-badge { border: 1px solid rgba(255, 255, 255, 0.14); }
 
