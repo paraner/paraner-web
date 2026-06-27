@@ -24,6 +24,8 @@ Mehmet hover.dev'deki **Beam Input**'u istedi (kenarında dönen ışık huzmesi
 2. **Kayıt'tan Ad Soyad kaldırıldı:** `AuthForm.tsx` — `name` state + validasyon + `full_name` metadata + input alanı silindi (kayıt artık sadece e-posta; ad soyad sonraki aşamalarda istenecek). CDP: /kayit form inputları = sadece ["E-posta"].
 3. **Hover'da yukarı-kalkma efekti kaldırıldı:** `.store-badge:hover`'tan `transform: translateY(-2px)` + box-shadow; titanyum marketing butonları (`.nav/.hero/.cta-band/.mobile-menu .btn-primary:hover`) → `transform: none`. (Auth/panel butonları etkilenmedi.)
 
+**Auth sayfalarına indirme rozetleri (Mehmet isteği):** Giriş + kayıt beyaz panelinin **en altına** mobil uygulama rozetleri eklendi. `AuthForm.tsx`'e `<StoreBadges/>` (DRY — ana sayfayla aynı bileşen) + "Mobil uygulamayı indir" etiketi `.auth-stores` footer'ında. CSS: `.auth-split-form { flex: 1 1 auto }` (paneli doldur) + `.auth-stores { margin-top: auto }` → rozetler panel dibine oturur, üst içerik (wordmark/switcher) kıpırdamaz. Siyah rozetler beyaz panelde standart/temiz durur. CDP: /giris + /kayit'ta rozetler altta ortalı doğrulandı. tsc + build temiz (44/44).
+
 - tsc + build temiz (44/44). **Push BEKLİYOR** (Mehmet onayı sonrası).
 
 ---

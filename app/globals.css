@@ -863,8 +863,18 @@ ul { list-style: none; }
    yüksekliğine göre ölçeklenir (büyük ekranda dengeli, kısa ekranda taşmaz). */
 .auth-split-form {
   display: flex; flex-direction: column; justify-content: flex-start;
+  flex: 1 1 auto; /* paneli doldur → indirme rozetleri en alta (margin-top:auto) oturur */
   padding: clamp(40px, 14vh, 150px) 60px 48px; max-width: 620px; width: 100%; margin: 0 auto;
 }
+/* Panel altı: mobil uygulama indirme rozetleri (giriş + kayıt) */
+.auth-stores {
+  margin-top: auto; padding-top: 36px;
+  display: flex; flex-direction: column; align-items: center; gap: 13px;
+}
+.auth-stores-label {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.02em; color: #8a9098;
+}
+.auth-stores .stores { margin-top: 0; }
 /* Giriş ⇄ Kayıt geçiş animasyonu (Dribbble signup tarzı): içerik yumuşak kayıp belirir.
    Yön switcher'a göre — kayıt sağdan, giriş soldan. key=mode ile her geçişte yeniden tetiklenir.
    SocialAuth animasyon DIŞINDA (sabit) → Google butonu titremez. */

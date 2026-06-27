@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import SocialAuth from "./SocialAuth";
 import OtpVerify from "./OtpVerify";
+import StoreBadges from "./StoreBadges";
 import { createClient } from "../../lib/supabase/client";
 
 type Mode = "giris" | "kayit";
@@ -309,6 +310,12 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
           </div>
         </>
       )}
+
+      {/* Panel altında mobil uygulama indirme rozetleri (giriş + kayıt) */}
+      <div className="auth-stores">
+        <span className="auth-stores-label">Mobil uygulamayı indir</span>
+        <StoreBadges />
+      </div>
     </div>
   );
 }
