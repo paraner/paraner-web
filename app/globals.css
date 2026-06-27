@@ -1143,6 +1143,18 @@ ul { list-style: none; }
   .auth-wordmark { background: linear-gradient(180deg, #f5f6f8 0%, #c2c7cd 30%, #8b9097 60%, #c8ccd1 100%); }
   /* Store badge'leri koyu zeminde ayırt edilsin diye ince kenar */
   .auth-stores .store-badge { border: 1px solid rgba(255, 255, 255, 0.14); }
+
+  /* Sosyal butonlar resend.com/signup tarzı: alt alta TAM GENİŞLİK, hafif koyu dolgu,
+     ince kenar, yuvarlak köşe (pill değil), logo + ortalı yazı. (GIS gizli → custom Google.) */
+  .social-auth { flex-direction: column; }
+  .gsi-wrap { display: none; }
+  .social-auth .btn-social { flex: 1 1 auto; max-width: none; }
+  .auth-card-form .btn-social {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.12);
+    border-radius: 14px; min-height: 52px; white-space: nowrap;
+  }
+  .auth-card-form .btn-social:hover:not(:disabled) { background: rgba(255, 255, 255, 0.09); }
 }
 
 /* ═══════════════════════════════════════════════
