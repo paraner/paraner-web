@@ -886,7 +886,7 @@ ul { list-style: none; }
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   border-radius: 28px; overflow: hidden;
   border: 4px solid #fff; /* tüm kartı saran tek parça beyaz çerçeve (sol+sağ kesintisiz) */
-  background: transparent; /* kart içi şeffaf → sol panelden arkadaki görsel görünür (sağ formun kendi beyazı var) */
+  background: #fff; /* kart içi beyaz → sol panelin yuvarlatılmış sağ köşe çentiklerinde beyaz görünür */
   box-shadow: 0 40px 120px rgba(0,0,0,0.5);
 }
 /* Sağ panel — beyaz form */
@@ -1067,10 +1067,13 @@ ul { list-style: none; }
 
 /* Sol panel — interaktif 3D küp (AuthCube3D) burada render edilir. Sol köşeler dış
    .auth-card radius'undan; sağ köşeler burada yuvarlanır. */
-/* Sol panel — içi BOŞ: arka plandaki görsel buradan görünsün (siyah dolgu yok).
-   Beyaz çerçeve .auth-card border'ından gelir; bu panel sadece şeffaf bir alan. */
-.auth-visual { position: relative; overflow: hidden; background: transparent; }
-.auth-cube { background: transparent; }
+/* Sol panel — markaya özel görsel. Sayfa arka planıyla SÜREKLİ görünür:
+   background-attachment:fixed → viewport'a göre konumlanır, .auth-page cover bg'siyle
+   pixel hizalı (kesintisiz). SAĞ köşeler yuvarlatılır (0 24 24 0); yuvarlatma
+   çentiğinde kartın beyazı görünür → sol köşelerle aynı beyaz-yuvarlak his.
+   (Sol köşeler kartın dış 28px radius + overflow:hidden ile yuvarlanır.) */
+.auth-visual { position: relative; overflow: hidden; border-radius: 0 24px 24px 0; }
+.auth-cube { background: url('/auth-bg.webp') center center / cover fixed; }
 .cube-stage { position: absolute; inset: 0; }
 .cube-stage canvas { position: absolute; inset: 0; }
 /* Tablet / küçük laptop / telefon → sıkışık iki sütun yerine temiz tek sütun form */
