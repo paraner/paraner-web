@@ -1089,10 +1089,60 @@ ul { list-style: none; }
   .auth-split-form .auth-head { text-align: center; }
 }
 
-/* Telefon: görsel arka plan YOK → düz koyu (form tam ekranı kapladığı için görsel
-   zaten görünmez; tutarlılık + olası kenar payı için açıkça düz koyu). */
+/* Telefon (resend.com/signup mobil tarzı): beyaz kart YOK → koyu görsel arka plan +
+   form KOYU temaya döner (açık-tema override'ları geri çevrilir). */
 @media (max-width: 560px) {
-  .auth-page { background: #060607; }
+  .auth-page {
+    height: auto; min-height: 100dvh; padding: 0;
+    background: #060607 url('/auth-bg.webp') center center / cover no-repeat;
+  }
+  .auth-card {
+    grid-template-columns: 1fr; max-width: none; width: 100%;
+    min-height: 100dvh; height: auto; max-height: none;
+    border: none; border-radius: 0; box-shadow: none; background: transparent;
+  }
+  .auth-visual { display: none; }
+  .auth-card-form { background: transparent; }
+  .auth-split-form { padding: 48px 24px 40px; max-width: 440px; }
+
+  /* Koyu tema — beyaz form override'larını geri çevir */
+  .auth-card-form .logo-text,
+  .auth-card-form .auth-head h1,
+  .auth-card-form .field label,
+  .auth-card-form .auth-text-link,
+  .auth-card-form .auth-row button,
+  .auth-card-form .otp-resend-link { color: var(--text); }
+  .auth-card-form .auth-head p,
+  .auth-card-form .auth-alt,
+  .auth-card-form .auth-terms,
+  .auth-card-form .auth-divider,
+  .auth-card-form .input-wrap .toggle-pw,
+  .auth-card-form .otp-loading,
+  .auth-card-form .otp-resend,
+  .auth-card-form .otp-back { color: var(--text-dim); }
+  .auth-card-form .auth-terms a { color: rgba(255, 255, 255, 0.7); }
+  .auth-card-form .otp-back:hover { color: var(--text); }
+  /* Form elemanları: DOLGU YOK → görselin üstüne otururlar (sadece kenar + metin). */
+  .auth-card-form .field input,
+  .auth-card-form .field select,
+  .auth-card-form .btn-social,
+  .auth-card-form .otp-cell { background: transparent; border-color: var(--border-strong); color: var(--text); }
+  .auth-card-form .field input::placeholder { color: var(--text-dim); }
+  .auth-card-form .field input:focus,
+  .auth-card-form .field select:focus { border-color: rgba(255, 255, 255, 0.55); background: transparent; }
+  .auth-card-form .btn-social:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); }
+  .auth-card-form .btn-social .soon-tag { color: var(--text-dim); border-color: var(--border-strong); }
+  .auth-card-form .auth-divider::before,
+  .auth-card-form .auth-divider::after { background: rgba(255, 255, 255, 0.14); }
+  .auth-card-form .auth-msg.success { color: var(--text); background: transparent; border-color: var(--border-strong); }
+  .auth-card-form .otp-cell.filled { border-color: rgba(255, 255, 255, 0.5); }
+  .auth-card-form .otp-cell.active { border-color: rgba(255, 255, 255, 0.6); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12); }
+  .auth-card-form .otp-cell.active::after { background: var(--text); }
+
+  /* Wordmark: gunmetal yerine titanyum (koyu zeminde okunur) */
+  .auth-wordmark { background: linear-gradient(180deg, #f5f6f8 0%, #c2c7cd 30%, #8b9097 60%, #c8ccd1 100%); }
+  /* Store badge'leri koyu zeminde ayırt edilsin diye ince kenar */
+  .auth-stores .store-badge { border: 1px solid rgba(255, 255, 255, 0.14); }
 }
 
 /* ═══════════════════════════════════════════════
