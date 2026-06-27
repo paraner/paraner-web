@@ -14,8 +14,11 @@
 > ✅ 2026-06-27 doğrulandı (Mehmet): auth koyu mod (çıkış→paraner.com, sol siyah panel, parlak siyah switcher/butonlar, yeşil temizliği, buton loading metinleri), Sonner toast, beam input→otomatik kod, onboarding Ad Soyad, kayıt formu (sadece e-posta), **Google One Tap** (Gmail açıkken paraner.com'da "Continue as Paraner" kartı çıkıyor) — hepsi sorunsuz.
 > ✅ 2026-06-27 **Hesap birleşme** doğrulandı: aynı e-posta hem kod hem Google ile → Supabase tek hesapta birleştiriyor (Email+Google tek UID), veri bölünmüyor. Çift hesap riski yok.
 > ✅ 2026-06-27 **Onboarding "Hazırlanıyor…" takılması** fix'lendi (bitişte `window.location.assign("/panel")`) — push'lu.
-> ✅ 2026-06-27 **Hesap silme veda maili** canlıya alındı: `auth.users` DELETE trigger'ı → `send-farewell-email` (her silme yolu: mobil/web/dashboard tek mail). Web Ayarlar'a **"Hesabı Sil"** butonu eklendi. (paraner-app + paraner-web push'lu.)
-- [ ] **Veda maili canlı teyit:** bir test hesabını mobil/web Ayarlar'dan + birini dashboard Danger zone'dan silince "Görüşmek üzere" maili geliyor mu? Çift mail GELMEMELİ.
+> ✅ 2026-06-27 **Hesap silme veda maili** canlıya alındı VE **canlı doğrulandı** (Mehmet): dashboard'dan silmede "Görüşmek üzere" maili geldi (trigger çalışıyor), hesap kapanıp giriş ekranına attı. Web Ayarlar'a **"Hesabı Sil"** butonu eklendi. (paraner-app + paraner-web push'lu.)
+> ✅ 2026-06-27 **Onboarding "Hazırlanıyor…" fix** canlı doğrulandı (yeni hesapta takılmadı) + **hoşgeldin maili** geliyor.
+
+### İLERİDE — hesap silme akışı v2 (Mehmet isteği)
+- [ ] **Admin/dashboard silmede FARKLI mail:** kullanıcı KENDİ silince "Görüşmek üzere" (mevcut); ama hesabı BİZ silersek (admin/dashboard/ihlal) farklı bir bildirim maili gitmeli. Şu an ikisi de aynı maili alıyor. Trigger'a "silme sebebi/kaynağı" ayrımı eklenecek (ör. delete-account user-initiated bayrağı vs. doğrudan dashboard silme). Akış genel olarak da iyileştirilecek.
 
 **Cüzdanım (canlı Truncgil) — yeni**
 - [ ] Canlıda (app.paraner.com) Truncgil fiyatları geliyor mu? Toplam Değer / K-Z / Bugün dolu mu?
