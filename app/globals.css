@@ -1108,7 +1108,10 @@ ul { list-style: none; }
     height: 100dvh; min-height: 100dvh;
     overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
     align-items: stretch; padding: 0;
-    background: #060607 url('/auth-bg.webp') center center / cover no-repeat;
+    /* Konum SAĞ: görselin saten kıvrımı sağda → telefonda (portre cover) resend'in mobil
+       kompozisyonu gibi üstte saten + sol-alt koyu. (center kırpınca koyu orta geliyordu.)
+       Görsel resend ile birebir AYNI dosya; fark sadece kırpma konumuydu. */
+    background: #060607 url('/auth-bg.webp') right center / cover no-repeat;
   }
   /* Klavye açılınca iOS otomatik yakınlaşmasını engelle: input font-size ≥16px */
   .auth-card-form .field input,
