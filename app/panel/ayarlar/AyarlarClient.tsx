@@ -163,7 +163,83 @@ export default function AyarlarClient({
         <h3>Oturum</h3>
         <LogoutButton />
       </div>
+
+      <DeleteAccountSection />
     </>
+  );
+}
+
+/* ── Hesabı Sil (kalıcı) ── delete-account Edge Function'ını çağırır; auth.users
+   silinince DB trigger'ı veda mailini gönderir. Mobil plan-detail.tsx ile aynı akış. */
+function DeleteAccountSection() {
+  const supabase = createClient();
+  const [busy, setBusy] = useState(false);
+
+  async function deleteAccount() {
+    const ok = await confirmDialog({
+      title: "Hesabı Sil",
+      message:
+        "Hesabın, tüm profillerin ve verilerin (işlemler, hesaplar, faturalar, cüzdan) kalıcı olarak silinir. Bu işlem geri alınamaz.",
+      confirmLabel: "Hesabı Sil",
+      cancelLabel: "Vazgeç",
+      danger: true,
+    });
+    if (!ok) return;
+    setBusy(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        showToast({ title: "Oturum bulunamadı", message: "Tekrar giriş yapıp dene.", variant: "error" });
+        setBusy(false);
+        return;
+      }
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+      const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+      const res = await fetch(`${url}/functions/v1/delete-account`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: anon,
+        },
+      });
+      if (!res.ok) {
+        let detail = `HTTP ${res.status}`;
+        try {
+          const body = await res.json();
+          detail = body?.error || detail;
+        } catch { /* gövde okunamadı */ }
+        throw new Error(detail);
+      }
+      // Silindi → oturumu kapat ve "hesabın silindi" ekranına at
+      try { sessionStorage.removeItem("login_reported"); } catch { /* yoksay */ }
+      try { await supabase.auth.signOut({ scope: "local" }); } catch { /* önemsiz */ }
+      window.location.href = "/giris?closed=1";
+    } catch (e) {
+      showToast({
+        title: "Silinemedi",
+        message: (e as Error)?.message || "İşlem tamamlanamadı, tekrar dene.",
+        variant: "error",
+      });
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="settings-block">
+      <h3>Hesabı Sil</h3>
+      <p className="panel-sub" style={{ marginTop: 4 }}>
+        Hesabın ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.
+      </p>
+      <button
+        className="btn btn-sm"
+        onClick={deleteAccount}
+        disabled={busy}
+        style={{ marginTop: 12, color: "#E24B4A", borderColor: "#E24B4A" }}
+      >
+        {busy ? "Siliniyor…" : "Hesabımı Kalıcı Olarak Sil"}
+      </button>
+    </div>
   );
 }
 
