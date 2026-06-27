@@ -3,6 +3,13 @@
 ## ⚠️ KONTROLLER — bir dahaki "işe başla"da ÖNCE bunları doğrula
 > Mehmet app tarafıyla ilgilenirken yapılan web işlerinin doğrulanması bekliyor. Önce bunları gözden geçir.
 
+**Ana sayfa + auth + onboarding — yeni (2026-06-27, canlıda push'lu)**
+- [ ] **Google One Tap (ana sayfa):** Chrome'da Google oturumu açıkken paraner.com'a girince üstte "Paraner olarak devam et" kartı çıkıyor mu? Basınca direkt panele giriyor mu? (Headless test edilemedi — gerçek Google oturumu gerekli. Çıkmazsa Google Cloud Console → Authorized JavaScript origins'te paraner.com var mı bak.)
+- [ ] **Beam input → otomatik kod:** Ana sayfada mail yaz + "Ücretsiz Başla" → maile kod gidiyor + doğrudan "Kodu gir" adımına düşüyor mu? (Test'te DB kirletmemek için Supabase bloklanmıştı → wiring doğrulandı, canlı akış teyit bekliyor.)
+- [ ] **Onboarding Ad Soyad:** Kod sonrası — Bireysel: para birimi→tip→**ad soyad**→plan; İşletme: →**şirket adı + ad soyad**→plan. Google/Apple ile gelende ad soyad **otomatik dolu**, e-posta ile kayıtta **boş + zorunlu** mu? Kayıt sonrası `profiles.name`/`profile_name` doğru yazılıyor mu (mobil ile uyum)?
+- [ ] **Kayıt formu:** /kayit artık sadece e-posta istiyor (Ad Soyad yok) — sorun yok mu?
+- [ ] **Beam input + 3 rozet + hover ışık:** ana sayfa + auth altı rozetler düzgün mü, hover'da kenar ışığı dönüyor mu? Mobilde taşma yok mu?
+
 **Cüzdanım (canlı Truncgil) — yeni**
 - [ ] Canlıda (app.paraner.com) Truncgil fiyatları geliyor mu? Toplam Değer / K-Z / Bugün dolu mu?
 - [ ] Web'den eklenen varlık **mobilde** görünüyor mu (ortak `savings_assets`)? Tersi de?
