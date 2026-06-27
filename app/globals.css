@@ -43,7 +43,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: hidden; }
 
 body {
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -1104,21 +1104,28 @@ ul { list-style: none; }
      açılınca zıplayıp sayfayı sağa-sola kaydırıyordu. Çözüm: .auth-page'in KENDİSİ viewport
      yüksekliğinde scroll kabı → kabın background'u içerikle kaymaz (sabit kalır), içerik
      İÇERİDE kayar, fixed eleman olmadığı için zıplama yok. overflow-x:hidden → yatay kayma yok. */
-  /* EN SADE doğal akış (iç scroll kabı YOK, sabit katman YOK) → tarayıcı klavyeyi en doğal
-     şekilde işler; klavye açıl/kapanınca normal site gibi davranır. (Bu sürümde arka plan
-     içerikle birlikte kayabilir; klavye baz alındıktan sonra sabit görsel yeniden eklenecek.) */
+  /* MOBİL AUTH — temiz/standart kurulum:
+     • Arka plan SABİT: ayrı position:fixed katman. iOS'ta klavye açılınca LAYOUT viewport
+       değişmez (sadece görsel viewport küçülür) → fixed bg yerinde kalır, içerik üstünde kayar.
+     • İçerik NORMAL akışta (body scroll, iç scroll kabı YOK) → klavye normal site gibi
+       açılır/kapanır, kapanınca kendiliğinden eski hâle döner.
+     • input font-size 16px → iOS odak yakınlaşması olmaz.
+     • overflow-x:hidden (html+body) → yatay kayma olmaz. */
   .auth-page {
-    min-height: 100dvh; height: auto;
+    min-height: 100dvh;
     overflow-x: hidden; padding: 0; align-items: stretch;
+    background: #060607;
+  }
+  .auth-page::before {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
     /* Konum SAĞ: saten kıvrım sağda → portre cover'da resend mobil kompozisyonu (görsel AYNI). */
     background: #060607 url('/auth-bg.webp') right center / cover no-repeat;
   }
-  /* Klavye açılınca iOS otomatik yakınlaşmasını engelle: input font-size ≥16px */
   .auth-card-form .field input,
   .auth-card-form .field select { font-size: 16px; }
   .auth-card {
     grid-template-columns: 1fr; max-width: none; width: 100%;
-    min-height: 100dvh; height: auto; max-height: none;
+    min-height: 100dvh; max-height: none;
     border: none; border-radius: 0; box-shadow: none; background: transparent;
   }
   .auth-visual { display: none; }
