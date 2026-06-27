@@ -1,5 +1,20 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-27 — Hesap silme veda maili (her yolu kapsar) + web "Hesabı Sil" butonu
+
+Mehmet: hesap silinince kullanıcıya "hesabınız silindi" maili gitsin — (1) kullanıcı kendi silince, (2) biz dashboard'dan elle silince de. **İki repo** (paraner-web + paraner-app) + Supabase backend işi. **Canlıya alındı.**
+
+**Tasarım — tek kaynak, her silme yolunu kapsar:** Veda maili artık `delete-account` function'ının içinde DEĞİL; **`auth.users` DELETE trigger'ı** ile gönderiliyor. Böylece silme nereden gelirse gelsin (mobil, web, Supabase dashboard "Danger zone", admin API) `auth.users` satırı kalkınca **tek yerden tek mail** gider. (Veri zaten `profiles.auth_user_id ... ON DELETE CASCADE` ile temizleniyordu.)
+
+- **`send-farewell-email` (yeni Edge Function, paraner-app):** welcome maili deseninin aynısı — secret-korumalı (`FAREWELL_HOOK_SECRET`, `x-farewell-secret` header), Resend ile "Görüşmek üzere 👋" şablonu (delete-account'tan taşındı). `config.toml`'a blok eklendi (verify_jwt=false). **Deploy edildi.**
+- **DB trigger (`farewell-email-trigger.sql`, paraner-app):** `auth.users` AFTER DELETE → pg_net → send-farewell-email (email + isim `raw_user_meta_data`'dan). welcome trigger'ı ile birebir desen. Secret repo'ya YAZILMADI (placeholder `__FAREWELL_HOOK_SECRET__`; gerçek değer Supabase Secrets + DB function gövdesinde). Mehmet SQL Editor'da çalıştırdı (success).
+- **`delete-account` (paraner-app):** satır-içi veda maili (farewellHtml + sendFarewell + waitUntil) **kaldırıldı** → çift gönderim önlendi. Sadece siler; auth.users silinince trigger maili atar. **Deploy edildi.**
+- **Web "Hesabı Sil" butonu (`AyarlarClient.tsx`):** Ayarlar en altta danger bölümü → onay diyaloğu → `delete-account` Edge Function (JWT + apikey) → başarıda local signOut + `/giris?closed=1` ("Hesabın silindi" mesajı AuthForm'da zaten var). Mobil `lib/deleteAccount.ts` akışıyla aynı. **#1'i çözer.**
+- Deploy: secret + 2 function CLI ile (Claude), trigger SQL dashboard'da (Mehmet). tsc + web build temiz. Push: web `39f716c`, app `3783ea1`.
+
+> ⚠️ Test: bir test hesabını **mobil uygulamadan** (veya web Ayarlar → Hesabı Sil) silince "Görüşmek üzere" maili gelmeli. Dashboard'dan elle silmede de gelmeli (trigger). Henüz canlı mailde teyit BEKLİYOR.
+> 🔑 `FAREWELL_HOOK_SECRET` Supabase Secrets'ta + DB function gövdesinde; repo'da yok.
+
 ## 2026-06-27 — Onboarding bitiş takılması fix + Google/e-posta hesap birleşme doğrulaması
 
 **Hesap birleşme (identity linking) — CANLI DOĞRULANDI (Mehmet):** Aynı e-posta hem OTP (kod) hem Google ile kullanıldığında Supabase **tek hesapta birleştiriyor** (çift hesap açmıyor). İki yön de test edildi: (a) önce Google → sonra kod, (b) önce kod → sonra Google. Supabase `Authentication → Users`'ta `thepavnero@gmail.com` **tek satır**, Provider Information'da **Email + Google ikisi de Enabled** (aynı UID). İlk hesapla eklenen işlem doğru profile düştü → veri bölünmüyor. **Kod değişikliği gerekmedi** — Supabase doğrulanmış aynı e-postayı otomatik linkliyor. (Google One Tap kartı da canlıda çalışıyor; çıkıp çıkmaması Google'ın cooldown/oturum kurallarına bağlı, bizim hatamız değil.)
