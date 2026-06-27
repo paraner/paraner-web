@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { showToast } from "./toast";
 import { createClient } from "../../lib/supabase/client";
 
 const CODE_LENGTH = 6;
@@ -23,7 +24,11 @@ export default function OtpVerify({
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(RESEND_SECONDS);
-  const [error, setError] = useState<string | null>(null);
+  const [errored, setErrored] = useState(false); // hücre kırmızı stili (mesaj sağ üst toast'ta)
+  const setError = (msg: string | null) => {
+    setErrored(!!msg);
+    if (msg) showToast({ title: msg, variant: "error" });
+  };
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -113,8 +118,6 @@ export default function OtpVerify({
         </p>
       </div>
 
-      {error && <div className="auth-msg error">{error}</div>}
-
       <div className="otp-wrap" onClick={() => inputRef.current?.focus()}>
         <input
           ref={inputRef}
@@ -135,7 +138,7 @@ export default function OtpVerify({
               <div
                 key={i}
                 className={`otp-cell${char ? " filled" : ""}${active ? " active" : ""}${
-                  error ? " err" : ""
+                  errored ? " err" : ""
                 }`}
               >
                 {char || ""}

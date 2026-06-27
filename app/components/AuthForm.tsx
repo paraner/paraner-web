@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import SocialAuth from "./SocialAuth";
 import OtpVerify from "./OtpVerify";
 import StoreBadges from "./StoreBadges";
+import { showToast } from "./toast";
 import { createClient } from "../../lib/supabase/client";
 
 type Mode = "giris" | "kayit";
@@ -23,8 +24,11 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [resetMsg, setResetMsg] = useState<string | null>(null); // şifre sıfırlama bağlantısı gönderildi
+  const [forgotBusy, setForgotBusy] = useState(false); // "Şifremi unuttum" çalışıyor → buton metni ayrışsın
+  // Bildirimler artık sağ üst toast'ta (Sonner tarzı). setError/setResetMsg toast'a
+  // yönlendiren ince sarmalayıcılar; null çağrıları (temizleme) no-op'tur.
+  const setError = (msg: string | null) => { if (msg) showToast({ title: msg, variant: "error" }); };
+  const setResetMsg = (msg: string | null) => { if (msg) showToast({ title: msg, variant: "success" }); };
 
   const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
 
@@ -167,6 +171,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
     setError(null);
     setResetMsg(null);
     if (!isValidEmail(email)) return setError("Önce e-posta adresini gir, sonra Şifremi unuttum'a bas.");
+    setForgotBusy(true);
     setLoading(true);
     try {
       // implicit flow → e-postadaki token düz token_hash olur (pkce_ değil) → /sifre-sifirla
@@ -188,6 +193,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
       setError("Bağlantı hatası. İnternetini kontrol et.");
     } finally {
       setLoading(false);
+      setForgotBusy(false);
     }
   }
 
@@ -258,8 +264,6 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
             </p>
           </div>
 
-          {error && <div className="auth-msg error">{error}</div>}
-
           <SocialAuth key="social" mode={mode} />
 
           <div className="auth-divider">veya e-posta ile</div>
@@ -271,9 +275,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
                 <input id="email" type="email" placeholder="E-posta" aria-label="E-posta" autoComplete="email"
                   value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
               </div>
-              <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
-                {loading ? "Gönderiliyor…" : "Devam Et"}
-              </button>
+              <FancySubmit label="Devam Et" loadingLabel="Kod gönderiliyor…" loading={loading} />
               <p className="auth-terms">
                 Kayıt olarak <a href="/gizlilik">Gizlilik Politikası</a>&apos;nı kabul etmiş olursun.
               </p>
@@ -299,10 +301,9 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
                   Şifremi unuttum
                 </button>
               </div>
-              {resetMsg && <div className="auth-msg success">{resetMsg}</div>}
-              <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
-                {loading ? "Giriş yapılıyor…" : "Giriş Yap"}
-              </button>
+              <FancySubmit label="Giriş Yap"
+                loadingLabel={forgotBusy ? "E-postanı kontrol et…" : "Giriş yapılıyor…"}
+                loading={loading} />
               <button type="button" className="auth-text-link"
                 onClick={() => { setPwMode(false); setError(null); setResetMsg(null); }}>
                 Kod ile giriş yap
@@ -314,9 +315,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
                 <input id="email" type="email" placeholder="E-posta" aria-label="E-posta" autoComplete="email"
                   value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
               </div>
-              <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
-                {loading ? "Gönderiliyor…" : "Devam Et"}
-              </button>
+              <FancySubmit label="Devam Et" loadingLabel="Kod gönderiliyor…" loading={loading} />
               <button type="button" className="auth-text-link"
                 onClick={() => { setPwMode(true); setError(null); setResetMsg(null); }}>
                 Şifre ile giriş yap
@@ -413,5 +412,19 @@ function AuthSwitch({ mode, onSwitch }: { mode: Mode; onSwitch: (m: Mode) => voi
         Kayıt Ol
       </button>
     </div>
+  );
+}
+
+// Auth gönder butonu — Uiverse parlak siyah pill (iç highlight + gloss yansıma).
+// type=submit; loading'de metin değişir + devre dışı. Boyut/stil .fancy-submit CSS'inde.
+function FancySubmit({ label, loadingLabel, loading }: {
+  label: string; loadingLabel: string; loading: boolean;
+}) {
+  return (
+    <button type="submit" className="fancy-submit" disabled={loading}>
+      <span className="fancy-wrap">
+        <span className="fancy-text">{loading ? loadingLabel : label}</span>
+      </span>
+    </button>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { showToast } from "./toast";
 import { createClient } from "../../lib/supabase/client";
 
 // Google Web Client ID (public — mobil app ile aynı, Supabase Google provider'da kayıtlı).
@@ -36,7 +37,8 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
   const appleEnabled = false; // Apple ile Giriş eklenince true
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Hata mesajları sağ üst toast'ta (Sonner). setError → toast'a yönlendiren sarmalayıcı.
+  const setError = (msg: string | null) => { if (msg) showToast({ title: msg, variant: "error" }); };
   const [gisReady, setGisReady] = useState(false); // GIS butonu render edildi mi
   const btnRef = useRef<HTMLDivElement>(null);
   const rawNonceRef = useRef<string>(""); // signInWithIdToken'a ham nonce gider
@@ -191,8 +193,6 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
 
   return (
     <div className="social-auth">
-      {error && <div className="auth-msg error">{error}</div>}
-
       {/* Google kişiselleştirilmiş buton (GIS render eder) */}
       <div
         ref={btnRef}

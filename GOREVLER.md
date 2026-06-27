@@ -3,6 +3,14 @@
 ## ⚠️ KONTROLLER — bir dahaki "işe başla"da ÖNCE bunları doğrula
 > Mehmet app tarafıyla ilgilenirken yapılan web işlerinin doğrulanması bekliyor. Önce bunları gözden geçir.
 
+**Auth koyu mod + toast — yeni (2026-06-27, push'lu)**
+- [ ] **Çıkış → paraner.com:** panelde Çıkış Yap → app.paraner.com yerine paraner.com anasayfasına düşüyor mu? Oturum gerçekten kapalı mı (geri gelince panele girmiyor)?
+- [ ] **Sol panel:** /giris + /kayit solda boş siyah panel (küp yok); form sağda. Mobilde panel gizli, taşma yok mu?
+- [ ] **Switcher + butonlar:** Giriş/Kayıt switcher parlak siyah + titanyum thumb; Devam Et/Giriş Yap parlak siyah pill (hover gloss kayması, active oturma) düzgün mü? Yeşil kalıntı yok mu?
+- [ ] **Yeşil temizliği:** input focus/OTP hücre/caret/"Şifre ile giriş"/"Şifremi unuttum"/başarı hepsi siyah-nötr mü?
+- [ ] **Buton metinleri:** kod gönderirken "Kod gönderiliyor…"; Şifremi unuttum'da "E-postanı kontrol et…" çıkıyor mu?
+- [ ] **Sonner toast (PROJE GENELİ):** sağ üstte yığılıyor + hover'da açılıyor mu? Auth hataları (ör. "Geçerli e-posta gir") + panel toast'ları yeni görünümde mi? Mobilde (≤520px) tam genişlik düzgün mü?
+
 **Ana sayfa + auth + onboarding — yeni (2026-06-27, canlıda push'lu)**
 - [ ] **Google One Tap (ana sayfa):** Chrome'da Google oturumu açıkken paraner.com'a girince üstte "Paraner olarak devam et" kartı çıkıyor mu? Basınca direkt panele giriyor mu? (Headless test edilemedi — gerçek Google oturumu gerekli. Çıkmazsa Google Cloud Console → Authorized JavaScript origins'te paraner.com var mı bak.)
 - [ ] **Beam input → otomatik kod:** Ana sayfada mail yaz + "Ücretsiz Başla" → maile kod gidiyor + doğrudan "Kodu gir" adımına düşüyor mu? (Test'te DB kirletmemek için Supabase bloklanmıştı → wiring doğrulandı, canlı akış teyit bekliyor.)

@@ -1,5 +1,20 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-27 — Auth koyu mod cilası (yeşil temizliği) + parlak siyah butonlar + Sonner toast + çıkış yönlendirme
+
+Mehmet'in canlı geri bildirimleriyle giriş/kayıt ekranı koyu/nötr dile çekildi (marka yeşili kaldırılıyor — [[marka-rengi-degisecek]]) ve proje geneli bir toast sistemi devreye alındı.
+
+- **Çıkış → paraner.com:** `LogoutButton` artık çıkışta `/giris` yerine **pazarlama anasayfasına** tam yönlendirme yapıyor (`app.` ön ekini host'tan kaldırır → canlıda app.paraner.com→paraner.com, dev'de app.localhost→localhost; `window.location.href` ile tam yeniden yükleme → server oturumu da temizlenir). `signOut({scope:'local'})` korundu.
+- **Sol küp kaldırıldı (panel korundu):** `/giris`+`/kayit` sol paneldeki `AuthCube3D` kaldırıldı; **boş siyah `.auth-visual` paneli** geri kondu (önce yanlışlıkla panelle birlikte silinmişti). Oraya sonra başka içerik gelecek. `AuthCube3D` ana sayfada hâlâ kullanıldığı için dosya silinmedi.
+- **Switcher (Giriş/Kayıt):** carbon→**parlak siyah track** (Devam Et butonuyla aynı dil: iç highlight'larla cam görünüm + üst gloss yansıma), **titanyum thumb** (ortada koyu bant olmadan açık gümüş sheen). Dönen/yanıp sönen yeşil çerçeve **kaldırıldı** (animasyon yok).
+- **Devam Et / Giriş Yap butonu:** teal neumorphism → birkaç tur sonra **Uiverse parlak siyah pill** (marcelodolza): iç highlight 3D cam yüz + üst gloss şeritleri (`::before/::after`) + hover'da ışık/gloss kayması + active oturma. Mor tema → siyah; iki-kelime swap ve eğim çıkarıldı; boyut bizim (tam genişlik, ~50px, pill). `FancySubmit` bileşeni 3 submit'i sarıyor. (Ara denemeler: shine-sweep+ring, sonra katmanlı dönen-ışık küp — beğenilmedi, bu pill'de karar kılındı.)
+- **Yeşil temizliği (auth):** input focus çerçevesi, OTP hücre kenarı+caret, "Şifre/Kod ile giriş yap", "Şifremi unuttum", başarı mesajı → hepsi **siyah/nötr**. Input çerçevesi belirginleştirildi (`#d8dce1`→`#aab0b8`). Hata kırmızısı (semantik) korundu.
+- **Buton loading metinleri:** kod gönderen iki "Devam Et" → **"Kod gönderiliyor…"**; "Şifremi unuttum"a basınca ana buton **"E-postanı kontrol et…"** (yeni `forgotBusy` flag'i login akışından ayırdı, yoksa "Giriş yapılıyor…" yazıyordu).
+- **Sonner tarzı toast — PROJE GENELİ:** Mehmet sonner.emilkowal.ski'yi seçti. Mevcut `toast.ts`+`ToastHost` **bağımlılık eklemeden** Sonner davranışına getirildi: sağ üstte **yığılır** (arkadakiler küçülüp peek), **hover'da dikey listeye açılır** (yükseklikler ölçülüp konumlanır), slide-in, variant ikonları (✓/✕/i; success **nötr**, marka yeşili yok). Panel zaten mount ediyordu → otomatik yeni görünüm; auth sayfalarına da eklendi. `AuthForm`+`OtpVerify`+`SocialAuth` inline `auth-msg` kutuları kaldırılıp `showToast`'a yönlendirildi (çağrı yerleri değişmeden ince sarmalayıcılarla; OTP hücre kırmızısı `errored` bool'una taşındı).
+- tsc + next build temiz. Push'lu.
+
+---
+
 ## 2026-06-27 — Ana sayfa hero: Beam Input (hover.dev tarzı) → CTA butonları kaldırıldı
 
 Mehmet hover.dev'deki **Beam Input**'u istedi (kenarında dönen ışık huzmesi olan e-posta pill'i). Hero'daki **"Ücretsiz Başla" + "Giriş Yap"** CTA çifti kaldırıldı, yerine beam input kondu: input içinde "E-posta adresin", sağında **"Ücretsiz Başla"** butonu (önce "7 gün ücretsiz dene" denildi, sonra "Ücretsiz Başla" olarak değişti).

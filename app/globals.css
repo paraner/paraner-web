@@ -352,28 +352,68 @@ ul { list-style: none; }
     inset 0 -1px 1px rgba(0, 0, 0, 0.22);
 }
 
-/* ─── Auth "Devam Et" — neumorphism (hover.dev tarzı) ───
-   Kart beyazından hafif ayrışan yumuşak KABARIK pill + teal metin; hover'da İÇE BASILI
-   (inset) + teal parlar; basınca daha derin inset. Yalnız auth kartında (açık tema);
-   panel + koyu reset kartı butonları teal-glow kalır (neumorphism siyahta iyi durmaz). */
-.auth-card-form .btn-primary {
-  background: #eceff3; color: #0c9a87;
-  box-shadow: -5px -5px 10px rgba(255, 255, 255, 0.9), 5px 5px 12px rgba(15, 30, 40, 0.16);
-}
-.auth-card-form .btn-primary::before { display: none; } /* shine yok */
-.auth-card-form .btn-primary:hover {
-  color: var(--teal); transform: none;
+/* ─── Auth gönder butonu (Devam Et / Giriş Yap) — Uiverse parlak siyah pill ───
+   İç highlight'larla 3D cam görünüm + üstte gloss yansıma (::before/::after) + hover'da
+   ışık kayması. Boyut bizimkiyle tutarlı: tam genişlik, ~50px, pill (font/padding bizim). */
+.fancy-submit {
+  position: relative; display: block; width: 100%;
+  margin-top: 4px; border: 0; outline: none; cursor: pointer;
+  border-radius: 999px; background-color: #080808;
+  font-family: inherit; -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s ease;
   box-shadow:
-    -1px -1px 4px rgba(255, 255, 255, 0.7), 1px 1px 4px rgba(15, 30, 40, 0.18),
-    inset -2px -2px 5px rgba(255, 255, 255, 0.95), inset 2px 2px 5px rgba(15, 30, 40, 0.2);
+    inset 0 0.3rem 0.9rem rgba(255, 255, 255, 0.3),
+    inset 0 -0.1rem 0.3rem rgba(0, 0, 0, 0.7),
+    inset 0 -0.4rem 0.9rem rgba(255, 255, 255, 0.5),
+    0 1.1rem 1.5rem rgba(0, 0, 0, 0.22),
+    0 0.5rem 0.7rem -0.4rem rgba(0, 0, 0, 0.7);
 }
-.auth-card-form .btn-primary:active {
-  transform: none;
-  box-shadow: inset -2px -2px 6px rgba(255, 255, 255, 0.95), inset 3px 3px 7px rgba(15, 30, 40, 0.26);
+.fancy-submit:disabled { cursor: not-allowed; }
+.fancy-wrap {
+  position: relative; display: block; overflow: hidden; border-radius: inherit;
+  padding: 14px 26px; /* bizim btn-lg yüksekliği */
+  font-size: 15px; font-weight: 700; letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.92);
 }
-.auth-card-form .btn-primary:disabled {
-  box-shadow: -3px -3px 8px rgba(255, 255, 255, 0.8), 3px 3px 8px rgba(15, 30, 40, 0.12);
+/* Etiket — alt kısma doğru hafif sönen gloss maskesi (okunur kalsın diye tam saydam değil) */
+.fancy-text {
+  position: relative; z-index: 1; display: block; text-align: center;
+  transform: translateY(2%); transition: transform 0.2s ease;
+  -webkit-mask-image: linear-gradient(to bottom, #fff 55%, rgba(255, 255, 255, 0.45));
+  mask-image: linear-gradient(to bottom, #fff 55%, rgba(255, 255, 255, 0.45));
 }
+.fancy-wrap::before, .fancy-wrap::after { content: ""; position: absolute; transition: all 0.3s ease; }
+.fancy-wrap::before { /* üstten geniş yumuşak ışık */
+  left: -15%; right: -15%; bottom: 25%; top: -100%;
+  border-radius: 50%; background-color: rgba(255, 255, 255, 0.12);
+}
+.fancy-wrap::after { /* üst gloss şeridi */
+  left: 6%; right: 6%; top: 12%; bottom: 40%;
+  border-radius: 22px 22px 0 0;
+  box-shadow: inset 0 10px 8px -10px rgba(255, 255, 255, 0.8);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 100%);
+}
+.fancy-submit:hover {
+  box-shadow:
+    inset 0 0.3rem 0.5rem rgba(255, 255, 255, 0.4),
+    inset 0 -0.1rem 0.3rem rgba(0, 0, 0, 0.7),
+    inset 0 -0.4rem 0.9rem rgba(255, 255, 255, 0.7),
+    0 1.1rem 1.5rem rgba(0, 0, 0, 0.22),
+    0 0.5rem 0.7rem -0.4rem rgba(0, 0, 0, 0.7);
+}
+.fancy-submit:hover .fancy-wrap::before { transform: translateY(-5%); }
+.fancy-submit:hover .fancy-wrap::after { opacity: 0.4; transform: translateY(5%); }
+.fancy-submit:hover .fancy-text { transform: translateY(-4%); }
+.fancy-submit:active {
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 0.3rem 0.5rem rgba(255, 255, 255, 0.5),
+    inset 0 -0.1rem 0.3rem rgba(0, 0, 0, 0.8),
+    inset 0 -0.4rem 0.9rem rgba(255, 255, 255, 0.4),
+    0 1.1rem 1.5rem rgba(0, 0, 0, 0.22),
+    0 0.5rem 0.7rem -0.4rem rgba(0, 0, 0, 0.7);
+}
+.fancy-submit:disabled { opacity: 0.8; }
 .btn-ghost { background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border-strong); color: rgba(255, 255, 255, 0.85); }
 .btn-ghost:hover { background: rgba(255, 255, 255, 0.1); }
 .btn-lg { padding: 14px 26px; font-size: 15px; border-radius: 14px; }
@@ -892,14 +932,23 @@ ul { list-style: none; }
 .auth-card-form .auth-head p { color: #5b6168; }
 .auth-card-form .field label { color: #2b2f34; }
 .auth-card-form .field input,
-.auth-card-form .field select { background: #fff; border-color: #d8dce1; color: #15171a; }
+.auth-card-form .field select { background: #fff; border-color: #aab0b8; color: #15171a; }
 /* Input + ana buton köşeleri = Google butonu gibi tam pill */
 .auth-card-form .field input,
 .auth-card-form .field select { border-radius: 999px; padding-left: 20px; padding-right: 20px; }
 .auth-card-form .btn-lg { border-radius: 999px; }
 .auth-card-form .field input::placeholder { color: #9aa0a6; }
 .auth-card-form .field input:focus,
-.auth-card-form .field select:focus { border-color: var(--teal); background: #fff; }
+.auth-card-form .field select:focus { border-color: #15171a; background: #fff; }
+/* Auth metin/link aksiyonları — yeşil yerine siyah (tutarlılık):
+   "Şifre/Kod ile giriş yap", "Şifremi unuttum", "Kodu tekrar gönder". */
+.auth-card-form .auth-text-link,
+.auth-card-form .auth-row button,
+.auth-card-form .otp-resend-link { color: #15171a; }
+/* Başarı mesajı (şifre sıfırlama bağlantısı gönderildi) — teal kutu yerine nötr koyu */
+.auth-card-form .auth-msg.success {
+  color: #15171a; background: #f0f1f3; border-color: #d4d8dd;
+}
 .auth-card-form .input-wrap .toggle-pw { color: #6b7178; }
 .auth-card-form .auth-divider { color: #9aa0a6; }
 .auth-card-form .auth-divider::before,
@@ -911,10 +960,11 @@ ul { list-style: none; }
 .auth-card-form .btn-social:hover:not(:disabled) { background: #f4f5f7; }
 .auth-card-form .btn-social .soon-tag { color: #9aa0a6; border-color: #d8dce1; }
 .auth-card-form .otp-cell { background: #fff; border-color: #d8dce1; color: #15171a; }
-/* Açık temada da dolu/aktif hücre teal (yoksa .auth-card-form .otp-cell gri kenarı ezip
-   aktif hücreyi belirsiz bırakıyordu). Caret zaten teal → beyaz zeminde net. */
-.auth-card-form .otp-cell.filled { border-color: var(--teal); }
-.auth-card-form .otp-cell.active { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(0, 191, 166, 0.18); }
+/* Açık temada dolu/aktif hücre siyah kenar (yeşil yerine; gri kenarı ezip aktif hücreyi
+   belirgin bırakır). Aktif hücre caret'i de siyah → beyaz zeminde net. */
+.auth-card-form .otp-cell.filled { border-color: #15171a; }
+.auth-card-form .otp-cell.active { border-color: #15171a; box-shadow: 0 0 0 3px rgba(15, 23, 26, 0.14); }
+.auth-card-form .otp-cell.active::after { background: #15171a; }
 .auth-card-form .otp-cell.err { border-color: rgba(226, 75, 74, 0.7); }
 .auth-card-form .otp-loading,
 .auth-card-form .otp-resend,
@@ -952,37 +1002,41 @@ ul { list-style: none; }
 .auth-switch {
   position: relative; display: grid; grid-template-columns: 1fr 1fr;
   width: 100%; margin: 0 auto 24px; /* input/sosyal satırla eşit genişlik (form içeriğini doldurur) */
-  padding: 5px; border-radius: 999px; background: #eef0f2;
-  box-shadow: 0 6px 20px rgba(0,191,166,0.10), inset 0 1px 2px rgba(0,0,0,0.04);
+  padding: 5px; border-radius: 999px;
+  /* Parlak siyah track — Devam Et butonuyla aynı dil (iç highlight'larla cam görünüm) */
+  background-color: #080808;
+  box-shadow:
+    inset 0 0.3rem 0.9rem rgba(255, 255, 255, 0.26),
+    inset 0 -0.1rem 0.3rem rgba(0, 0, 0, 0.7),
+    inset 0 -0.4rem 0.9rem rgba(255, 255, 255, 0.45),
+    0 0.6rem 1rem rgba(0, 0, 0, 0.18);
   touch-action: none; user-select: none;
 }
-/* Canlı animasyonlu teal gradient çerçeve (mask ile ince halka) */
+/* Üst gloss yansıma (butondaki ::after ile aynı) — cam parlaklık hissi */
 .auth-switch::before {
-  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px;
-  background: linear-gradient(110deg, var(--teal), #5fe3d1, rgba(0,191,166,0), var(--teal));
-  background-size: 300% 100%;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: switchBorder 4.5s linear infinite; pointer-events: none;
+  content: ""; position: absolute; left: 6%; right: 6%; top: 8%; bottom: 52%;
+  border-radius: 22px 22px 0 0; pointer-events: none; z-index: 0;
+  box-shadow: inset 0 10px 8px -10px rgba(255, 255, 255, 0.7);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(0, 0, 0, 0) 60%);
 }
-@keyframes switchBorder { to { background-position: 300% 0; } }
 .auth-switch-thumb {
   position: absolute; z-index: 1; top: 5px; bottom: 5px; left: 5px;
   width: calc(50% - 5px); border-radius: 999px;
-  background: linear-gradient(180deg, #ffffff, #f6f8f9);
-  border: 1px solid rgba(0,0,0,0.05);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+  /* Titanyum dikey sheen — açık/parlak (ortada koyu bant yok) */
+  background: linear-gradient(180deg, #ffffff 0%, #eceef0 42%, #dfe2e6 58%, #eef0f3 100%);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 1px rgba(255,255,255,0.5);
   transition: transform 0.32s cubic-bezier(0.34, 1.4, 0.4, 1);
   will-change: transform;
 }
 .auth-switch-seg {
   position: relative; z-index: 2; background: none; border: none; cursor: pointer;
-  padding: 10px 0; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; color: #7a8087;
+  padding: 10px 0; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; color: rgba(255,255,255,0.55);
   transition: color 0.2s; touch-action: none;
 }
-.auth-switch-seg.active { color: #0f1113; }
+/* Aktif segment titanyum thumb üstünde → koyu metin (okunur) */
+.auth-switch-seg.active { color: #15171a; }
 @media (prefers-reduced-motion: reduce) {
-  .auth-switch::before { animation: none; }
   .auth-switch-thumb { transition: none; }
 }
 
@@ -2531,28 +2585,36 @@ ul { list-style: none; }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* === Bildirim (toast) — sağ üst, app GlobalToast diliyle === */
+/* === Bildirim (toast) — Sonner tarzı: sağ üstte yığılır, hover'da açılır === */
 .toast-host {
-  position: fixed; top: 20px; right: 20px; z-index: 300;
-  display: flex; flex-direction: column; gap: 10px;
-  max-width: 360px; width: calc(100vw - 40px); pointer-events: none;
+  position: fixed; top: 18px; right: 18px; z-index: 9999;
+  width: 356px; pointer-events: auto;
+  transition: height 0.4s cubic-bezier(0.21, 1.02, 0.73, 1);
 }
 .toast {
-  pointer-events: auto;
-  display: flex; align-items: flex-start; gap: 12px;
-  background: #161618;
-  border: 1px solid var(--border-strong);
-  border-radius: 14px; padding: 13px 16px;
-  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.45);
-  cursor: pointer;
-  animation: toastIn 0.26s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: absolute; top: 0; right: 0; width: 100%;
+  display: flex; align-items: flex-start; gap: 11px;
+  background: #1c1f23; border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px; padding: 14px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.22);
+  color: #fff; cursor: pointer;
+  transform-origin: 50% 0%;
+  transition: transform 0.4s cubic-bezier(0.21, 1.02, 0.73, 1), opacity 0.35s ease;
+  will-change: transform, opacity;
+  animation: toastIn 0.32s cubic-bezier(0.21, 1.02, 0.73, 1);
 }
-.toast-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
-.toast-success .toast-dot { background: var(--teal); box-shadow: 0 0 10px rgba(0, 191, 166, 0.5); }
-.toast-error .toast-dot { background: #E24B4A; box-shadow: 0 0 10px rgba(226, 75, 74, 0.5); }
-.toast-info .toast-dot { background: #8a8a8a; }
-.toast-body { min-width: 0; }
-.toast-title { font-size: 14px; font-weight: 600; color: #fff; }
-.toast-msg { font-size: 13px; color: rgba(255, 255, 255, 0.62); margin-top: 2px; line-height: 1.4; }
-@keyframes toastIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
-@media (max-width: 520px) { .toast-host { left: 20px; right: 20px; max-width: none; } }
+.toast-icon { flex: none; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.toast-icon svg { width: 18px; height: 18px; }
+.toast-success .toast-icon { color: #e7e9ec; }   /* nötr (marka yeşili yok) */
+.toast-error .toast-icon { color: #ff6b6b; }
+.toast-info .toast-icon { color: #9aa0a6; }
+.toast-body { min-width: 0; flex: 1; }
+.toast-title { font-size: 14px; font-weight: 600; color: #fff; line-height: 1.35; }
+.toast-msg { font-size: 13px; color: rgba(255, 255, 255, 0.6); margin-top: 2px; line-height: 1.45; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(-16px) scale(0.96); } }
+@media (prefers-reduced-motion: reduce) {
+  .toast, .toast-host { transition: opacity 0.2s ease; animation: none; }
+}
+@media (max-width: 520px) {
+  .toast-host { left: 16px; right: 16px; width: auto; }
+}
