@@ -1100,22 +1100,22 @@ ul { list-style: none; }
 /* Telefon (resend.com/signup mobil tarzı): beyaz kart YOK → koyu görsel arka plan +
    form KOYU temaya döner (açık-tema override'ları geri çevrilir). */
 @media (max-width: 560px) {
+  /* Arka plan görseli SABİT görünür ama position:fixed YOK — iOS'ta fixed eleman klavye
+     açılınca zıplayıp sayfayı sağa-sola kaydırıyordu. Çözüm: .auth-page'in KENDİSİ viewport
+     yüksekliğinde scroll kabı → kabın background'u içerikle kaymaz (sabit kalır), içerik
+     İÇERİDE kayar, fixed eleman olmadığı için zıplama yok. overflow-x:hidden → yatay kayma yok. */
   .auth-page {
-    height: auto; min-height: 100dvh; padding: 0;
-    background: #060607;
-  }
-  /* Arka plan görseli SABİT — kullanıcı kaydırınca SADECE içerik kayar.
-     (iOS'ta background-attachment:fixed bozuk → viewport'a sabit position:fixed katman.) */
-  .auth-page::before {
-    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-    background: url('/auth-bg.webp') center center / cover no-repeat;
+    height: 100dvh; min-height: 100dvh;
+    overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+    align-items: stretch; padding: 0;
+    background: #060607 url('/auth-bg.webp') center center / cover no-repeat;
   }
   /* Klavye açılınca iOS otomatik yakınlaşmasını engelle: input font-size ≥16px */
   .auth-card-form .field input,
   .auth-card-form .field select { font-size: 16px; }
   .auth-card {
     grid-template-columns: 1fr; max-width: none; width: 100%;
-    min-height: 100dvh; height: auto; max-height: none;
+    min-height: 100%; height: auto; max-height: none;
     border: none; border-radius: 0; box-shadow: none; background: transparent;
   }
   .auth-visual { display: none; }
