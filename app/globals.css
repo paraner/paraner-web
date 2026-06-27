@@ -1104,12 +1104,12 @@ ul { list-style: none; }
      açılınca zıplayıp sayfayı sağa-sola kaydırıyordu. Çözüm: .auth-page'in KENDİSİ viewport
      yüksekliğinde scroll kabı → kabın background'u içerikle kaymaz (sabit kalır), içerik
      İÇERİDE kayar, fixed eleman olmadığı için zıplama yok. overflow-x:hidden → yatay kayma yok. */
-  /* ÖNCEKİ klavye davranışı (canlı test için geri alındı): .auth-page iç scroll kabı (dvh).
-     Görsel scroll kabının bg'sinde → içerik İÇERİDE kayar, görsel sabit görünür. */
+  /* EN SADE doğal akış (iç scroll kabı YOK, sabit katman YOK) → tarayıcı klavyeyi en doğal
+     şekilde işler; klavye açıl/kapanınca normal site gibi davranır. (Bu sürümde arka plan
+     içerikle birlikte kayabilir; klavye baz alındıktan sonra sabit görsel yeniden eklenecek.) */
   .auth-page {
-    height: 100dvh; min-height: 100dvh;
-    overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
-    align-items: stretch; padding: 0;
+    min-height: 100dvh; height: auto;
+    overflow-x: hidden; padding: 0; align-items: stretch;
     /* Konum SAĞ: saten kıvrım sağda → portre cover'da resend mobil kompozisyonu (görsel AYNI). */
     background: #060607 url('/auth-bg.webp') right center / cover no-repeat;
   }
@@ -1118,7 +1118,7 @@ ul { list-style: none; }
   .auth-card-form .field select { font-size: 16px; }
   .auth-card {
     grid-template-columns: 1fr; max-width: none; width: 100%;
-    min-height: 100%; height: auto; max-height: none;
+    min-height: 100dvh; height: auto; max-height: none;
     border: none; border-radius: 0; box-shadow: none; background: transparent;
   }
   .auth-visual { display: none; }
