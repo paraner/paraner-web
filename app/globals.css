@@ -1105,8 +1105,7 @@ ul { list-style: none; }
      yüksekliğinde scroll kabı → kabın background'u içerikle kaymaz (sabit kalır), içerik
      İÇERİDE kayar, fixed eleman olmadığı için zıplama yok. overflow-x:hidden → yatay kayma yok. */
   /* MOBİL AUTH — temiz/standart kurulum:
-     • Arka plan SABİT: ayrı position:fixed katman. iOS'ta klavye açılınca LAYOUT viewport
-       değişmez (sadece görsel viewport küçülür) → fixed bg yerinde kalır, içerik üstünde kayar.
+     • Arka plan DÜZ SİYAH (görsel kaldırıldı — Mehmet isteği). Görsel/sabit katman yok.
      • İçerik NORMAL akışta (body scroll, iç scroll kabı YOK) → klavye normal site gibi
        açılır/kapanır, kapanınca kendiliğinden eski hâle döner.
      • input font-size 16px → iOS odak yakınlaşması olmaz.
@@ -1114,12 +1113,7 @@ ul { list-style: none; }
   .auth-page {
     min-height: 100dvh;
     overflow-x: hidden; padding: 0; align-items: stretch;
-    background: #060607;
-  }
-  .auth-page::before {
-    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-    /* Konum SAĞ: saten kıvrım sağda → portre cover'da resend mobil kompozisyonu (görsel AYNI). */
-    background: #060607 url('/auth-bg.webp') right center / cover no-repeat;
+    background: #000000;
   }
   .auth-card-form .field input,
   .auth-card-form .field select { font-size: 16px; }
@@ -1166,13 +1160,9 @@ ul { list-style: none; }
   .auth-card-form .otp-cell.active { border-color: rgba(255, 255, 255, 0.6); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12); }
   .auth-card-form .otp-cell.active::after { background: var(--text); }
 
-  /* Wordmark: gunmetal yerine titanyum (koyu zeminde okunur) */
-  /* Wordmark: titanyum + KOYU GÖLGE → parlak saten arka planın üstünde de net görünür
-     (gölgesiz, açık gri wordmark satende kayboluyordu). drop-shadow mask alfasını izler. */
-  .auth-wordmark {
-    background: linear-gradient(180deg, #ffffff 0%, #d3d7dc 32%, #9aa0a8 62%, #d8dce1 100%);
-    filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.65)) drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
-  }
+  /* Wordmark: koyu (siyah) zeminde okunur titanyum. (filter+mask Safari'de görünmez
+     yaptığı için drop-shadow KULLANILMADI — siyah zeminde gölgeye gerek de yok.) */
+  .auth-wordmark { background: linear-gradient(180deg, #ffffff 0%, #cdd2d8 34%, #9aa0a8 64%, #d8dce1 100%); }
   /* Store badge'leri koyu zeminde ayırt edilsin diye ince kenar */
   .auth-stores .store-badge { border: 1px solid rgba(255, 255, 255, 0.14); }
 
