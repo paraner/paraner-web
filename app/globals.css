@@ -1167,7 +1167,12 @@ ul { list-style: none; }
   .auth-card-form .otp-cell.active::after { background: var(--text); }
 
   /* Wordmark: gunmetal yerine titanyum (koyu zeminde okunur) */
-  .auth-wordmark { background: linear-gradient(180deg, #f5f6f8 0%, #c2c7cd 30%, #8b9097 60%, #c8ccd1 100%); }
+  /* Wordmark: titanyum + KOYU GÖLGE → parlak saten arka planın üstünde de net görünür
+     (gölgesiz, açık gri wordmark satende kayboluyordu). drop-shadow mask alfasını izler. */
+  .auth-wordmark {
+    background: linear-gradient(180deg, #ffffff 0%, #d3d7dc 32%, #9aa0a8 62%, #d8dce1 100%);
+    filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.65)) drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+  }
   /* Store badge'leri koyu zeminde ayırt edilsin diye ince kenar */
   .auth-stores .store-badge { border: 1px solid rgba(255, 255, 255, 0.14); }
 
