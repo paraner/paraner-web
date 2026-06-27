@@ -1,5 +1,15 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-27 — Onboarding bitiş takılması fix + Google/e-posta hesap birleşme doğrulaması
+
+**Hesap birleşme (identity linking) — CANLI DOĞRULANDI (Mehmet):** Aynı e-posta hem OTP (kod) hem Google ile kullanıldığında Supabase **tek hesapta birleştiriyor** (çift hesap açmıyor). İki yön de test edildi: (a) önce Google → sonra kod, (b) önce kod → sonra Google. Supabase `Authentication → Users`'ta `thepavnero@gmail.com` **tek satır**, Provider Information'da **Email + Google ikisi de Enabled** (aynı UID). İlk hesapla eklenen işlem doğru profile düştü → veri bölünmüyor. **Kod değişikliği gerekmedi** — Supabase doğrulanmış aynı e-postayı otomatik linkliyor. (Google One Tap kartı da canlıda çalışıyor; çıkıp çıkmaması Google'ın cooldown/oturum kurallarına bağlı, bizim hatamız değil.)
+
+**Onboarding "Hazırlanıyor…" sonsuz takılma — FIX:** `OnboardingModal.finish()` profili DB'ye yazıyordu (başarılı) ama ekranı kapatmak için `router.refresh()` kullanıyordu; server yeni profili her zaman hemen görmüyor → modal açık kalıp buton kalıcı "Hazırlanıyor…"da takılıyordu (Mehmet canlıda ~2dk bekledi, manuel yenileyince düzeldi). **Çözüm:** bitişte `router.refresh()` yerine `window.location.assign("/panel")` (tam yönlendirme) → server profili sıfırdan taze okur, modal %100 kapanır. Onboarding tek seferlik akış → tam reload sorun değil. Kullanılmayan `useRouter` importu temizlendi. tsc + build temiz (44/44).
+
+> Not: üretim DB'sinde 3 test kullanıcısı kaldı (`mediamgzr`, `theparaner`, `thepavnero`) — Mehmet sonra Supabase Danger zone'dan silecek.
+
+---
+
 ## 2026-06-27 — Auth koyu mod cilası (yeşil temizliği) + parlak siyah butonlar + Sonner toast + çıkış yönlendirme
 
 Mehmet'in canlı geri bildirimleriyle giriş/kayıt ekranı koyu/nötr dile çekildi (marka yeşili kaldırılıyor — [[marka-rengi-degisecek]]) ve proje geneli bir toast sistemi devreye alındı.

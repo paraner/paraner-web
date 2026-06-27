@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
 import { CURRENCIES } from "../../lib/currencies";
 
@@ -29,7 +28,6 @@ export default function OnboardingModal({
   userId: string;
   initialName: string;
 }) {
-  const router = useRouter();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,7 +101,9 @@ export default function OnboardingModal({
       }
       if (err) throw err;
 
-      router.refresh();
+      // Tam yeniden yükleme → server profili taze okur, modal güvenilir kapanır.
+      // (router.refresh() bazen modalı kapatmadan butonu "Hazırlanıyor…"da bırakıyordu.)
+      window.location.assign("/panel");
     } catch {
       setError("Kaydedilemedi. İnternetini kontrol edip tekrar dene.");
       setSaving(false);

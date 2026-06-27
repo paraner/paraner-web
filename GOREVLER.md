@@ -1,22 +1,19 @@
 # GÖREVLER — paraner-web
 
+## 🔥 ŞİMDİ — mobil uyum (öncelik)
+> Mehmet: masaüstü görünüm iyi, ama **telefonda uyum sorunları var** → önce bunları ele alacağız.
+- [ ] **Mağaza rozetleri (3'lü) mobilde:** masaüstü tek satır iyi ama telefonda düzgün otursun (taşma/sarma/hiza). Ana sayfa hero + auth altı rozetler.
+- [ ] Genel mobil tarama: ana sayfa + auth ekranlarında telefonda taşma/bozulma var mı, tek tek bak.
+
+## 📌 İLERİDE
+- [ ] **Toast sistemini iyileştir:** mevcut Sonner-tarzı çalışıyor; Mehmet araştırıp daha iyi bir görünüm/UX isteyecek. Önce temel sistem otursun, sonra ele alınacak.
+
 ## ⚠️ KONTROLLER — bir dahaki "işe başla"da ÖNCE bunları doğrula
 > Mehmet app tarafıyla ilgilenirken yapılan web işlerinin doğrulanması bekliyor. Önce bunları gözden geçir.
 
-**Auth koyu mod + toast — yeni (2026-06-27, push'lu)**
-- [ ] **Çıkış → paraner.com:** panelde Çıkış Yap → app.paraner.com yerine paraner.com anasayfasına düşüyor mu? Oturum gerçekten kapalı mı (geri gelince panele girmiyor)?
-- [ ] **Sol panel:** /giris + /kayit solda boş siyah panel (küp yok); form sağda. Mobilde panel gizli, taşma yok mu?
-- [ ] **Switcher + butonlar:** Giriş/Kayıt switcher parlak siyah + titanyum thumb; Devam Et/Giriş Yap parlak siyah pill (hover gloss kayması, active oturma) düzgün mü? Yeşil kalıntı yok mu?
-- [ ] **Yeşil temizliği:** input focus/OTP hücre/caret/"Şifre ile giriş"/"Şifremi unuttum"/başarı hepsi siyah-nötr mü?
-- [ ] **Buton metinleri:** kod gönderirken "Kod gönderiliyor…"; Şifremi unuttum'da "E-postanı kontrol et…" çıkıyor mu?
-- [ ] **Sonner toast (PROJE GENELİ):** sağ üstte yığılıyor + hover'da açılıyor mu? Auth hataları (ör. "Geçerli e-posta gir") + panel toast'ları yeni görünümde mi? Mobilde (≤520px) tam genişlik düzgün mü?
-
-**Ana sayfa + auth + onboarding — yeni (2026-06-27, canlıda push'lu)**
-- [ ] **Google One Tap (ana sayfa):** Chrome'da Google oturumu açıkken paraner.com'a girince üstte "Paraner olarak devam et" kartı çıkıyor mu? Basınca direkt panele giriyor mu? (Headless test edilemedi — gerçek Google oturumu gerekli. Çıkmazsa Google Cloud Console → Authorized JavaScript origins'te paraner.com var mı bak.)
-- [ ] **Beam input → otomatik kod:** Ana sayfada mail yaz + "Ücretsiz Başla" → maile kod gidiyor + doğrudan "Kodu gir" adımına düşüyor mu? (Test'te DB kirletmemek için Supabase bloklanmıştı → wiring doğrulandı, canlı akış teyit bekliyor.)
-- [ ] **Onboarding Ad Soyad:** Kod sonrası — Bireysel: para birimi→tip→**ad soyad**→plan; İşletme: →**şirket adı + ad soyad**→plan. Google/Apple ile gelende ad soyad **otomatik dolu**, e-posta ile kayıtta **boş + zorunlu** mu? Kayıt sonrası `profiles.name`/`profile_name` doğru yazılıyor mu (mobil ile uyum)?
-- [ ] **Kayıt formu:** /kayit artık sadece e-posta istiyor (Ad Soyad yok) — sorun yok mu?
-- [ ] **Beam input + 3 rozet + hover ışık:** ana sayfa + auth altı rozetler düzgün mü, hover'da kenar ışığı dönüyor mu? Mobilde taşma yok mu?
+> ✅ 2026-06-27 doğrulandı (Mehmet): auth koyu mod (çıkış→paraner.com, sol siyah panel, parlak siyah switcher/butonlar, yeşil temizliği, buton loading metinleri), Sonner toast, beam input→otomatik kod, onboarding Ad Soyad, kayıt formu (sadece e-posta), **Google One Tap** (Gmail açıkken paraner.com'da "Continue as Paraner" kartı çıkıyor) — hepsi sorunsuz.
+> ✅ 2026-06-27 **Hesap birleşme** doğrulandı: aynı e-posta hem kod hem Google ile → Supabase tek hesapta birleştiriyor (Email+Google tek UID), veri bölünmüyor. Çift hesap riski yok.
+> ✅ 2026-06-27 **Onboarding "Hazırlanıyor…" takılması** fix'lendi (bitişte `window.location.assign("/panel")`) — push'lu.
 
 **Cüzdanım (canlı Truncgil) — yeni**
 - [ ] Canlıda (app.paraner.com) Truncgil fiyatları geliyor mu? Toplam Değer / K-Z / Bugün dolu mu?
