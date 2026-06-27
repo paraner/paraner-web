@@ -40,15 +40,6 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
   // Hata mesajları sağ üst toast'ta (Sonner). setError → toast'a yönlendiren sarmalayıcı.
   const setError = (msg: string | null) => { if (msg) showToast({ title: msg, variant: "error" }); };
   const [gisReady, setGisReady] = useState(false); // GIS butonu render edildi mi
-  const [isMobile, setIsMobile] = useState(false); // ≤560px → GIS yerine custom Google butonu (resend tarzı koyu)
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 560px)");
-    const update = () => setIsMobile(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
   const btnRef = useRef<HTMLDivElement>(null);
   const rawNonceRef = useRef<string>(""); // signInWithIdToken'a ham nonce gider
   const modeRef = useRef(mode); // GIS init'te context için (mod değişince RE-INIT YOK → titreme yok)
@@ -209,23 +200,16 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
         aria-busy={loading}
       />
 
-      {/* Custom Google butonu — GIS hazır değilse (masaüstü fallback) VEYA mobilde
-          (mobilde GIS gizli, resend tarzı custom buton kullanılır). */}
-      {(!gisReady || isMobile) && (
+      {/* Yedek custom buton — GIS hazır değilse */}
+      {!gisReady && (
         <button
           type="button"
           className="btn btn-social btn-google"
           onClick={handleGoogleFallback}
           disabled={loading}
         >
-          {loading ? (
-            <span className="btn-dots" aria-label="Yükleniyor"><i /><i /><i /></span>
-          ) : (
-            <>
-              <GoogleIcon />
-              Google ile devam et
-            </>
-          )}
+          <GoogleIcon />
+          {loading ? "…" : "Google"}
         </button>
       )}
 
@@ -236,7 +220,7 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
         title="Apple ile Giriş yakında"
       >
         <AppleIcon />
-        {isMobile ? "Apple ile devam et" : "Apple"}
+        Apple
         {!appleEnabled && <span className="soon-tag">YAKINDA</span>}
       </button>
     </div>

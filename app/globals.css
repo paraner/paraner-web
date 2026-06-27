@@ -43,7 +43,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; overflow-x: hidden; }
+html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -1065,13 +1065,6 @@ ul { list-style: none; }
 .btn-social:hover:not(:disabled) { background: rgba(255,255,255,0.1); }
 .btn-social svg { flex-shrink: 0; }
 .btn-social .soon-tag { margin-left: 6px; font-size: 10px; font-weight: 700; color: var(--text-faint); border: 1px solid var(--border-strong); border-radius: 6px; padding: 1px 6px; }
-/* Buton yükleme göstergesi — 3 yanıp sönen nokta (resend tarzı). currentColor → her temada (koyu/açık) uyumlu. */
-.btn-dots { display: inline-flex; align-items: center; gap: 6px; }
-.btn-dots i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.25; animation: btnDots 1s ease-in-out infinite; }
-.btn-dots i:nth-child(2) { animation-delay: 0.16s; }
-.btn-dots i:nth-child(3) { animation-delay: 0.32s; }
-@keyframes btnDots { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .btn-dots i { animation: none; opacity: 0.55; } }
 
 /* Sol panel — interaktif 3D küp (AuthCube3D) burada render edilir. Sol köşeler dış
    .auth-card radius'undan; sağ köşeler burada yuvarlanır. */
@@ -1097,92 +1090,8 @@ ul { list-style: none; }
   .auth-split-form .auth-head { text-align: center; }
 }
 
-/* Telefon (resend.com/signup mobil tarzı): beyaz kart YOK → koyu görsel arka plan +
-   form KOYU temaya döner (açık-tema override'ları geri çevrilir). */
-@media (max-width: 560px) {
-  /* Arka plan görseli SABİT görünür ama position:fixed YOK — iOS'ta fixed eleman klavye
-     açılınca zıplayıp sayfayı sağa-sola kaydırıyordu. Çözüm: .auth-page'in KENDİSİ viewport
-     yüksekliğinde scroll kabı → kabın background'u içerikle kaymaz (sabit kalır), içerik
-     İÇERİDE kayar, fixed eleman olmadığı için zıplama yok. overflow-x:hidden → yatay kayma yok. */
-  /* MOBİL AUTH — temiz/standart kurulum:
-     • Arka plan DÜZ SİYAH (görsel kaldırıldı — Mehmet isteği). Görsel/sabit katman yok.
-     • İçerik NORMAL akışta (body scroll, iç scroll kabı YOK) → klavye normal site gibi
-       açılır/kapanır, kapanınca kendiliğinden eski hâle döner.
-     • input font-size 16px → iOS odak yakınlaşması olmaz.
-     • overflow-x:hidden (html+body) → yatay kayma olmaz. */
-  .auth-page {
-    min-height: 100dvh;
-    overflow-x: hidden; padding: 0; align-items: stretch;
-    background: #000000;
-  }
-  .auth-card-form .field input,
-  .auth-card-form .field select { font-size: 16px; }
-  .auth-card {
-    grid-template-columns: 1fr; max-width: none; width: 100%;
-    min-height: 100dvh; max-height: none;
-    border: none; border-radius: 0; box-shadow: none; background: transparent;
-  }
-  .auth-visual { display: none; }
-  .auth-card-form { background: transparent; }
-  .auth-split-form { padding: 48px 24px 40px; max-width: 440px; }
-
-  /* Koyu tema — beyaz form override'larını geri çevir */
-  .auth-card-form .logo-text,
-  .auth-card-form .auth-head h1,
-  .auth-card-form .field label,
-  .auth-card-form .auth-text-link,
-  .auth-card-form .auth-row button,
-  .auth-card-form .otp-resend-link { color: var(--text); }
-  .auth-card-form .auth-head p,
-  .auth-card-form .auth-alt,
-  .auth-card-form .auth-terms,
-  .auth-card-form .auth-divider,
-  .auth-card-form .input-wrap .toggle-pw,
-  .auth-card-form .otp-loading,
-  .auth-card-form .otp-resend,
-  .auth-card-form .otp-back { color: var(--text-dim); }
-  .auth-card-form .auth-terms a { color: rgba(255, 255, 255, 0.7); }
-  .auth-card-form .otp-back:hover { color: var(--text); }
-  /* Form elemanları: DOLGU YOK → görselin üstüne otururlar (sadece kenar + metin). */
-  .auth-card-form .field input,
-  .auth-card-form .field select,
-  .auth-card-form .btn-social,
-  .auth-card-form .otp-cell { background: transparent; border-color: var(--border-strong); color: var(--text); }
-  .auth-card-form .field input::placeholder { color: var(--text-dim); }
-  .auth-card-form .field input:focus,
-  .auth-card-form .field select:focus { border-color: rgba(255, 255, 255, 0.55); background: transparent; }
-  .auth-card-form .btn-social:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); }
-  .auth-card-form .btn-social .soon-tag { color: var(--text-dim); border-color: var(--border-strong); }
-  .auth-card-form .auth-divider::before,
-  .auth-card-form .auth-divider::after { background: rgba(255, 255, 255, 0.14); }
-  .auth-card-form .auth-msg.success { color: var(--text); background: transparent; border-color: var(--border-strong); }
-  .auth-card-form .otp-cell.filled { border-color: rgba(255, 255, 255, 0.5); }
-  .auth-card-form .otp-cell.active { border-color: rgba(255, 255, 255, 0.6); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12); }
-  .auth-card-form .otp-cell.active::after { background: var(--text); }
-
-  /* Wordmark: mobilde HAZIR titanyum PNG'yi doğrudan arka plan görseli olarak kullan
-     (CSS mask+gradient yaklaşımı mobilde görünmüyordu → kesin çözüm: gerçek görsel).
-     Mask + shimmer (::after) kapatılır, yoksa mask'sız ::after dikdörtgen olarak görünür. */
-  .auth-wordmark {
-    background: url('/paraner-wordmark-titan.png') center / contain no-repeat;
-    -webkit-mask: none; mask: none;
-  }
-  .auth-wordmark::after { display: none; }
-  /* Store badge'leri koyu zeminde ayırt edilsin diye ince kenar */
-  .auth-stores .store-badge { border: 1px solid rgba(255, 255, 255, 0.14); }
-
-  /* Sosyal butonlar resend.com/signup tarzı: alt alta TAM GENİŞLİK, hafif koyu dolgu,
-     ince kenar, yuvarlak köşe (pill değil), logo + ortalı yazı. (GIS gizli → custom Google.) */
-  .social-auth { flex-direction: column; }
-  .gsi-wrap { display: none; }
-  .social-auth .btn-social { flex: 1 1 auto; max-width: none; }
-  .auth-card-form .btn-social {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.12);
-    border-radius: 14px; min-height: 52px; white-space: nowrap;
-  }
-  .auth-card-form .btn-social:hover:not(:disabled) { background: rgba(255, 255, 255, 0.09); }
-}
+/* Mobil auth: özel ≤560 KOYU/görsel tema KALDIRILDI (ilk hâle dönüş). Mobil artık
+   yukarıdaki ≤1024 bloğundaki tek-sütun BEYAZ formu kullanır (orijinal davranış). */
 
 /* ═══════════════════════════════════════════════
    ONBOARDING MODAL (kayıt sonrası kurulum — dashboard üstü)
