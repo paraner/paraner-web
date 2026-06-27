@@ -1104,13 +1104,20 @@ ul { list-style: none; }
      açılınca zıplayıp sayfayı sağa-sola kaydırıyordu. Çözüm: .auth-page'in KENDİSİ viewport
      yüksekliğinde scroll kabı → kabın background'u içerikle kaymaz (sabit kalır), içerik
      İÇERİDE kayar, fixed eleman olmadığı için zıplama yok. overflow-x:hidden → yatay kayma yok. */
+  /* Görsel SABİT katman (position:fixed) → kullanıcı kaydırınca SADECE içerik kayar, görsel
+     yerinde kalır. İçerik DOĞAL akışta (body scroll) → klavye kapanınca iOS düzgün sıfırlar
+     (iç scroll kabı sıfırlamıyordu). Yükseklik svh = STABİL; dvh klavyeyle oynayıp alt
+     boşluk/sıçrama yapıyordu. Fixed katman tüm ekranı kapladığı için svh kısa kalsa bile
+     görselde boşluk olmaz. */
   .auth-page {
-    height: 100dvh; min-height: 100dvh;
-    overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
-    align-items: stretch; padding: 0;
-    /* Konum SAĞ: görselin saten kıvrımı sağda → telefonda (portre cover) resend'in mobil
-       kompozisyonu gibi üstte saten + sol-alt koyu. (center kırpınca koyu orta geliyordu.)
-       Görsel resend ile birebir AYNI dosya; fark sadece kırpma konumuydu. */
+    min-height: 100svh; height: auto;
+    overflow-x: hidden; padding: 0; align-items: stretch;
+    background: #060607;
+  }
+  .auth-page::before {
+    content: ""; position: fixed; left: 0; right: 0; top: 0; bottom: 0;
+    z-index: -1; pointer-events: none;
+    /* Konum SAĞ: saten kıvrım sağda → portre cover'da resend mobil kompozisyonu (görsel AYNI). */
     background: #060607 url('/auth-bg.webp') right center / cover no-repeat;
   }
   /* Klavye açılınca iOS otomatik yakınlaşmasını engelle: input font-size ≥16px */
@@ -1118,7 +1125,7 @@ ul { list-style: none; }
   .auth-card-form .field select { font-size: 16px; }
   .auth-card {
     grid-template-columns: 1fr; max-width: none; width: 100%;
-    min-height: 100%; height: auto; max-height: none;
+    min-height: 100svh; height: auto; max-height: none;
     border: none; border-radius: 0; box-shadow: none; background: transparent;
   }
   .auth-visual { display: none; }
