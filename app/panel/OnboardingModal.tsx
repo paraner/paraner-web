@@ -6,12 +6,13 @@ import { createClient } from "../../lib/supabase/client";
 import { CURRENCIES } from "../../lib/currencies";
 
 // Kayıt sonrası kurulum modalı — dashboard üstü, adım adım, en son plan.
-// Sade akış: isim/soyisim zaten kayıtta alındığı için TEKRAR sorulmaz.
-//   Bireysel: para birimi → tip → plan
-//   İşletme:  para birimi → tip → şirket adı → plan
+//   Bireysel: para birimi → tip → ad soyad → plan
+//   İşletme:  para birimi → tip → şirket adı + ad soyad → plan
+// İsim: Google/Apple ile gelende OAuth'tan otomatik dolu (initialName); e-posta ile
+// kayıtta boş gelir → kullanıcı bu adımda girmek zorunda (kayıt formundan kaldırıldı).
 
 type Plan = "free" | "pro" | "max";
-type StepKey = "currency" | "account" | "company" | "plan";
+type StepKey = "currency" | "account" | "company" | "name" | "plan";
 
 const PLANS: { id: Plan; name: string; price: string; tag?: string; perks: string[] }[] = [
   { id: "free", name: "Ücretsiz", price: "₺0", perks: ["Temel gelir-gider", "30 işlem/ay", "Günde 5 AI mesaj"] },
@@ -36,15 +37,16 @@ export default function OnboardingModal({
   const [currency, setCurrency] = useState("TRY");
   const [accountType, setAccountType] = useState<"individual" | "business" | null>(null);
   const [companyName, setCompanyName] = useState("");
+  const [fullName, setFullName] = useState(initialName || ""); // OAuth'ta dolu, e-postada boş
   const [plan, setPlan] = useState<Plan>("free");
 
   const isBusiness = accountType === "business";
   const firstName = (initialName || "").trim().split(" ")[0];
 
-  // Tipe göre adım dizisi (isim adımı yok — kayıtta alındı)
+  // Tipe göre adım dizisi (Bireysel'de ad soyad adımı; İşletme'de şirket adımında birlikte)
   const steps: StepKey[] = isBusiness
     ? ["currency", "account", "company", "plan"]
-    : ["currency", "account", "plan"];
+    : ["currency", "account", "name", "plan"];
   const TOTAL = steps.length;
   const current = steps[step];
   const isLast = step === TOTAL - 1;
@@ -53,7 +55,8 @@ export default function OnboardingModal({
   const canProceed =
     current === "currency" ? true
     : current === "account" ? !!accountType
-    : current === "company" ? !!companyName.trim()
+    : current === "name" ? !!fullName.trim()
+    : current === "company" ? !!companyName.trim() && !!fullName.trim()
     : true; // plan
 
   function next() {
@@ -71,12 +74,13 @@ export default function OnboardingModal({
     setSaving(true);
     try {
       const supabase = createClient();
-      const displayName = isBusiness ? companyName.trim() : (initialName || "").trim();
+      const nameTrim = fullName.trim();
+      const displayName = isBusiness ? companyName.trim() : nameTrim;
       const fields: Record<string, unknown> = {
         currency,
         account_type: accountType,
         profile_type: accountType,
-        name: (initialName || "").trim(),
+        name: nameTrim,
         profile_name: displayName,
         onboarding_completed: true,
       };
@@ -154,11 +158,29 @@ export default function OnboardingModal({
           </div>
         )}
 
-        {/* Şirket adı (sadece işletme) */}
+        {/* Ad Soyad (sadece bireysel) — OAuth'ta dolu gelir, e-postada kullanıcı girer */}
+        {current === "name" && (
+          <div className="onb-step">
+            <h2>Seni tanıyalım</h2>
+            <p>Adın profilinde ve uygulamada görünür, sonra değiştirebilirsin.</p>
+            <div className="field">
+              <label>Ad Soyad <span className="onb-req">*</span></label>
+              <input
+                type="text"
+                placeholder="Adın Soyadın"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                autoFocus
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Şirket adı + Ad Soyad (sadece işletme) */}
         {current === "company" && (
           <div className="onb-step">
             <h2>İşletmeni tanıyalım</h2>
-            <p>Bu ad faturalarında ve profilinde görünür, sonra değiştirebilirsin.</p>
+            <p>Bu bilgiler faturalarında ve profilinde görünür, sonra değiştirebilirsin.</p>
             <div className="field">
               <label>Şirket adı <span className="onb-req">*</span></label>
               <input
@@ -167,6 +189,15 @@ export default function OnboardingModal({
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 autoFocus
+              />
+            </div>
+            <div className="field">
+              <label>Ad Soyad <span className="onb-req">*</span></label>
+              <input
+                type="text"
+                placeholder="Adın Soyadın"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
               />
             </div>
           </div>

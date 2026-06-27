@@ -191,16 +191,16 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
     }
   }
 
-  // Kayıt — doğrulama kodu gönder (şifresiz OTP)
-  async function handleSignup(e: React.FormEvent) {
-    e.preventDefault();
+  // Kayıt — doğrulama kodu gönder (şifresiz OTP). Hem "Devam Et" hem ana sayfa beam
+  // input'undan otomatik tetiklenir (start=1).
+  const sendSignupOtp = useCallback(async (target: string) => {
     setError(null);
-    if (!isValidEmail(email)) return setError("Geçerli bir e-posta adresi gir.");
+    if (!isValidEmail(target)) return setError("Geçerli bir e-posta adresi gir.");
     setLoading(true);
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
+        email: target.trim(),
         options: { shouldCreateUser: true },
       });
       if (error) {
@@ -217,7 +217,23 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault();
+    await sendSignupOtp(email);
   }
+
+  // Ana sayfa beam input'u (?email=...&start=1) → otomatik kod gönder + "Kodu gir" adımı.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const e = params.get("email") || "";
+    if (params.get("start") === "1" && isValidEmail(e)) {
+      void sendSignupOtp(e);
+      window.history.replaceState(null, "", "/kayit"); // yenilemede tekrar gönderme
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sendSignupOtp]);
 
   return (
     <div className="auth-split-form">

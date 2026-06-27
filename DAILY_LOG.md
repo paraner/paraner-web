@@ -24,6 +24,16 @@ Mehmet hover.dev'deki **Beam Input**'u istedi (kenarında dönen ışık huzmesi
 2. **Kayıt'tan Ad Soyad kaldırıldı:** `AuthForm.tsx` — `name` state + validasyon + `full_name` metadata + input alanı silindi (kayıt artık sadece e-posta; ad soyad sonraki aşamalarda istenecek). CDP: /kayit form inputları = sadece ["E-posta"].
 3. **Hover'da yukarı-kalkma efekti kaldırıldı:** `.store-badge:hover`'tan `transform: translateY(-2px)` + box-shadow; titanyum marketing butonları (`.nav/.hero/.cta-band/.mobile-menu .btn-primary:hover`) → `transform: none`. (Auth/panel butonları etkilenmedi.)
 
+**Onboarding'e Ad Soyad eklendi (kayıttan kaldırılınca — Mehmet isteği):** Kayıt formundan Ad Soyad kaldırıldığı için artık e-posta ile kayıtta `initialName` boş geliyor → onboarding'de sorulmalı. `OnboardingModal.tsx`:
+- `fullName` state eklendi, `initialName` ile başlatıldı (Google/Apple OAuth'tan **otomatik dolu**; e-posta ile kayıtta **boş** → kullanıcı girmek zorunda).
+- **Bireysel** akışı: para birimi → tip → **ad soyad** (yeni "name" adımı) → plan.
+- **İşletme** akışı: para birimi → tip → **şirket adı + ad soyad** (company adımına Ad Soyad alanı eklendi) → plan.
+- `canProceed`: name adımı `fullName` zorunlu; company adımı `companyName && fullName` zorunlu.
+- `finish()`: `name` ve (bireyselde) `profile_name` artık `fullName`'den yazılıyor (eskiden `initialName`). İşletmede `profile_name`=şirket adı, `name`=fullName.
+- DB kolonları aynı (`name`, `profile_name`, `company_name`) — şema değişmedi. tsc + build temiz (44/44). ⚠️ Panel-içi (auth gerekli) → tam akış canlıda test edilecek.
+
+**Beam input → otomatik kod gönderimi (Mehmet isteği):** Ana sayfada mail yazıp "Ücretsiz Başla"ya basınca **maile kod gitsin + doğrudan "Kodu gir" adımına düşsün**. `BeamInput.tsx`: geçerli e-posta → `/kayit?email=...&start=1`. `AuthForm.tsx`: `handleSignup` → `sendSignupOtp(target)` (useCallback) olarak ayrıldı; yeni useEffect `start=1` + geçerli e-posta görürse otomatik `sendSignupOtp` çağırır → başarıda `setStep("code")`; `replaceState('/kayit')` ile yenilemede tekrar gönderme engellenir (Strict Mode çift-gönderimi de korur). CDP (Supabase BLOKLU — üretim DB'sine sahte kullanıcı yazılmasın diye): tıklama `…/auth/v1/otp` isteğini tetikledi → wiring doğru; kod-adımına geçiş canlıda gerçek mailde görülecek.
+
 **Auth sayfalarına indirme rozetleri (Mehmet isteği):** Giriş + kayıt beyaz panelinin **en altına** mobil uygulama rozetleri eklendi. `AuthForm.tsx`'e `<StoreBadges/>` (DRY — ana sayfayla aynı bileşen) + "Mobil uygulamayı indir" etiketi `.auth-stores` footer'ında. CSS: `.auth-split-form { flex: 1 1 auto }` (paneli doldur) + `.auth-stores { margin-top: auto }` → rozetler panel dibine oturur, üst içerik (wordmark/switcher) kıpırdamaz. Siyah rozetler beyaz panelde standart/temiz durur. CDP: /giris + /kayit'ta rozetler altta ortalı doğrulandı. tsc + build temiz (44/44).
 
 - tsc + build temiz (44/44). **Push BEKLİYOR** (Mehmet onayı sonrası).

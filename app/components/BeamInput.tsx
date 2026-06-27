@@ -10,10 +10,18 @@ export default function BeamInput() {
   const router = useRouter();
   const [email, setEmail] = useState("");
 
+  const isValidEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const v = email.trim();
-    router.push(v ? `/kayit?email=${encodeURIComponent(v)}` : "/kayit");
+    // Geçerli e-posta → /kayit'a start=1 ile git: AuthForm otomatik kod gönderip
+    // doğrudan "Kodu gir" adımına geçer. Boş/geçersizse normal kayıt formuna düşer.
+    if (isValidEmail(v)) {
+      router.push(`/kayit?email=${encodeURIComponent(v)}&start=1`);
+    } else {
+      router.push(v ? `/kayit?email=${encodeURIComponent(v)}` : "/kayit");
+    }
   };
 
   return (
