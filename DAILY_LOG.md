@@ -7,6 +7,7 @@ Mehmet markaya özel koyu/gri saten görsel verdi (`~/Downloads/background-auth.
 - **`public/auth-bg.webp`** (yeni, görsel kopyalandı).
 - **`.auth-page`** arka planı: eski radial+linear koyu degrade → `#060607 url('/auth-bg.webp') center center / cover no-repeat`. `cover` → her ekranda (4K/laptop/tablet) boşluksuz, taşmasız tam oturur; #060607 fallback. Beyaz yüzen kart üstünde durur.
 - **Telefon hariç (Mehmet isteği):** `@media (max-width: 560px)` → `.auth-page { background: #060607 }` (telefonda form tam ekranı kapladığı için görsel zaten görünmez; tutarlılık için açıkça düz koyu).
+- **Sol panel içi boşaltıldı (Mehmet isteği):** sol panelin siyah dolgusu kaldırıldı → arkadaki görsel buradan görünür. Beyaz çerçeve (`.auth-card` 4px border) korundu. `.auth-card` background `#fff`→`transparent`, `.auth-visual` + `.auth-cube` background→`transparent` (siyah aslında `.auth-cube` degrade'inden geliyordu). Sağ form kendi beyazını (`.auth-card-form #fff`) koruyor.
 - Doğrulama: dev sunucu — `/giris` 200, `/auth-bg.webp` 200 (image/webp, 205434B), CSS bundle'da referans var. tsc + build temiz.
 
 ## 2026-06-27 — Hesap silme veda maili (her yolu kapsar) + web "Hesabı Sil" butonu
