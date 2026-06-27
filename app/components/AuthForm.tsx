@@ -19,7 +19,6 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
 
   const [pwMode, setPwMode] = useState(false); // giriş: false = OTP, true = şifre
   const [showPw, setShowPw] = useState(false);
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,6 +26,12 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
   const [resetMsg, setResetMsg] = useState<string | null>(null); // şifre sıfırlama bağlantısı gönderildi
 
   const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
+
+  // Ana sayfa beam input'undan gelen ?email= ile alanı önceden doldur.
+  useEffect(() => {
+    const e = new URLSearchParams(window.location.search).get("email");
+    if (e) setEmail(e);
+  }, []);
 
   // Mod değiştir (switcher) — alanları sıfırla + URL'yi (/giris ↔ /kayit) güncelle.
   const switchTo = useCallback((next: Mode) => {
@@ -189,14 +194,13 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!name.trim()) return setError("Ad Soyad gerekli.");
     if (!isValidEmail(email)) return setError("Geçerli bir e-posta adresi gir.");
     setLoading(true);
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
-        options: { shouldCreateUser: true, data: { full_name: name.trim() } },
+        options: { shouldCreateUser: true },
       });
       if (error) {
         setError(
@@ -246,10 +250,6 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
           <div key={`form-${mode}`} className={`auth-anim auth-anim-${dir}`}>
           {mode === "kayit" ? (
             <form onSubmit={handleSignup}>
-              <div className="field">
-                <input id="name" type="text" placeholder="Ad Soyad" aria-label="Ad Soyad" autoComplete="name"
-                  value={name} onChange={(e) => setName(e.target.value)} disabled={loading} />
-              </div>
               <div className="field">
                 <input id="email" type="email" placeholder="E-posta" aria-label="E-posta" autoComplete="email"
                   value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />

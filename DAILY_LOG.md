@@ -1,5 +1,33 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-27 — Ana sayfa hero: Beam Input (hover.dev tarzı) → CTA butonları kaldırıldı
+
+Mehmet hover.dev'deki **Beam Input**'u istedi (kenarında dönen ışık huzmesi olan e-posta pill'i). Hero'daki **"Ücretsiz Başla" + "Giriş Yap"** CTA çifti kaldırıldı, yerine beam input kondu: input içinde "E-posta adresin", sağında **"Ücretsiz Başla"** butonu (önce "7 gün ücretsiz dene" denildi, sonra "Ücretsiz Başla" olarak değişti).
+
+- **`app/components/BeamInput.tsx`** (yeni, client): e-posta input + buton; submit → `/kayit?email=<encoded>` (yazılan e-posta taşınır). hover.dev kodu paywall arkasında → **sıfırdan kendi kodumuz** (telifsiz).
+- **Beam efekti SAF CSS** (framer-motion YOK — projede zaten yok, bağımlılık eklemedik): `@property --beam-angle` ile dönen `conic-gradient(from var(--beam-angle), transparent 75%, var(--beam-color) 100%)` + CSS `mask` (content-box exclude) → sadece kenar görünür, huzme döner (`beamSpin` 4s linear). `prefers-reduced-motion` kapalı. Bu, hover.dev'in `mask-with-browser-support` + `bg-origin-border` tekniğinin birebir CSS karşılığı.
+- **Renk:** marketing monokrom/titanyum diline uygun **titanyum/beyaz huzme** (`--beam-color: rgba(255,255,255,0.95)`) + titanyum buton (hero `.btn-primary` gradyanı). Teal isteniyorsa tek değişken: `--beam-color: #00BFA6`.
+- **`AuthForm.tsx`:** `?email=` query'sini okuyup alanı önceden doldurur (`useEffect` + `URLSearchParams`, Suspense gerektirmez).
+- **`page.tsx`:** `.hero-cta` içeriği `<BeamInput/>` oldu (`Link` hâlâ cta-band'de kullanılıyor, import kaldı).
+- **Mobil:** ≤480px buton/iç boşluk küçülür. ⚠️ `--window-size` headless screenshot YANLIŞ taşma gösterdi (DAILY_LOG'da bilinen artefakt) → **CDP cihaz metrikleriyle** ölçüldü: 390px'de overflowX=0, beam 342px tam sığıyor, buton görünür. Beam ring döndüğü (computed `conic-gradient from 161deg`, `animationName: beamSpin`) ve mask'in çalıştığı CDP kırpılmış görüntüyle doğrulandı (parlak yay net).
+- **Canlı geri bildirim turu (aynı gün):**
+  - **Hover ok efekti:** butona hover'da **"Ücretsiz Başla →"** — `.beam-arrow` SVG normalde gizli (`margin-right:-1.45em` + `opacity:0`), hover'da `margin-right:0` + `opacity:1` → ok belirir ve buton **sola büyür**; `:active`'te ok -45° döner (hover.dev birebir). `.beam-btn` → `inline-flex`.
+  - **Metin yazınca beyaz zemin BUG'ı:** Chrome autofill koyu pill'i beyaza çeviriyordu → `input:-webkit-autofill` override (`-webkit-box-shadow: 0 0 0 1000px transparent inset` + `-webkit-text-fill-color:#fff` + `transition: background-color 9999s`) + `caret-color:#fff` → zemin koyu, metin beyaz kalır.
+  - **"Kart gerekmez · İstediğin zaman iptal et" notu kaldırıldı** (`.hero-note` page.tsx'ten silindi).
+- Doğrulama: CDP (1440, scale 2) ile **yazılı hâl** (koyu zemin + beyaz "ornek@eposta.com") + **hover hâli** (ok belirdi, buton sola büyüdü) kırpılmış görüntülerle teyit edildi.
+
+**Mağaza rozetleri — 3'lü (Google Play · App Store · AppGallery):** Mehmet referans görsel verdi. Eski "yakında" metin rozetleri (App Store + Google Play) kaldırıldı → **`app/components/StoreBadges.tsx`** (yeni, server): siyah zemin, site butonlarıyla aynı köşe (14px), inline SVG logolar — **Google Play 4-renk üçgen**, **Apple** (beyaz), **Huawei AppGallery** (kırmızı #C30A14 yuvarlak kare + beyaz 4-yaprak çiçek; sadeleştirilmiş marka). Her rozet: logo + iki satır (büyük marka + küçük caps eylem): "Google Play / 'DEN ALIN", "App Store'dan / İNDİR", "AppGallery / İLE KEŞFEDİN". `page.tsx` stores bloğu `<StoreBadges/>` oldu. CSS `.store-*` yeniden yazıldı; hero-text 520px sütununa 3'ü **tek satıra** sığsın diye kompaktlaştırıldı (büyük 14px, svg 23px, padding 8/13). CDP: masaüstü tek satır (h≈43px), mobil 2+1 sarma (overflowX=0). ⚠️ AppGallery çiçeği yaklaşık (resmi vektör değil) — istenirse gerçek SVG ile değiştirilir. ⚠️ Uygulamalar yayında olmadığı için rozetler **şimdilik tıklanmaz** (href yok); "yakında" ibaresi kaldırıldı (Mehmet referansına göre).
+- **Rozet hover beam (Mehmet isteği):** üstüne gelince beam input'taki **dönen ışık huzmesi** çıksın → `.store-badge::before` (conic-gradient + CSS mask, beam input'la aynı titanyum beyaz renk), normalde `opacity:0`, `:hover`'da `opacity:1` + `beamSpin` animasyonu. `prefers-reduced-motion` kapalı. CDP ile hover'da huzmenin döndüğü doğrulandı.
+
+**Üç ek istek (aynı gün):**
+1. **Google One Tap — ana sayfa:** `app/components/GoogleOneTap.tsx` (yeni, client; `page.tsx`'e eklendi). Kullanıcı paraner.com'u açınca üstte "Paraner olarak devam et · e-posta" One Tap kartı belirir; basınca `signInWithIdToken` ile **sayfadan çıkmadan** kayıt/giriş → app.paraner.com. SocialAuth'taki GIS mantığı sadeleştirildi (aynı client_id + SHA-256 nonce + FedCM). Oturum açıksa veya GIS yüklenmezse sessizce hiçbir şey yapmaz. CDP: GIS script + `window.google.accounts` yüklendi; headless'te Google oturumu olmadığı için kart görünmez (`FedCM NetworkError` = beklenen) → **canlıda gerçek Google oturumuyla test edilmeli.** (client_id auth sayfalarında zaten çalışıyor; aynı origin → ek config gerekmez.)
+2. **Kayıt'tan Ad Soyad kaldırıldı:** `AuthForm.tsx` — `name` state + validasyon + `full_name` metadata + input alanı silindi (kayıt artık sadece e-posta; ad soyad sonraki aşamalarda istenecek). CDP: /kayit form inputları = sadece ["E-posta"].
+3. **Hover'da yukarı-kalkma efekti kaldırıldı:** `.store-badge:hover`'tan `transform: translateY(-2px)` + box-shadow; titanyum marketing butonları (`.nav/.hero/.cta-band/.mobile-menu .btn-primary:hover`) → `transform: none`. (Auth/panel butonları etkilenmedi.)
+
+- tsc + build temiz (44/44). **Push BEKLİYOR** (Mehmet onayı sonrası).
+
+---
+
 ## 2026-06-27 — Küp beyaz flaş (NİHAİ teşhis+çözüm) + performans (banner WebP)
 
 **Beyaz flaş — kök sebep netleşti:** Yalnız **harici DisplayPort monitör + Windows**'ta, **ara sıra** çıkıyor; MacBook M5 dahili panelinde HİÇ çıkmıyor (Mehmet test etti). Yani GPU **compositor zamanlama yarışı** — yeni WebGL katmanı, ilk 3D kare çizilmeden compositlenirse o frame beyaz; harici/ikincil ekran hattının vsync'i farklı olduğundan orada yüzeye çıkıyor. (Benim headless yazılım+Metal render'ımda hiç üremedi → görsel teyit edilemedi, kademeli sağlamlaştırıldı.) İzlenen yol (hepsi `AuthCube3D.tsx`):

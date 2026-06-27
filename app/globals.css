@@ -347,6 +347,7 @@ ul { list-style: none; }
     inset 0 -1px 1px rgba(0, 0, 0, 0.18);
 }
 .nav .btn-primary:hover, .hero .btn-primary:hover, .cta-band .btn-primary:hover, .mobile-menu .btn-primary:hover {
+  transform: none; /* hover'da yukarı kalkma yok (Mehmet isteği) */
   box-shadow: 0 11px 28px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.92),
     inset 0 -1px 1px rgba(0, 0, 0, 0.22);
 }
@@ -480,19 +481,132 @@ ul { list-style: none; }
 .hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .hero-note { margin-top: 18px; font-size: 13px; color: var(--text-faint); }
 
-/* ─── MAĞAZA ROZETLERİ ─── */
-.stores { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 26px; }
-.store-badge {
-  display: inline-flex; align-items: center; gap: 10px;
-  background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
-  border-radius: 13px; padding: 9px 16px; color: rgba(255, 255, 255, 0.8);
-  transition: border-color 0.18s, background 0.18s;
+/* ─── BEAM INPUT (hero) — hover.dev tarzı dönen ışık huzmesi ───
+   Kenarda conic-gradient ışık + CSS mask (sadece kenar görünür); açı saf CSS
+   @property ile döner (framer-motion'a gerek yok). Titanyum/beyaz huzme — marketing
+   monokrom dilinde. Teal istenirse: --beam-color: #00BFA6. */
+@property --beam-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
 }
-.store-badge:hover { border-color: var(--border-strong); background: rgba(255, 255, 255, 0.08); }
-.store-badge .store-icon { font-size: 22px; }
-.store-badge .store-small { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.08em; }
-.store-badge .store-big { font-size: 14px; font-weight: 700; }
-.store-badge .soon { font-size: 9px; color: var(--purple); margin-left: 4px; }
+.beam-input {
+  --beam-color: rgba(255, 255, 255, 0.95);
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 440px;
+  padding: 6px 6px 6px 4px;
+  border-radius: 999px;
+  background: rgba(18, 20, 24, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.beam-input input {
+  flex: 1; min-width: 0;
+  height: 46px; padding: 0 12px 0 18px;
+  background: transparent; border: none; outline: none;
+  color: #fff; caret-color: #fff; font-size: 0.98rem; font-family: inherit;
+}
+.beam-input input::placeholder { color: rgba(255, 255, 255, 0.42); }
+/* Chrome autofill koyu pill'i beyaza çeviriyordu → zemin şeffaf, metin beyaz kalsın */
+.beam-input input:-webkit-autofill,
+.beam-input input:-webkit-autofill:hover,
+.beam-input input:-webkit-autofill:focus,
+.beam-input input:-webkit-autofill:active {
+  -webkit-text-fill-color: #fff;
+  caret-color: #fff;
+  -webkit-box-shadow: 0 0 0 1000px transparent inset;
+  box-shadow: 0 0 0 1000px transparent inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+.beam-btn {
+  flex: 0 0 auto;
+  display: inline-flex; align-items: center;
+  height: 46px; padding: 0 24px;
+  border: none; border-radius: 999px; cursor: pointer;
+  font-family: inherit; font-weight: 600; font-size: 0.95rem; white-space: nowrap;
+  background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
+  color: #0a0b0d;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.18);
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+/* ok: normalde gizli (sağa çekili + fade-out); hover'da belirir → buton sola büyür */
+.beam-arrow {
+  width: 1.05em; height: 1.05em; flex: none;
+  margin-left: 0.4em; margin-right: -1.45em; opacity: 0;
+  transition: margin-right 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s, transform 0.18s;
+}
+.beam-btn:hover .beam-arrow { margin-right: 0; opacity: 1; }
+.beam-btn:active .beam-arrow { transform: rotate(-45deg); }
+@media (prefers-reduced-motion: reduce) { .beam-arrow { transition: none; } }
+.beam-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 11px 28px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.22);
+}
+.beam-btn:active { transform: translateY(0); }
+/* dönen huzme: sadece kenar (border) görünsün diye mask exclude */
+.beam-border { pointer-events: none; position: absolute; inset: 0; z-index: 2; border-radius: 999px; }
+.beam-ring {
+  position: absolute; inset: -1px; border-radius: 999px;
+  border: 1px solid transparent;
+  background-origin: border-box;
+  background-image: conic-gradient(from var(--beam-angle), transparent 75%, var(--beam-color) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: beamSpin 4s linear infinite;
+}
+@keyframes beamSpin { to { --beam-angle: 360deg; } }
+@media (prefers-reduced-motion: reduce) { .beam-ring { animation: none; } }
+@media (max-width: 480px) {
+  .beam-input { max-width: 100%; gap: 6px; }
+  .beam-input input { padding-left: 14px; font-size: 0.92rem; }
+  .beam-btn { padding: 0 16px; font-size: 0.9rem; }
+}
+
+/* ─── MAĞAZA ROZETLERİ (Google Play · App Store · AppGallery) ───
+   Siyah zemin, site butonlarıyla aynı köşe yuvarlatma (14px), logo + iki satır. */
+.stores { display: flex; gap: 9px; justify-content: center; flex-wrap: wrap; margin-top: 26px; }
+.store-badge {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #000; border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px; padding: 8px 13px; color: #fff;
+  transition: border-color 0.18s;
+}
+.store-badge:hover { border-color: rgba(255, 255, 255, 0.34); }
+/* hover'da beam input'taki dönen ışık huzmesi (kenarda kayan ışık) */
+.store-badge::before {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit;
+  border: 1px solid transparent; background-origin: border-box;
+  background-image: conic-gradient(from var(--beam-angle), transparent 75%, rgba(255, 255, 255, 0.95) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0; transition: opacity 0.25s; pointer-events: none;
+}
+.store-badge:hover::before { opacity: 1; animation: beamSpin 4s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .store-badge:hover::before { animation: none; } }
+.store-badge .store-logo { display: inline-flex; }
+.store-badge .store-svg { width: 23px; height: 23px; display: block; }
+.store-badge .store-txt { display: flex; flex-direction: column; line-height: 1.1; text-align: left; }
+.store-badge .store-big { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
+.store-badge .store-small { font-size: 8.5px; font-weight: 600; color: rgba(255, 255, 255, 0.82); letter-spacing: 0.04em; white-space: nowrap; }
+/* mobil: tek sütun gibi 2+1 sarması doğal; daha dar ekranda biraz daha kompakt */
+@media (max-width: 400px) {
+  .store-badge { padding: 7px 11px; gap: 7px; }
+  .store-badge .store-svg { width: 21px; height: 21px; }
+}
 
 /* ─── BÖLÜM BAŞLIĞI ─── */
 .section { padding: 80px 0; }

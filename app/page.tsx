@@ -4,6 +4,9 @@ import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import AuthCube3D from "./components/AuthCube3D";
 import HeroTitle from "./components/HeroTitle";
+import BeamInput from "./components/BeamInput";
+import StoreBadges from "./components/StoreBadges";
+import GoogleOneTap from "./components/GoogleOneTap";
 
 // ─── İçerik verisi (kolay düzenlenebilsin diye dosyanın başında) ───
 
@@ -46,6 +49,7 @@ const PLANS = [
 export default function Home() {
   return (
     <>
+      <GoogleOneTap />
       <Background />
       <Nav />
 
@@ -60,27 +64,10 @@ export default function Home() {
             yapay zeka koçun Parla ile akıllı kararlar al.
           </p>
           <div className="hero-cta">
-            <Link href="/kayit" className="btn btn-primary btn-lg">Ücretsiz Başla</Link>
-            <Link href="/giris" className="btn btn-ghost btn-lg">Giriş Yap</Link>
+            <BeamInput />
           </div>
 
-          <div className="stores">
-            <span className="store-badge">
-              <span className="store-icon"></span>
-              <span>
-                <span className="store-small" style={{ display: "block" }}>İndir</span>
-                <span className="store-big">App Store<span className="soon"> yakında</span></span>
-              </span>
-            </span>
-            <span className="store-badge">
-              <span className="store-icon">▶</span>
-              <span>
-                <span className="store-small" style={{ display: "block" }}>İndir</span>
-                <span className="store-big">Google Play<span className="soon"> yakında</span></span>
-              </span>
-            </span>
-          </div>
-          <p className="hero-note">Kart gerekmez · İstediğin zaman iptal et</p>
+          <StoreBadges />
         </div>
 
         <div className="hero-visual">
