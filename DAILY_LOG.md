@@ -1,5 +1,14 @@
 # DAILY LOG — paraner-web
 
+## 2026-06-27 — Giriş/kayıt sayfası arka planı: düz koyu → markaya özel görsel
+
+Mehmet markaya özel koyu/gri saten görsel verdi (`~/Downloads/background-auth.webp`, 205KB, zaten webp/optimize). Giriş/kayıt sayfasının düz koyu degrade arka planı bu görselle değiştirildi.
+
+- **`public/auth-bg.webp`** (yeni, görsel kopyalandı).
+- **`.auth-page`** arka planı: eski radial+linear koyu degrade → `#060607 url('/auth-bg.webp') center center / cover no-repeat`. `cover` → her ekranda (4K/laptop/tablet) boşluksuz, taşmasız tam oturur; #060607 fallback. Beyaz yüzen kart üstünde durur.
+- **Telefon hariç (Mehmet isteği):** `@media (max-width: 560px)` → `.auth-page { background: #060607 }` (telefonda form tam ekranı kapladığı için görsel zaten görünmez; tutarlılık için açıkça düz koyu).
+- Doğrulama: dev sunucu — `/giris` 200, `/auth-bg.webp` 200 (image/webp, 205434B), CSS bundle'da referans var. tsc + build temiz.
+
 ## 2026-06-27 — Hesap silme veda maili (her yolu kapsar) + web "Hesabı Sil" butonu
 
 Mehmet: hesap silinince kullanıcıya "hesabınız silindi" maili gitsin — (1) kullanıcı kendi silince, (2) biz dashboard'dan elle silince de. **İki repo** (paraner-web + paraner-app) + Supabase backend işi. **Canlıya alındı.**

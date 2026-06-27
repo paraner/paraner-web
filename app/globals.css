@@ -873,10 +873,9 @@ ul { list-style: none; }
   display: flex; align-items: center; justify-content: center;
   /* Pay — kart ekranı doldurmasın, etrafında nefes kalsın */
   padding: clamp(20px, 2.6vw, 52px);
-  /* Koyu nötr arka plan: yumuşak degrade + üst-sağdan hafif ışık (yeşil/teal YOK) */
-  background:
-    radial-gradient(120% 90% at 78% 12%, rgba(255, 255, 255, 0.06), transparent 55%),
-    linear-gradient(165deg, #111214 0%, #0a0a0b 50%, #060607 100%);
+  /* Markaya özel koyu görsel arka plan (cover → her ekranda tam oturur). #060607 fallback.
+     Telefonda (≤560px) düz koyuya döner — aşağıdaki @media. */
+  background: #060607 url('/auth-bg.webp') center center / cover no-repeat;
 }
 .auth-card {
   position: relative;
@@ -1090,6 +1089,12 @@ ul { list-style: none; }
   .auth-visual { display: none; }
   .auth-split-form { padding: 32px 24px 60px; justify-content: flex-start; padding-top: 56px; min-height: 0; }
   .auth-split-form .auth-head { text-align: center; }
+}
+
+/* Telefon: görsel arka plan YOK → düz koyu (form tam ekranı kapladığı için görsel
+   zaten görünmez; tutarlılık + olası kenar payı için açıkça düz koyu). */
+@media (max-width: 560px) {
+  .auth-page { background: #060607; }
 }
 
 /* ═══════════════════════════════════════════════
