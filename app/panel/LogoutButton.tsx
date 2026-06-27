@@ -1,11 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 
 export default function LogoutButton() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   async function handleLogout() {
@@ -16,8 +14,11 @@ export default function LogoutButton() {
     // scope: 'local' — SADECE bu tarayıcıdan çık. Varsayılan 'global' kullanıcının
     // TÜM cihazlarının token'ını iptal eder → başka cihaz (telefon) durduk yere düşer.
     await supabase.auth.signOut({ scope: "local" });
-    router.push("/giris");
-    router.refresh();
+    // Çıkışta pazarlama anasayfasına (paraner.com) at — app.paraner.com → paraner.com,
+    // dev'de app.localhost → localhost. Tam yeniden yükleme (server oturumu da temizlensin).
+    const { protocol, hostname, port } = window.location;
+    const marketingHost = hostname.replace(/^app\./, "");
+    window.location.href = `${protocol}//${marketingHost}${port ? ":" + port : ""}/`;
   }
 
   return (
