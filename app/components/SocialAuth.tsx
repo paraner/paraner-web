@@ -218,8 +218,14 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
           onClick={handleGoogleFallback}
           disabled={loading}
         >
-          <GoogleIcon />
-          {loading ? "…" : "Google ile devam et"}
+          {loading ? (
+            <span className="btn-dots" aria-label="Yükleniyor"><i /><i /><i /></span>
+          ) : (
+            <>
+              <GoogleIcon />
+              Google ile devam et
+            </>
+          )}
         </button>
       )}
 
