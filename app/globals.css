@@ -723,6 +723,8 @@ ul { list-style: none; }
   position: relative; z-index: 1; overflow: hidden;
   border-top: 1px solid var(--border); margin-top: 80px;
   padding: 44px 28px 40px;
+  /* Splash Cursor akışkanına dikey alan → girdaplar gelişir (siteye benzer his) */
+  min-height: 300px;
 }
 /* ReactBits Splash Cursor arka planı — içeriğin arkasında, üstte yumuşak geçiş.
    pointer-events:none → footer linkleri etkilenmez (efekt window'dan dinler) */
