@@ -720,11 +720,23 @@ ul { list-style: none; }
 
 /* ─── FOOTER ─── */
 .footer {
-  position: relative; z-index: 1;
+  position: relative; z-index: 1; overflow: hidden;
   border-top: 1px solid var(--border); margin-top: 80px;
   padding: 44px 28px 40px;
 }
-.footer-inner { max-width: var(--max); margin: 0 auto; display: flex; flex-wrap: wrap; gap: 30px; justify-content: space-between; align-items: flex-start; }
+/* ReactBits Hyperspeed arka planı — içeriğin arkasında, üstte yumuşak geçiş.
+   pointer-events açık → footer'a basılı tutunca yol hızlanır (linkler üstte tıklanır) */
+.footer-shader {
+  position: absolute; inset: 0; z-index: 0; opacity: 0;
+  animation: footer-shader-in 1.2s ease 0.1s forwards;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 90px);
+  mask-image: linear-gradient(180deg, transparent, #000 90px);
+}
+@keyframes footer-shader-in { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .footer-shader { animation: none; opacity: 1; }
+}
+.footer-inner { position: relative; z-index: 1; max-width: var(--max); margin: 0 auto; display: flex; flex-wrap: wrap; gap: 30px; justify-content: space-between; align-items: flex-start; }
 .footer-links { display: flex; gap: 26px; flex-wrap: wrap; }
 .footer-links a { color: var(--text-dim); font-size: 14px; transition: color 0.18s; }
 .footer-links a:hover { color: var(--text); }

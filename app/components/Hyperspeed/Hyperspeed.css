@@ -1,0 +1,13 @@
+#lights {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: absolute;
+  inset: 0;
+}
+
+/* ÖNEMLİ: kapsamlı seçici — bare `canvas {}` sayfadaki diğer canvas'ları bozuyordu */
+#lights canvas {
+  width: 100%;
+  height: 100%;
+}

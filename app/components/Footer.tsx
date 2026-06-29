@@ -1,10 +1,12 @@
 import Logo from "./Logo";
+import FooterShader from "./FooterShader";
 
 // Alt bilgi — logo, yasal linkler, telif
 export default function Footer() {
   const year = new Date().getFullYear();
   return (
     <footer className="footer">
+      <FooterShader />
       <div className="footer-inner">
         <div>
           <Logo />
