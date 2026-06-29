@@ -104,7 +104,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" className={inter.variable}>
+    /* data-scroll-behavior="smooth": Next 16 artık geçişte scroll-behavior:smooth'u otomatik
+       kapatmıyor → bu attribute olmadan sayfa geçişinde scroll tepeye ANIMASYONLU gidiyordu
+       (dikey zıplama). Bu attribute ile Next geçiş anında auto'ya çevirir (anında scroll);
+       in-page çapraz linkler (#ozellikler/#fiyatlar) yine smooth kalır. */
+    <html lang="tr" className={inter.variable} data-scroll-behavior="smooth">
       {/* suppressHydrationWarning: bazı tarayıcı eklentileri <body>'ye attribute
           ekleyip hydration uyarısı tetikliyor; bu zararsız farkı görmezden geliriz. */}
       <body suppressHydrationWarning>
