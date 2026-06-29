@@ -4,6 +4,7 @@ import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import AuthCube3D from "./components/AuthCube3D";
 import HeroTitle from "./components/HeroTitle";
+import Beams from "./components/Beams";
 import BeamInput from "./components/BeamInput";
 import StoreBadges from "./components/StoreBadges";
 import GoogleOneTap from "./components/GoogleOneTap";
@@ -55,6 +56,18 @@ export default function Home() {
 
       {/* ─── HERO / BANNER ─── */}
       <section className="hero-banner">
+      <div className="hero-fx">
+        <Beams
+          beamWidth={1}
+          beamHeight={15}
+          beamNumber={12}
+          lightColor="#9aa0a6"
+          speed={2}
+          noiseIntensity={1.75}
+          scale={0.2}
+          rotation={30}
+        />
+      </div>
       <div className="hero wrap">
         <div className="hero-text">
           <span className="eyebrow">AI Destekli Finans Asistanı</span>

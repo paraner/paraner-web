@@ -422,8 +422,26 @@ ul { list-style: none; }
 /* ─── BANNER — markaya özel görsel SADECE burada (tam genişlik), site geneli koyu ─── */
 .hero-banner {
   position: relative;
-  /* WebP (880KB JPG → 79KB, kalite aynı). #060607 = WebP desteklenmezse fallback. */
-  background: #060607 url("/paraner-bg.webp") center center / cover no-repeat;
+  /* Arka plan = ReactBits Beams (3D ışık huzmeleri). Düz koyu zemin. */
+  background: #060607;
+}
+/* Beams Canvas içeriğin ARKASINA (metin z-index:2, küp z-index:1).
+   .hero-fx kesin yükseklikli sarmalayıcı → R3F Canvas (inline height:100%) doğru dolar. */
+.hero-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+/* Banner altında siyaha yumuşak geçiş → alttaki #000 bölümle keskin çizgi olmasın */
+.hero-banner::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 220px;
+  background: linear-gradient(to bottom, transparent, #000);
+  z-index: 1;
+  pointer-events: none;
 }
 
 /* ─── HERO — tam ekran banner; ORTADAN BÖLME YOK. Metin solda (üstte katman),

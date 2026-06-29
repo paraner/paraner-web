@@ -14,6 +14,16 @@
 
 ---
 
+## 2026-06-29 — Hero banner: ReactBits Beams (3D ışık huzmeleri) + arka plan görseli kaldırıldı
+
+Ana sayfa hero arka planı (`paraner-bg.webp`) → **ReactBits Beams** (`components/Beams.jsx`, R3F custom shader material).
+- **Yol:** önce ReactBits **SideRays** (ogl) denendi, sonra **Beams** seçildi → SideRays + `ogl` + `public/paraner-bg.webp` temizlendi.
+- **Bağımlılıklar:** `@react-three/fiber@9` + `@react-three/drei@10` (React 19 uyumlu) + mevcut `three`.
+- **Yerleşim:** `<Beams>` `.hero-fx` (position:absolute, inset:0) sarmalayıcısında → R3F Canvas inline `height:100%` doğru dolar (yoksa tepede minik şeride çöküyordu). İçeriğin arkasında (`.hero-fx` z-index:0, metin z:2, küp z:1).
+- **Banner altı fade:** `.hero-banner::after` son 220px'de `transparent→#000` → alttaki #000 bölümle keskin çizgi yok.
+- **Marka/ayar (onaylı):** `lightColor:#9aa0a6`, `beamWidth:1`, `beamNumber:12`, `beamHeight:15`, `speed:2`, `noiseIntensity:1.75`, `scale:0.2`, `rotation:30`. Parlaklık kısıldı: `directionalLight` 1→0.7, `ambientLight` 1→0.65.
+- **Beams.jsx ayar düğmeleri:** parlaklık prop değil → `lightColor` + bileşen içi `directionalLight`/`ambientLight` intensity.
+
 ## 2026-06-29 — Footer arka planı: ReactBits Splash Cursor (akışkan imleç)
 
 Footer arka planı için birkaç tur denendi, oturmuş durum:
