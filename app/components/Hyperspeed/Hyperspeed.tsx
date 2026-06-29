@@ -1122,6 +1122,7 @@ class App {
     if (this.options.onSpeedUp) this.options.onSpeedUp(ev);
     this.fovTarget = this.options.fovSpeedUp;
     this.speedUpTarget = this.options.speedUp;
+    this.speedUp = this.options.speedUp; // anında his: tek tık = belirgin hızlanma (lerp beklemeden)
   }
 
   onMouseUp(ev: MouseEvent) {
@@ -1134,6 +1135,7 @@ class App {
     if (this.options.onSpeedUp) this.options.onSpeedUp(ev);
     this.fovTarget = this.options.fovSpeedUp;
     this.speedUpTarget = this.options.speedUp;
+    this.speedUp = this.options.speedUp; // anında his (dokunmatik)
   }
 
   onTouchEnd(ev: TouchEvent) {
