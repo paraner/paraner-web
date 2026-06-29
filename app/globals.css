@@ -1775,6 +1775,7 @@ ul { list-style: none; }
 /* İşlem satırında düzenle/sil butonları (hover'da belirir) */
 .tx-row .tx-right { display: flex; align-items: center; gap: 14px; }
 .tx-actions { display: flex; align-items: center; gap: 2px; }
+/* Klasik ikon butonları — diğer modüller (cüzdanım, faturalar, harcamalar, teklifler, izinler, maaşlar) kullanır */
 .tx-edit, .tx-delete {
   opacity: 0; background: none; border: none; color: var(--text-dim);
   cursor: pointer; padding: 4px; border-radius: 8px; transition: opacity 0.15s, color 0.15s, background 0.15s;
@@ -1783,6 +1784,38 @@ ul { list-style: none; }
 .tx-edit:hover { color: var(--teal); background: rgba(0, 191, 166, 0.1); }
 .tx-delete:hover { color: var(--danger); background: rgba(226, 75, 74, 0.1); }
 .tx-edit svg, .tx-delete svg { width: 16px; height: 16px; display: block; }
+
+/* İşlemler: animasyonlu butonların açılmasına yer ayır (yalnız anim-act içeren satır kabı) */
+.tx-actions:has(.anim-act) { justify-content: flex-end; gap: 8px; min-width: 152px; }
+
+/* Animasyonlu aksiyon butonu (uiverse "smart-emu" tarzı): daire → hover'da pill + etiket reveal.
+   Hem işlem satırında hem detay panelinde kullanılır. .del = "Sil" (danger), .edit = "Düzenle" (teal). */
+.anim-act {
+  width: 44px; height: 44px; flex: none; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border-strong);
+  color: var(--text-dim); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; overflow: hidden; position: relative;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.25);
+  transition: width .3s, background .3s, border-color .3s, color .3s, border-radius .3s, opacity .15s;
+}
+.anim-act svg { width: 16px; height: 16px; display: block; transition: width .3s, height .3s, transform .3s; }
+.anim-act::before {
+  position: absolute; top: -22px; content: ""; color: #fff; white-space: nowrap;
+  font-weight: 600; font-size: 2px; opacity: 0;
+  transition: transform .3s, font-size .3s, opacity .3s;
+}
+.anim-act:hover { width: 100px; border-radius: 22px; color: #fff; }
+.anim-act:hover svg { width: 40px; height: 40px; transform: translateY(62%); }
+.anim-act:hover::before { font-size: 13px; opacity: 1; transform: translateY(31px); }
+.anim-act.del::before { content: "Sil"; }
+.anim-act.del:hover { background: var(--danger); border-color: var(--danger); }
+.anim-act.edit::before { content: "Düzenle"; }
+.anim-act.edit:hover { background: var(--teal); border-color: var(--teal); }
+
+/* Satırda: butonlar yalnız satır hover'ında (veya klavye odağında) belirir → liste sade kalır */
+.tx-actions .anim-act { opacity: 0; }
+.tx-row:hover .tx-actions .anim-act,
+.tx-actions .anim-act:focus-visible { opacity: 1; }
 
 /* İşlem satırı tıklanabilir (detay paneli) */
 .tx-row-click { cursor: pointer; }
@@ -1828,7 +1861,7 @@ ul { list-style: none; }
 .dr-thumbs { display: flex; flex-wrap: wrap; gap: 10px; }
 .dr-thumb { width: 72px; height: 72px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); display: block; }
 .dr-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.drawer-actions { margin-top: auto; display: flex; flex-direction: row; gap: 10px; padding-top: 8px; }
+.drawer-actions { margin-top: auto; display: flex; flex-direction: row; justify-content: flex-end; gap: 12px; padding-top: 8px; }
 .drawer-actions .btn { flex: 1; width: auto; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 12px; }
 .drawer-actions .btn svg { width: 15px; height: 15px; }
 

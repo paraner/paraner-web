@@ -677,7 +677,7 @@ export default function IslemlerClient({
                       <div className="tx-actions">
                         {t.type !== "transfer" && (
                           <button
-                            className="tx-edit"
+                            className="anim-act edit"
                             onClick={(e) => {
                               e.stopPropagation();
                               openEdit(t);
@@ -688,7 +688,7 @@ export default function IslemlerClient({
                           </button>
                         )}
                         <button
-                          className="tx-delete"
+                          className="anim-act del"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDelete(t);
@@ -1061,23 +1061,25 @@ export default function IslemlerClient({
                 <div className="drawer-actions">
                   {!isTransfer && (
                     <button
-                      className="btn btn-ghost btn-block"
+                      className="anim-act edit"
+                      aria-label="Düzenle"
                       onClick={() => {
                         setSelected(null);
                         openEdit(t);
                       }}
                     >
-                      <EditIcon /> Düzenle
+                      <EditIcon />
                     </button>
                   )}
                   <button
-                    className="btn btn-ghost danger btn-block"
+                    className="anim-act del"
+                    aria-label="Sil"
                     onClick={async () => {
                       await handleDelete(t);
                       setSelected(null);
                     }}
                   >
-                    <TrashIcon /> Sil
+                    <TrashIcon />
                   </button>
                 </div>
               </aside>
