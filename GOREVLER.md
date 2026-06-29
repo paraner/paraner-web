@@ -3,12 +3,11 @@
 > Sadece açık görevler. Tamamlananlar için `DAILY_LOG.md` + git geçmişi.
 
 ## Şimdiki
-- [ ] **Mağaza rozetleri (3'lü) mobilde:** masaüstü tek satır iyi; telefonda düzgün otursun (taşma/sarma/hiza). Ana sayfa hero + auth altı.
-- [ ] **Genel mobil tarama:** ana sayfa + auth ekranlarında telefonda taşma/bozulma var mı, tek tek bak.
+- [ ] **Genel mobil tarama:** ana sayfa + auth ekranlarında telefonda taşma/bozulma var mı, tek tek bak. (Auth + rozetler 06-29'da elden geçti; ana sayfa/diğer bölümler kaldı.)
 
 ## İLERİDE
 - [ ] **Toast sistemini iyileştir:** Sonner-tarzı çalışıyor; Mehmet daha iyi görünüm/UX araştıracak. Temel sistem oturduktan sonra.
-- [ ] **Mobil auth (giriş/kayıt) yeniden tasarımı:** masaüstü görsel bg KALICI/iyi; mobil orijinal beyaz forma geri alındı. Tekrar ele alınırsa **adım adım + her adım Mehmet onayıyla.** iOS dersleri: `DAILY_LOG.md` ⚠️ bölümü.
+- [x] **Mobil auth (giriş/kayıt) KOYU tema:** 06-29'da yapıldı — mobil (≤1024) artık SİYAH/koyu form (base tema), masaüstü beyaz form korundu. iOS güvenceleri (svh, 16px input) uygulandı. Detay: `DAILY_LOG.md` 06-29. (Cila/ince ayar gerekirse adım adım + onay.)
 - [ ] **Hesap silme v2:** admin/dashboard silmede FARKLI mail (kullanıcı kendi silince "Görüşmek üzere" mevcut; biz silersek ayrı bildirim). Trigger'a silme kaynağı ayrımı (user-initiated bayrağı vs dashboard).
 
 ## Canlı göz kontrolü (kod tarafı doğrulandı, cihaz teyidi bekliyor)

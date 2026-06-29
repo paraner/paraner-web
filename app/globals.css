@@ -660,10 +660,18 @@ ul { list-style: none; }
 .store-badge .store-txt { display: flex; flex-direction: column; line-height: 1.1; text-align: left; }
 .store-badge .store-big { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
 .store-badge .store-small { font-size: 8.5px; font-weight: 600; color: rgba(255, 255, 255, 0.82); letter-spacing: 0.04em; white-space: nowrap; }
-/* mobil: tek sütun gibi 2+1 sarması doğal; daha dar ekranda biraz daha kompakt */
-@media (max-width: 400px) {
-  .store-badge { padding: 7px 11px; gap: 7px; }
-  .store-badge .store-svg { width: 21px; height: 21px; }
+/* mobil: 3 rozet TEK SATIR — sarmaz, eşit esner, font/padding/logo viewport'a göre küçülür (taşmadan sığar) */
+@media (max-width: 560px) {
+  .stores { flex-wrap: nowrap; gap: 6px; }
+  .store-badge { flex: 1 1 0; min-width: 0; justify-content: center; padding: 7px; gap: 5px; }
+  .store-badge .store-svg { width: 18px; height: 18px; }
+  .store-badge .store-big { font-size: clamp(9px, 3vw, 13px); }
+  .store-badge .store-small { font-size: clamp(6.5px, 2vw, 8.5px); }
+}
+/* en dar telefonlar: biraz daha sıkı padding/logo, taşma payı */
+@media (max-width: 360px) {
+  .store-badge { padding: 6px 5px; gap: 4px; }
+  .store-badge .store-svg { width: 16px; height: 16px; }
 }
 
 /* ─── BÖLÜM BAŞLIĞI ─── */
@@ -958,17 +966,15 @@ ul { list-style: none; }
   .auth-anim-fwd, .auth-anim-back { animation: none; }
 }
 
-/* ─── Sağ panel açık tema (beyaz zemin) — yalnızca auth formu ─── */
+/* ─── Sağ panel açık tema (beyaz zemin) — yalnızca MASAÜSTÜ iki-sütun (≥1025).
+   Mobil (≤1024) tek-sütun form KOYU/siyah temaya döner → base stiller (aşağıdaki ≤1024 bloğu). ─── */
+@media (min-width: 1025px) {
 .auth-card-form .logo-text { color: #15171a; }
 .auth-card-form .auth-head h1 { color: #0c0e10; }
 .auth-card-form .auth-head p { color: #5b6168; }
 .auth-card-form .field label { color: #2b2f34; }
 .auth-card-form .field input,
 .auth-card-form .field select { background: #fff; border-color: #aab0b8; color: #15171a; }
-/* Input + ana buton köşeleri = Google butonu gibi tam pill */
-.auth-card-form .field input,
-.auth-card-form .field select { border-radius: 999px; padding-left: 20px; padding-right: 20px; }
-.auth-card-form .btn-lg { border-radius: 999px; }
 .auth-card-form .field input::placeholder { color: #9aa0a6; }
 .auth-card-form .field input:focus,
 .auth-card-form .field select:focus { border-color: #15171a; background: #fff; }
@@ -1002,6 +1008,11 @@ ul { list-style: none; }
 .auth-card-form .otp-resend,
 .auth-card-form .otp-back { color: #5b6168; }
 .auth-card-form .otp-back:hover { color: #15171a; }
+} /* /MASAÜSTÜ açık tema */
+/* Input + ana buton köşeleri = tam pill — MASAÜSTÜ + MOBİL ORTAK (şekil tutarlılığı, temadan bağımsız) */
+.auth-card-form .field input,
+.auth-card-form .field select { border-radius: 999px; padding-left: 20px; padding-right: 20px; }
+.auth-card-form .btn-lg { border-radius: 999px; }
 .auth-split-form .logo { margin-bottom: 40px; }
 .auth-split-form .auth-head { text-align: center; margin-bottom: 24px; }
 .auth-split-form .auth-head h1 { font-size: 30px; }
@@ -1111,15 +1122,33 @@ ul { list-style: none; }
 .cube-stage canvas { position: absolute; inset: 0; }
 /* Tablet / küçük laptop / telefon → sıkışık iki sütun yerine temiz tek sütun form */
 @media (max-width: 1024px) {
-  .auth-page { padding: 0; }
+  /* Mobil tek-sütun = SİYAH ekran + KOYU form (base tema). Beyaz override'lar ≥1025'e hapsedildi. */
+  .auth-page { padding: 0; background: #000; }
   .auth-card {
     grid-template-columns: 1fr; max-width: 480px;
-    height: auto; min-height: 100dvh; max-height: none;
+    height: auto; min-height: 100svh; max-height: none; /* svh: klavye açılınca dvh gibi zıplamaz */
     border: none; border-radius: 0; box-shadow: none;
+    background: var(--bg); /* beyaz → siyah */
   }
+  .auth-card-form { background: var(--bg); color: var(--text); } /* siyah zemin + açık metin (h1 vb. miras alır) */
   .auth-visual { display: none; }
   .auth-split-form { padding: 32px 24px 60px; justify-content: flex-start; padding-top: 56px; min-height: 0; }
   .auth-split-form .auth-head { text-align: center; }
+  /* gunmetal wordmark siyahta kaybolur → açık titanyum gradyan (splash ile aynı) */
+  .auth-wordmark { background: linear-gradient(180deg, #f6f7f9 0%, #c2c7ce 35%, #9499a1 55%, #c8cdd4 75%, #eef0f3 100%); }
+  /* iOS: input font-size ≥16px → odakta otomatik zoom olmaz */
+  .auth-split-form .field input, .auth-split-form .field select { font-size: 16px; }
+  /* base TEAL aksanları → mobil koyu temada NÖTR (marka teal'siz, [[marka-rengi-degisecek]]).
+     Masaüstü beyaz form bunları #15171a yapıyor; mobilde açık nötr karşılığı. */
+  .auth-split-form .auth-text-link,
+  .auth-split-form .auth-row button,
+  .auth-split-form .otp-resend-link { color: var(--text); }
+  .auth-split-form .field input:focus,
+  .auth-split-form .field select:focus { border-color: rgba(255, 255, 255, 0.5); }
+  .auth-split-form .otp-cell.filled,
+  .auth-split-form .otp-cell.active { border-color: rgba(255, 255, 255, 0.65); }
+  .auth-split-form .otp-cell.active { box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.14); }
+  .auth-split-form .otp-cell.active::after { background: #fff; }
 }
 
 /* Mobil auth: özel ≤560 KOYU/görsel tema KALDIRILDI (ilk hâle dönüş). Mobil artık

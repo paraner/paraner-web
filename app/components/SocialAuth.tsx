@@ -114,13 +114,21 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
         context: modeRef.current === "kayit" ? "signup" : "signin",
       });
 
-      // gsi-wrap genişliği CSS ile sabit (%50 - 8px); GIS butonunu tam o genişliğe render et
-      // → Apple ile birebir eşit yarım. (Eski (pw-16)/2 hesabı stale ölçümle şaşıyordu.)
-      const target = btnRef.current.clientWidth || 240;
-      const width = Math.round(Math.min(400, Math.max(200, target)));
+      // Genişlik: gsi-wrap GIS hazır olana kadar display:none (gsi-hidden) → clientWidth 0 döner
+      // ve eski kod 240'a düşüyordu (Google butonu sabit dar/ortada kalıyordu). GÖRÜNÜR parent'tan
+      // hesapla: telefon (≤420 kolon) → tam genişlik; masaüstü (satır) → yarım (gap 16). Apple ile eşit.
+      const parentW = btnRef.current.parentElement?.clientWidth || 0;
+      const column = window.matchMedia("(max-width: 420px)").matches;
+      const target = column ? parentW : (parentW - 16) / 2;
+      const width = Math.round(Math.min(400, Math.max(200, target || 240)));
+      // Mobil (≤1024) auth KOYU temada → koyu Google butonu (Apple koyu pill ile tutarlı).
+      // Masaüstü beyaz formda → outline (beyaz). matchMedia render anında okunur.
+      const darkAuth =
+        typeof window !== "undefined" &&
+        window.matchMedia("(max-width: 1024px)").matches;
       window.google.accounts.id.renderButton(btnRef.current, {
         type: "standard",
-        theme: "outline",
+        theme: darkAuth ? "filled_black" : "outline",
         size: "large",
         text: "continue_with",
         shape: "pill",

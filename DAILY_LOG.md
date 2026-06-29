@@ -14,6 +14,16 @@
 
 ---
 
+## 2026-06-29 — Mobil auth KOYU tema (siyah) + mağaza rozetleri tek satır + Google buton fix
+
+Mehmet onayıyla adım adım (canlı ekran görüntüleriyle), tümü `app/globals.css` + `SocialAuth.tsx`:
+- **Mağaza rozetleri mobil (≤560):** `flex-wrap:nowrap` → 3 rozet TEK SATIR, eşit esner (`flex:1 1 0; min-width:0`), font `clamp()` + küçük padding/logo (≤360 ekstra sıkı). Masaüstü tek satır KORUNDU. Hero + auth altı tek bileşen (DRY) → ikisi de düzeldi.
+- **Mobil auth SİYAH tema:** beyaz form override'ları (`.auth-card-form .X`, ~40 kural) `@media (min-width:1025px)`'e hapsedildi → mobil (≤1024) tek-sütun form base KOYU temaya döndü. `.auth-page/.auth-card/.auth-card-form` zemin `#000`/`--bg`, metin `var(--text)` (h1 miras alır), wordmark gunmetal→açık titanyum gradyan (siyahta görünür). **iOS dersleri uygulandı:** `min-height 100dvh→100svh` (klavye zıplaması), input `font-size:16px` (odakta zoom yok). Sabit konum / mask+filter YOK.
+- **Teal nötrleme (mobil koyu):** base teal aksanları ([[marka-rengi-degisecek]]) nötrlendi — link/buton (Şifremi unuttum, Kod ile giriş yap) beyaz, input odak kenarı + OTP hücreleri nötr beyaz. Hata kırmızısı korundu.
+- **Input köşeleri:** pill (999px) + 20px padding artık masaüstü+mobil ORTAK (şekil tutarlılığı, temadan bağımsız).
+- **Google butonu (GIS) fix:** mobilde tema `outline`→`filled_black` (Apple koyu pill ile tutarlı). **Genişlik bug'ı:** GIS genişliği gizli (`display:none`) `gsi-wrap`'ten ölçülüyordu → `clientWidth=0` → sabit 240px (dar/ortada). Artık görünür parent `.social-auth`'tan hesaplanıyor (telefon=tam, masaüstü=yarım) → Apple ile birebir eşit.
+- ⚠️ **Dev'deki 3 GSI_LOGGER hatası** ("origin not allowed" + 2× "failed to open popup") = localhost'a özgü, canlıda çıkmaz. Susturmak için Google Cloud Console → OAuth client → Authorized JS origins'e `http://localhost:3000` (config, kod değil; client ID mobil ile ortak ama JS origin web'e özel).
+
 ## 2026-06-29 — Hero banner: ReactBits Beams (3D ışık huzmeleri) + arka plan görseli kaldırıldı
 
 Ana sayfa hero arka planı (`paraner-bg.webp`) → **ReactBits Beams** (`components/Beams.jsx`, R3F custom shader material).
