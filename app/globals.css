@@ -441,7 +441,10 @@ ul { list-style: none; }
    küp sağda serbest ve büyük (kendi kutusuna sığar, kırpılmaz). ─── */
 .hero.wrap {
   max-width: 1500px; margin: 0 auto;
-  position: relative; display: flex; align-items: center;
+  /* z-index:2 → TÜM hero içeriği tek katman olarak banner fade'inin (::after z1) ÜSTÜNDE.
+     Fade kesin olarak Beams (z0) ile içerik arasında kalır → mobilde rozetlerin/küpün üstüne
+     binmez (eskiden içerik çocukları ayrı stacking context'lerdi, fade aralarına sızıyordu). */
+  position: relative; z-index: 2; display: flex; align-items: center;
   min-height: 100svh;
   padding: 96px clamp(24px, 5vw, 72px) 56px;
   overflow: visible;
