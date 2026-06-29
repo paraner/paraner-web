@@ -61,7 +61,14 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, onMobile ? 1.5 : 2));
       renderer.setSize(W0, H0);
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.12;
+      renderer.toneMappingExposure = 1.0;
+      // Cubie'ler birbirine gölge düşürsün → küpün üstünde gerçek derinlik/AO (siyah zeminde bile görünür).
+      // Sadece masaüstü: shadow map GPU yükü mobilde küpü zorluyordu.
+      const enableShadows = !onMobile;
+      if (enableShadows) {
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      }
       // opacity:0 başla → boş canvas'ın ilk paint'indeki beyaz flaş görünmez;
       // ilk kare render olunca yumuşakça belirir (aşağıda style.opacity="1").
       renderer.domElement.style.cssText =
@@ -79,19 +86,31 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
       scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.05).texture;
 
       // ── Işık ──
-      const key = new THREE.DirectionalLight(0xffffff, 3.0);
+      const key = new THREE.DirectionalLight(0xffffff, 2.3);
       key.position.set(6, 10, 7);
+      if (enableShadows) {
+        key.castShadow = true;
+        key.shadow.mapSize.set(2048, 2048);
+        const sc = key.shadow.camera;
+        sc.near = 1;
+        sc.far = 30;
+        sc.left = sc.bottom = -3;
+        sc.right = sc.top = 3;
+        key.shadow.bias = -0.0004; // akne (self-shadow titremesi) önler
+        key.shadow.normalBias = 0.03; // yuvarlatılmış kenarlarda akneyi keser
+        key.shadow.radius = 4; // PCF yumuşak kenar
+      }
       scene.add(key);
-      const rim = new THREE.DirectionalLight(0xd7e4f2, 1.7);
+      const rim = new THREE.DirectionalLight(0xcdd6e0, 1.9); // kenar/pah ışığı — siluet ayrışsın
       rim.position.set(-7, 3, -8);
       scene.add(rim);
-      const spec = new THREE.PointLight(0xffffff, 22, 50, 1.8);
+      const spec = new THREE.PointLight(0xffffff, 8, 50, 1.8); // sıcak nokta kısıldı (B adımı ayarı)
       spec.position.set(5, -1, 6);
       scene.add(spec);
-      const front = new THREE.DirectionalLight(0xffffff, 0.95);
+      const front = new THREE.DirectionalLight(0xffffff, 0.6);
       front.position.set(0, 1.5, 9);
       scene.add(front);
-      scene.add(new THREE.AmbientLight(0xffffff, 0.14));
+      scene.add(new THREE.AmbientLight(0xffffff, 0.2)); // eşit yumuşak dolgu
 
       // ── Dokular ──
       const mkTex = (n: number, rep: number, draw: (g: CanvasRenderingContext2D, n: number) => void) => {
@@ -103,29 +122,35 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
         t.repeat.set(rep, rep);
         return t;
       };
-      // Apple Pro Display XDR arkası: hex dizilimli yarım-küre delik kafesi (bump map) — sadece MGZR
-      const xdrTex = mkTex(256, 2, (g, n) => {
-        g.fillStyle = "#9a9a9a"; // düz yüzey = orta yükseklik
-        g.fillRect(0, 0, n, n);
-        const r = 13; // delik yarıçapı
-        const sx = r * 2.15; // yatay aralık (delikler neredeyse bitişik)
-        const sy = sx * 0.866; // altıgen satır yüksekliği
-        for (let row = 0, y = -sy; y < n + sy; y += sy, row++) {
-          const off = row % 2 ? sx / 2 : 0;
-          for (let x = -sx; x < n + sx; x += sx) {
-            const cx = x + off;
-            const grd = g.createRadialGradient(cx, y, 1, cx, y, r);
-            grd.addColorStop(0, "#101010"); // çukur merkezi = en alçak
-            grd.addColorStop(0.55, "#4a4a4a");
-            grd.addColorStop(0.86, "#d0d0d0"); // kenar = parlak rim (en yüksek)
-            grd.addColorStop(1, "#7a7a7a");
-            g.fillStyle = grd;
-            g.beginPath();
-            g.arc(cx, y, r, 0, Math.PI * 2);
-            g.fill();
+      // MGZR panel arka planı — referans görseldeki KOYU petek (honeycomb) delik ızgarası.
+      // TEK PARÇA (repeat=1, 512px) çizilir → döşeme dikişi/ek yeri yok, hex yapısı temiz.
+      // Aynı desenden iki doku: renk (map, sRGB) + kabartma (bumpMap), birebir hizalı.
+      const mgzrGrid = () =>
+        mkTex(512, 1, (g, n) => {
+          g.fillStyle = "#1a1b1f"; // delikler arası koyu yüzey
+          g.fillRect(0, 0, n, n);
+          const r = 10; // delik yarıçapı → panelde ~25 delik (referansa yakın, temiz)
+          const sx = r * 2.0; // yatay aralık (delikler neredeyse bitişik)
+          const sy = sx * 0.866; // altıgen satır yüksekliği
+          for (let row = 0, y = -sy; y < n + sy; y += sy, row++) {
+            const off = row % 2 ? sx / 2 : 0;
+            for (let x = -sx; x < n + sx; x += sx) {
+              const cx = x + off;
+              const grd = g.createRadialGradient(cx, y, 1, cx, y, r);
+              grd.addColorStop(0, "#020203"); // çukur merkezi = neredeyse siyah (delik)
+              grd.addColorStop(0.62, "#0a0b0d");
+              grd.addColorStop(0.9, "#42454c"); // kenar = parlak rim
+              grd.addColorStop(1, "#1a1b1f");
+              g.fillStyle = grd;
+              g.beginPath();
+              g.arc(cx, y, r, 0, Math.PI * 2);
+              g.fill();
+            }
           }
-        }
-      });
+        });
+      const mgzrMapTex = mgzrGrid();
+      mgzrMapTex.colorSpace = THREE.SRGBColorSpace; // renk olarak kullanılıyor → sRGB
+      const mgzrBumpTex = mgzrGrid(); // kabartma (linear) → derinlik
       const brushedTex = mkTex(128, 2, (g, n) => {
         g.fillStyle = "#777";
         g.fillRect(0, 0, n, n);
@@ -163,26 +188,46 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
           }
         }
       });
+      // Karbon + ince metalik parıltı — koyu karbon (grafit) zemin + çok küçük parlak glint noktaları (₿).
+      const speckleTex = mkTex(512, 1, (g, n) => {
+        g.fillStyle = "#0d0e12"; // karbon zemin (grafit, koyu)
+        g.fillRect(0, 0, n, n);
+        for (let i = 0; i < 850; i++) {
+          const x = Math.random() * n;
+          const y = Math.random() * n;
+          const rr = Math.random() * 0.9 + 0.4; // çok küçük parıltı tanesi
+          const v = Math.random() > 0.86 ? 235 : 95 + ((Math.random() * 70) | 0); // çoğu sönük gri, az sayıda parlak glint
+          g.fillStyle = `rgba(${v},${v},${v + 8},${0.5 + Math.random() * 0.5})`; // hafif soğuk (mavi) ton → metalik karbon
+          g.beginPath();
+          g.arc(x, y, rr, 0, Math.PI * 2);
+          g.fill();
+        }
+      });
+      speckleTex.colorSpace = THREE.SRGBColorSpace; // renk (albedo) → sRGB
+
       // ── Her sembole ÖZEL KOYU/premium panel (titanyum · karbon · onyx). Renk değil FINISH ayrışır.
       //    Resend tarzı: koyu, parlak, ince ton/doku farkı; neredeyse monokrom. MGZR BENZERSIZ (karbon).
-      const matDollar = new THREE.MeshPhysicalMaterial({ color: 0x08090b, metalness: 1, roughness: 0.12, clearcoat: 0.9, clearcoatRoughness: 0.16, envMapIntensity: 1.4 }); // piyano siyahı (ayna gloss)
-      const matEuro = new THREE.MeshStandardMaterial({ color: 0x2a2e34, metalness: 0.96, roughness: 0.4, roughnessMap: brushedTex, envMapIntensity: 1.2 }); // fırçalı titanyum (gri)
-      const matPound = new THREE.MeshStandardMaterial({ color: 0x14161a, metalness: 0.55, roughness: 0.66, envMapIntensity: 0.9 }); // satin antrasit (mat)
-      const matLira = new THREE.MeshPhysicalMaterial({ color: 0x1a1d22, metalness: 1, roughness: 0.3, clearcoat: 0.4, clearcoatRoughness: 0.3, envMapIntensity: 1.25 }); // koyu gunmetal (yarı parlak)
-      const matBtc = new THREE.MeshStandardMaterial({ color: 0x20242b, metalness: 1, roughness: 0.26, envMapIntensity: 1.35 }); // nötr cilalı çelik (soğuk monokrom)
-      const matMgzr = new THREE.MeshStandardMaterial({ color: 0x141619, metalness: 0.85, roughness: 0.42, bumpMap: xdrTex, bumpScale: 0.12, envMapIntensity: 1.1 }); // XDR delikli titanyum kafes (sadece MGZR)
-      const matParaner = new THREE.MeshPhysicalMaterial({ color: 0x06140f, metalness: 1, roughness: 0.2, clearcoat: 0.7, clearcoatRoughness: 0.2, envMapIntensity: 1.3 }); // koyu teal-siyah (marka fısıltısı, gloss)
+      const matDollar = new THREE.MeshPhysicalMaterial({ color: 0x070809, metalness: 1, roughness: 0.18, clearcoat: 0.9, clearcoatRoughness: 0.2, envMapIntensity: 1.1 }); // piyano siyahı (ayna gloss)
+      const matEuro = new THREE.MeshStandardMaterial({ color: 0x1b1e23, metalness: 0.94, roughness: 0.5, roughnessMap: brushedTex, envMapIntensity: 0.85 }); // fırçalı titanyum (koyu)
+      const matPound = new THREE.MeshStandardMaterial({ color: 0x121419, metalness: 0.55, roughness: 0.66, envMapIntensity: 0.85 }); // satin antrasit (mat)
+      const matLira = new THREE.MeshPhysicalMaterial({ color: 0x16191e, metalness: 1, roughness: 0.42, clearcoat: 0.4, clearcoatRoughness: 0.35, envMapIntensity: 0.95 }); // koyu gunmetal (yarı parlak)
+      const matBtc = new THREE.MeshStandardMaterial({ color: 0xffffff, map: speckleTex, metalness: 0.7, roughness: 0.45, envMapIntensity: 1.0 }); // karbon + ince metalik parıltı (₿)
+      const matMgzr = new THREE.MeshStandardMaterial({ color: 0xffffff, map: mgzrMapTex, metalness: 0.9, roughness: 0.5, bumpMap: mgzrBumpTex, bumpScale: 0.3, envMapIntensity: 0.85 }); // KOYU petek delikli yüz (sadece MGZR arka planı)
+      const matParaner = new THREE.MeshPhysicalMaterial({ color: 0x0c1310, metalness: 1, roughness: 0.4, clearcoat: 0.6, clearcoatRoughness: 0.3, envMapIntensity: 0.95 }); // koyu nötr-siyah (gloss, kısık yansıma)
       const frameMat = new THREE.MeshStandardMaterial({ color: 0x0c0d10, metalness: 0.7, roughness: 0.56, bumpMap: frameXdrTex, bumpScale: 0.16, envMapIntensity: 0.9 }); // koyu premium XDR delikli kafes (MGZR arka planı gibi, mat)
       const ownedMats = [matDollar, matEuro, matPound, matLira, matBtc, matMgzr, matParaner, frameMat];
 
       // ── Damga/kabartma para birimi ──
-      const symTex = (ch: string) => {
+      // Sembol → İKİ doku: KESKİN alpha maskesi (kenarda yarı-saydam halka/çizgi olmasın) +
+      // YUMUŞAK bump (kabartma rölyefi). Eskiden tek blur'lu doku ikisini de yapıyordu →
+      // yarı-saydam kenar bandı logo çevresinde "çizgi geçiyormuş gibi" görünüyordu.
+      const symCanvas = (ch: string, blur: number) => {
         const c = document.createElement("canvas");
         c.width = c.height = 256;
         const g = c.getContext("2d")!;
         g.fillStyle = "#000";
         g.fillRect(0, 0, 256, 256);
-        g.filter = "blur(1.4px)";
+        if (blur) g.filter = `blur(${blur}px)`;
         g.fillStyle = "#fff";
         g.font = "800 156px -apple-system, 'Segoe UI', Arial, sans-serif";
         g.textAlign = "center";
@@ -193,46 +238,51 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
         t.anisotropy = 4;
         return t;
       };
-      // Görsel (şeffaf PNG) → para sembolleriyle aynı kabartma dokusu (beyaz siluet · blur · siyah zemin)
+      const symTex = (ch: string) => ({ alpha: symCanvas(ch, 0.5), bump: symCanvas(ch, 1.6) });
+      // Görsel (şeffaf PNG) → sembollerle aynı mantık: KESKİN alpha + YUMUŞAK bump.
       const imgTex = (img: HTMLImageElement | null, margin: number) => {
         if (!img) return null;
-        const c = document.createElement("canvas");
-        c.width = c.height = 256;
-        const g = c.getContext("2d")!;
+        // önce keskin beyaz siluet (en-boy korunarak kareye sığdır)
         const sil = document.createElement("canvas");
         sil.width = sil.height = 256;
         const sg = sil.getContext("2d")!;
-        // en-boy oranını koru, kareye sığdır → beyaz siluet
         const r = Math.min((256 - 2 * margin) / img.width, (256 - 2 * margin) / img.height);
         const w = img.width * r, h = img.height * r;
         sg.drawImage(img, (256 - w) / 2, (256 - h) / 2, w, h);
         sg.globalCompositeOperation = "source-in";
         sg.fillStyle = "#fff";
         sg.fillRect(0, 0, 256, 256);
-        // siyah zemine kabartma için blur'lu bas
-        g.fillStyle = "#000";
-        g.fillRect(0, 0, 256, 256);
-        g.filter = "blur(1.4px)";
-        g.drawImage(sil, 0, 0);
-        g.filter = "none";
-        const t = new THREE.CanvasTexture(c);
-        t.anisotropy = 4;
-        return t;
+        // siluetten ayrı blur'larla iki doku: alpha (keskin) + bump (yumuşak)
+        const render = (blur: number) => {
+          const c = document.createElement("canvas");
+          c.width = c.height = 256;
+          const g = c.getContext("2d")!;
+          g.fillStyle = "#000";
+          g.fillRect(0, 0, 256, 256);
+          if (blur) g.filter = `blur(${blur}px)`;
+          g.drawImage(sil, 0, 0);
+          g.filter = "none";
+          const t = new THREE.CanvasTexture(c);
+          t.anisotropy = 4;
+          return t;
+        };
+        return { alpha: render(0.5), bump: render(1.8) };
       };
 
-      const mkSymMat = (t: InstanceType<typeof THREE.CanvasTexture>) =>
+      const mkSymMat = (tex: { alpha: InstanceType<typeof THREE.CanvasTexture>; bump: InstanceType<typeof THREE.CanvasTexture> }) =>
         new THREE.MeshStandardMaterial({
-          color: 0x2b2f37,
-          metalness: 0.92,
-          roughness: 0.3,
-          bumpMap: t,
-          bumpScale: 0.07,
-          alphaMap: t,
+          color: 0x262a31, // panel tonuna yakın → daha az "sticker", daha gömük
+          metalness: 0.7,
+          roughness: 0.5, // mat → ışıkta yüzeyin parçası gibi, parlak decal değil
+          bumpMap: tex.bump,
+          bumpScale: 0.24, // kabartma rölyefi (kenar çizgisi olmadan embossed his)
+          alphaMap: tex.alpha,
+          alphaTest: 0.45, // yarı-saydam kenar bandını at → logo çevresinde "çizgi/halka" kalmaz
           transparent: true,
           depthWrite: false,
           polygonOffset: true,
           polygonOffsetFactor: -2,
-          envMapIntensity: 1.1,
+          envMapIntensity: 0.9,
         });
 
       // 7 damga (EŞİT dağılım): her damga = sembol (kabartma) + KENDİ paneli (iç renk/tasarım)
@@ -278,7 +328,7 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
       const panelGeo = new THREE.PlaneGeometry(flat, flat);
       const symGeo = new THREE.PlaneGeometry(flat * 0.55, flat * 0.55);
       const fo = SIZE / 2 + 0.004;
-      const so = SIZE / 2 + 0.012;
+      const so = SIZE / 2 + 0.008; // panele daha yakın → havada durmasın
       const faceDef: Array<{ p: [number, number, number]; r: [number, number, number] }> = [
         { p: [1, 0, 0], r: [0, Math.PI / 2, 0] },
         { p: [-1, 0, 0], r: [0, -Math.PI / 2, 0] },
@@ -294,13 +344,19 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
           for (let z = -1; z <= 1; z++) {
             const cubie = new THREE.Group();
             cubie.position.set(x, y, z);
-            cubie.add(new THREE.Mesh(boxGeo, frameMat));
+            const body = new THREE.Mesh(boxGeo, frameMat);
+            if (enableShadows) {
+              body.castShadow = true;
+              body.receiveShadow = true;
+            }
+            cubie.add(body);
             faceDef.forEach((f) => {
               // Her yüz = bir damga: kendi paneli (iç renk/tasarım) + üstüne kabartma sembol
               const st = pickStamp();
               const panel = new THREE.Mesh(panelGeo, st.panel);
               panel.position.set(f.p[0] * fo, f.p[1] * fo, f.p[2] * fo);
               panel.rotation.set(...f.r);
+              if (enableShadows) panel.receiveShadow = true;
               cubie.add(panel);
               const sym = new THREE.Mesh(symGeo, st.sym);
               sym.position.set(f.p[0] * so, f.p[1] * so, f.p[2] * so);
@@ -400,6 +456,40 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
         restTimer = Math.random() < 0.2 ? 0.14 : 0.9 + Math.random() * 1.9;
       }
 
+      // ── Post-processing (sadece masaüstü) — sinematik "render edilmiş" his ──
+      // Bloom (parlak rim/highlight'ların doğal taşması) + vignette (odağı küpe çek) +
+      // film grain (referanstaki ince doku/noise). SSAO eklemedim: B adımındaki gölge
+      // haritası cubie aralarındaki AO'yu zaten geometri-doğru veriyor (SSAO halo riski + tekrar).
+      let composer: import("three/examples/jsm/postprocessing/EffectComposer.js").EffectComposer | null = null;
+      let disposePost = () => {};
+      if (enableShadows) {
+        const [{ EffectComposer }, { RenderPass }, { ShaderPass }, { VignetteShader }, { FilmPass }, { OutputPass }] =
+          await Promise.all([
+            import("three/examples/jsm/postprocessing/EffectComposer.js"),
+            import("three/examples/jsm/postprocessing/RenderPass.js"),
+            import("three/examples/jsm/postprocessing/ShaderPass.js"),
+            import("three/examples/jsm/shaders/VignetteShader.js"),
+            import("three/examples/jsm/postprocessing/FilmPass.js"),
+            import("three/examples/jsm/postprocessing/OutputPass.js"),
+          ]);
+        if (disposed || !ref.current) return;
+        composer = new EffectComposer(renderer);
+        composer.setSize(W0, H0);
+        composer.addPass(new RenderPass(scene, camera)); // sahne → HDR (tonemap en sonda)
+        // Bloom KALDIRILDI: dönen metalde highlight'lar patlayıp arka plana hale yapıyordu.
+        const vignette = new ShaderPass(VignetteShader);
+        vignette.uniforms.offset.value = 1.1;
+        vignette.uniforms.darkness.value = 1.12; // kenarları hafif karart → odak küpte
+        composer.addPass(vignette);
+        if (!reduce) composer.addPass(new FilmPass(0.16, false)); // ince film grain (reduced-motion'da kapalı)
+        composer.addPass(new OutputPass()); // tonemap + sRGB — zincirin EN SONUNDA tek sefer
+        disposePost = () => {
+          composer?.dispose?.();
+        };
+      }
+      // Post varsa composer üzerinden çiz; yoksa (mobil/WebGL) doğrudan renderer.
+      const renderFrame = () => (composer ? composer.render() : renderer.render(scene, camera));
+
       // ── Giriş + render ──
       // Giriş: küp uzaktan (küçük) HIZLI döne döne büyüyerek gelir; yerine oturunca dönüş BİR ANDA idle'a iner.
       let intro = noIntro ? 1 : 0;
@@ -456,7 +546,7 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
           }
         }
 
-        renderer.render(scene, camera);
+        renderFrame();
         if (!shown) {
           shown = true;
           renderer.domElement.style.opacity = "1";
@@ -500,7 +590,7 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
 
       // İlk kareyi DOM dışında çiz, sonra canvas'ı ekle → ekrana girdiğinde
       // içinde küp var; boş/beyaz WebGL katmanı hiç görünmez (ara sıra beyaz flaş fix).
-      renderer.render(scene, camera);
+      renderFrame();
       el.appendChild(renderer.domElement);
 
       animate();
@@ -513,6 +603,7 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
         camera.aspect = Wn / Hn;
         camera.updateProjectionMatrix();
         renderer.setSize(Wn, Hn);
+        composer?.setSize(Wn, Hn); // post-processing tampon boyutları da güncellensin
       });
       ro.observe(el);
 
@@ -527,13 +618,15 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
         boxGeo.dispose();
         panelGeo.dispose();
         symGeo.dispose();
-        [xdrTex, brushedTex, frameXdrTex].forEach((t) => t.dispose());
+        [mgzrMapTex, mgzrBumpTex, brushedTex, frameXdrTex, speckleTex].forEach((t) => t.dispose());
         ownedMats.forEach((m) => m.dispose());
         stamps.forEach((s) => {
           s.sym.alphaMap?.dispose();
+          s.sym.bumpMap?.dispose(); // alpha'dan ayrı doku → ayrıca bırak
           s.sym.dispose();
         });
         pmrem.dispose();
+        disposePost(); // composer + bloom render target'larını bırak
         renderer.dispose();
         if (dom.parentElement === el) el.removeChild(dom);
       };
