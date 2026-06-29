@@ -291,16 +291,9 @@ ul { list-style: none; }
 .mm-row svg { width: 17px; height: 17px; color: rgba(255, 255, 255, 0.4); }
 
 /* App Store + Play Store — en altta yan yana */
-.mm-stores { margin-top: auto; padding-top: 28px; display: flex; gap: 12px; }
-.mm-store {
-  flex: 1; display: flex; align-items: center; gap: 11px;
-  padding: 12px 14px; border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1);
-}
-.mm-store svg { width: 22px; height: 22px; color: #fff; flex-shrink: 0; }
-.mm-store-txt { display: flex; flex-direction: column; line-height: 1.15; }
-.mm-store-small { font-size: 10px; color: rgba(255, 255, 255, 0.5); }
-.mm-store-big { font-size: 13px; font-weight: 700; color: #fff; }
+/* Mobil menü alt rozetleri = ana sayfa ile AYNI paylaşılan StoreBadges (3 rozet yan yana) */
+.mm-stores { margin-top: auto; padding-top: 28px; }
+.mm-stores .stores { margin-top: 0; }
 
 /* ─── BUTONLAR ─── */
 .btn {

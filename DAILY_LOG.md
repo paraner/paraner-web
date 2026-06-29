@@ -23,6 +23,7 @@ Mehmet onayıyla adım adım (canlı ekran görüntüleriyle), tümü `app/globa
 - **Input köşeleri:** pill (999px) + 20px padding artık masaüstü+mobil ORTAK (şekil tutarlılığı, temadan bağımsız).
 - **Google butonu (GIS) fix:** mobilde tema `outline`→`filled_black` (Apple koyu pill ile tutarlı). **Genişlik bug'ı:** GIS genişliği gizli (`display:none`) `gsi-wrap`'ten ölçülüyordu → `clientWidth=0` → sabit 240px (dar/ortada). Artık görünür parent `.social-auth`'tan hesaplanıyor (telefon=tam, masaüstü=yarım) → Apple ile birebir eşit.
 - ⚠️ **Dev'deki 3 GSI_LOGGER hatası** ("origin not allowed" + 2× "failed to open popup") = localhost'a özgü, canlıda çıkmaz. Susturmak için Google Cloud Console → OAuth client → Authorized JS origins'e `http://localhost:3000` (config, kod değil; client ID mobil ile ortak ama JS origin web'e özel).
+- **Mobil menü (☰) rozetleri:** ayrı 2-rozetli markup (`.mm-store`, App Store+Google Play) → paylaşılan `<StoreBadges />` (3 rozet yan yana, ana sayfa/auth ile birebir). Ölü `.mm-store*` CSS temizlendi; `.mm-stores` sadece alta-yaslama wrapper'ı.
 
 ## 2026-06-29 — Hero banner: ReactBits Beams (3D ışık huzmeleri) + arka plan görseli kaldırıldı
 

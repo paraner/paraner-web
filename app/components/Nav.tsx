@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "./Logo";
+import StoreBadges from "./StoreBadges";
 
 // Üst bar — masaüstünde banner'a gömülü; kaydırınca iOS Liquid Glass pill'e döner.
 // Mobilde pill YOK: sade bar (wordmark + ☰) + ☰'a basınca tam ekran menü (Resend tarzı).
@@ -91,20 +92,7 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
           </nav>
 
           <div className="mm-stores">
-            <span className="mm-store" aria-label="App Store — yakında">
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M16.365 1.43c0 1.14-.49 2.27-1.18 3.08-.74.9-1.99 1.57-2.98 1.57-.12 0-.23-.02-.3-.03-.02-.06-.04-.22-.04-.39 0-1.15.57-2.27 1.2-2.98.8-.94 2.14-1.64 3.25-1.68.03.13.05.28.05.43zM21 17.14c-.03.07-.46 1.58-1.52 3.12-.94 1.34-1.94 2.71-3.43 2.71-1.52 0-1.9-.88-3.63-.88-1.7 0-2.3.91-3.67.91-1.38 0-2.33-1.26-3.43-2.8C3.6 18.4 2.57 15.6 2.57 12.95c0-4.28 2.8-6.55 5.55-6.55 1.45 0 2.68.95 3.6.95.87 0 2.22-1.01 3.9-1.01.61 0 2.89.06 4.37 2.19-.13.09-2.38 1.37-2.38 4.19 0 3.26 2.85 4.42 2.96 4.45z" /></svg>
-              <span className="mm-store-txt">
-                <span className="mm-store-small">İndir</span>
-                <span className="mm-store-big">App Store</span>
-              </span>
-            </span>
-            <span className="mm-store" aria-label="Google Play — yakında">
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M4 3.4v17.2a.8.8 0 0 0 1.2.7l14.3-8.6a.8.8 0 0 0 0-1.4L5.2 2.7A.8.8 0 0 0 4 3.4z" /></svg>
-              <span className="mm-store-txt">
-                <span className="mm-store-small">İndir</span>
-                <span className="mm-store-big">Google Play</span>
-              </span>
-            </span>
+            <StoreBadges />
           </div>
         </div>
       </div>
