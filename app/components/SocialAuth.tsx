@@ -137,8 +137,10 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
       });
       setGisReady(true);
 
-      // One Tap kişiselleştirilmiş kart (Google oturumu açıksa belirir).
-      window.google.accounts.id.prompt();
+      // NOT: One Tap prompt() BİLEREK çağrılmıyor. Auth sayfasında buton zaten görünür →
+      // One Tap gereksiz; ayrıca ana sayfadaki GoogleOneTap ile çift initialize/prompt
+      // çakışması ("initialize multiple times") + canlıda geçiş anında layout/UI kaymasına
+      // (zıplama) yol açıyordu. One Tap yalnız ana sayfada (GoogleOneTap) kalır.
     }
 
     // GIS script'ini bir kez yükle.
