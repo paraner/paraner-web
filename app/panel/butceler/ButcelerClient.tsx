@@ -1,4 +1,5 @@
 "use client";
+import AddButton from "../../../components/AddButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
@@ -112,9 +113,7 @@ export default function ButcelerClient({
         title="Kategori Bütçeleri"
         sub="Bu ayki harcamalarını kategori limitleriyle takip et"
         action={
-          <button className="btn btn-primary btn-sm" onClick={openNew} disabled={available.length === 0 && !editing}>
-            + Bütçe Ekle
-          </button>
+          <AddButton onClick={openNew} disabled={available.length === 0 && !editing}>Bütçe Ekle</AddButton>
         }
       />
 

@@ -1,4 +1,5 @@
 "use client";
+import AddButton from "../../../components/AddButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
@@ -153,9 +154,7 @@ export default function IzinlerClient({
         title="İzin & Devamsızlık"
         sub="Çalışan izin kayıtları"
         action={
-          <button className="btn btn-primary btn-sm" onClick={openNew}>
-            + İzin Ekle
-          </button>
+          <AddButton onClick={openNew}>İzin Ekle</AddButton>
         }
       />
 

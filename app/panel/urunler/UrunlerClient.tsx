@@ -1,4 +1,5 @@
 "use client";
+import AddButton from "../../../components/AddButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useMemo, useState } from "react";
@@ -183,9 +184,7 @@ export default function UrunlerClient({
         title="Ürün / Hizmet Kataloğu"
         sub="Sattığın ürün ve hizmetler"
         action={
-          <button className="btn btn-primary btn-sm" onClick={openNew}>
-            + Ürün / Hizmet
-          </button>
+          <AddButton onClick={openNew}>Ürün / Hizmet</AddButton>
         }
       />
 

@@ -1815,28 +1815,45 @@ ul { list-style: none; }
 .anim-act.cls::before { content: "Kapat"; }
 .anim-act.cls:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.24); }
 
-/* "İşlem Ekle" — uiverse (JaydipPrajapati1910) sade buton, TİTANYUM (paraner.com primary).
-   Tek hover efekti: sağdaki ikon kutusu genişler + ok hafif kayar. Ağır animasyon yok. */
-.tx-add-btn {
-  font-family: inherit; color: #0a0b0d; font-size: 15px; font-weight: 600; letter-spacing: 0.02em;
+/* "Ekle" butonları (tüm modüller) — uiverse (JaydipPrajapati1910) sade buton, TİTANYUM.
+   Tek hover efekti: sağdaki + kutusu genişler. Paylaşımlı AddButton bileşeni kullanır. */
+.add-btn {
+  font-family: inherit; color: #0a0b0d; font-size: 13px; font-weight: 600; letter-spacing: 0.02em;
   display: inline-flex; align-items: center; border: none; cursor: pointer; position: relative; overflow: hidden;
-  height: 2.8em; padding: 0.35em 3.3em 0.35em 1.2em; border-radius: 0.8em;
+  height: 2.5em; padding: 0.3em 3em 0.3em 1.1em; border-radius: 0.72em; white-space: nowrap;
   background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%); /* TİTANYUM */
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 1px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 1px rgba(0, 0, 0, 0.18);
+  transition: box-shadow 0.25s ease, opacity 0.2s ease;
+}
+.add-btn:hover:not(:disabled) {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.92), inset 0 -1px 1px rgba(0, 0, 0, 0.22);
+}
+.add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.add-btn-ic {
+  position: absolute; right: 0.26em; display: flex; align-items: center; justify-content: center;
+  height: 1.95em; width: 1.95em; border-radius: 0.52em; background: #0a0b0d;
+  box-shadow: 0.1em 0.1em 0.45em 0.08em rgba(0, 0, 0, 0.35); transition: width 0.3s ease;
+}
+.add-btn:hover:not(:disabled) .add-btn-ic { width: calc(100% - 0.52em); }
+.add-btn-ic svg { width: 1.05em; height: 1.05em; color: #fff; }
+.add-btn:active:not(:disabled) .add-btn-ic { transform: scale(0.95); }
+
+/* Kompakt yenileme butonu (cüzdanım) — AddButton ile aynı titanyum + yükseklik, ama dar.
+   İçerik: yenileme ikonu + son yenileme saati. */
+.refresh-btn {
+  font-family: inherit; color: #0a0b0d; font-size: 13px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer;
+  height: 2.5em; padding: 0 0.85em; border-radius: 0.72em;
+  background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 1px rgba(0, 0, 0, 0.18);
   transition: box-shadow 0.25s ease;
 }
-.tx-add-btn:hover {
-  box-shadow: 0 11px 28px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.92), inset 0 -1px 1px rgba(0, 0, 0, 0.22);
+.refresh-btn:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.92), inset 0 -1px 1px rgba(0, 0, 0, 0.22);
 }
-.tx-add-icon {
-  position: absolute; right: 0.3em; display: flex; align-items: center; justify-content: center;
-  height: 2.2em; width: 2.2em; border-radius: 0.6em; background: #0a0b0d;
-  box-shadow: 0.1em 0.1em 0.5em 0.1em rgba(0, 0, 0, 0.35); transition: width 0.3s ease;
-}
-.tx-add-btn:hover .tx-add-icon { width: calc(100% - 0.6em); }
-.tx-add-icon svg { width: 1.1em; height: 1.1em; color: #fff; transition: transform 0.3s ease; }
-.tx-add-btn:hover .tx-add-icon svg { transform: translateX(0.15em); }
-.tx-add-btn:active .tx-add-icon { transform: scale(0.96); }
+.refresh-btn svg { width: 14px; height: 14px; color: #0a0b0d; transition: transform 0.5s ease; }
+.refresh-btn:hover svg { transform: rotate(180deg); }
+.refresh-btn .refresh-time { font-size: 11px; font-weight: 600; color: #45484e; font-variant-numeric: tabular-nums; }
 
 /* Satırda entegre kayma:
    - hover yok → genişlik 0, görünmez (tutar en sağda)

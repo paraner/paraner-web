@@ -1,4 +1,5 @@
 "use client";
+import AddButton from "../../../components/AddButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useMemo, useState } from "react";
@@ -156,9 +157,7 @@ export default function MusterilerClient({
         title="Müşteri / Tedarikçi Kartları"
         sub="Müşteri ve tedarikçi bilgileri"
         action={
-          <button className="btn btn-primary btn-sm" onClick={openNew}>
-            + Kart Ekle
-          </button>
+          <AddButton onClick={openNew}>Kart Ekle</AddButton>
         }
       />
 

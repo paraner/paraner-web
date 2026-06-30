@@ -1,4 +1,5 @@
 "use client";
+import AddButton from "../../../components/AddButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useEffect, useRef, useState } from "react";
@@ -386,9 +387,7 @@ export default function HesaplarClient({
                 Transfer
               </button>
             )}
-            <button className="btn btn-primary btn-sm" onClick={openNew}>
-              + Hesap Ekle
-            </button>
+            <AddButton onClick={openNew}>Hesap Ekle</AddButton>
           </div>
         }
       />

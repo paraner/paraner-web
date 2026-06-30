@@ -1,4 +1,5 @@
 "use client";
+import AddButton from "../../../components/AddButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
@@ -115,9 +116,7 @@ export default function HarcamalarClient({
         title="Harcama Kayıtları"
         sub="Çalışan harcamaları"
         action={
-          <button className="btn btn-primary btn-sm" onClick={openNew}>
-            + Harcama Ekle
-          </button>
+          <AddButton onClick={openNew}>Harcama Ekle</AddButton>
         }
       />
 

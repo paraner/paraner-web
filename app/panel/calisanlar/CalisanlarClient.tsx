@@ -1,4 +1,5 @@
 "use client";
+import AddButton from "../../../components/AddButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
@@ -111,9 +112,7 @@ export default function CalisanlarClient({
         title="Çalışanlar"
         sub="Ekibin ve pozisyonları"
         action={
-          <button className="btn btn-primary btn-sm" onClick={openNew}>
-            + Çalışan Ekle
-          </button>
+          <AddButton onClick={openNew}>Çalışan Ekle</AddButton>
         }
       />
 

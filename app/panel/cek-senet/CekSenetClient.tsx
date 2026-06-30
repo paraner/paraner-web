@@ -1,4 +1,5 @@
 "use client";
+import AddButton from "../../../components/AddButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
@@ -170,9 +171,7 @@ export default function CekSenetClient({
         title="Çek / Senet Takibi"
         sub="Alınan ve verilen çek/senetler"
         action={
-          <button className="btn btn-primary btn-sm" onClick={openNew}>
-            + Çek / Senet
-          </button>
+          <AddButton onClick={openNew}>Çek / Senet</AddButton>
         }
       />
 

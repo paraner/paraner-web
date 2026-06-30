@@ -1,4 +1,5 @@
 "use client";
+import AddButton from "../../../components/AddButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
@@ -111,9 +112,7 @@ export default function BorcAlacakClient({
         title="Borç / Alacak"
         sub="Kime borçlusun, kim sana borçlu"
         action={
-          <button className="btn btn-primary btn-sm" onClick={openNew}>
-            + Kayıt Ekle
-          </button>
+          <AddButton onClick={openNew}>Kayıt Ekle</AddButton>
         }
       />
 

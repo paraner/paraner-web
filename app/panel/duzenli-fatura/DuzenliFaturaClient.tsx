@@ -1,4 +1,5 @@
 "use client";
+import AddButton from "../../../components/AddButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
@@ -178,9 +179,7 @@ export default function DuzenliFaturaClient({
         title="Düzenli Fatura"
         sub="Periyodik olarak tekrar eden faturalar"
         action={
-          <button className="btn btn-primary btn-sm" onClick={openNew}>
-            + Düzenli Fatura
-          </button>
+          <AddButton onClick={openNew}>Düzenli Fatura</AddButton>
         }
       />
 

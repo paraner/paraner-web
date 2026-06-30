@@ -1,4 +1,5 @@
 "use client";
+import AddButton from "../../../components/AddButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
@@ -94,9 +95,7 @@ export default function CarilerClient({
         title="Cariler"
         sub="Müşteri ve tedarikçi hesapların"
         action={
-          <button className="btn btn-primary btn-sm" onClick={openNew}>
-            + Cari Ekle
-          </button>
+          <AddButton onClick={openNew}>Cari Ekle</AddButton>
         }
       />
 

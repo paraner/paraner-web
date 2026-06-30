@@ -1,4 +1,5 @@
 "use client";
+import AddButton from "../../../components/AddButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useMemo, useState } from "react";
@@ -364,17 +365,18 @@ export default function CuzdanimClient({
         title="Cüzdanım"
         sub="Birikim ve yatırım varlıkların — canlı piyasa fiyatıyla"
         action={
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button
-              className="btn btn-ghost"
+              className="refresh-btn"
               onClick={() => router.refresh()}
               title="Fiyatları yenile"
             >
-              <RefreshCw size={16} />
+              <RefreshCw size={14} />
+              <span className="refresh-time" suppressHydrationWarning>
+                {new Date(market.timestamp).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+              </span>
             </button>
-            <button className="btn btn-primary" onClick={openAdd}>
-              <Plus size={16} /> Varlık Ekle
-            </button>
+            <AddButton onClick={openAdd}>Varlık Ekle</AddButton>
           </div>
         }
       />

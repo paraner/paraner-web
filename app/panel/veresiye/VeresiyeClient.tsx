@@ -1,4 +1,5 @@
 "use client";
+import AddButton from "../../../components/AddButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
@@ -146,9 +147,7 @@ export default function VeresiyeClient({
         title="Veresiye Defteri"
         sub="Müşteri veresiye ve ödemeleri"
         action={
-          <button className="btn btn-primary btn-sm" onClick={openNewCustomer}>
-            + Müşteri Ekle
-          </button>
+          <AddButton onClick={openNewCustomer}>Müşteri Ekle</AddButton>
         }
       />
 
