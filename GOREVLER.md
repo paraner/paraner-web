@@ -3,6 +3,7 @@
 > Sadece açık görevler. Tamamlananlar için `DAILY_LOG.md` + git geçmişi.
 
 ## Şimdiki
+- [ ] **🔴 SAYFA GEÇİŞİ ZIPLAMASI (DEVAM EDİYOR — işe başlayınca İLK bunu sor):** Ana sayfadan Giriş/Kayıt'a basınca canlıda (`paraner.com`) **dikey zıplama** oluyor — hem Mac Chrome hem iPhone, gizli sekme + cache temizliğinde bile. **Localde OLMUYOR.** Yapılanlar: (1) Next 16 `data-scroll-behavior="smooth"` eklendi (scroll artık anında — gerçek Chrome ölçümünde doğrulandı, bu DEĞİLDİ). (2) Auth'tan gereksiz One Tap `prompt()` kaldırıldı (hipotez 2, GIS prod-only). **Mehmet'in son deploy'u (33d4d26) test sonucu BEKLENİYOR.** Düzelmezse **Plan B:** canlıya görünür debug satırı (scroll/resize/nav/GIS olayları) ekle → Mehmet ekran görüntüsü alsın (video açamıyorum, sadece görsel). Detay: `DAILY_LOG.md` 06-29/30.
 - [ ] **Genel mobil tarama:** ana sayfa + auth ekranlarında telefonda taşma/bozulma var mı, tek tek bak. (Auth + rozetler 06-29'da elden geçti; ana sayfa/diğer bölümler kaldı.)
 
 ## İLERİDE
