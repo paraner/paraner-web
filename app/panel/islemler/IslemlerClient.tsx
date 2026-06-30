@@ -562,17 +562,8 @@ export default function IslemlerClient({
               <i className="tx-add-point" />
             </div>
             <span className="tx-add-inner">
-              <svg
-                className="tx-add-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2.5}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M12 5v14M5 12h14" />
+              <svg className="tx-add-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 4 H15 V9 H20 V15 H15 V20 H9 V15 H4 V9 H9 Z" />
               </svg>
               İşlem Ekle
             </span>
