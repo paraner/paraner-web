@@ -6,6 +6,7 @@ import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
 import PageHead from "../../../components/ui/PageHead";
+import AddButton from "../../../components/AddButton";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
@@ -154,9 +155,7 @@ export default function FaturalarClient({
         title={head.title}
         sub={head.sub}
         action={
-          <button className="btn btn-primary btn-sm" onClick={openNew}>
-            + Fatura Oluştur
-          </button>
+          <AddButton onClick={openNew}>Fatura Oluştur</AddButton>
         }
       />
 

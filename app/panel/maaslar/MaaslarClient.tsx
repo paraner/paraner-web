@@ -7,6 +7,7 @@ import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
 import PageHead from "../../../components/ui/PageHead";
+import AddButton from "../../../components/AddButton";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
@@ -115,9 +116,7 @@ export default function MaaslarClient({
         title="Maaş Ödemeleri"
         sub="Çalışan maaş kayıtları"
         action={
-          <button className="btn btn-primary btn-sm" onClick={openNew}>
-            + Maaş Ödemesi
-          </button>
+          <AddButton onClick={openNew}>Maaş Ödemesi</AddButton>
         }
       />
 

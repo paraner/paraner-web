@@ -6,6 +6,7 @@ import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
 import PageHead from "../../../components/ui/PageHead";
+import AddButton from "../../../components/AddButton";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
@@ -174,9 +175,7 @@ export default function TekliflerClient({
         title="Teklifler"
         sub="Müşteri teklif ve proformaları"
         action={
-          <button className="btn btn-primary btn-sm" onClick={openNew}>
-            + Teklif Oluştur
-          </button>
+          <AddButton onClick={openNew}>Teklif Oluştur</AddButton>
         }
       />
 

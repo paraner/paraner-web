@@ -6,6 +6,7 @@ import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
 import PageHead from "../../../components/ui/PageHead";
+import AddButton from "../../../components/AddButton";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
@@ -155,9 +156,7 @@ export default function MutabakatClient({
         title="Mutabakat"
         sub="Cari bakiye mutabakatları"
         action={
-          <button className="btn btn-primary btn-sm" onClick={openNew}>
-            + Mutabakat
-          </button>
+          <AddButton onClick={openNew}>Mutabakat</AddButton>
         }
       />
 
