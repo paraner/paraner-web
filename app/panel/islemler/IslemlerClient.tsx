@@ -910,7 +910,7 @@ export default function IslemlerClient({
                 <div className="drawer-head">
                   <span className="drawer-title">İşlem Detayı</span>
                   <button
-                    className="icon-btn"
+                    className="anim-act cls"
                     onClick={() => setSelected(null)}
                     aria-label="Kapat"
                   >

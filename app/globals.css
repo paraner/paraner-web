@@ -1812,6 +1812,8 @@ ul { list-style: none; }
 .anim-act.del:hover { background: var(--danger); border-color: var(--danger); }
 .anim-act.edit::before { content: "Düzenle"; }
 .anim-act.edit:hover { background: var(--teal); border-color: var(--teal); }
+.anim-act.cls::before { content: "Kapat"; }
+.anim-act.cls:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.24); }
 
 /* Satırda entegre kayma:
    - hover yok → genişlik 0, görünmez (tutar en sağda)
