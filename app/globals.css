@@ -1815,86 +1815,28 @@ ul { list-style: none; }
 .anim-act.cls::before { content: "Kapat"; }
 .anim-act.cls:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.24); }
 
-/* "İşlem Ekle" — uiverse "foolish-shrimp" uyarlaması (teal tema, marka değişkenine bağlı).
-   Tüm alt sınıflar tx-add-* ile namespace'li → genel .inner/.point/.fold ile çakışmaz. */
+/* "İşlem Ekle" — uiverse (JaydipPrajapati1910) sade buton, TİTANYUM (paraner.com primary).
+   Tek hover efekti: sağdaki ikon kutusu genişler + ok hafif kayar. Ağır animasyon yok. */
 .tx-add-btn {
-  --round: 0.7rem;
-  --tx-add-glow: rgba(255, 255, 255, 0.6);
-  cursor: pointer; position: relative; display: inline-flex; align-items: center; justify-content: center;
-  overflow: hidden; transition: all 0.25s ease; border: none; outline: none; padding: 11px 18px;
-  border-radius: var(--round);
-  background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%); /* TİTANYUM (paraner.com primary) */
+  font-family: inherit; color: #0a0b0d; font-size: 15px; font-weight: 600; letter-spacing: 0.02em;
+  display: inline-flex; align-items: center; border: none; cursor: pointer; position: relative; overflow: hidden;
+  height: 2.8em; padding: 0.35em 3.3em 0.35em 1.2em; border-radius: 0.8em;
+  background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%); /* TİTANYUM */
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 1px rgba(0, 0, 0, 0.18);
+  transition: box-shadow 0.25s ease;
 }
 .tx-add-btn:hover {
   box-shadow: 0 11px 28px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.92), inset 0 -1px 1px rgba(0, 0, 0, 0.22);
 }
-.tx-add-btn::before, .tx-add-btn::after {
-  content: ""; position: absolute; inset: var(--space); transition: all 0.5s ease-in-out;
-  border-radius: calc(var(--round) - var(--space)); z-index: 0;
-}
-.tx-add-btn::before { --space: 1px; background: linear-gradient(177.95deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 100%); }
-.tx-add-btn::after {
-  --space: 2px;
-  background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
-}
-.tx-add-btn:active { transform: scale(0.95); }
-
-.tx-add-fold {
-  z-index: 1; position: absolute; top: 0; right: 0; height: 1rem; width: 1rem; display: inline-block;
-  transition: all 0.5s ease-in-out;
-  background: radial-gradient(100% 75% at 55%, var(--tx-add-glow) 0%, transparent 100%);
-  box-shadow: 0 0 3px rgba(0, 0, 0, 0.5); border-bottom-left-radius: 0.5rem; border-top-right-radius: var(--round);
-}
-.tx-add-fold::after {
-  content: ""; position: absolute; top: 0; right: 0; width: 150%; height: 150%;
-  transform: rotate(45deg) translateX(0%) translateY(-18px); background-color: #e8e8e8; pointer-events: none;
-}
-.tx-add-btn:hover .tx-add-fold { margin-top: -1rem; margin-right: -1rem; }
-
-.tx-add-points { overflow: hidden; width: 100%; height: 100%; pointer-events: none; position: absolute; z-index: 1; }
-.tx-add-point {
-  bottom: -10px; position: absolute; pointer-events: none; width: 2px; height: 2px;
-  background-color: rgba(10, 11, 13, 0.45); border-radius: 9999px;
-  animation: txAddFloat infinite ease-in-out; animation-play-state: paused;
-}
-.tx-add-btn:hover .tx-add-point { animation-play-state: running; }
-@keyframes txAddFloat {
-  0% { transform: translateY(0); }
-  85% { opacity: 0; }
-  100% { transform: translateY(-55px); opacity: 0; }
-}
-.tx-add-point:nth-child(1) { left: 10%; opacity: 1; animation-duration: 2.35s; animation-delay: 0.2s; }
-.tx-add-point:nth-child(2) { left: 30%; opacity: 0.7; animation-duration: 2.5s; animation-delay: 0.5s; }
-.tx-add-point:nth-child(3) { left: 25%; opacity: 0.8; animation-duration: 2.2s; animation-delay: 0.1s; }
-.tx-add-point:nth-child(4) { left: 44%; opacity: 0.6; animation-duration: 2.05s; }
-.tx-add-point:nth-child(5) { left: 50%; opacity: 1; animation-duration: 1.9s; }
-.tx-add-point:nth-child(6) { left: 75%; opacity: 0.5; animation-duration: 1.5s; animation-delay: 1.5s; }
-.tx-add-point:nth-child(7) { left: 88%; opacity: 0.9; animation-duration: 2.2s; animation-delay: 0.2s; }
-.tx-add-point:nth-child(8) { left: 58%; opacity: 0.8; animation-duration: 2.25s; animation-delay: 0.2s; }
-.tx-add-point:nth-child(9) { left: 98%; opacity: 0.6; animation-duration: 2.6s; animation-delay: 0.1s; }
-.tx-add-point:nth-child(10) { left: 65%; opacity: 1; animation-duration: 2.5s; animation-delay: 0.2s; }
-
-.tx-add-inner {
-  z-index: 2; gap: 7px; position: relative; color: #0a0b0d; display: inline-flex; align-items: center;
-  justify-content: center; font-size: 15px; font-weight: 600; line-height: 1.5; white-space: nowrap;
-}
-/* + ikonu: DOLU siyah (kalın). Hover → içi boşalır, çerçeve çizilir, sonra tekrar dolar (uiverse davranışı). */
 .tx-add-icon {
-  width: 19px; height: 19px; fill: #0a0b0d; stroke: #0a0b0d; stroke-width: 1.5;
-  stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 64; stroke-dashoffset: 0;
+  position: absolute; right: 0.3em; display: flex; align-items: center; justify-content: center;
+  height: 2.2em; width: 2.2em; border-radius: 0.6em; background: #0a0b0d;
+  box-shadow: 0.1em 0.1em 0.5em 0.1em rgba(0, 0, 0, 0.35); transition: width 0.3s ease;
 }
-.tx-add-btn:hover .tx-add-icon {
-  fill: transparent;
-  animation: txAddDraw 0.9s ease forwards, txAddFill 0.01s linear forwards 0.82s;
-}
-@keyframes txAddDraw { from { stroke-dashoffset: 64; } to { stroke-dashoffset: 0; } }
-@keyframes txAddFill { from { fill: transparent; } to { fill: #0a0b0d; } }
-
-@media (prefers-reduced-motion: reduce) {
-  .tx-add-point { animation: none; opacity: 0; }
-  .tx-add-btn:hover .tx-add-icon { animation: none; fill: #0a0b0d; }
-}
+.tx-add-btn:hover .tx-add-icon { width: calc(100% - 0.6em); }
+.tx-add-icon svg { width: 1.1em; height: 1.1em; color: #fff; transition: transform 0.3s ease; }
+.tx-add-btn:hover .tx-add-icon svg { transform: translateX(0.15em); }
+.tx-add-btn:active .tx-add-icon { transform: scale(0.96); }
 
 /* Satırda entegre kayma:
    - hover yok → genişlik 0, görünmez (tutar en sağda)

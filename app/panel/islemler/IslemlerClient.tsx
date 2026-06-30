@@ -547,25 +547,13 @@ export default function IslemlerClient({
         title="İşlemler"
         sub="Gelir ve giderlerin"
         action={
-          <button type="button" className="tx-add-btn" onClick={openAdd} aria-label="İşlem Ekle">
-            <span className="tx-add-fold" />
-            <div className="tx-add-points" aria-hidden="true">
-              <i className="tx-add-point" />
-              <i className="tx-add-point" />
-              <i className="tx-add-point" />
-              <i className="tx-add-point" />
-              <i className="tx-add-point" />
-              <i className="tx-add-point" />
-              <i className="tx-add-point" />
-              <i className="tx-add-point" />
-              <i className="tx-add-point" />
-              <i className="tx-add-point" />
-            </div>
-            <span className="tx-add-inner">
-              <svg className="tx-add-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M9 4 H15 V9 H20 V15 H15 V20 H9 V15 H4 V9 H9 Z" />
+          <button type="button" className="tx-add-btn" onClick={openAdd}>
+            İşlem Ekle
+            <span className="tx-add-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0 0h24v24H0z" fill="none" />
+                <path d="M16.172 11l-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z" fill="currentColor" />
               </svg>
-              İşlem Ekle
             </span>
           </button>
         }
