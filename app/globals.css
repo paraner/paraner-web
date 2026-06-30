@@ -1785,8 +1785,8 @@ ul { list-style: none; }
 .tx-delete:hover { color: var(--danger); background: rgba(226, 75, 74, 0.1); }
 .tx-edit svg, .tx-delete svg { width: 16px; height: 16px; display: block; }
 
-/* İşlemler: animasyonlu butonların açılmasına yer ayır (yalnız anim-act içeren satır kabı) */
-.tx-actions:has(.anim-act) { justify-content: flex-end; gap: 8px; min-width: 152px; }
+/* İşlemler satır aksiyonları: hover yokken genişlik 0 (tutar en sağda), hover'da açılır */
+.tx-actions:has(.anim-act) { justify-content: flex-end; gap: 0; }
 
 /* Animasyonlu aksiyon butonu (uiverse "smart-emu" tarzı): daire → hover'da pill + etiket reveal.
    Hem işlem satırında hem detay panelinde kullanılır. .del = "Sil" (danger), .edit = "Düzenle" (teal). */
@@ -1796,11 +1796,12 @@ ul { list-style: none; }
   color: var(--text-dim); display: flex; align-items: center; justify-content: center;
   cursor: pointer; overflow: hidden; position: relative;
   box-shadow: 0 0 16px rgba(0, 0, 0, 0.25);
-  transition: width .3s, background .3s, border-color .3s, color .3s, border-radius .3s, opacity .15s;
+  transition: width .3s, margin .3s, border-width .3s, background .3s, border-color .3s, color .3s, border-radius .3s, opacity .2s;
 }
 .anim-act svg { width: 16px; height: 16px; display: block; transition: width .3s, height .3s, transform .3s; }
 .anim-act::before {
-  position: absolute; top: -22px; content: ""; color: #fff; white-space: nowrap;
+  position: absolute; top: -22px; left: 0; right: 0; text-align: center;
+  content: ""; color: #fff; white-space: nowrap;
   font-weight: 600; font-size: 2px; opacity: 0;
   transition: transform .3s, font-size .3s, opacity .3s;
 }
@@ -1812,10 +1813,21 @@ ul { list-style: none; }
 .anim-act.edit::before { content: "Düzenle"; }
 .anim-act.edit:hover { background: var(--teal); border-color: var(--teal); }
 
-/* Satırda: butonlar yalnız satır hover'ında (veya klavye odağında) belirir → liste sade kalır */
-.tx-actions .anim-act { opacity: 0; }
+/* Satırda entegre kayma:
+   - hover yok → genişlik 0, görünmez (tutar en sağda)
+   - satır hover → 44px daire açılır, tutar sola kayar
+   - buton hover → 100px pill, tutar biraz daha kayar */
+.tx-row .tx-actions .anim-act {
+  width: 0; margin-left: 0; opacity: 0; border-width: 0; pointer-events: none;
+}
 .tx-row:hover .tx-actions .anim-act,
-.tx-actions .anim-act:focus-visible { opacity: 1; }
+.tx-row .tx-actions .anim-act:focus-visible {
+  width: 44px; margin-left: 8px; opacity: 1; border-width: 1px; pointer-events: auto;
+}
+.tx-row:hover .tx-actions .anim-act:hover,
+.tx-row .tx-actions .anim-act:focus-visible:hover {
+  width: 100px;
+}
 
 /* İşlem satırı tıklanabilir (detay paneli) */
 .tx-row-click { cursor: pointer; }
@@ -1862,6 +1874,9 @@ ul { list-style: none; }
 .dr-thumb { width: 72px; height: 72px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); display: block; }
 .dr-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .drawer-actions { margin-top: auto; display: flex; flex-direction: row; justify-content: flex-end; gap: 12px; padding-top: 8px; }
+/* Düzenle sola (margin-right:auto onu sol uca iter), Sil sağda → dengeli; her biri ortaya doğru açılır.
+   Düzenle yoksa (transfer) Sil tek başına sağda kalır. */
+.drawer-actions .anim-act.edit { margin-right: auto; }
 .drawer-actions .btn { flex: 1; width: auto; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 12px; }
 .drawer-actions .btn svg { width: 15px; height: 15px; }
 
