@@ -1261,7 +1261,7 @@ ul { list-style: none; }
   transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
 .sidebar-toggle:hover {
-  background: var(--teal); color: #04140f; border-color: rgba(0, 191, 166, 0.5);
+  background: rgba(255, 255, 255, 0.12); color: #fff; border-color: rgba(255, 255, 255, 0.28);
   transform: scale(1.12);
 }
 .sidebar-toggle:active { transform: scale(0.96); }
@@ -1316,9 +1316,10 @@ ul { list-style: none; }
 /* Etiket asla 2. satıra düşmesin (açılışta "Genel Bakış" zıplamasın) */
 .nav-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .panel-nav-item:hover { background: rgba(255, 255, 255, 0.05); color: var(--text); }
+/* Aktif öğe — monokrom titanyum: beyaz metin + hafif zemin + ince gümüş sol çizgi */
 .panel-nav-item.active {
-  background: rgba(0, 191, 166, 0.18); color: var(--teal-2); font-weight: 700;
-  box-shadow: inset 0 0 0 1px rgba(0, 191, 166, 0.25);
+  background: rgba(255, 255, 255, 0.08); color: #fff; font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), inset 2px 0 0 0 #c9ced5;
 }
 .panel-nav-item.disabled { opacity: 0.4; cursor: default; pointer-events: none; }
 .panel-nav-soon {
@@ -1339,8 +1340,8 @@ ul { list-style: none; }
 .profile-switch-btn:disabled { cursor: default; }
 .profile-avatar {
   width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
-  display: grid; place-items: center; font-size: 13px; font-weight: 800; color: #000;
-  background: linear-gradient(135deg, var(--teal), #00d4b8);
+  display: grid; place-items: center; font-size: 13px; font-weight: 800; color: #0a0b0d;
+  background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%); /* titanyum */
 }
 .profile-avatar.sm { width: 26px; height: 26px; border-radius: 8px; font-size: 12px; }
 .profile-switch-info { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; flex: 1; }
@@ -1359,18 +1360,18 @@ ul { list-style: none; }
   text-align: left; color: var(--text); transition: background 0.12s;
 }
 .profile-switch-opt:hover { background: var(--card-2); }
-.profile-switch-opt.active { background: rgba(0, 191, 166, 0.1); }
-.profile-switch-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); flex-shrink: 0; margin-left: auto; }
+.profile-switch-opt.active { background: rgba(255, 255, 255, 0.06); }
+.profile-switch-dot { width: 8px; height: 8px; border-radius: 50%; background: #c9ced5; flex-shrink: 0; margin-left: auto; }
 
 /* ─── Yeni hesap ekle (switcher içi) ─── */
 .profile-switch-sep { height: 1px; background: var(--border); margin: 5px 4px; }
 .profile-add-plus {
   width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
-  display: grid; place-items: center; color: var(--teal);
-  background: rgba(0, 191, 166, 0.12);
+  display: grid; place-items: center; color: #c9ced5;
+  background: rgba(255, 255, 255, 0.08);
 }
 .profile-add-plus svg { width: 15px; height: 15px; }
-.profile-add-trigger .profile-switch-name { color: var(--teal); }
+.profile-add-trigger .profile-switch-name { color: #c9ced5; }
 .profile-add-locked {
   display: flex; align-items: center; gap: 10px; width: 100%;
   padding: 8px 9px; border-radius: 9px; opacity: 0.55;
@@ -1386,13 +1387,13 @@ ul { list-style: none; }
   font-size: 12px; font-weight: 600; transition: border-color 0.12s, color 0.12s, background 0.12s;
 }
 .profile-add-type svg { width: 14px; height: 14px; }
-.profile-add-type.on { color: var(--teal); border-color: var(--teal); background: rgba(0, 191, 166, 0.1); }
+.profile-add-type.on { color: #fff; border-color: rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.08); }
 .profile-add-input {
   width: 100%; padding: 8px 10px; border-radius: 9px;
   background: var(--card-2); border: 1px solid var(--border); color: var(--text);
   font-size: 13px; outline: none; transition: border-color 0.12s;
 }
-.profile-add-input:focus { border-color: var(--teal); }
+.profile-add-input:focus { border-color: rgba(255, 255, 255, 0.45); }
 .profile-add-input::placeholder { color: var(--text-faint); }
 .profile-add-error { font-size: 11px; color: var(--danger); padding: 0 2px; }
 .profile-add-actions { display: flex; gap: 6px; }
@@ -1402,7 +1403,7 @@ ul { list-style: none; }
 }
 .profile-add-cancel { background: var(--card-2); border: 1px solid var(--border); color: var(--text-dim); }
 .profile-add-cancel:hover:not(:disabled) { color: var(--text); }
-.profile-add-submit { background: var(--teal); border: 1px solid var(--teal); color: #000; }
+.profile-add-submit { background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%); border: 1px solid rgba(255, 255, 255, 0.3); color: #0a0b0d; }
 .profile-add-submit:hover:not(:disabled) { opacity: 0.9; }
 .profile-add-cancel:disabled, .profile-add-submit:disabled { opacity: 0.5; cursor: default; }
 

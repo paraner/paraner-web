@@ -74,7 +74,7 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
   const [addName, setAddName] = useState("");
   const [creating, setCreating] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
-  // Hesap geçişi animasyon overlay'i — P aşağıdan yukarıya beyazdan teal'e dolar
+  // Hesap geçişi animasyon overlay'i — P aşağıdan yukarıya gunmetal'den açık titanyuma dolar
   const [transition, setTransition] = useState<{
     name: string;
     type: string | null;
