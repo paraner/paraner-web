@@ -150,8 +150,13 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
     if (localStorage.getItem(COLLAPSE_KEY) === "1") setCollapsed(true);
   }, []);
 
-  // Aktif sayfanın bulunduğu işletme bölümünü otomatik aç.
+  // Aktif sayfanın bulunduğu işletme bölümünü SADECE ilk yüklemede otomatik aç.
+  // Oturum içi gezinmede (özellikle favoriden tıklamada) akordeonu kendiliğinden
+  // açmayız → favoriye basınca sadece sayfaya gider, ilgili bölüm patlamaz.
+  const didAutoOpen = useRef(false);
   useEffect(() => {
+    if (didAutoOpen.current) return;
+    didAutoOpen.current = true;
     const sec = BUSINESS_SECTIONS.find((s) =>
       s.items.some((i) => i.href != null && i.href.split("?")[0] === pathname)
     );
