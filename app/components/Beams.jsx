@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable react/no-unknown-property */
-import { forwardRef, useImperativeHandle, useEffect, useRef, useMemo } from 'react';
+import { forwardRef, useImperativeHandle, useEffect, useRef, useMemo, useState } from 'react';
 
 import * as THREE from 'three';
 
@@ -52,11 +52,38 @@ function extendMaterial(BaseMaterial, cfg) {
   return mat;
 }
 
-const CanvasWrapper = ({ children }) => (
-  <Canvas dpr={[1, 2]} frameloop="always" className="beams-container">
-    {children}
-  </Canvas>
-);
+// Görünürlük tabanlı duraklatma: hero ekran dışına çıkınca / sekme gizlenince
+// frameloop "never" → GPU boşa çalışmaz (mobil perf/pil). Görününce "always".
+const CanvasWrapper = ({ children }) => {
+  const boxRef = useRef(null);
+  const inView = useRef(true);
+  const [active, setActive] = useState(true);
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const sync = () => setActive(inView.current && !document.hidden);
+    const io = new IntersectionObserver(
+      ([e]) => {
+        inView.current = e.isIntersecting;
+        sync();
+      },
+      { threshold: 0.01 }
+    );
+    io.observe(el);
+    document.addEventListener('visibilitychange', sync);
+    return () => {
+      io.disconnect();
+      document.removeEventListener('visibilitychange', sync);
+    };
+  }, []);
+  return (
+    <div ref={boxRef} style={{ position: 'absolute', inset: 0 }}>
+      <Canvas dpr={[1, 2]} frameloop={active ? 'always' : 'never'} className="beams-container">
+        {children}
+      </Canvas>
+    </div>
+  );
+};
 
 const hexToNormalizedRGB = hex => {
   const clean = hex.replace('#', '');

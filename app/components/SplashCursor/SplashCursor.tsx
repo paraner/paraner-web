@@ -858,6 +858,7 @@ export default function SplashCursor({
 
     let lastUpdateTime = Date.now();
     let colorUpdateTimer = 0.0;
+    let rafId = 0; // rAF döngü id'si — unmount'ta iptal edilir (sızıntı önleme)
 
     function updateFrame() {
       const dt = calcDeltaTime();
@@ -866,7 +867,7 @@ export default function SplashCursor({
       applyInputs();
       step(dt);
       render(null);
-      requestAnimationFrame(updateFrame);
+      rafId = requestAnimationFrame(updateFrame);
     }
 
     function calcDeltaTime() {
@@ -1206,13 +1207,15 @@ export default function SplashCursor({
       return ((value - min) % range) + min;
     }
 
-    window.addEventListener('mousedown', e => {
+    // Dinleyiciler isimli fonksiyonlara alındı → unmount'ta kaldırılabilir (sızıntı önleme)
+    function onMouseDown(e: MouseEvent) {
       const pointer = pointers[0];
       const posX = scaleByPixelRatio(e.clientX - canvas!.getBoundingClientRect().left);
       const posY = scaleByPixelRatio(e.clientY - canvas!.getBoundingClientRect().top);
       updatePointerDownData(pointer, -1, posX, posY);
       clickSplat(pointer);
-    });
+    }
+    window.addEventListener('mousedown', onMouseDown);
 
     function handleFirstMouseMove(e: MouseEvent) {
       const pointer = pointers[0];
@@ -1225,13 +1228,14 @@ export default function SplashCursor({
     }
     document.body.addEventListener('mousemove', handleFirstMouseMove);
 
-    window.addEventListener('mousemove', e => {
+    function onMouseMove(e: MouseEvent) {
       const pointer = pointers[0];
       const posX = scaleByPixelRatio(e.clientX - canvas!.getBoundingClientRect().left);
       const posY = scaleByPixelRatio(e.clientY - canvas!.getBoundingClientRect().top);
       const color = pointer.color;
       updatePointerMoveData(pointer, posX, posY, color);
-    });
+    }
+    window.addEventListener('mousemove', onMouseMove);
 
     function handleFirstTouchStart(e: TouchEvent) {
       const touches = e.targetTouches;
@@ -1246,59 +1250,53 @@ export default function SplashCursor({
     }
     document.body.addEventListener('touchstart', handleFirstTouchStart);
 
-    window.addEventListener(
-      'touchstart',
-      e => {
-        const touches = e.targetTouches;
-        const pointer = pointers[0];
-        for (let i = 0; i < touches.length; i++) {
-          const posX = scaleByPixelRatio(touches[i].clientX - canvas!.getBoundingClientRect().left);
-          const posY = scaleByPixelRatio(touches[i].clientY - canvas!.getBoundingClientRect().top);
-          updatePointerDownData(pointer, touches[i].identifier, posX, posY);
-        }
-      },
-      false
-    );
+    function onTouchStart(e: TouchEvent) {
+      const touches = e.targetTouches;
+      const pointer = pointers[0];
+      for (let i = 0; i < touches.length; i++) {
+        const posX = scaleByPixelRatio(touches[i].clientX - canvas!.getBoundingClientRect().left);
+        const posY = scaleByPixelRatio(touches[i].clientY - canvas!.getBoundingClientRect().top);
+        updatePointerDownData(pointer, touches[i].identifier, posX, posY);
+      }
+    }
+    window.addEventListener('touchstart', onTouchStart, false);
 
-    window.addEventListener(
-      'touchmove',
-      e => {
-        const touches = e.targetTouches;
-        const pointer = pointers[0];
-        for (let i = 0; i < touches.length; i++) {
-          const posX = scaleByPixelRatio(touches[i].clientX - canvas!.getBoundingClientRect().left);
-          const posY = scaleByPixelRatio(touches[i].clientY - canvas!.getBoundingClientRect().top);
-          updatePointerMoveData(pointer, posX, posY, pointer.color);
-        }
-      },
-      false
-    );
+    function onTouchMove(e: TouchEvent) {
+      const touches = e.targetTouches;
+      const pointer = pointers[0];
+      for (let i = 0; i < touches.length; i++) {
+        const posX = scaleByPixelRatio(touches[i].clientX - canvas!.getBoundingClientRect().left);
+        const posY = scaleByPixelRatio(touches[i].clientY - canvas!.getBoundingClientRect().top);
+        updatePointerMoveData(pointer, posX, posY, pointer.color);
+      }
+    }
+    window.addEventListener('touchmove', onTouchMove, false);
 
-    window.addEventListener('touchend', e => {
+    function onTouchEnd(e: TouchEvent) {
       const touches = e.changedTouches;
       const pointer = pointers[0];
       for (let i = 0; i < touches.length; i++) {
         updatePointerUpData(pointer);
       }
-    });
-  }, [
-    SIM_RESOLUTION,
-    DYE_RESOLUTION,
-    CAPTURE_RESOLUTION,
-    DENSITY_DISSIPATION,
-    VELOCITY_DISSIPATION,
-    PRESSURE,
-    PRESSURE_ITERATIONS,
-    CURL,
-    SPLAT_RADIUS,
-    SPLAT_FORCE,
-    SHADING,
-    COLOR_UPDATE_SPEED,
-    BACK_COLOR,
-    TRANSPARENT,
-    RAINBOW_MODE,
-    COLOR
-  ]);
+    }
+    window.addEventListener('touchend', onTouchEnd);
+
+    // Unmount temizliği: rAF iptal + tüm dinleyiciler kaldırılır + WebGL context kaybedilir.
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('mousedown', onMouseDown);
+      document.body.removeEventListener('mousemove', handleFirstMouseMove);
+      window.removeEventListener('mousemove', onMouseMove);
+      document.body.removeEventListener('touchstart', handleFirstTouchStart);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
+    };
+    // Yapılandırma prop'ları yalnız ilk mount'ta okunur; dep array boş → effect
+    // yeniden koşmaz (FooterShader'ın inline obje prop'ları kümülatif context açmaz).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div
