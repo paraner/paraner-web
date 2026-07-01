@@ -105,11 +105,22 @@ export default function AuthLogo3D({ className }: { className?: string }) {
         mesh.rotation.y = -0.5;
         renderOnce();
       } else {
+        // Vitrin dönüşü: hız açının fonksiyonu. Ön yüz (rotation.y ≈ 0, 2π…) tam
+        // görünürken YAVAŞ (FRONT_FLOOR), dönüp arkaya (π) giderken HIZLANIR,
+        // sonra yumuşakça yavaşlayıp yine öne oturur. Asla durmaz, sürekli akış.
+        const FRONT_FLOOR = 0.14; // ön yüzdeki hız oranı (0=durur, 1=tam)
+        const PEAK = 1.7; // arka tepe açısal hız (rad/s)
+        const TWO_PI = Math.PI * 2;
         const loop = () => {
           if (disposed) return;
           raf = requestAnimationFrame(loop);
           if (!running) return;
-          mesh.rotation.y += clock.getDelta() * 0.7;
+          let dt = clock.getDelta();
+          if (dt > 0.05) dt = 0.05; // sekme geri gelince sıçrama olmasın
+          const a = mesh.rotation.y % TWO_PI;
+          // 0 → FRONT_FLOOR (ön, yavaş) · π → 1 (arka, hızlı) — cos ile yumuşak
+          const factor = FRONT_FLOOR + (1 - FRONT_FLOOR) * (0.5 - 0.5 * Math.cos(a));
+          mesh.rotation.y += PEAK * factor * dt;
           renderOnce();
         };
         raf = requestAnimationFrame(loop);
