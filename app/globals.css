@@ -1098,11 +1098,13 @@ ul { list-style: none; }
 .gsi-wrap, .social-auth .btn-social { flex: 0 0 calc(50% - 8px); max-width: calc(50% - 8px); min-width: 0; }
 /* GIS (Google Identity Services) kişiselleştirilmiş buton kabı — Apple ile eşit yarım;
    align-items:stretch (row) sayesinde Apple, GIS butonunun yüksekliğine uyar (eşit ebat). */
-/* min-height 52px: GIS kişiselleştirilmiş ("Paraner olarak devam et · e-posta") buton
-   2 satırlı → ~48-52px. Yedek buton + Apple da align-items:stretch ile bu yüksekliğe
-   uyar → GIS async geldiğinde satır BÜYÜMEZ (yükseklik baştan rezerve). Bu, canlıdaki
-   ~330ms sonra oluşan dikey ZIPLAMANIN kök nedeniydi (yedek 44px → GIS ~50px). */
-.gsi-wrap { display: flex; justify-content: center; align-items: center; min-height: 52px; }
+/* SABİT height 52px + overflow:hidden: GIS kişiselleştirilmiş ("Continue as … · e-posta")
+   buton render olurken BİR KARE ~80px'e sıçrayıp geri 52'ye iniyor (JumpProbe SOCIAL logu:
+   52→80→52). min-height sadece TABAN olduğundan bu geçici 80px satırı büyütüp altını
+   itiyordu = dikey ZIPLAMA (canlı-özel; GIS localhost'ta bloke → localde yok). Sabit
+   height + overflow:hidden bu sıçramayı KIRPAR → satır hep 52px. Yerleşen buton zaten
+   ≤52px (kırpılmaz). Yedek buton + Apple .btn-social min-height:52 ile eşit. */
+.gsi-wrap { display: flex; justify-content: center; align-items: center; height: 52px; overflow: hidden; }
 .gsi-wrap.gsi-hidden { display: none; }
 /* Çok dar ekranda (telefon) alt alta in — sıkışmasın */
 @media (max-width: 420px) {
