@@ -14,6 +14,14 @@
 
 ---
 
+## 2026-07-01 — Sayfa geçişi "dikey zıplama": KÖK NEDEN bulundu + fix (GIS buton reflow)
+
+Aylardır çözülemeyen prod-only zıplama (ana sayfa→Giriş/Kayıt; localde/headless üretilemiyor). Tahmin yerine **teşhis probu** (`JumpProbe.tsx`, `?jump=1` ile ekran-overlay: scrollY/viewport/docHeight/**layout-shift kaynağı**/`.social-auth` satır yüksekliği) yazıldı → Mehmet ekran görüntüsü aldı → **kesin neden**:
+- **Kök neden:** `/giris`'e inince **async GIS Google butonu** render olurken `.social-auth` satırı **52→80→52** sıçrıyor (kişiselleştirilmiş 2-satır buton + GIS'in render reflow'u). Altındaki her şeyi (bölücü/e-posta/Devam Et/rozetler) itip çekiyordu = zıplama. **Canlı-özel çünkü GIS localhost origin'de bloke** → yedek buton hiç değişmez → localde reflow yok. (Eski hipotezler smooth-scroll + One Tap YANLIŞTI.)
+- **Fix (satır/layout — ÇÖZÜLDÜ, canlı onaylandı "butonların/inputun zıplaması gitti"):** `.google-slot` (relative, **sabit 52px**) içine GIS kabı + yedek buton üst üste (absolute); `.gsi-wrap` `overflow:hidden` → GIS'in 80px sıçraması KIRPILIR, satır hep 52px. Deploy'lar: min-height denemesi (f79453b) → sabit height+overflow (941b10c) → görünmez-render+settle (8d0f801).
+- **GIS buton reveal cilası (fb77425):** yedek "Google" ↔ GIS "Continue with Google" yazı-değişimi göze çarpıyordu → yükleme boyunca slot BOŞ, GIS oturunca (rAF ile yükseklik ~150ms sabit) fade-in; yedek yalnız GIS yüklenemezse (`onerror`/1.6s timeout). ⚠️ Mehmet "olmadı yine" dedi + Mac fanı ısındı (prob sürekli rAF) → **prob kaldırıldı** (bu commit). Asıl layout zıplaması çözülü; GIS butonun mikro-belirme davranışı istenirse ileride ele alınır (alternatif: GIS renderButton yerine sabit Türkçe custom Google butonu → personalization kaybı pahasına sıfır reflow).
+- ⚠️ **Ders:** async 3P widget (GIS) yükseklik reflow'unda `min-height` taban yetmez; sabit `height`+`overflow:hidden` ile TAVANLA. Şeffaf/async alanları baştan sabit yükseklikle rezerve et.
+
 ## 2026-07-01 — Hero küp "çerçeve" fix (renk yönetimi) + panel sessiz-hata denetimi
 
 - **Hero 3B küp Windows'ta çerçeveli görünüyordu** (Mac + harici monitörde normal). Kök neden three.js kaynağından kanıtlandı: canvas `alpha:true`+premultiplied ile boş pikseller (0,0,0,0) = şeffaf; ama **Vignette post-pass** bu ŞEFFAF piksellere `darkness=1.12` ile negatif RGB yazıyordu → **OutputPass ACES tonemap negatifi POZİTİFE çeviriyor** (−0.07→+0.09) → premultiplied compositor artığı sayfa zeminine ekliyor → çevreden açık dikdörtgen. İyi ekranda görünmez, kalibrasyonsuz/yüksek-siyah-seviyeli panelde görünür. **Fix:** `AuthCube3D` Vignette (+zaten kapalı Bloom) pass'i kaldırıldı; FilmPass kaldı (siyaha 0 ekler, şeffaflığı bozmaz — doğrulandı). Deploy 50e2fcb → **kardeşinin Windows dizüstüsünde çerçeve gitti (canlı onaylandı).** Ders: şeffaf WebGL canvas'ta "boş piksele sabit karıştıran" pass'lerden kaçın; ACES+premultiplied negatifi görünür artığa çevirir. Detay: [[hero-kup-cerceve-fix]].

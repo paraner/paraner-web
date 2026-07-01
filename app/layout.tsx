@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import JumpProbe from "./components/JumpProbe";
 
 // Inter — telefon uygulamasıyla aynı font ailesi
 const inter = Inter({
@@ -117,8 +116,6 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        {/* Geçici teşhis: sayfa geçişi dikey zıplama (yalnız ?jump=1 ile görünür) */}
-        <JumpProbe />
         {children}
       </body>
     </html>
