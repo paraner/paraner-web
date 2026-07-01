@@ -1517,19 +1517,24 @@ ul { list-style: none; }
 .nav-section-chev { width: 15px; height: 15px; flex-shrink: 0; margin-left: auto; opacity: 0.5; transition: transform 0.2s ease; }
 .nav-section-head.open .nav-section-chev { transform: rotate(180deg); }
 
-/* Açılan alt öğeler */
+/* Akordeon paneli — grid-template-rows 0fr↔1fr ile auto yüksekliğe yumuşak animasyon
+   (biri içeri çekilirken öteki yukarı açılır). overflow:hidden içerikleri kırpar. */
+.nav-section-panel {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-section-panel.open { grid-template-rows: 1fr; }
+.nav-section-panel-inner { overflow: hidden; min-height: 0; }
+/* İçerik açılırken hafif belirme (kapanırken sönme) */
 .nav-section-items {
   display: flex; flex-direction: column; gap: 1px;
   /* Rehber çizgisini sola al (bölüm ikonunun sol kenarına); alt öğeler
      yerinde kalsın diye padding ile telafi (net girinti aynı). */
   margin: 2px 0 6px 12px; padding-left: 13px;
   border-left: 1.5px solid var(--border);
-  animation: navSectionOpen 0.18s ease;
+  opacity: 0; transition: opacity 0.22s ease;
 }
-@keyframes navSectionOpen {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+.nav-section-panel.open .nav-section-items { opacity: 1; }
 
 /* Alt öğe satırı = bağlantı/metin (esnek) + favori yıldızı */
 .nav-subitem-row { display: flex; align-items: center; border-radius: 9px; transition: background 0.15s; }

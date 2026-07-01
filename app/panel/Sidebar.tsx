@@ -83,7 +83,9 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
   const [collapsed, setCollapsed] = useState(false);
   const [dragWidth, setDragWidth] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
-  const [openSections, setOpenSections] = useState<Set<string>>(new Set());
+  // Akordeon: aynı anda tek bölüm açık (Faturalar açıkken Finans'a basınca Faturalar
+  // kapanır, Finans açılır). null = hepsi kapalı.
+  const [openSection, setOpenSection] = useState<string | null>(null);
   const [favs, setFavs] = useState<string[]>([]);
   const [navFade, setNavFade] = useState({ top: false, bottom: false });
   const switchRef = useRef<HTMLDivElement>(null);
@@ -153,23 +155,19 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
     const sec = BUSINESS_SECTIONS.find((s) =>
       s.items.some((i) => i.href != null && i.href.split("?")[0] === pathname)
     );
-    if (sec) setOpenSections((prev) => new Set(prev).add(sec.id));
+    if (sec) setOpenSection(sec.id);
   }, [pathname]);
 
+  // Akordeon: açık bölüme tekrar basınca kapanır, başka bölüme basınca ona geçer.
   function toggleSection(id: string) {
-    setOpenSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    setOpenSection((prev) => (prev === id ? null : id));
   }
 
   // Daraltılmışken bölüme tıklama: önce menüyü genişlet, sonra o bölümü aç.
   function onSectionClick(id: string) {
     if (collapsed) {
       applyCollapsed(false);
-      setOpenSections((prev) => new Set(prev).add(id));
+      setOpenSection(id);
     } else {
       toggleSection(id);
     }
@@ -216,7 +214,7 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
   // İçerik değişince (bölüm aç/kapa, favori, daralt) fade'i yeniden hesapla
   useEffect(() => {
     updateNavFade();
-  }, [openSections, favs, collapsed, isBusiness]);
+  }, [openSection, favs, collapsed, isBusiness]);
 
   // Alt öğe satırı (bölüm içi + favoriler aynı görünümü paylaşır) + yıldız
   function renderSubRow(item: BusinessMenuItem, favKey: string) {
@@ -594,7 +592,7 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
           {isBusiness && (
             <div className="nav-sections">
               {BUSINESS_SECTIONS.map((sec) => {
-                const open = openSections.has(sec.id) && !collapsed;
+                const open = openSection === sec.id && !collapsed;
                 return (
                   <div key={sec.id} className="nav-section">
                     <button
@@ -614,13 +612,20 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
                       <ChevronDown className="nav-section-chev" />
                     </button>
 
-                    {open && (
-                      <div className="nav-section-items">
-                        {sec.items.map((item) =>
-                          renderSubRow(item, `${sec.id}:${item.label}`)
-                        )}
+                    {/* Akordeon paneli — grid-rows 0fr↔1fr ile yumuşak aç/kapa
+                        (biri kapanırken öteki açılır). İçerik hep DOM'da. */}
+                    <div
+                      className={`nav-section-panel${open ? " open" : ""}`}
+                      inert={!open}
+                    >
+                      <div className="nav-section-panel-inner">
+                        <div className="nav-section-items">
+                          {sec.items.map((item) =>
+                            renderSubRow(item, `${sec.id}:${item.label}`)
+                          )}
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 );
               })}
