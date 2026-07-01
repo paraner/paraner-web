@@ -39,7 +39,7 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
   const [loading, setLoading] = useState(false);
   // Hata mesajları sağ üst toast'ta (Sonner). setError → toast'a yönlendiren sarmalayıcı.
   const setError = (msg: string | null) => { if (msg) showToast({ title: msg, variant: "error" }); };
-  const [gisReady, setGisReady] = useState(false); // GIS butonu render edildi mi
+  const [gisIn, setGisIn] = useState(false); // GIS butonu ölçüsü OTURDU mu → crossfade ile belir
   const btnRef = useRef<HTMLDivElement>(null);
   const rawNonceRef = useRef<string>(""); // signInWithIdToken'a ham nonce gider
   const modeRef = useRef(mode); // GIS init'te context için (mod değişince RE-INIT YOK → titreme yok)
@@ -114,13 +114,11 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
         context: modeRef.current === "kayit" ? "signup" : "signin",
       });
 
-      // Genişlik: gsi-wrap GIS hazır olana kadar display:none (gsi-hidden) → clientWidth 0 döner
-      // ve eski kod 240'a düşüyordu (Google butonu sabit dar/ortada kalıyordu). GÖRÜNÜR parent'tan
-      // hesapla: telefon (≤420 kolon) → tam genişlik; masaüstü (satır) → yarım (gap 16). Apple ile eşit.
-      const parentW = btnRef.current.parentElement?.clientWidth || 0;
-      const column = window.matchMedia("(max-width: 420px)").matches;
-      const target = column ? parentW : (parentW - 16) / 2;
-      const width = Math.round(Math.min(400, Math.max(200, target || 240)));
+      // Genişlik: gsi-wrap artık .google-slot içinde absolute inset:0 (opacity:0, laid-out) →
+      // clientWidth = slot genişliği (satır=yarım, kolon=tam). Apple ile birebir eşit; 200–400 kıs.
+      const width = Math.round(
+        Math.min(400, Math.max(200, btnRef.current.clientWidth || 240))
+      );
       // Mobil (≤1024) auth KOYU temada → koyu Google butonu (Apple koyu pill ile tutarlı).
       // Masaüstü beyaz formda → outline (beyaz). matchMedia render anında okunur.
       const darkAuth =
@@ -135,7 +133,30 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
         logo_alignment: "left",
         width,
       });
-      setGisReady(true);
+      // GIS butonu render olurken yüksekliği bir kaç kare SIÇRIYOR (JumpProbe: ~52→80→52).
+      // .gsi-wrap sabit 52 + overflow:hidden satırı sabitliyor AMA butonun KENDİSİ kırpılı
+      // kutuda snap yapıp flicker'lıyordu. Çözüm: buton opacity:0 render olur; yüksekliği
+      // ~150ms SABİT kalınca (oturunca) gisIn=true → yedek buton ile CROSSFADE ile belir.
+      // Böylece snap görünmez. Emniyet: 1.6s içinde oturmazsa yine göster.
+      const startedAt = performance.now();
+      let lastH = -1;
+      let stableSince = 0;
+      const revealWhenSettled = () => {
+        if (cancelled) return;
+        const child = btnRef.current?.firstElementChild as HTMLElement | null;
+        const h = child ? child.getBoundingClientRect().height : 0;
+        const now = performance.now();
+        if (h > 0 && Math.abs(h - lastH) < 0.5) {
+          if (!stableSince) stableSince = now;
+          if (now - stableSince >= 150) return setGisIn(true);
+        } else {
+          lastH = h;
+          stableSince = 0;
+        }
+        if (now - startedAt >= 1600) return setGisIn(true);
+        requestAnimationFrame(revealWhenSettled);
+      };
+      requestAnimationFrame(revealWhenSettled);
 
       // NOT: One Tap prompt() BİLEREK çağrılmıyor. Auth sayfasında buton zaten görünür →
       // One Tap gereksiz; ayrıca ana sayfadaki GoogleOneTap ile çift initialize/prompt
@@ -203,25 +224,28 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
 
   return (
     <div className="social-auth">
-      {/* Google kişiselleştirilmiş buton (GIS render eder) */}
-      <div
-        ref={btnRef}
-        className={`gsi-wrap${gisReady ? "" : " gsi-hidden"}`}
-        aria-busy={loading}
-      />
-
-      {/* Yedek custom buton — GIS hazır değilse */}
-      {!gisReady && (
+      {/* Google slot — GIS butonu + yedek buton ÜST ÜSTE (absolute); GIS oturunca crossfade.
+          Sabit 52px yükseklik → satır hiç zıplamaz; yedek→GIS geçişi flicker'sız. */}
+      <div className="google-slot">
+        {/* GIS kişiselleştirilmiş buton (Google render eder); oturana kadar opacity:0 */}
+        <div
+          ref={btnRef}
+          className={`gsi-wrap${gisIn ? " gsi-in" : ""}`}
+          aria-busy={loading}
+        />
+        {/* Yedek custom buton — GIS oturana kadar görünür; oturunca fade-out (DOM'da inert kalır) */}
         <button
           type="button"
-          className="btn btn-social btn-google"
+          className={`btn btn-social btn-google${gisIn ? " gsi-faded" : ""}`}
           onClick={handleGoogleFallback}
-          disabled={loading}
+          disabled={loading || gisIn}
+          aria-hidden={gisIn}
+          tabIndex={gisIn ? -1 : undefined}
         >
           <GoogleIcon />
           {loading ? "…" : "Google"}
         </button>
-      )}
+      </div>
 
       <button
         type="button"

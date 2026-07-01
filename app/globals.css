@@ -1095,21 +1095,29 @@ ul { list-style: none; }
 .social-auth .auth-msg { flex: 1 0 100%; margin-bottom: 0; }
 /* Her iki buton TAM yarım (gap 16 → her biri 50% - 8px). GIS butonu kendi container
    genişliğini ele geçirdiğinden flex:1 ile eşitlenmiyordu; sabit %50 ile birebir eşit. */
-.gsi-wrap, .social-auth .btn-social { flex: 0 0 calc(50% - 8px); max-width: calc(50% - 8px); min-width: 0; }
-/* GIS (Google Identity Services) kişiselleştirilmiş buton kabı — Apple ile eşit yarım;
-   align-items:stretch (row) sayesinde Apple, GIS butonunun yüksekliğine uyar (eşit ebat). */
-/* SABİT height 52px + overflow:hidden: GIS kişiselleştirilmiş ("Continue as … · e-posta")
-   buton render olurken BİR KARE ~80px'e sıçrayıp geri 52'ye iniyor (JumpProbe SOCIAL logu:
-   52→80→52). min-height sadece TABAN olduğundan bu geçici 80px satırı büyütüp altını
-   itiyordu = dikey ZIPLAMA (canlı-özel; GIS localhost'ta bloke → localde yok). Sabit
-   height + overflow:hidden bu sıçramayı KIRPAR → satır hep 52px. Yerleşen buton zaten
-   ≤52px (kırpılmaz). Yedek buton + Apple .btn-social min-height:52 ile eşit. */
-.gsi-wrap { display: flex; justify-content: center; align-items: center; height: 52px; overflow: hidden; }
-.gsi-wrap.gsi-hidden { display: none; }
+.google-slot, .social-auth .btn-social { flex: 0 0 calc(50% - 8px); max-width: calc(50% - 8px); min-width: 0; }
+/* Google slot: GIS butonu + yedek buton ÜST ÜSTE (absolute). SABİT 52px yükseklik →
+   GIS render'ı ne yaparsa yapsın satır ZIPLAMAZ. Kök neden: GIS butonu render olurken
+   yüksekliği bir kaç kare 52→80→52 sıçrıyordu (JumpProbe SOCIAL logu kanıtladı). Canlı-özel:
+   GIS localhost origin'de bloke → localde reflow yok. */
+.google-slot { position: relative; height: 52px; }
+/* GIS kabı: kutuyu doldur + kırp (snap görünmesin); oturana kadar opacity:0, gisIn'de belir. */
+.gsi-wrap {
+  position: absolute; inset: 0;
+  display: flex; justify-content: center; align-items: center; overflow: hidden;
+  opacity: 0; transition: opacity 0.28s ease;
+}
+.gsi-wrap.gsi-in { opacity: 1; }
+/* Yedek buton da slotu doldurur; GIS oturunca (gsi-faded) fade-out → CROSSFADE (flicker yok). */
+.google-slot .btn-social.btn-google { position: absolute; inset: 0; transition: opacity 0.28s ease; }
+.google-slot .btn-social.btn-google.gsi-faded { opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  .gsi-wrap, .google-slot .btn-social.btn-google { transition: none; }
+}
 /* Çok dar ekranda (telefon) alt alta in — sıkışmasın */
 @media (max-width: 420px) {
   .social-auth { flex-direction: column; }
-  .gsi-wrap, .social-auth .btn-social { flex: 1 1 auto; max-width: none; }
+  .google-slot, .social-auth .btn-social { flex: 1 1 auto; max-width: none; }
 }
 .btn-social {
   display: flex; align-items: center; justify-content: center; gap: 10px;
