@@ -4,7 +4,7 @@ import { confirmDialog } from "../../components/confirm";
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "../../../lib/supabase/client";
-import { formatCurrency, formatDate } from "../../../lib/format";
+import { formatCurrency, formatDate, parseAmount } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
 import PageHead from "../../../components/ui/PageHead";
 import AddButton from "../../../components/AddButton";
@@ -64,7 +64,7 @@ export default function MaaslarClient({
       setError("Çalışan seç.");
       return;
     }
-    const amt = Number(amount.replace(",", ".")) || 0;
+    const amt = parseAmount(amount) || 0;
     if (amt <= 0) {
       setError("Geçerli bir tutar gir.");
       return;

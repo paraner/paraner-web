@@ -5,8 +5,8 @@ import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
-import { formatCurrency, formatDate } from "../../../lib/format";
-import { todayStr } from "../../../lib/date";
+import { formatCurrency, formatDate, parseAmount } from "../../../lib/format";
+import { todayStr, advanceDate } from "../../../lib/date";
 import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
@@ -32,11 +32,7 @@ const PERIODS = [
 const periodLabel = (p: string) => PERIODS.find((x) => x.id === p)?.label ?? p;
 
 function advance(dateStr: string, period: string) {
-  const d = new Date(dateStr);
-  if (period === "quarterly") d.setMonth(d.getMonth() + 3);
-  else if (period === "yearly") d.setFullYear(d.getFullYear() + 1);
-  else d.setMonth(d.getMonth() + 1);
-  return d.toISOString().slice(0, 10);
+  return advanceDate(dateStr, period); // UTC-güvenli + ay taşması kısılır
 }
 
 export default function DuzenliFaturaClient({
@@ -97,7 +93,7 @@ export default function DuzenliFaturaClient({
       setError("Açıklama gerekli.");
       return;
     }
-    const amt = Number(amount.replace(",", ".")) || 0;
+    const amt = parseAmount(amount) || 0;
     if (amt <= 0) {
       setError("Geçerli bir tutar gir.");
       return;
@@ -106,7 +102,7 @@ export default function DuzenliFaturaClient({
       customer_name: customer.trim(),
       description: description.trim(),
       amount: amt,
-      vat_rate: Math.round(Number(vatRate.replace(",", ".")) || 0),
+      vat_rate: Math.round(parseAmount(vatRate) || 0),
       period,
       next_date: nextDate,
     };

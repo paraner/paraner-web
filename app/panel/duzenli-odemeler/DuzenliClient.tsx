@@ -5,8 +5,8 @@ import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
-import { formatCurrency, formatDate } from "../../../lib/format";
-import { todayStr } from "../../../lib/date";
+import { formatCurrency, formatDate, parseAmount } from "../../../lib/format";
+import { todayStr, advanceDate } from "../../../lib/date";
 import { CATEGORIES, INCOME_CATEGORIES } from "../../../lib/categories";
 import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
@@ -36,11 +36,7 @@ const periodLabel = (p: string) => PERIODS.find((x) => x.id === p)?.label ?? p;
 const CURRENCIES = ["TRY", "USD", "EUR", "GBP"];
 
 function advance(dateStr: string, period: string) {
-  const d = new Date(dateStr);
-  if (period === "weekly") d.setDate(d.getDate() + 7);
-  else if (period === "yearly") d.setFullYear(d.getFullYear() + 1);
-  else d.setMonth(d.getMonth() + 1);
-  return d.toISOString().slice(0, 10);
+  return advanceDate(dateStr, period); // UTC-güvenli + ay taşması kısılır
 }
 
 function monthlyEq(r: Recurring) {
@@ -115,7 +111,7 @@ export default function DuzenliClient({
       setError("Başlık gerekli.");
       return;
     }
-    const amt = Number(amount.replace(",", ".")) || 0;
+    const amt = parseAmount(amount) || 0;
     if (amt <= 0) {
       setError("Geçerli bir tutar gir.");
       return;

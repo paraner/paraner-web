@@ -463,12 +463,10 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
       let composer: import("three/examples/jsm/postprocessing/EffectComposer.js").EffectComposer | null = null;
       let disposePost = () => {};
       if (enableShadows) {
-        const [{ EffectComposer }, { RenderPass }, { ShaderPass }, { VignetteShader }, { FilmPass }, { OutputPass }] =
+        const [{ EffectComposer }, { RenderPass }, { FilmPass }, { OutputPass }] =
           await Promise.all([
             import("three/examples/jsm/postprocessing/EffectComposer.js"),
             import("three/examples/jsm/postprocessing/RenderPass.js"),
-            import("three/examples/jsm/postprocessing/ShaderPass.js"),
-            import("three/examples/jsm/shaders/VignetteShader.js"),
             import("three/examples/jsm/postprocessing/FilmPass.js"),
             import("three/examples/jsm/postprocessing/OutputPass.js"),
           ]);
@@ -477,10 +475,14 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
         composer.setSize(W0, H0);
         composer.addPass(new RenderPass(scene, camera)); // sahne → HDR (tonemap en sonda)
         // Bloom KALDIRILDI: dönen metalde highlight'lar patlayıp arka plana hale yapıyordu.
-        const vignette = new ShaderPass(VignetteShader);
-        vignette.uniforms.offset.value = 1.1;
-        vignette.uniforms.darkness.value = 1.12; // kenarları hafif karart → odak küpte
-        composer.addPass(vignette);
+        // VIGNETTE KALDIRILDI (küp "çerçeveli" görünüyordu): canvas alpha:true + premultipliedAlpha
+        // ile boş pikseller (0,0,0,0) = şeffaf. Vignette bu ŞEFFAF piksellere darkness=1.12 ile
+        // NEGATİF RGB yazıyordu (alpha yine 0); OutputPass'teki ACES tonemap o negatifi POZİTİFE
+        // çeviriyor (~-0.07 → +0.09) → premultiplied compositor bunu sayfa zeminine EKLİYOR →
+        // küp bölgesi çevresinden daha açık bir DİKDÖRTGEN oluyordu. İyi ekranda görünmez ama
+        // düşük kaliteli/kalibrasyonsuz panelde (Windows dizüstü) belirgin kutu. Vignette gidince
+        // boş pikseller tam (0,0,0,0) kalır → küp gerçekten şeffaf, her ekranda "boşlukta" durur.
+        // (Film grain güvenli: siyaha 0 ekler — 0 + 0*noise = 0 → şeffaflığı bozmaz.)
         if (!reduce) composer.addPass(new FilmPass(0.16, false)); // ince film grain (reduced-motion'da kapalı)
         composer.addPass(new OutputPass()); // tonemap + sRGB — zincirin EN SONUNDA tek sefer
         disposePost = () => {

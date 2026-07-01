@@ -5,7 +5,7 @@ import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
-import { formatCurrency } from "../../../lib/format";
+import { formatCurrency, parseAmount } from "../../../lib/format";
 import { CATEGORIES, findCategory } from "../../../lib/categories";
 import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
@@ -68,7 +68,7 @@ export default function ButcelerClient({
       setError("Kategori seç.");
       return;
     }
-    const lim = Number(limit.replace(",", ".")) || 0;
+    const lim = parseAmount(limit) || 0;
     if (lim <= 0) {
       setError("Geçerli bir limit gir.");
       return;
@@ -114,7 +114,7 @@ export default function ButcelerClient({
         title="Kategori Bütçeleri"
         sub="Bu ayki harcamalarını kategori limitleriyle takip et"
         action={
-          <AddButton onClick={openNew} disabled={available.length === 0 && !editing}>Bütçe Ekle</AddButton>
+          <AddButton onClick={openNew} disabled={available.length === 0}>Bütçe Ekle</AddButton>
         }
       />
 

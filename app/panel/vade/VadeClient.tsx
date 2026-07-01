@@ -16,9 +16,14 @@ export type AgingInvoice = {
 
 function daysSince(dateStr: string | null) {
   if (!dateStr) return 0;
-  const d = new Date(dateStr).getTime();
-  if (isNaN(d)) return 0;
-  return Math.floor((Date.now() - d) / 86400000);
+  // Tarih-only karşılaştırma (UTC): new Date(str) + Date.now() karışımı timezone
+  // kaymasıyla sınırda 1 gün sapabiliyordu → her iki tarafı da UTC gün olarak al.
+  const [y, m, d] = dateStr.split("T")[0].split("-").map(Number);
+  if (!y || !m || !d) return 0;
+  const then = Date.UTC(y, m - 1, d);
+  const now = new Date();
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.floor((today - then) / 86400000);
 }
 
 function bucketOf(days: number) {
