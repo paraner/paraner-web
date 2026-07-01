@@ -244,12 +244,13 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
 
   return (
     <div className="auth-split-form">
-      <AuthLogo3D className="auth-logo3d" />
       <a
         href="https://paraner.com"
-        className="auth-wordmark"
+        className="auth-logo-link"
         aria-label="Paraner — ana sayfaya git"
-      />
+      >
+        <AuthLogo3D className="auth-logo3d" />
+      </a>
 
       {step === "code" ? (
         <OtpVerify email={email.trim()} mode={mode} onBack={() => setStep("input")} />

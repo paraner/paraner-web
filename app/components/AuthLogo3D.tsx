@@ -33,7 +33,7 @@ export default function AuthLogo3D({ className }: { className?: string }) {
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      renderer.setSize(size, size, false);
+      renderer.setSize(size, size); // updateStyle=true → canvas CSS boyutu container'a eşit (2x büyümez)
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.12;
       el.appendChild(renderer.domElement);
