@@ -969,8 +969,8 @@ ul { list-style: none; }
 /* ─── Sağ panel açık tema (beyaz zemin) — yalnızca MASAÜSTÜ iki-sütun (≥1025).
    Mobil (≤1024) tek-sütun form KOYU/siyah temaya döner → base stiller (aşağıdaki ≤1024 bloğu). ─── */
 @media (min-width: 1025px) {
-/* Masaüstünde içerik biraz yukarı — üst boşluk küçültüldü (aşağıya çok yakın durmasın) */
-.auth-split-form { padding-top: clamp(28px, 7vh, 84px); }
+/* Masaüstünde P logosu ile Giriş/Kayıt switcher'ı arasına biraz nefes */
+.auth-card-form .auth-logo-link { margin-bottom: 34px; }
 .auth-card-form .logo-text { color: #15171a; }
 .auth-card-form .auth-head h1 { color: #0c0e10; }
 .auth-card-form .auth-head p { color: #5b6168; }
