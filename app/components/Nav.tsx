@@ -40,7 +40,7 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
     <>
       <header className={`nav${scrolled ? " scrolled" : ""}`}>
         <div className="nav-inner">
-          <Logo />
+          <Logo spinning />
           <nav className="nav-links">
             <a href="/#ozellikler">Özellikler</a>
             <a href="/#fiyatlar">Fiyatlar</a>

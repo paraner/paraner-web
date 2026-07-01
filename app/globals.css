@@ -240,7 +240,9 @@ ul { list-style: none; }
     filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.45));
     transition: opacity 0.3s ease 0.12s;
   }
-  .nav.scrolled .logo { width: 17px; }
+  /* Dönen 3B P (spinning): wordmark P'siyle tutarlı boyut (~20px), kutu ona göre */
+  .logo-p-3d { width: 22px; height: 22px; }
+  .nav.scrolled .logo { width: 22px; }
   .nav.scrolled .logo-wordmark { transform: translateY(-50%) translateX(-90px); opacity: 0; }
   .nav.scrolled .logo-p { opacity: 1; }
 }

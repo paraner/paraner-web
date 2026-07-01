@@ -7,7 +7,13 @@ import { useEffect, useRef } from "react";
 //  • Titanyum PBR (metalness 1) + RoomEnvironment yansıması → krom/titanyum parlaklık
 //  • Y ekseninde yavaş döner; sekme gizliyken/görünmezken durur; reduced-motion → sabit açı
 //  • three dinamik import; WebGL yoksa sessizce boş kalır (fallback wordmark zaten var)
-export default function AuthLogo3D({ className }: { className?: string }) {
+export default function AuthLogo3D({
+  className,
+  camZ = 4.2, // kamera uzaklığı — küçükse P kadrajı doldurur (nav gibi ufak yerlerde)
+}: {
+  className?: string;
+  camZ?: number;
+}) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,7 +35,10 @@ export default function AuthLogo3D({ className }: { className?: string }) {
       if (disposed || !ref.current) return;
 
       const el = ref.current;
-      const size = el.clientWidth || 104;
+      // Gizliyse (ör. masaüstünde nav'daki mobil-P, display:none) hiç başlatma →
+      // boşa WebGL context açılmasın.
+      if (el.offsetParent === null || el.clientWidth === 0) return;
+      const size = el.clientWidth;
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -40,7 +49,7 @@ export default function AuthLogo3D({ className }: { className?: string }) {
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
-      camera.position.set(0, 0.35, 4.2);
+      camera.position.set(0, 0.35, camZ);
       camera.lookAt(0, 0, 0);
 
       // Ortam yansıması (stüdyo) — titanyumun "aynalı" hissi buradan gelir
