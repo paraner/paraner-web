@@ -14,6 +14,13 @@
 
 ---
 
+## 2026-07-01 — Hero küp "çerçeve" fix (renk yönetimi) + panel sessiz-hata denetimi
+
+- **Hero 3B küp Windows'ta çerçeveli görünüyordu** (Mac + harici monitörde normal). Kök neden three.js kaynağından kanıtlandı: canvas `alpha:true`+premultiplied ile boş pikseller (0,0,0,0) = şeffaf; ama **Vignette post-pass** bu ŞEFFAF piksellere `darkness=1.12` ile negatif RGB yazıyordu → **OutputPass ACES tonemap negatifi POZİTİFE çeviriyor** (−0.07→+0.09) → premultiplied compositor artığı sayfa zeminine ekliyor → çevreden açık dikdörtgen. İyi ekranda görünmez, kalibrasyonsuz/yüksek-siyah-seviyeli panelde görünür. **Fix:** `AuthCube3D` Vignette (+zaten kapalı Bloom) pass'i kaldırıldı; FilmPass kaldı (siyaha 0 ekler, şeffaflığı bozmaz — doğrulandı). Deploy 50e2fcb → **kardeşinin Windows dizüstüsünde çerçeve gitti (canlı onaylandı).** Ders: şeffaf WebGL canvas'ta "boş piksele sabit karıştıran" pass'lerden kaçın; ACES+premultiplied negatifi görünür artığa çevirir. Detay: [[hero-kup-cerceve-fix]].
+- **Web geneli hata taraması (2 paralel Explore ajanı):** panel modülleri + pazarlama/auth/3B. tsc+lint+`next build` temiz. **Kritik nokta: pazarlama bulgularının neredeyse tamamı yanlış pozitif çıktı** — gerçek kodla tek tek doğrulandı, körlemesine uygulanmadı (OtpVerify "stale email" → `email` zaten dep'te; SocialAuth matchMedia guard'ı doğru sırada + modeRef kasıtlı; proxy `rewrite` kasıtlı; Cüzdanım optimistic restore çalışıyor; AuthForm `window` useEffect'te client-only).
+- **Panel sessiz DB hata yutmaları giderildi (deploy 1a411ee):** (1) İşlemler ay filtresi — sorgu hatası spinner'ı sonsuza takıyordu → hata gösterilip loading temizleniyor. (2) `adjustBalance`/`dbAdjust` — bakiye update hatası yutuluyordu → kullanıcıya bildiriliyor (dbAdjust hata→null, çağıran `!= null` ile zaten güvenli). (3) Transfer silme — ters sıra (bakiye geri al→sil) silme başarısızsa bakiyeyi bozuyordu → önce sil, hata varsa çık, sonra bakiye geri al. (4) Ayarlar "diğer cihazlardan çıkış" — `user_devices` delete hatası yanlış "başarılı" mesajı yerine hata toast'ı.
+- **Bilerek YAPILMADI:** Faturalar numara sayacı update hatası (düşük önem; atomik artış server-side/RPC ister — DB şemasına dokunma). AuthForm/proxy edge-case robustluk (yanlış pozitif).
+
 ## 2026-07-01 — Web geneli denetim (4 paralel ajan) + düzeltmeler
 
 Baştan sona hata/ölü-kod denetimi (tsc+build temiz, 11/11 rota 200 ile doğrulandı). **Düzeltildi (4 commit):**
