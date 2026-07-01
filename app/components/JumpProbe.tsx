@@ -83,8 +83,9 @@ export default function JumpProbe() {
     window.visualViewport?.addEventListener("resize", onResize);
     window.visualViewport?.addEventListener("scroll", onResize);
 
-    // ── DOCUMENT yüksekliği (rAF poll; çökmeyi yakala) ──
+    // ── DOCUMENT yüksekliği + sosyal buton satırı (rAF poll; çökme/büyümeyi yakala) ──
     let lastDocH = document.documentElement.scrollHeight;
+    let lastSocialH = 0; // .social-auth satır yüksekliği (GIS async gelince değişirse = zıplama)
     let rafPoll = 0;
     const poll = () => {
       rafPoll = requestAnimationFrame(poll);
@@ -92,6 +93,12 @@ export default function JumpProbe() {
       if (Math.abs(dh - lastDocH) >= 4) {
         push("DOCH", `${lastDocH} → ${dh} (Δ${dh - lastDocH})`);
         lastDocH = dh;
+      }
+      const social = document.querySelector(".social-auth") as HTMLElement | null;
+      const sh = social ? Math.round(social.getBoundingClientRect().height) : 0;
+      if (sh !== lastSocialH) {
+        push("SOCIAL", `row h ${lastSocialH} → ${sh}`);
+        lastSocialH = sh;
       }
     };
     rafPoll = requestAnimationFrame(poll);
