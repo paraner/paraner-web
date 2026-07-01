@@ -8,13 +8,14 @@ import { cookieDomain } from "./lib/supabase/cookieDomain";
 export async function proxy(request: NextRequest) {
   const host = request.headers.get("host") || "";
   const hostname = host.split(":")[0];
-  const isApp = hostname === "app.paraner.com" || hostname === "app.localhost";
+  // app.* öneki olan her host panel sayılır (app.paraner.com, app.localhost, preview app.*)
+  const isApp = hostname.startsWith("app.");
 
   // Pazarlama domaini → panel yolu sadece app.* üzerinde olsun
   if (!isApp) {
     if (
       request.nextUrl.pathname.startsWith("/panel") &&
-      hostname.endsWith("paraner.com")
+      (hostname === "paraner.com" || hostname === "www.paraner.com")
     ) {
       const url = request.nextUrl.clone();
       url.hostname = "app." + hostname; // paraner.com/panel → app.paraner.com/panel
@@ -58,6 +59,14 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+
+  // Girişli kullanıcı /giris veya /kayit'a gelirse panele al (tekrar giriş/OTP olmasın)
+  if (user && (pathname.startsWith("/giris") || pathname.startsWith("/kayit"))) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/panel";
+    url.search = "";
+    return copyCookies(NextResponse.redirect(url), response);
+  }
 
   // Giriş/kayıt gibi herkese açık sayfalar korumadan muaf (yoksa /giris kendine döngü yapar)
   const PUBLIC_PATHS = ["/giris", "/kayit", "/sifre-sifirla"];

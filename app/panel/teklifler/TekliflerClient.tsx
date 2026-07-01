@@ -141,7 +141,11 @@ export default function TekliflerClient({
         };
       });
       const { error: iErr } = await supabase.from("quote_items").insert(rows);
-      if (iErr) throw iErr;
+      if (iErr) {
+        // Kalemler eklenemedi → kalemsiz (yetim) teklif DB'de kalmasın, geri al.
+        await supabase.from("quotes").delete().eq("id", (quote as Quote).id);
+        throw iErr;
+      }
 
       setList((prev) => [quote as Quote, ...prev]);
       setCounter((c) => c + 1);
