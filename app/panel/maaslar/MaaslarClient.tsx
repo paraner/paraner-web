@@ -8,6 +8,7 @@ import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
 import PageHead from "../../../components/ui/PageHead";
 import AddButton from "../../../components/AddButton";
+import SaveButton from "../../../components/SaveButton";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
@@ -215,14 +216,9 @@ export default function MaaslarClient({
               </Field>
             </div>
 
-            <button
-              type="submit"
-              className="btn btn-primary btn-block btn-lg"
-              disabled={saving}
-              style={{ marginTop: 4 }}
-            >
+            <SaveButton busy={saving} disabled={saving} style={{ marginTop: 4 }}>
               {saving ? "Kaydediliyor…" : "Kaydet"}
-            </button>
+            </SaveButton>
           </form>
         </Modal>
       )}

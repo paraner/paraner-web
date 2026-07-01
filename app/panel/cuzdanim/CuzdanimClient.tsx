@@ -1,5 +1,6 @@
 "use client";
 import AddButton from "../../../components/AddButton";
+import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useMemo, useState } from "react";
@@ -620,9 +621,9 @@ export default function CuzdanimClient({
             )}
 
             {error && <p className="form-error">{error}</p>}
-            <button className="btn btn-primary btn-block" disabled={saving}>
+            <SaveButton busy={saving} disabled={saving}>
               {saving ? "Kaydediliyor…" : editing ? "Güncelle" : "Ekle"}
-            </button>
+            </SaveButton>
           </form>
         </Modal>
       )}
@@ -668,9 +669,9 @@ export default function CuzdanimClient({
               />
             </Field>
             {error && <p className="form-error">{error}</p>}
-            <button className="btn btn-primary btn-block" disabled={saving}>
+            <SaveButton busy={saving} disabled={saving}>
               {saving ? "Kaydediliyor…" : "Satışı Kaydet"}
-            </button>
+            </SaveButton>
           </form>
         </Modal>
       )}

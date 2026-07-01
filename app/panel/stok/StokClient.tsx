@@ -7,6 +7,7 @@ import { todayStr } from "../../../lib/date";
 import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
+import SaveButton from "../../../components/SaveButton";
 
 export type StokProduct = {
   id: string;
@@ -341,14 +342,9 @@ export default function StokClient({
               </Field>
             </div>
 
-            <button
-              type="submit"
-              className="btn btn-primary btn-block btn-lg"
-              disabled={saving}
-              style={{ marginTop: 4 }}
-            >
+            <SaveButton busy={saving} disabled={saving} style={{ marginTop: 4 }}>
               {saving ? "Kaydediliyor…" : "Hareketi Kaydet"}
-            </button>
+            </SaveButton>
           </form>
         </Modal>
       )}

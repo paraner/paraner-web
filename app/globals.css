@@ -1838,6 +1838,123 @@ ul { list-style: none; }
 .add-btn-ic svg { width: 1.05em; height: 1.05em; color: #fff; }
 .add-btn:active:not(:disabled) .add-btn-ic { transform: scale(0.95); }
 
+/* Modal birincil "Kaydet / Güncelle" butonu (uiverse Gugu-Ndlovu dark-glossy → TİTANYUM).
+   Paylaşımlı SaveButton bileşeni. Kıvılcım ikonu + harf shimmer + titanyum parıltı.
+   Mavi highlight (referans hue 210) → nötr titanyuma çevrildi ([[marka-rengi-degisecek]]). */
+.sb {
+  --sb-radius: 14px;
+  --sb-pad: 4px;
+  --sb-t: 0.4s;
+  --sb-bg: #101216;
+  --sb-accent: #d4d9df;                 /* titanyum highlight */
+  --sb-accent-soft: rgba(212, 217, 223, 0.5);
+
+  position: relative; z-index: 0;
+  width: 100%;
+  user-select: none;
+  display: flex; align-items: center; justify-content: center; gap: 0.55rem;
+  padding: 13px 20px;
+  font-family: inherit; font-size: 15px; font-weight: 600; letter-spacing: 0.01em;
+  background-color: var(--sb-bg);
+  border: solid 1px #ffffff22;
+  border-radius: var(--sb-radius);
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.2), inset 0 2px 2px rgba(255, 255, 255, 0.15),
+    inset 0 4px 4px rgba(255, 255, 255, 0.1), inset 0 8px 8px rgba(255, 255, 255, 0.05),
+    inset 0 16px 16px rgba(255, 255, 255, 0.05),
+    0 -1px 1px rgba(0, 0, 0, 0.02), 0 -2px 2px rgba(0, 0, 0, 0.03), 0 -4px 4px rgba(0, 0, 0, 0.05),
+    0 -8px 8px rgba(0, 0, 0, 0.06), 0 -16px 16px rgba(0, 0, 0, 0.08);
+  transition: box-shadow var(--sb-t), border var(--sb-t), background-color var(--sb-t), opacity var(--sb-t);
+}
+.sb::before {
+  content: ""; position: absolute; pointer-events: none;
+  top: calc(0px - var(--sb-pad)); left: calc(0px - var(--sb-pad));
+  width: calc(100% + var(--sb-pad) * 2); height: calc(100% + var(--sb-pad) * 2);
+  border-radius: calc(var(--sb-radius) + var(--sb-pad));
+  background-image: linear-gradient(0deg, #0004, #000a);
+  z-index: -1;
+  transition: box-shadow var(--sb-t), filter var(--sb-t);
+  box-shadow: 1px 1px 1px #fff2, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001;
+}
+.sb::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  border-radius: inherit;
+  background-image: linear-gradient(0deg, #fff, var(--sb-accent), var(--sb-accent-soft), 8%, transparent);
+  opacity: 0;
+  transition: opacity var(--sb-t), filter var(--sb-t);
+}
+.sb:disabled:not(.is-busy) { cursor: not-allowed; opacity: 0.5; }
+
+.sb-svg {
+  flex: none; height: 20px; width: 20px;
+  fill: #e8e8e8;
+  filter: drop-shadow(0 0 2px #fff9);
+  animation: sb-flicker 2s linear infinite; animation-delay: 0.5s;
+  transition: fill var(--sb-t), filter var(--sb-t);
+}
+@keyframes sb-flicker { 50% { opacity: 0.3; } }
+
+.sb-txt { position: relative; display: inline-flex; }
+.sb-letter {
+  position: relative; display: inline-block;
+  color: #fff6;
+  animation: sb-letter 2s ease-in-out infinite;
+  transition: color var(--sb-t), text-shadow var(--sb-t);
+}
+@keyframes sb-letter { 50% { text-shadow: 0 0 3px #fff8; color: #fff; } }
+
+/* Hover */
+.sb:hover:not(:disabled) { border-color: var(--sb-accent-soft); }
+.sb:hover:not(:disabled)::before {
+  box-shadow: 0 -8px 8px -6px #fffa inset, 0 -16px 16px -8px rgba(212, 217, 223, 0.3) inset,
+    1px 1px 1px #fff2, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001;
+}
+.sb:hover:not(:disabled)::after { opacity: 1; mask-image: linear-gradient(0deg, #fff, transparent); }
+.sb:hover:not(:disabled) .sb-svg {
+  fill: #fff; animation: none;
+  filter: drop-shadow(0 0 3px var(--sb-accent)) drop-shadow(0 -4px 6px #0009);
+}
+
+/* Aktif (basılı) */
+.sb:active:not(:disabled) {
+  border-color: rgba(224, 228, 233, 0.7);
+  background-color: rgba(52, 58, 66, 0.5);
+}
+.sb:active:not(:disabled)::before {
+  box-shadow: 0 -8px 12px -6px #fffa inset, 0 -16px 16px -8px rgba(212, 217, 223, 0.8) inset,
+    1px 1px 1px #fff4, 2px 2px 2px #fff2, -1px -1px 1px #0002, -2px -2px 2px #0001;
+}
+.sb:active:not(:disabled)::after { opacity: 1; filter: brightness(180%); mask-image: linear-gradient(0deg, #fff, transparent); }
+.sb:active:not(:disabled) .sb-letter { color: #fff; text-shadow: 0 0 1px rgba(230, 234, 238, 0.9); animation: none; }
+
+/* Kaydediliyor (busy) — sürekli parıltı + ikon hızlı flicker + harfler tam beyaz */
+.sb.is-busy { cursor: progress; }
+.sb.is-busy::after { opacity: 0.5; mask-image: linear-gradient(0deg, #fff, transparent); }
+.sb.is-busy .sb-svg { animation-duration: 0.9s; fill: #fff; }
+.sb.is-busy .sb-letter { color: #fff; }
+
+/* Harf shimmer gecikmeleri (soldan sağa dalga) */
+.sb-letter:nth-child(1) { animation-delay: 0s; }
+.sb-letter:nth-child(2) { animation-delay: 0.08s; }
+.sb-letter:nth-child(3) { animation-delay: 0.16s; }
+.sb-letter:nth-child(4) { animation-delay: 0.24s; }
+.sb-letter:nth-child(5) { animation-delay: 0.32s; }
+.sb-letter:nth-child(6) { animation-delay: 0.4s; }
+.sb-letter:nth-child(7) { animation-delay: 0.48s; }
+.sb-letter:nth-child(8) { animation-delay: 0.56s; }
+.sb-letter:nth-child(9) { animation-delay: 0.64s; }
+.sb-letter:nth-child(10) { animation-delay: 0.72s; }
+.sb-letter:nth-child(11) { animation-delay: 0.8s; }
+.sb-letter:nth-child(12) { animation-delay: 0.88s; }
+.sb-letter:nth-child(13) { animation-delay: 0.96s; }
+.sb-letter:nth-child(14) { animation-delay: 1.04s; }
+.sb-letter:nth-child(15) { animation-delay: 1.12s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sb-svg, .sb-letter { animation: none !important; }
+}
+
 /* Kompakt yenileme butonu (cüzdanım) — AddButton ile aynı titanyum + yükseklik, ama dar.
    İçerik: yenileme ikonu + son yenileme saati. */
 .refresh-btn {

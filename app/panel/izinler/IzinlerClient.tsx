@@ -1,5 +1,6 @@
 "use client";
 import AddButton from "../../../components/AddButton";
+import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
@@ -287,14 +288,9 @@ export default function IzinlerClient({
               </Field>
             </div>
 
-            <button
-              type="submit"
-              className="btn btn-primary btn-block btn-lg"
-              disabled={saving}
-              style={{ marginTop: 4 }}
-            >
+            <SaveButton busy={saving} disabled={saving} style={{ marginTop: 4 }}>
               {saving ? "Kaydediliyor…" : "Kaydet"}
-            </button>
+            </SaveButton>
           </form>
         </Modal>
       )}

@@ -1,5 +1,6 @@
 "use client";
 import AddButton from "../../../components/AddButton";
+import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useEffect, useRef, useState } from "react";
@@ -639,14 +640,9 @@ export default function HesaplarClient({
               />
             </div>
 
-            <button
-              type="submit"
-              className="btn btn-primary btn-block btn-lg"
-              disabled={saving}
-              style={{ marginTop: 4 }}
-            >
+            <SaveButton busy={saving} disabled={saving} style={{ marginTop: 4 }}>
               {saving ? "Kaydediliyor…" : "Kaydet"}
-            </button>
+            </SaveButton>
           </form>
         </Modal>
       )}
@@ -753,14 +749,9 @@ export default function HesaplarClient({
                 );
               })()}
 
-            <button
-              type="submit"
-              className="btn btn-primary btn-block btn-lg"
-              disabled={tSaving || targets.length === 0}
-              style={{ marginTop: 4 }}
-            >
+            <SaveButton busy={tSaving} disabled={tSaving || targets.length === 0} style={{ marginTop: 4 }}>
               {tSaving ? "Aktarılıyor…" : "Transfer Et"}
-            </button>
+            </SaveButton>
           </form>
         </Modal>
       )}

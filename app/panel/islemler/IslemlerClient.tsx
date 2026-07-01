@@ -1,5 +1,6 @@
 "use client";
 import AddButton from "../../../components/AddButton";
+import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useEffect, useRef, useState } from "react";
@@ -875,14 +876,9 @@ export default function IslemlerClient({
               </Field>
             )}
 
-            <button
-              type="submit"
-              className="btn btn-primary btn-block btn-lg"
-              disabled={saving}
-              style={{ marginTop: 4 }}
-            >
+            <SaveButton busy={saving} disabled={saving} style={{ marginTop: 4 }}>
               {saving ? "Kaydediliyor…" : editing ? "Güncelle" : "Kaydet"}
-            </button>
+            </SaveButton>
           </form>
         </Modal>
       )}
