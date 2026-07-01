@@ -10,11 +10,18 @@ import { useEffect, useRef } from "react";
 export default function AuthLogo3D({
   className,
   camZ = 4.2, // kamera uzaklığı — küçükse P kadrajı doldurur (nav gibi ufak yerlerde)
+  paused = false, // true → dönüşü duraklat (açıyı korur; nav'da wordmark açıkken pil tasarrufu)
 }: {
   className?: string;
   camZ?: number;
+  paused?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  // paused prop'u döngüye ref üzerinden yansır (ana effect bir kez kurulur)
+  const pausedRef = useRef(paused);
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
 
   useEffect(() => {
     let disposed = false;
@@ -109,6 +116,7 @@ export default function AuthLogo3D({
       const clock = new THREE.Clock();
 
       const renderOnce = () => renderer.render(scene, camera);
+      renderOnce(); // ilk kare (duraklatılmış başlarsa boş kalmasın)
 
       if (reduce) {
         mesh.rotation.y = -0.5;
@@ -123,7 +131,7 @@ export default function AuthLogo3D({
         const loop = () => {
           if (disposed) return;
           raf = requestAnimationFrame(loop);
-          if (!running) return;
+          if (!running || pausedRef.current) return; // görünmez/duraklatılmışsa render etme (açı korunur)
           let dt = clock.getDelta();
           if (dt > 0.05) dt = 0.05; // sekme geri gelince sıçrama olmasın
           const a = mesh.rotation.y % TWO_PI;
