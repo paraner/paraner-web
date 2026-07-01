@@ -109,7 +109,7 @@ export default function AuthLogo3D({ className }: { className?: string }) {
         // görünürken YAVAŞ (FRONT_FLOOR), dönüp arkaya (π) giderken HIZLANIR,
         // sonra yumuşakça yavaşlayıp yine öne oturur. Asla durmaz, sürekli akış.
         const FRONT_FLOOR = 0.12; // ön yüzdeki hız oranı (0=durur, 1=tam) — otururken yavaş
-        const PEAK = 3.4; // arka tepe açısal hız (rad/s) — dönüşte belirgin hızlanma
+        const PEAK = 4.0; // arka tepe açısal hız (rad/s) — dönüşte belirgin hızlanma
         const TWO_PI = Math.PI * 2;
         const loop = () => {
           if (disposed) return;
