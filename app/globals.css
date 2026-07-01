@@ -1016,6 +1016,13 @@ ul { list-style: none; }
 
 /* Üst wordmark — ortalı, paraner.com linki + üstünden geçen ışıltı (paraner-app
    AnimatedWordmark ile aynı: wordmark PNG MASKE, teal taban + hareketli beyaz parıltı). */
+/* Formun üstünde dönen 3B titanyum P (AuthLogo3D) */
+.auth-logo3d {
+  width: 104px; height: 104px; margin: 2px auto 8px;
+  line-height: 0; pointer-events: none;
+}
+@media (max-width: 1024px) { .auth-logo3d { width: 92px; height: 92px; } }
+
 .auth-wordmark {
   display: block; width: 152px; height: 31px; margin: 0 auto 26px;
   position: relative; overflow: hidden;

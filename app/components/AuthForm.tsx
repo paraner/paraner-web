@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import SocialAuth from "./SocialAuth";
 import OtpVerify from "./OtpVerify";
 import StoreBadges from "./StoreBadges";
+import AuthLogo3D from "./AuthLogo3D";
 import { showToast } from "./toast";
 import { createClient } from "../../lib/supabase/client";
 
@@ -243,6 +244,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
 
   return (
     <div className="auth-split-form">
+      <AuthLogo3D className="auth-logo3d" />
       <a
         href="https://paraner.com"
         className="auth-wordmark"
