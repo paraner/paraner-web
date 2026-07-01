@@ -457,9 +457,10 @@ export default function AuthCube3D({ className, playIntro = true, zoom = 1 }: { 
       }
 
       // ── Post-processing (sadece masaüstü) — sinematik "render edilmiş" his ──
-      // Bloom (parlak rim/highlight'ların doğal taşması) + vignette (odağı küpe çek) +
-      // film grain (referanstaki ince doku/noise). SSAO eklemedim: B adımındaki gölge
-      // haritası cubie aralarındaki AO'yu zaten geometri-doğru veriyor (SSAO halo riski + tekrar).
+      // Sadece film grain (referanstaki ince doku/noise) kaldı. Bloom + Vignette KALDIRILDI:
+      // ikisi de şeffaf (alpha:true) canvas'ta boş pikselleri kirletip küpün etrafında görünür
+      // "çerçeve/hale" yapıyordu (detay aşağıda). SSAO eklemedim: gölge haritası cubie
+      // aralarındaki AO'yu zaten geometri-doğru veriyor (SSAO halo riski + tekrar).
       let composer: import("three/examples/jsm/postprocessing/EffectComposer.js").EffectComposer | null = null;
       let disposePost = () => {};
       if (enableShadows) {
