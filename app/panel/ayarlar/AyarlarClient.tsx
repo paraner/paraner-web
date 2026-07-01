@@ -293,7 +293,8 @@ function DevicesSection({ devices }: { devices: DeviceRow[] }) {
       await supabase.auth.signOut({ scope: "others" });
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.id && thisId) {
-        await supabase.from("user_devices").delete().eq("user_id", user.id).neq("device_id", thisId);
+        const { error: devErr } = await supabase.from("user_devices").delete().eq("user_id", user.id).neq("device_id", thisId);
+        if (devErr) throw devErr; // yanlış "başarılı" mesajı gösterme → catch hata toast'ı basar
       }
       showToast({ title: "Çıkış yapıldı", message: "Diğer tüm cihazlardan çıkış yapıldı.", variant: "success" });
       router.refresh();

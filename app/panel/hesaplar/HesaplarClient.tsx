@@ -187,7 +187,12 @@ export default function HesaplarClient({
       .maybeSingle();
     if (!data) return null;
     const next = Math.round(((Number(data.balance) || 0) + delta) * 100) / 100;
-    await supabase.from("bank_accounts").update({ balance: next }).eq("id", id);
+    const { error } = await supabase.from("bank_accounts").update({ balance: next }).eq("id", id);
+    if (error) {
+      // Bakiye yazımı başarısız → null dön (çağıran null'ı zaten ele alıyor), sessiz başarı olmasın.
+      setTError("Bakiye güncellenemedi. Tekrar dene.");
+      return null;
+    }
     return next;
   }
 

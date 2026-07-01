@@ -255,8 +255,14 @@ export default function IslemlerClient({
       .lt("date", end)
       .order("date", { ascending: false })
       .order("created_at", { ascending: false })
-      .then(({ data }) => {
+      .then(({ data, error }) => {
         if (!active) return;
+        if (error) {
+          // Hata yutulmasın: yoksa spinner sonsuza dek takılı kalırdı.
+          setError("İşlemler yüklenemedi. Tekrar dene.");
+          setLoadingMonth(false);
+          return;
+        }
         setList((data as Tx[]) ?? []);
         setLoadingMonth(false);
       });
@@ -404,7 +410,9 @@ export default function IslemlerClient({
       .maybeSingle();
     if (!data) return;
     const next = (Number(data.balance) || 0) + delta;
-    await supabase.from("bank_accounts").update({ balance: next }).eq("id", id);
+    const { error } = await supabase.from("bank_accounts").update({ balance: next }).eq("id", id);
+    // Finansal veri: bakiye yazımı sessizce başarısız olmasın — kullanıcı görüp doğrulasın.
+    if (error) setError("Hesap bakiyesi güncellenemedi. Hesabı kontrol et.");
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -512,17 +520,22 @@ export default function IslemlerClient({
         .eq("transfer_group_id", t.transfer_group_id);
       if (!legs) return;
 
-      // Her bacağın bakiye etkisini geri al, sonra grubu sil
+      // ÖNCE grubu sil (hata varsa bakiyelere dokunmadan çık — yoksa silme başarısız olup
+      // bakiyeler geri alınmış kalır, tutarsızlık olurdu). Sonra her bacağın bakiye etkisini geri al.
+      const { error: delErr } = await supabase
+        .from("transactions")
+        .delete()
+        .eq("transfer_group_id", t.transfer_group_id);
+      if (delErr) {
+        setError("Transfer silinemedi. Tekrar dene.");
+        return;
+      }
       for (const leg of legs) {
         if (leg.bank_account_id) {
           const delta = appliedDelta(leg.type, Number(leg.amount) || 0, leg.category);
           await adjustBalance(leg.bank_account_id, -delta);
         }
       }
-      await supabase
-        .from("transactions")
-        .delete()
-        .eq("transfer_group_id", t.transfer_group_id);
       const ids = new Set(legs.map((l) => l.id));
       setList((prev) => prev.filter((x) => !ids.has(x.id)));
       return;
