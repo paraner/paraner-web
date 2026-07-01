@@ -14,6 +14,14 @@
 
 ---
 
+## 2026-07-01 — Buton yenileme Adım 2: modal "Kaydet" → ortak SaveButton (titanyum)
+
+Mehmet uiverse dark-glossy buton HTML/CSS'i verdi (kıvılcım ikonu + harf-harf shimmer + parıltı, referans mavi hue 210). "Uygun şekilde" uyarlandı:
+- **Yeni ortak bileşen `components/SaveButton.tsx`** + `.sb`/`.sb-*` (globals.css). Mavi highlight NÖTR TİTANYUMA çevrildi ([[marka-rengi-degisecek]]): `--sb-accent:#d4d9df`. API: `<SaveButton busy={saving} disabled={saving} style={...}>{label}</SaveButton>` — children **string** olmalı (harflere bölünüp animasyonlanıyor). Varsayılan `type="submit"`. reduced-motion'da animasyon kapalı. `busy` (=kaydediliyor) → sürekli parıltı + ikon hızlı flicker; disabled ama .is-busy dim OLMAZ.
+- **20 modal submit butonu (19 modül)** eski yeşil `btn btn-primary btn-block btn-lg` → SaveButton. Çoğu perl toplu-replace (2 geçiş: stilli/stilsiz), cüzdanım (2, btn-lg'siz) + hesaplar transfer (busy=tSaving) elle. **Kapsam dışı:** hesaplar info-modal "Anladım/Kapat" butonu (type=button) — hâlâ `btn btn-primary`.
+- ⚠️ Perl notu: `s{}{}` delimiter'ı regex içindeki `[^}]` yüzünden bozuluyordu → `s###` delimiter kullanıldı. zsh'te `$files` unquoted BÖLÜNMEZ → glob'u doğrudan ver.
+- tsc temiz + `next build` OK → deploy (4fd7566). **Canlı görünüm onayı bekleniyor** (özellikle harf shimmer'ın her modalda çok mu hareketli olduğu). Sıradaki: Adım 3 (ikincil `btn-ghost` butonlar).
+
 ## 2026-06-29 — Mobil auth KOYU tema (siyah) + mağaza rozetleri tek satır + Google buton fix
 
 Mehmet onayıyla adım adım (canlı ekran görüntüleriyle), tümü `app/globals.css` + `SocialAuth.tsx`:
