@@ -14,6 +14,17 @@
 
 ---
 
+## 2026-07-01 — Web geneli denetim (4 paralel ajan) + düzeltmeler
+
+Baştan sona hata/ölü-kod denetimi (tsc+build temiz, 11/11 rota 200 ile doğrulandı). **Düzeltildi (4 commit):**
+- **Ölü kod:** SplashScreen.tsx + ServiceWorkerRegister.tsx (import edilmiyor), paraner-bg.jpg (860K) + paraner-logo.png + boot.html, 12 orphan CSS sınıfı (−27 satır). `sw.js` KORUNDU (kill-switch). CLAUDE.md güncellendi.
+- **WebGL sızıntı/perf:** SplashCursor useEffect'e cleanup (cancelAnimationFrame + 7 dinleyici removeEventListener + WEBGL_lose_context) + dep array `[]` (inline obje prop'tan kümülatif context açılmaz). Beams görünürlük duraklatma (IntersectionObserver + visibilitychange → frameloop "never").
+- **Teklifler:** numara `count()` yerine mevcut en büyük numaradan (silince mükerrer önlendi); quote_items patlarsa quote geri silinir (yetim önlendi).
+- **proxy:** `isApp = hostname.startsWith("app.")`; pazarlama→app redirect yalnız paraner.com/www; girişli kullanıcı /giris|/kayit → panele.
+- **Cila:** `lib/format.parseAmount` (Türkçe "1.234,56" → 1234.56, eskiden NaN→0) + `lib/date.advanceDate` (UTC-güvenli + ay taşması kısma, 31 Oca→28 Şub) → duzenli-odemeler/duzenli-fatura/maaslar/butceler retrofit. Modal a11y (role=dialog + odak yönetimi + focus-trap). vade daysSince UTC tarih-only. butceler disabled guard sadeleşti.
+
+**Bilerek YAPILMADI (rapor + GOREVLER'de):** maaş/düzenli "Ödendi"→`transactions` (mobil parite/çift-kayıt riski), `contacts` profile_id (kod tutarlı, şema teyidi), update/delete'e user_id defense-in-depth (~11 modül, RLS zaten gate ediyor), panel server-side auth guard (proxy+RLS yeterli; "ikinci getUser" perf optimizasyonu korundu), budget kategori-id normalize (veri teyidi gerek).
+
 ## 2026-07-01 — Buton yenileme Adım 2: modal "Kaydet" → ortak SaveButton (titanyum)
 
 Mehmet uiverse dark-glossy buton HTML/CSS'i verdi (kıvılcım ikonu + harf-harf shimmer + parıltı, referans mavi hue 210). "Uygun şekilde" uyarlandı:
