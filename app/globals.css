@@ -1886,15 +1886,6 @@ ul { list-style: none; }
 }
 .sb:disabled:not(.is-busy) { cursor: not-allowed; opacity: 0.5; }
 
-.sb-svg {
-  flex: none; height: 20px; width: 20px;
-  fill: #e8e8e8;
-  filter: drop-shadow(0 0 2px #fff9);
-  animation: sb-flicker 2s linear infinite; animation-delay: 0.5s;
-  transition: fill var(--sb-t), filter var(--sb-t);
-}
-@keyframes sb-flicker { 50% { opacity: 0.3; } }
-
 .sb-txt { position: relative; display: inline-flex; }
 .sb-letter {
   position: relative; display: inline-block;
@@ -1904,17 +1895,13 @@ ul { list-style: none; }
 }
 @keyframes sb-letter { 50% { text-shadow: 0 0 3px #fff8; color: #fff; } }
 
-/* Hover */
+/* Hover — çok hafif alt parıltı (kısık) */
 .sb:hover:not(:disabled) { border-color: var(--sb-accent-soft); }
 .sb:hover:not(:disabled)::before {
-  box-shadow: 0 -8px 8px -6px #fffa inset, 0 -16px 16px -8px rgba(212, 217, 223, 0.3) inset,
+  box-shadow: 0 -5px 7px -7px #fff3 inset, 0 -14px 14px -10px rgba(212, 217, 223, 0.14) inset,
     1px 1px 1px #fff2, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001;
 }
-.sb:hover:not(:disabled)::after { opacity: 1; mask-image: linear-gradient(0deg, #fff, transparent); }
-.sb:hover:not(:disabled) .sb-svg {
-  fill: #fff; animation: none;
-  filter: drop-shadow(0 0 3px var(--sb-accent)) drop-shadow(0 -4px 6px #0009);
-}
+.sb:hover:not(:disabled)::after { opacity: 0.28; mask-image: linear-gradient(0deg, #fff, transparent); }
 
 /* Aktif (basılı) */
 .sb:active:not(:disabled) {
@@ -1930,8 +1917,7 @@ ul { list-style: none; }
 
 /* Kaydediliyor (busy) — sürekli parıltı + ikon hızlı flicker + harfler tam beyaz */
 .sb.is-busy { cursor: progress; }
-.sb.is-busy::after { opacity: 0.5; mask-image: linear-gradient(0deg, #fff, transparent); }
-.sb.is-busy .sb-svg { animation-duration: 0.9s; fill: #fff; }
+.sb.is-busy::after { opacity: 0.28; mask-image: linear-gradient(0deg, #fff, transparent); }
 .sb.is-busy .sb-letter { color: #fff; }
 
 /* Harf shimmer gecikmeleri (soldan sağa dalga) */
@@ -1952,7 +1938,7 @@ ul { list-style: none; }
 .sb-letter:nth-child(15) { animation-delay: 1.12s; }
 
 @media (prefers-reduced-motion: reduce) {
-  .sb-svg, .sb-letter { animation: none !important; }
+  .sb-letter { animation: none !important; }
 }
 
 /* Kompakt yenileme butonu (cüzdanım) — AddButton ile aynı titanyum + yükseklik, ama dar.
