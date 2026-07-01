@@ -108,8 +108,8 @@ export default function AuthLogo3D({ className }: { className?: string }) {
         // Vitrin dönüşü: hız açının fonksiyonu. Ön yüz (rotation.y ≈ 0, 2π…) tam
         // görünürken YAVAŞ (FRONT_FLOOR), dönüp arkaya (π) giderken HIZLANIR,
         // sonra yumuşakça yavaşlayıp yine öne oturur. Asla durmaz, sürekli akış.
-        const FRONT_FLOOR = 0.14; // ön yüzdeki hız oranı (0=durur, 1=tam)
-        const PEAK = 1.7; // arka tepe açısal hız (rad/s)
+        const FRONT_FLOOR = 0.12; // ön yüzdeki hız oranı (0=durur, 1=tam) — otururken yavaş
+        const PEAK = 2.8; // arka tepe açısal hız (rad/s) — dönüşte belirgin hızlanma
         const TWO_PI = Math.PI * 2;
         const loop = () => {
           if (disposed) return;
