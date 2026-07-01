@@ -1108,11 +1108,10 @@ ul { list-style: none; }
   opacity: 0; transition: opacity 0.28s ease;
 }
 .gsi-wrap.gsi-in { opacity: 1; }
-/* Yedek buton da slotu doldurur; GIS oturunca (gsi-faded) fade-out → CROSSFADE (flicker yok). */
-.google-slot .btn-social.btn-google { position: absolute; inset: 0; transition: opacity 0.28s ease; }
-.google-slot .btn-social.btn-google.gsi-faded { opacity: 0; pointer-events: none; }
+/* Yedek buton (yalnız GIS yüklenemezse) slotu doldurur. */
+.google-slot .btn-social.btn-google { position: absolute; inset: 0; }
 @media (prefers-reduced-motion: reduce) {
-  .gsi-wrap, .google-slot .btn-social.btn-google { transition: none; }
+  .gsi-wrap { transition: none; }
 }
 /* Çok dar ekranda (telefon) alt alta in — sıkışmasın */
 @media (max-width: 420px) {

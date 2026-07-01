@@ -39,7 +39,8 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
   const [loading, setLoading] = useState(false);
   // Hata mesajları sağ üst toast'ta (Sonner). setError → toast'a yönlendiren sarmalayıcı.
   const setError = (msg: string | null) => { if (msg) showToast({ title: msg, variant: "error" }); };
-  const [gisIn, setGisIn] = useState(false); // GIS butonu ölçüsü OTURDU mu → crossfade ile belir
+  const [gisIn, setGisIn] = useState(false); // GIS butonu ölçüsü OTURDU mu → boşluktan fade-in
+  const [gisFailed, setGisFailed] = useState(false); // GIS hiç yüklenemedi → yedek buton göster
   const btnRef = useRef<HTMLDivElement>(null);
   const rawNonceRef = useRef<string>(""); // signInWithIdToken'a ham nonce gider
   const modeRef = useRef(mode); // GIS init'te context için (mod değişince RE-INIT YOK → titreme yok)
@@ -133,11 +134,11 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
         logo_alignment: "left",
         width,
       });
-      // GIS butonu render olurken yüksekliği bir kaç kare SIÇRIYOR (JumpProbe: ~52→80→52).
-      // .gsi-wrap sabit 52 + overflow:hidden satırı sabitliyor AMA butonun KENDİSİ kırpılı
-      // kutuda snap yapıp flicker'lıyordu. Çözüm: buton opacity:0 render olur; yüksekliği
-      // ~150ms SABİT kalınca (oturunca) gisIn=true → yedek buton ile CROSSFADE ile belir.
-      // Böylece snap görünmez. Emniyet: 1.6s içinde oturmazsa yine göster.
+      // GIS butonu render olurken yüksekliği bir kaç kare SIÇRIYOR (JumpProbe: ~52→80→52) +
+      // yazısı yedek "Google"dan "Continue with Google"a döner. Yükleme boyunca slot BOŞ tutulur
+      // (yedek gösterilmez → yazı-değişimi olmaz); GIS butonu opacity:0 render olur, yüksekliği
+      // ~150ms SABİT kalınca (oturunca) gisIn=true → boşluktan yumuşak FADE-IN. GIS gerçekten
+      // yüklenemezse (timeout'ta buton yok) gisFailed=true → yedek buton gösterilir.
       const startedAt = performance.now();
       let lastH = -1;
       let stableSince = 0;
@@ -153,7 +154,8 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
           lastH = h;
           stableSince = 0;
         }
-        if (now - startedAt >= 1600) return setGisIn(true);
+        // Emniyet: 1.6s'de oturmadıysa — buton varsa göster, hiç yoksa yedeğe düş.
+        if (now - startedAt >= 1600) return h > 0 ? setGisIn(true) : setGisFailed(true);
         requestAnimationFrame(revealWhenSettled);
       };
       requestAnimationFrame(revealWhenSettled);
@@ -178,6 +180,9 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
       s.defer = true;
       s.onload = () => {
         if (!cancelled) initGis();
+      };
+      s.onerror = () => {
+        if (!cancelled) setGisFailed(true); // GIS script yüklenemedi → yedek buton
       };
       document.head.appendChild(s);
     } else {
@@ -233,18 +238,19 @@ export default function SocialAuth({ mode }: { mode: "giris" | "kayit" }) {
           className={`gsi-wrap${gisIn ? " gsi-in" : ""}`}
           aria-busy={loading}
         />
-        {/* Yedek custom buton — GIS oturana kadar görünür; oturunca fade-out (DOM'da inert kalır) */}
-        <button
-          type="button"
-          className={`btn btn-social btn-google${gisIn ? " gsi-faded" : ""}`}
-          onClick={handleGoogleFallback}
-          disabled={loading || gisIn}
-          aria-hidden={gisIn}
-          tabIndex={gisIn ? -1 : undefined}
-        >
-          <GoogleIcon />
-          {loading ? "…" : "Google"}
-        </button>
+        {/* Yedek buton — YALNIZ GIS hiç yüklenemezse. Normal yüklemede gösterilmez → yazı
+            "Google" iken "Continue with Google"a dönme zıplaması olmaz (slot boş bekler). */}
+        {gisFailed && (
+          <button
+            type="button"
+            className="btn btn-social btn-google"
+            onClick={handleGoogleFallback}
+            disabled={loading}
+          >
+            <GoogleIcon />
+            {loading ? "…" : "Google"}
+          </button>
+        )}
       </div>
 
       <button
