@@ -225,25 +225,27 @@ ul { list-style: none; }
   /* LOGO mobil: kaydırınca "ARANER" sola kayıp P'nin arkasına gider, P kalır.
      .logo kutusu wordmark genişliğinden P genişliğine daralır (overflow clip);
      wordmark sola öteler (slide), P üstte (z2) belirir. */
+  /* Wordmark→P kapanışı: YERİNDE çapraz geçiş (kaydırma yok). Kutu daralır,
+     "ARANER" solup kırpılır, P tam wordmark'ın P'sinin üstünde belirir → tutarlı. */
   .logo {
     width: 108px; height: 22px; overflow: hidden;
-    transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .logo-wordmark {
     position: absolute; left: 0; top: 50%; height: 20px; width: auto; z-index: 1;
     transform: translateY(-50%);
-    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease 0.1s;
+    transition: opacity 0.22s ease;
   }
   .logo-p {
     display: block; position: absolute; left: 0; top: 50%; height: 20px; width: auto; z-index: 2;
     transform: translateY(-50%); opacity: 0;
     filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.45));
-    transition: opacity 0.3s ease 0.12s;
+    transition: opacity 0.28s ease 0.06s;
   }
   /* Dönen 3B P (spinning): wordmark P'siyle tutarlı boyut (~20px), kutu ona göre */
   .logo-p-3d { width: 22px; height: 22px; }
   .nav.scrolled .logo { width: 22px; }
-  .nav.scrolled .logo-wordmark { transform: translateY(-50%) translateX(-90px); opacity: 0; }
+  .nav.scrolled .logo-wordmark { opacity: 0; }
   .nav.scrolled .logo-p { opacity: 1; }
 }
 
