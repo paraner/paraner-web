@@ -1022,8 +1022,8 @@ ul { list-style: none; }
 }
 .auth-logo3d { width: 96px; height: 96px; line-height: 0; pointer-events: none; }
 @media (max-width: 1024px) {
-  .auth-logo-link { width: 84px; height: 84px; margin-bottom: 14px; }
-  .auth-logo3d { width: 84px; height: 84px; }
+  .auth-logo-link { width: 68px; height: 68px; margin-bottom: 12px; }
+  .auth-logo3d { width: 68px; height: 68px; }
 }
 
 .auth-wordmark {
