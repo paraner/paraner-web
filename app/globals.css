@@ -2267,6 +2267,51 @@ ul { list-style: none; }
 .badge.green { background: rgba(0,191,166,0.15); color: var(--teal); }
 .badge.amber { background: rgba(186,117,23,0.18); color: var(--warning); }
 .badge.red { background: rgba(226,75,74,0.15); color: var(--danger); }
+.badge.blue { background: rgba(59,130,246,0.16); color: #7fb0ff; }
+
+/* Faturalar — araç çubuğu (durum çipleri + arama + tarih + CSV) + tıklanır satır + detay */
+.inv-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 14px;
+}
+.inv-status button { display: inline-flex; align-items: center; gap: 6px; }
+.chip-count {
+  font-size: 11px; font-weight: 700; line-height: 1;
+  padding: 2px 6px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08); color: var(--text-dim);
+}
+.inv-status button.active .chip-count { background: rgba(255, 255, 255, 0.14); color: var(--text); }
+.inv-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.inv-search {
+  display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px;
+  border: 1px solid var(--border); border-radius: 11px; background: var(--card-2); color: var(--text-dim);
+}
+.inv-search input {
+  border: none; background: transparent; color: var(--text); font-size: 14px; width: 180px; outline: none;
+}
+.inv-search input::placeholder { color: var(--text-faint); }
+.inv-dates { display: inline-flex; align-items: center; gap: 6px; }
+.inv-dates input {
+  height: 38px; padding: 0 10px; font-size: 13px;
+  border: 1px solid var(--border); border-radius: 11px; background: var(--card-2); color: var(--text);
+}
+.inv-dash { color: var(--text-dim); }
+.inv-draft {
+  display: flex; align-items: center; gap: 8px; margin: 4px 0 2px;
+  font-size: 13.5px; color: var(--text-dim); cursor: pointer;
+}
+.inv-draft input { width: 16px; height: 16px; accent-color: var(--teal); }
+
+.tx-row.clickable { cursor: pointer; }
+.tx-row.clickable:hover { background: rgba(255, 255, 255, 0.03); }
+.tx-row.active { background: var(--card-2); }
+
+/* Detay çekmecesindeki tehlike (Sil) butonu */
+.btn-danger {
+  background: rgba(226, 75, 74, 0.14); color: var(--danger);
+  box-shadow: inset 0 0 0 1px rgba(226, 75, 74, 0.3);
+}
+.btn-danger:hover { background: rgba(226, 75, 74, 0.22); }
 
 /* Liste satırında küçük baş-harf avatarı (örn. çalışanlar) */
 .avatar-chip {

@@ -3,7 +3,7 @@
 // `href: null` → "Yakında" (pasif). İkonlar Lucide.
 import {
   FileText, Wallet, Users, Briefcase, Package, BarChart3, Landmark,
-  PlusCircle, ArrowUpCircle, ArrowDownCircle, Repeat, ScanLine, Files,
+  Repeat, ScanLine, Files,
   ArrowLeftRight, TrendingUp, CircleDollarSign, Percent, PieChart, UserCircle,
   BookOpen, CircleCheck, Clock, Banknote, Receipt, CalendarDays, Tags, Layers,
   Download, FileBarChart, Share2, AlarmClock, ShieldCheck, Cloud,
@@ -31,9 +31,7 @@ export const BUSINESS_SECTIONS: BusinessMenuSection[] = [
     icon: <FileText />,
     color: "#1A6BFA",
     items: [
-      { label: "Fatura Oluştur", icon: <PlusCircle />, href: "/panel/faturalar" },
-      { label: "Satış Faturaları", icon: <ArrowUpCircle />, href: "/panel/faturalar?type=income" },
-      { label: "Alış Faturaları", icon: <ArrowDownCircle />, href: "/panel/faturalar?type=expense" },
+      { label: "Faturalar", icon: <FileText />, href: "/panel/faturalar" },
       { label: "Düzenli Fatura", icon: <Repeat />, href: "/panel/duzenli-fatura" },
       { label: "Fiş / Makbuz Tara", icon: <ScanLine />, href: null },
       { label: "Teklifler", icon: <Files />, href: "/panel/teklifler" },

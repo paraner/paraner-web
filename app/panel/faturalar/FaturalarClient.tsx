@@ -11,17 +11,49 @@ import SaveButton from "../../../components/SaveButton";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
+import { X, Search, Download, Check } from "lucide-react";
 
 export type Invoice = {
   id: string;
   invoice_number: string | null;
   customer_name: string | null;
+  subtotal: string | null;
+  vat_rate: number | null;
+  vat_amount: string | null;
   amount: string | null;
   currency: string | null;
   payment_status: string | null;
+  status: string | null;
+  paid_amount: string | null;
   type: string | null;
   invoice_date: string | null;
+  created_at: string | null;
 };
+
+// Vade tarihi kolonu yok (mobil şema) → "vadesi geçti" fatura tarihinden türetilir.
+const OVERDUE_DAYS = 30;
+
+type StatusKey = "draft" | "sent" | "paid" | "overdue";
+
+const STATUS_META: Record<StatusKey, { label: string; badge: string }> = {
+  draft: { label: "Taslak", badge: "gray" },
+  sent: { label: "Gönderildi", badge: "blue" },
+  paid: { label: "Ödendi", badge: "green" },
+  overdue: { label: "Vadesi geçti", badge: "red" },
+};
+
+function invStatus(inv: Invoice): StatusKey {
+  if (inv.payment_status === "paid") return "paid";
+  if ((inv.status ?? "sent") === "draft") return "draft";
+  if (inv.invoice_date) {
+    const due = new Date(inv.invoice_date);
+    due.setDate(due.getDate() + OVERDUE_DAYS);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (due < today) return "overdue";
+  }
+  return "sent";
+}
 
 export default function FaturalarClient({
   profileId,
@@ -40,14 +72,22 @@ export default function FaturalarClient({
 }) {
   const supabase = createClient();
   const [list, setList] = useState<Invoice[]>(initial);
-  // Liste filtresi (Tümü / Satış / Alış) — menüden gelen ?type= ile başlar
+  // Tür filtresi (Tümü / Satış / Alış) — derin-link ?type= ile başlar
   const [listFilter, setListFilter] = useState(initialFilter);
-  // Menüden satış↔alış geçişinde (aynı sayfa) URL değişince filtreyi güncelle
   useEffect(() => setListFilter(initialFilter), [initialFilter]);
+  // Durum filtresi (Tümü / Taslak / Gönderildi / Ödendi / Vadesi geçti)
+  const [statusFilter, setStatusFilter] = useState<"all" | StatusKey>("all");
+  // Arama + tarih aralığı
+  const [query, setQuery] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
   const [nextNumber, setNextNumber] = useState(invoiceNextNumber);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Invoice | null>(null); // sağ detay paneli
+  const [busyId, setBusyId] = useState<string | null>(null); // ödendi işaretleme
 
   // Form
   const [type, setType] = useState<"income" | "expense">("income");
@@ -56,6 +96,7 @@ export default function FaturalarClient({
   const [vatRate, setVatRate] = useState("20");
   const [invoiceDate, setInvoiceDate] = useState(todayStr());
   const [paid, setPaid] = useState(false);
+  const [isDraft, setIsDraft] = useState(false);
 
   function openNew() {
     setType(listFilter === "expense" ? "expense" : "income");
@@ -64,6 +105,7 @@ export default function FaturalarClient({
     setVatRate("20");
     setInvoiceDate(todayStr());
     setPaid(false);
+    setIsDraft(false);
     setError(null);
     setOpen(true);
   }
@@ -75,9 +117,20 @@ export default function FaturalarClient({
   const totalPurchase = sum(list.filter((i) => i.type === "expense"));
   const totalUnpaid = sum(list.filter((i) => i.payment_status !== "paid"));
 
-  // Aktif filtreye göre liste + başlık
-  const filtered =
-    listFilter === "all" ? list : list.filter((i) => i.type === listFilter);
+  // Filtreler: tür → durum → arama → tarih aralığı
+  const q = query.trim().toLocaleLowerCase("tr");
+  const filtered = list.filter((i) => {
+    if (listFilter !== "all" && i.type !== listFilter) return false;
+    if (statusFilter !== "all" && invStatus(i) !== statusFilter) return false;
+    if (q) {
+      const hay = `${i.customer_name ?? ""} ${i.invoice_number ?? ""}`.toLocaleLowerCase("tr");
+      if (!hay.includes(q)) return false;
+    }
+    if (dateFrom && (i.invoice_date ?? "") < dateFrom) return false;
+    if (dateTo && (i.invoice_date ?? "") > dateTo) return false;
+    return true;
+  });
+
   const head =
     listFilter === "income"
       ? { title: "Satış Faturaları", sub: "Kestiğin faturalar" }
@@ -85,12 +138,19 @@ export default function FaturalarClient({
       ? { title: "Alış Faturaları", sub: "Aldığın faturalar" }
       : { title: "Faturalar", sub: "Kestiğin ve aldığın faturalar" };
 
+  // Durum çipleri (mevcut listede geçen sayıya göre)
+  const scopeForStatus = list.filter(
+    (i) => listFilter === "all" || i.type === listFilter
+  );
+  const statusCount = (k: "all" | StatusKey) =>
+    k === "all" ? scopeForStatus.length : scopeForStatus.filter((i) => invStatus(i) === k).length;
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     const sub = Number(subtotal.replace(",", ".")) || 0;
     if (!customer.trim()) {
-      setError("Müşteri/firma adı gerekli.");
+      setError(type === "expense" ? "Tedarikçi/firma adı gerekli." : "Müşteri/firma adı gerekli.");
       return;
     }
     if (sub <= 0) {
@@ -116,13 +176,13 @@ export default function FaturalarClient({
           amount: total,
           currency,
           type,
-          status: "sent",
+          status: isDraft ? "draft" : "sent",
           payment_status: paid ? "paid" : "unpaid",
           paid_amount: paid ? total : 0,
           invoice_date: invoiceDate,
         })
         .select(
-          "id, invoice_number, customer_name, amount, currency, payment_status, type, invoice_date"
+          "id, invoice_number, customer_name, subtotal, vat_rate, vat_amount, amount, currency, payment_status, status, paid_amount, type, invoice_date, created_at"
         )
         .single();
       if (error) throw error;
@@ -143,21 +203,61 @@ export default function FaturalarClient({
     }
   }
 
+  async function markPaid(inv: Invoice) {
+    setBusyId(inv.id);
+    const total = Number(inv.amount) || 0;
+    const { error } = await supabase
+      .from("invoices")
+      .update({ payment_status: "paid", paid_amount: total })
+      .eq("id", inv.id);
+    setBusyId(null);
+    if (error) return;
+    const upd = { ...inv, payment_status: "paid", paid_amount: String(total) };
+    setList((prev) => prev.map((x) => (x.id === inv.id ? upd : x)));
+    setSelected((s) => (s && s.id === inv.id ? upd : s));
+  }
+
   async function handleDelete(inv: Invoice) {
     if (!(await confirmDialog({ message: `${inv.invoice_number ?? "Fatura"} silinsin mi?`, danger: true }))) return;
     const { error } = await supabase.from("invoices").delete().eq("id", inv.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== inv.id));
+    setSelected((s) => (s && s.id === inv.id ? null : s));
   }
+
+  function exportCsv() {
+    const rows = [
+      ["No", "Tür", "Müşteri/Firma", "Tarih", "Durum", "KDV Hariç", "KDV", "Toplam", "Para"],
+      ...filtered.map((i) => [
+        i.invoice_number ?? "",
+        i.type === "income" ? "Satış" : "Alış",
+        i.customer_name ?? "",
+        i.invoice_date ? formatDate(i.invoice_date) : "",
+        STATUS_META[invStatus(i)].label,
+        String(i.subtotal ?? ""),
+        String(i.vat_amount ?? ""),
+        String(i.amount ?? ""),
+        i.currency ?? currency,
+      ]),
+    ];
+    const csv = rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `faturalar-${todayStr()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const STATUS_CHIPS: ("all" | StatusKey)[] = ["all", "draft", "sent", "overdue", "paid"];
 
   return (
     <>
       <PageHead
         title={head.title}
         sub={head.sub}
-        action={
-          <AddButton onClick={openNew}>Fatura Oluştur</AddButton>
-        }
+        action={<AddButton onClick={openNew}>Fatura Oluştur</AddButton>}
       />
 
       {list.length === 0 ? (
@@ -183,7 +283,8 @@ export default function FaturalarClient({
             </div>
           </div>
 
-          <div className="chip-seg" style={{ marginBottom: 14 }}>
+          {/* Tür sekmeleri */}
+          <div className="chip-seg" style={{ marginBottom: 10 }}>
             <button
               className={listFilter === "all" ? "active" : ""}
               onClick={() => setListFilter("all")}
@@ -204,57 +305,183 @@ export default function FaturalarClient({
             </button>
           </div>
 
-          {filtered.length === 0 ? (
-            <div className="panel-empty">
-              Bu filtrede fatura yok.
+          {/* Araç çubuğu: durum çipleri + arama + tarih + CSV */}
+          <div className="inv-toolbar">
+            <div className="chip-seg inv-status">
+              {STATUS_CHIPS.map((k) => (
+                <button
+                  key={k}
+                  className={statusFilter === k ? "active" : ""}
+                  onClick={() => setStatusFilter(k)}
+                >
+                  {k === "all" ? "Tümü" : STATUS_META[k].label}
+                  <span className="chip-count">{statusCount(k)}</span>
+                </button>
+              ))}
             </div>
-          ) : (
-          <div className="tx-list">
-            {filtered.map((inv) => {
-            const isIncome = inv.type === "income";
-            const isPaid = inv.payment_status === "paid";
-            return (
-              <div key={inv.id} className="tx-row">
-                <div className="tx-main">
-                  <span
-                    className="tx-dot"
-                    style={{ background: isIncome ? "var(--teal)" : "var(--danger)" }}
-                  />
-                  <div className="tx-left">
-                    <span className="tx-title">{inv.customer_name || "—"}</span>
-                    <span className="tx-meta">
-                      {[
-                        inv.invoice_number,
-                        isIncome ? "Satış" : "Alış",
-                        inv.invoice_date ? formatDate(inv.invoice_date) : null,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                  </div>
-                </div>
-                <div className="tx-right">
-                  <span className={`badge ${isPaid ? "green" : "amber"}`}>
-                    {isPaid ? "Ödendi" : "Ödenmedi"}
-                  </span>
-                  <span className="tx-amount">
-                    {formatCurrency(Number(inv.amount) || 0, inv.currency || currency)}
-                  </span>
-                  <button
-                    className="tx-delete"
-                    onClick={() => handleDelete(inv)}
-                    aria-label="Sil"
-                  >
-                    <TrashIcon />
-                  </button>
-                </div>
+
+            <div className="inv-tools">
+              <label className="inv-search">
+                <Search size={15} />
+                <input
+                  type="search"
+                  placeholder="Müşteri veya no ara…"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+              </label>
+              <div className="inv-dates">
+                <input
+                  type="date"
+                  value={dateFrom}
+                  max={dateTo || undefined}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  aria-label="Başlangıç tarihi"
+                />
+                <span className="inv-dash">–</span>
+                <input
+                  type="date"
+                  value={dateTo}
+                  min={dateFrom || undefined}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  aria-label="Bitiş tarihi"
+                />
               </div>
-            );
-          })}
+              <button className="btn btn-ghost btn-sm" onClick={exportCsv} disabled={filtered.length === 0}>
+                <Download size={15} /> CSV
+              </button>
+            </div>
           </div>
-          )}
+
+          <div className={`tx-area${selected ? " shifted" : ""}`}>
+            {filtered.length === 0 ? (
+              <div className="panel-empty">Bu filtrede fatura yok.</div>
+            ) : (
+              <div className="tx-list">
+                {filtered.map((inv) => {
+                  const isIncome = inv.type === "income";
+                  const st = invStatus(inv);
+                  const meta = STATUS_META[st];
+                  return (
+                    <div
+                      key={inv.id}
+                      className={`tx-row clickable${selected?.id === inv.id ? " active" : ""}`}
+                      onClick={() => setSelected(inv)}
+                    >
+                      <div className="tx-main">
+                        <span
+                          className="tx-dot"
+                          style={{ background: isIncome ? "var(--teal)" : "var(--danger)" }}
+                        />
+                        <div className="tx-left">
+                          <span className="tx-title">{inv.customer_name || "—"}</span>
+                          <span className="tx-meta">
+                            {[
+                              inv.invoice_number,
+                              isIncome ? "Satış" : "Alış",
+                              inv.invoice_date ? formatDate(inv.invoice_date) : null,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="tx-right">
+                        <span className={`badge ${meta.badge}`}>{meta.label}</span>
+                        <span className="tx-amount">
+                          {formatCurrency(Number(inv.amount) || 0, inv.currency || currency)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </>
       )}
+
+      {/* Sağ detay çekmecesi */}
+      {selected &&
+        (() => {
+          const inv = selected;
+          const isIncome = inv.type === "income";
+          const st = invStatus(inv);
+          const meta = STATUS_META[st];
+          const cls = isIncome ? "pos" : "neg";
+          const sub = Number(inv.subtotal) || 0;
+          const vat = Number(inv.vat_amount) || 0;
+          return (
+            <aside className="tx-drawer">
+              <div className="drawer-head">
+                <span className="drawer-title">Fatura Detayı</span>
+                <button className="anim-act cls" onClick={() => setSelected(null)} aria-label="Kapat">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="drawer-amount">
+                <span className={`tx-amount ${cls}`}>
+                  {formatCurrency(Number(inv.amount) || 0, inv.currency || currency)}
+                </span>
+                <span className={`drawer-type ${cls}`}>{isIncome ? "Satış" : "Alış"}</span>
+              </div>
+              <div className="drawer-name">{inv.customer_name || "—"}</div>
+
+              <div className="drawer-rows">
+                <div className="drawer-row">
+                  <span className="dr-k">Fatura No</span>
+                  <span className="dr-v">{inv.invoice_number || "—"}</span>
+                </div>
+                <div className="drawer-row">
+                  <span className="dr-k">Durum</span>
+                  <span className="dr-v">
+                    <span className={`badge ${meta.badge}`}>{meta.label}</span>
+                  </span>
+                </div>
+                <div className="drawer-row">
+                  <span className="dr-k">Tarih</span>
+                  <span className="dr-v">{inv.invoice_date ? formatDate(inv.invoice_date) : "—"}</span>
+                </div>
+                <div className="drawer-row">
+                  <span className="dr-k">KDV Hariç</span>
+                  <span className="dr-v">{formatCurrency(sub, inv.currency || currency)}</span>
+                </div>
+                <div className="drawer-row">
+                  <span className="dr-k">KDV {inv.vat_rate != null ? `(%${inv.vat_rate})` : ""}</span>
+                  <span className="dr-v">{formatCurrency(vat, inv.currency || currency)}</span>
+                </div>
+                <div className="drawer-row">
+                  <span className="dr-k">Toplam</span>
+                  <span className="dr-v">{formatCurrency(Number(inv.amount) || 0, inv.currency || currency)}</span>
+                </div>
+                <div className="drawer-row">
+                  <span className="dr-k">Ödeme</span>
+                  <span className="dr-v">
+                    <span className={`badge ${inv.payment_status === "paid" ? "green" : "amber"}`}>
+                      {inv.payment_status === "paid" ? "Ödendi" : "Ödenmedi"}
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="drawer-actions">
+                {inv.payment_status !== "paid" && (
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() => markPaid(inv)}
+                    disabled={busyId === inv.id}
+                  >
+                    <Check size={15} /> {busyId === inv.id ? "İşleniyor…" : "Ödendi işaretle"}
+                  </button>
+                )}
+                <button className="btn btn-danger" onClick={() => handleDelete(inv)}>
+                  <TrashIcon /> Sil
+                </button>
+              </div>
+            </aside>
+          );
+        })()}
 
       {open && (
         <Modal title="Fatura Oluştur" onClose={() => setOpen(false)} busy={saving}>
@@ -278,7 +505,7 @@ export default function FaturalarClient({
 
             {error && <div className="form-error">{error}</div>}
 
-            <Field label="Müşteri / Firma">
+            <Field label={type === "expense" ? "Tedarikçi / Firma" : "Müşteri / Firma"}>
               <input
                 type="text"
                 placeholder="ör. ABC Ltd. Şti."
@@ -326,6 +553,15 @@ export default function FaturalarClient({
                 </select>
               </Field>
             </div>
+
+            <label className="inv-draft">
+              <input
+                type="checkbox"
+                checked={isDraft}
+                onChange={(e) => setIsDraft(e.target.checked)}
+              />
+              Taslak olarak kaydet (henüz gönderilmedi)
+            </label>
 
             <SaveButton busy={saving} disabled={saving} style={{ marginTop: 4 }}>
               {saving ? "Kaydediliyor…" : "Faturayı Kaydet"}

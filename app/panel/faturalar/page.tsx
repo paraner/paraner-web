@@ -22,7 +22,7 @@ export default async function FaturalarPage({
   const { data: invoices } = await supabase
     .from("invoices")
     .select(
-      "id, invoice_number, customer_name, amount, currency, payment_status, type, invoice_date"
+      "id, invoice_number, customer_name, subtotal, vat_rate, vat_amount, amount, currency, payment_status, status, paid_amount, type, invoice_date, created_at"
     )
     .eq("user_id", profile.id)
     .order("invoice_date", { ascending: false })
