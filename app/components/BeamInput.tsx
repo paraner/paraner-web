@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-// Hover.dev "Beam Input" — kenarında dönen ışık huzmesi (conic-gradient + CSS mask,
-// saf CSS @property açısıyla; framer-motion'a gerek yok). E-posta + "Ücretsiz Başla"
+// Hover.dev "Beam Input" — kenarında dönen ışık huzmesi (form background'unda iki
+// katmanlı conic-gradient; mask YOK — iOS Safari mask'i düşürüp beyaz kama basıyordu,
+// bkz. globals.css .beam-input notu). E-posta + "Ücretsiz Başla"
 // → /kayit'a yazılan e-postayı taşıyarak yönlendirir (AuthForm prefill eder).
 export default function BeamInput() {
   const router = useRouter();
@@ -42,9 +43,6 @@ export default function BeamInput() {
           <polyline points="12 5 19 12 12 19" />
         </svg>
       </button>
-      <div className="beam-border" aria-hidden="true">
-        <div className="beam-ring" />
-      </div>
     </form>
   );
 }

@@ -501,7 +501,9 @@ ul { list-style: none; }
 @media (max-width: 900px) {
   .hero.wrap { flex-direction: column; justify-content: center; text-align: center;
     min-height: 0; padding: 56px 24px 48px; }
-  .hero-text { text-align: center; max-width: none; }
+  /* width:100% şart: kolon flex + align-items:center'da genişlik içerikten gelir →
+     rozet satırının min-content'i (~342px) dar ekranı (320px) iki yana taşırıyordu */
+  .hero-text { text-align: center; max-width: none; width: 100%; }
   .hero-text .hero-sub { margin-left: auto; margin-right: auto; }
   .hero-text .hero-cta, .hero-text .stores { justify-content: center; }
   /* Mobilde küp metnin ÜSTÜNDE (order: -1), akış içinde (mutlak değil) — kendi küpümüz mobilde de oynar */
@@ -538,9 +540,13 @@ ul { list-style: none; }
 .hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
 /* ─── BEAM INPUT (hero) — hover.dev tarzı dönen ışık huzmesi ───
-   Kenarda conic-gradient ışık + CSS mask (sadece kenar görünür); açı saf CSS
-   @property ile döner (framer-motion'a gerek yok). Titanyum/beyaz huzme — marketing
-   monokrom dilinde. Teal istenirse: --beam-color: #00BFA6. */
+   Kenarda conic-gradient ışık; açı saf CSS @property ile döner (framer-motion'a
+   gerek yok). Titanyum/beyaz huzme — marketing monokrom dilinde. Teal istenirse:
+   --beam-color: #00BFA6.
+   ⚠️ MASK KULLANMA: eski mask-composite ring'i iOS Safari nadiren maskesiz boyuyordu
+   → pill'in içini dolduran beyaz kama (2026-07-02). Bunun yerine iki katmanlı
+   background: iç kutu (padding-box) koyu zemin, kenarlık kutusu (border-box) conic —
+   huzme yalnız 1px şeffaf border'da görünür, düşecek maske yok. */
 @property --beam-angle {
   syntax: "<angle>";
   initial-value: 0deg;
@@ -557,12 +563,18 @@ ul { list-style: none; }
   max-width: 440px;
   padding: 6px 6px 6px 4px;
   border-radius: 999px;
-  background: rgba(18, 20, 24, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  border: 1px solid transparent;
+  /* iç katman TAM OPAK olmalı — yarı saydamda alttaki conic kama içeriden sızar.
+     (Eski rgba(...,0.9)+backdrop-blur koyu zeminde zaten opaktan ayırt edilmiyordu.)
+     var(--beam-angle, 0deg): @property yoksa açı 0'da sabit kalır ama pill yine boyanır */
+  background:
+    linear-gradient(rgb(18, 20, 24), rgb(18, 20, 24)) padding-box,
+    conic-gradient(from var(--beam-angle, 0deg),
+      rgba(255, 255, 255, 0.08) 0 75%, var(--beam-color) 100%) border-box;
+  animation: beamSpin 4s linear infinite;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
+@media (prefers-reduced-motion: reduce) { .beam-input { animation: none; } }
 .beam-input input {
   flex: 1; min-width: 0;
   height: 46px; padding: 0 12px 0 18px;
@@ -608,21 +620,7 @@ ul { list-style: none; }
     inset 0 -1px 1px rgba(0, 0, 0, 0.22);
 }
 .beam-btn:active { transform: translateY(0); }
-/* dönen huzme: sadece kenar (border) görünsün diye mask exclude */
-.beam-border { pointer-events: none; position: absolute; inset: 0; z-index: 2; border-radius: 999px; }
-.beam-ring {
-  position: absolute; inset: -1px; border-radius: 999px;
-  border: 1px solid transparent;
-  background-origin: border-box;
-  background-image: conic-gradient(from var(--beam-angle), transparent 75%, var(--beam-color) 100%);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  animation: beamSpin 4s linear infinite;
-}
 @keyframes beamSpin { to { --beam-angle: 360deg; } }
-@media (prefers-reduced-motion: reduce) { .beam-ring { animation: none; } }
 @media (max-width: 480px) {
   .beam-input { max-width: 100%; gap: 6px; }
   .beam-input input { padding-left: 14px; font-size: 0.92rem; }
@@ -640,17 +638,20 @@ ul { list-style: none; }
   transition: border-color 0.18s;
 }
 .store-badge:hover { border-color: rgba(255, 255, 255, 0.34); }
-/* hover'da beam input'taki dönen ışık huzmesi (kenarda kayan ışık) */
+/* hover'da beam input'taki dönen ışık huzmesi (kenarda kayan ışık).
+   ⚠️ MASK KULLANMA (bkz. beam-input notu): iki katmanlı background —
+   iç kutu opak siyah (rozet zemini de #000), huzme yalnız 1px border'da. */
 .store-badge::before {
   content: ""; position: absolute; inset: -1px; border-radius: inherit;
-  border: 1px solid transparent; background-origin: border-box;
-  background-image: conic-gradient(from var(--beam-angle), transparent 75%, rgba(255, 255, 255, 0.95) 100%);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(#000, #000) padding-box,
+    conic-gradient(from var(--beam-angle, 0deg),
+      rgba(255, 255, 255, 0.34) 0 75%, rgba(255, 255, 255, 0.95) 100%) border-box;
   opacity: 0; transition: opacity 0.25s; pointer-events: none;
 }
+/* logo+yazı, hover'da beliren opak-içli ::before'un ÜSTÜNDE kalmalı */
+.store-badge > * { position: relative; z-index: 1; }
 .store-badge:hover::before { opacity: 1; animation: beamSpin 4s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .store-badge:hover::before { animation: none; } }
 .store-badge .store-logo { display: inline-flex; }
