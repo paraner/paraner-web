@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
@@ -94,6 +95,8 @@ export default function StokClient({
 
   const num = (s: string) => Number(s.replace(",", ".")) || 0;
 
+  const submitLock = useSubmitLock();
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!target) return;
@@ -117,6 +120,7 @@ export default function StokClient({
       newQty = amount; // düzeltme: yeni stok miktarı
     }
 
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       const { data: mov, error: movErr } = await supabase
@@ -157,6 +161,7 @@ export default function StokClient({
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 

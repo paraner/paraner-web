@@ -14,6 +14,36 @@
 
 ---
 
+## 2026-07-02 — Baştan sona denetim (4 paralel ajan: güvenlik×2 + hata + app↔web parite) + 18 düzeltme
+
+Mehmet "hacker gibi tüm web'i denetle, güvenlik + app↔web tutarsızlık" istedi. 4 paralel ajan + her kritik bulgu gerçek kod/RLS SQL ile ELLE doğrulandı (yanlış pozitif elendi). Genel durum: mimari sağlam (RLS tüm tablolarda UPDATE/DELETE gate ediyor, edge function'lar JWT'yi sunucuda doğruluyor, secret sızıntısı yok, IDOR/XSS/PostgREST-injection YOK). Bulgular ağırlıkla veri-bütünlüğü + parite. **18 kalem düzeltildi + deploy** (31 dosya + `lib/csv.ts` + `lib/useSubmitLock.ts`):
+
+**Güvenlik:**
+- **G1 HTTP güvenlik header'ları** (`next.config.ts` `headers()`): X-Frame-Options DENY + CSP frame-ancestors none (clickjacking), HSTS, X-Content-Type-Options, Referrer-Policy. Canlı `curl -I` ile doğrulandı.
+- **G2 CSV formül enjeksiyonu** (faturalar + ayarlar + gelir-gider-raporu export): ortak `lib/csv.ts` (`toCsv`/`downloadCsv`) — `=+-@` ile başlayan hücre başına `'`, RFC4180 tırnak katlama. Faturalar eski `"${c}"` tırnak bile kaçırmıyordu. Birim test 8/8.
+
+**Kritik veri/para:**
+- **K1 çift-submit kilidi** — `lib/useSubmitLock.ts` (senkron useRef; `disabled={saving}` async olduğundan yarışı engellemiyordu → mükerrer kayıt/çift bakiye). Para/kayıt yazan 22 handler'a uygulandı (17 uniform CRUD script'le, cuzdanim/hesaplar/veresiye elle). Mobil GUVENLIK.md 12.06 double-submit dersinin web karşılığı.
+- **K2 bütçe currency** (`butceler/page.tsx`): "harcanan" sorgusu currency filtrelemiyordu → dövizli gider TRY bütçesine ham ekleniyordu. `.eq("currency", …)` eklendi.
+- **K3 profil değiştirme kilitlenmesi** (`ayarlar switchTo`): "hepsini pasifle→seçileni aktifle" sırası + error-check yoktu → ikinci adım düşerse hiç aktif profil kalmıyordu (panel kilitlenirdi). Sıra çevrildi (önce aktifle) + error-check + setSwitching reset.
+- **K4 collection_in bakiye ters-işareti** (`islemler appliedDelta`): mobil `collection_in` whitelist'te değildi → mobil tahsilat transferini web'den silmede bakiye 2× ters bozuluyordu. INFLOW_CATEGORIES set'ine eklendi.
+- **K5 düzenli fatura çift-üretim** (`duzenli-fatura`): "İlerlet" gerçek fatura üretmeden tarihi atlıyordu → mobil dashboard açılışı aynı dönemleri geri-doldurup çift/atlama yaratıyordu. "Şimdi Oluştur"a çevrildi: RPC numara + invoice_items + transaction senkronu + ilerlet (mobil generateInvoiceFromTemplate paritesi).
+
+**App↔web parite (hepsi web istemcisinde, şemaya dokunmadan, mobil davranışına hizalı):**
+- **P1 fatura numarası** (`faturalar`): web `MGZR0003` (4h, tiresiz, atomik-olmayan sayaç) ≠ ayarlar önizleme `MGZR-000003` ≠ mobil. Atomik RPC `get_next_invoice_number` + `PREFIX-000006` formatına geçti (mükerrer numara riski de bitti).
+- **P2 fatura→transactions** (`faturalar`): web faturaları ciro/kâr KPI'sına girmiyordu → non-draft faturada invoice_id'li transaction yazılıyor; taslak→paid'de markPaid tamamlıyor. Silme FK CASCADE ile temiz.
+- **P3 invoice_items + title** (`faturalar`): web kalem/başlık yazmıyordu → mobilde boş kalem tablosu + boş başlık/no. Tek özet kalem + `NUMARA - müşteri` başlık yazılıyor.
+- **P4 durum enum** (`faturalar`): `cancelled`/`partial` tanınmıyordu (mobil iptal/kısmi web'de yanlış rozet); markPaid `status='paid'` de set etmiyordu. StatusKey genişletildi + invStatus + markPaid.
+- **P5 gerçek due_date** (`faturalar`): `due_date` kolonu VAR (mobil yazıyor), web yok sayıp `invoice_date+30` uyduruyordu (yanlış overdue). Artık gerçek due_date okunuyor (yoksa +30 fallback) + oluşturmada yazılıyor.
+- **P6 KDV raporu** (`kdv-raporu`): dönem üst sınırı yoktu → gelecek tarihli fatura "Bu Ay"a sızıyordu. `endOfExclusive` eklendi (currency filtresi zaten doğruydu, korundu).
+- **P7 para birimi listesi** (`lib/currencies.ts`): 6→30 kod (mobil ile birebir) → AED/JPY vb. hesaplar web'de ham kod/boş seçici göstermez.
+- **P8 findCategory** (`lib/categories.ts`): `adjust_in/out` + `collection_in/out` etiketleri eklendi (mobil sistem işlemleri web'de ham id görünmez).
+- **P9 aktif profil** (`profile.ts`): `is_active → is_primary → ilk` fallback (mobil default'uyla hizalı; tam parite cihaz-yerel AsyncStorage yüzünden şema ister — not).
+
+**Fix edilmedi (bilinçli):** mobil-taraflı bulgular (mobil KDV currency-mix, is_primary AsyncStorage kaynağı, ai-chat client systemPrompt, token cookie httpOnly-olamaz SSO tasarımı) → mobil Claude'a/ileriye. Edge function CORS/JWT zaten sağlam.
+
+tsc + build temiz; header'lar + CSV birim test canlı doğrulandı.
+
 ## 2026-07-02 — Ayarlar sayfası SaaS-standardı sekmeli yapıya geçti
 
 Mehmet "SaaS ayarları nasıl olmalı" araştırması istedi (web araştırması: 3-katmanlı kapsam ayrımı kişisel/işletme/hesap, sekme-veya-yan-menü navigasyon, solda etiket/sağda kontrol satırları, hibrit kaydetme, tehlike bölgesi; galeriler: saasinterface/nicelydone/saasframe/Mobbin) → öneri onaylandı, uygulandı (`AyarlarClient.tsx` + globals.css):

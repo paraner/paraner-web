@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
@@ -56,6 +57,8 @@ export default function VeresiyeClient({
     setCustOpen(true);
   }
 
+  const submitLock = useSubmitLock();
+
   async function saveCustomer(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -63,6 +66,7 @@ export default function VeresiyeClient({
       setError("Müşteri adı gerekli.");
       return;
     }
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       const { data, error } = await supabase
@@ -82,6 +86,7 @@ export default function VeresiyeClient({
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 
@@ -107,6 +112,7 @@ export default function VeresiyeClient({
     const newTotal =
       (Number(target.total_debt) || 0) + (entryType === "debt" ? amt : -amt);
 
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       const { error: entryErr } = await supabase.from("credit_book_entries").insert({
@@ -132,6 +138,7 @@ export default function VeresiyeClient({
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 

@@ -4,7 +4,9 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
+import { showToast } from "../../components/toast";
 import { formatCurrency, formatDate, parseAmount } from "../../../lib/format";
 import { todayStr, advanceDate } from "../../../lib/date";
 import PageHead from "../../../components/ui/PageHead";
@@ -38,10 +40,12 @@ function advance(dateStr: string, period: string) {
 export default function DuzenliFaturaClient({
   profileId,
   currency,
+  invoicePrefix,
   items: initial,
 }: {
   profileId: string;
   currency: string;
+  invoicePrefix: string;
   items: RecurringInvoice[];
 }) {
   const supabase = createClient();
@@ -49,6 +53,7 @@ export default function DuzenliFaturaClient({
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RecurringInvoice | null>(null);
   const [saving, setSaving] = useState(false);
+  const [genId, setGenId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [customer, setCustomer] = useState("");
@@ -82,6 +87,8 @@ export default function DuzenliFaturaClient({
     setOpen(true);
   }
 
+  const submitLock = useSubmitLock();
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -109,6 +116,7 @@ export default function DuzenliFaturaClient({
     const cols =
       "id, customer_name, description, amount, vat_rate, period, is_active, next_date, last_generated";
 
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       if (editing) {
@@ -134,6 +142,7 @@ export default function DuzenliFaturaClient({
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 
@@ -146,19 +155,99 @@ export default function DuzenliFaturaClient({
     setList((prev) => prev.map((x) => (x.id === r.id ? { ...x, is_active: !r.is_active } : x)));
   }
 
-  async function advanceNext(r: RecurringInvoice) {
+  const genLock = useSubmitLock();
+
+  // "Şimdi Oluştur": bu dönem için GERÇEK fatura üretir (mobil generateInvoiceFromTemplate
+  // ile aynı: atomik numara + invoice_items + transactions/ciro senkronu), sonra next_date'i
+  // ilerletir. Eskiden yalnız tarihi atlıyordu (fatura/gelir üretmeden) → mobil dashboard
+  // açılışında aynı dönemleri geri-doldurup çift kayıt/atlama yaratıyordu. Artık üretiyor.
+  async function generateNow(r: RecurringInvoice) {
     if (!r.next_date) return;
-    const next = advance(r.next_date, r.period);
-    const { error } = await supabase
-      .from("recurring_invoices")
-      .update({ next_date: next, last_generated: r.next_date })
-      .eq("id", r.id);
-    if (error) return;
-    setList((prev) =>
-      prev.map((x) =>
-        x.id === r.id ? { ...x, next_date: next, last_generated: r.next_date } : x
-      )
-    );
+    if (!genLock.acquire()) return;
+    setGenId(r.id);
+    try {
+      const amt = Number(r.amount) || 0;
+      const rate = Number(r.vat_rate) || 0;
+      const vat = (amt * rate) / 100;
+      const total = amt + vat;
+      const invoiceDate = r.next_date;
+
+      const { data: nextNum, error: rpcErr } = await supabase.rpc(
+        "get_next_invoice_number",
+        { p_profile_id: profileId }
+      );
+      if (rpcErr) throw rpcErr;
+      const number = `${invoicePrefix}-${String(nextNum).padStart(6, "0")}`;
+      const title = `${number} - ${r.customer_name}`;
+      const due = new Date(invoiceDate + "T00:00:00Z");
+      due.setUTCDate(due.getUTCDate() + 30);
+      const dueDate = due.toISOString().slice(0, 10);
+
+      const { data: inv, error: invErr } = await supabase
+        .from("invoices")
+        .insert({
+          user_id: profileId,
+          invoice_number: number,
+          title,
+          customer_name: r.customer_name,
+          subtotal: amt,
+          vat_rate: rate,
+          vat_amount: vat,
+          amount: total,
+          currency,
+          type: "income",
+          status: "sent",
+          payment_status: "unpaid",
+          paid_amount: 0,
+          invoice_date: invoiceDate,
+          due_date: dueDate,
+        })
+        .select("id")
+        .single();
+      if (invErr) throw invErr;
+
+      await supabase.from("invoice_items").insert({
+        invoice_id: (inv as { id: string }).id,
+        description: r.description || r.customer_name || "Fatura",
+        quantity: 1,
+        unit: "adet",
+        unit_price: amt,
+        vat_rate: rate,
+        total: amt,
+      });
+      await supabase.from("transactions").insert({
+        user_id: profileId,
+        invoice_id: (inv as { id: string }).id,
+        title,
+        amount: total,
+        type: "income",
+        category: "Fatura",
+        note: r.description || null,
+        date: invoiceDate,
+        currency,
+        source: "web",
+      });
+
+      // Üretim başarılı → ilerlet (bu dönem tekrar üretilmesin)
+      const next = advance(r.next_date, r.period);
+      const stamp = todayStr();
+      const { error: upErr } = await supabase
+        .from("recurring_invoices")
+        .update({ next_date: next, last_generated: stamp })
+        .eq("id", r.id);
+      if (upErr) throw upErr;
+      setList((prev) =>
+        prev.map((x) =>
+          x.id === r.id ? { ...x, next_date: next, last_generated: stamp } : x
+        )
+      );
+      showToast({ title: "Fatura oluşturuldu", message: `${number} kesildi.`, variant: "success" });
+    } catch {
+      showToast({ title: "Oluşturulamadı", message: "Fatura üretilemedi, tekrar dene.", variant: "error" });
+    } finally {
+      setGenId(null);
+      genLock.release();
+    }
   }
 
   async function handleDelete(r: RecurringInvoice) {
@@ -212,10 +301,11 @@ export default function DuzenliFaturaClient({
                   {r.is_active && r.next_date && (
                     <button
                       className="btn btn-ghost btn-sm"
-                      onClick={() => advanceNext(r)}
-                      title="Oluşturuldu say ve sonraki tarihe ilerlet"
+                      onClick={() => generateNow(r)}
+                      disabled={genId === r.id}
+                      title="Bu dönem için faturayı şimdi oluştur ve sonraki tarihe ilerlet"
                     >
-                      İlerlet
+                      {genId === r.id ? "Oluşturuluyor…" : "Şimdi Oluştur"}
                     </button>
                   )}
                   <button

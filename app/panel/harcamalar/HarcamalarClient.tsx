@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import Link from "next/link";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
@@ -54,6 +55,8 @@ export default function HarcamalarClient({
     setOpen(true);
   }
 
+  const submitLock = useSubmitLock();
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -70,6 +73,7 @@ export default function HarcamalarClient({
       setError("Geçerli bir tutar gir.");
       return;
     }
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       const { data, error } = await supabase
@@ -89,6 +93,7 @@ export default function HarcamalarClient({
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 

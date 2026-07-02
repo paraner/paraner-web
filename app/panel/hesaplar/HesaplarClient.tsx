@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useEffect, useRef, useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
@@ -196,6 +197,8 @@ export default function HesaplarClient({
     return next;
   }
 
+  const submitLock = useSubmitLock();
+
   async function handleTransfer(e: React.FormEvent) {
     e.preventDefault();
     setTError(null);
@@ -269,6 +272,7 @@ export default function HesaplarClient({
       });
     }
 
+    if (!submitLock.acquire()) return;
     setTSaving(true);
     try {
       const { error } = await supabase.from("transactions").insert(rows);
@@ -288,6 +292,7 @@ export default function HesaplarClient({
       setTError("Transfer kaydedilemedi. Tekrar dene.");
     } finally {
       setTSaving(false);
+      submitLock.release();
     }
   }
 
@@ -343,6 +348,7 @@ export default function HesaplarClient({
       currency,
     };
 
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       if (editing) {
@@ -368,6 +374,7 @@ export default function HesaplarClient({
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 

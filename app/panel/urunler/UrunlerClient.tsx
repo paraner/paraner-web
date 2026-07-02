@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useMemo, useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency } from "../../../lib/format";
 import PageHead from "../../../components/ui/PageHead";
@@ -117,6 +118,8 @@ export default function UrunlerClient({
 
   const num = (s: string) => Number(s.replace(",", ".")) || 0;
 
+  const submitLock = useSubmitLock();
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -140,6 +143,7 @@ export default function UrunlerClient({
     const cols =
       "id, name, type, code, unit, buy_price, sell_price, vat_rate, stock_quantity, min_stock_alert, category, is_active";
 
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       if (editing) {
@@ -165,6 +169,7 @@ export default function UrunlerClient({
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 

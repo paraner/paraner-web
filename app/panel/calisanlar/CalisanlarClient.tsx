@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
@@ -57,6 +58,8 @@ export default function CalisanlarClient({
     setOpen(true);
   }
 
+  const submitLock = useSubmitLock();
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -72,6 +75,7 @@ export default function CalisanlarClient({
     };
     const cols = "id, name, phone, email, position";
 
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       if (editing) {
@@ -97,6 +101,7 @@ export default function CalisanlarClient({
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 

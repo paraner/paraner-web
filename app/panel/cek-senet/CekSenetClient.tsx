@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
@@ -104,6 +105,8 @@ export default function CekSenetClient({
     setOpen(true);
   }
 
+  const submitLock = useSubmitLock();
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -131,6 +134,7 @@ export default function CekSenetClient({
     const cols =
       "id, type, direction, person_name, amount, currency, issue_date, due_date, bank_name, check_number, status, note";
 
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       if (editing) {
@@ -156,6 +160,7 @@ export default function CekSenetClient({
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 

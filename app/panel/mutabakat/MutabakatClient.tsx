@@ -2,6 +2,7 @@
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
@@ -96,6 +97,8 @@ export default function MutabakatClient({
     if (a) setAccountName(a.name);
   }
 
+  const submitLock = useSubmitLock();
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -116,6 +119,7 @@ export default function MutabakatClient({
     const cols =
       "id, account_id, account_name, period_start, period_end, our_balance, their_balance, status, note";
 
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       if (editing) {
@@ -141,6 +145,7 @@ export default function MutabakatClient({
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 

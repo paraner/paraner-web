@@ -2,9 +2,11 @@
 import { confirmDialog } from "../../components/confirm";
 
 import { useEffect, useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
+import { toCsv, downloadCsv } from "../../../lib/csv";
 import PageHead from "../../../components/ui/PageHead";
 import AddButton from "../../../components/AddButton";
 import SaveButton from "../../../components/SaveButton";
@@ -27,27 +29,34 @@ export type Invoice = {
   paid_amount: string | null;
   type: string | null;
   invoice_date: string | null;
+  due_date: string | null;
   created_at: string | null;
 };
 
-// Vade tarihi kolonu yok (mobil şema) → "vadesi geçti" fatura tarihinden türetilir.
+// Gerçek due_date kolonu VAR (mobil yazıyor). Yoksa fatura tarihinden türetilir.
 const OVERDUE_DAYS = 30;
 
-type StatusKey = "draft" | "sent" | "paid" | "overdue";
+type StatusKey = "draft" | "sent" | "partial" | "paid" | "overdue" | "cancelled";
 
 const STATUS_META: Record<StatusKey, { label: string; badge: string }> = {
   draft: { label: "Taslak", badge: "gray" },
   sent: { label: "Gönderildi", badge: "blue" },
+  partial: { label: "Kısmi ödendi", badge: "amber" },
   paid: { label: "Ödendi", badge: "green" },
   overdue: { label: "Vadesi geçti", badge: "red" },
+  cancelled: { label: "İptal", badge: "gray" },
 };
 
 function invStatus(inv: Invoice): StatusKey {
   if (inv.payment_status === "paid") return "paid";
+  if (inv.status === "cancelled") return "cancelled";
   if ((inv.status ?? "sent") === "draft") return "draft";
-  if (inv.invoice_date) {
-    const due = new Date(inv.invoice_date);
-    due.setDate(due.getDate() + OVERDUE_DAYS);
+  if (inv.payment_status === "partial") return "partial";
+  // Vade: gerçek due_date, yoksa invoice_date + 30g (mobil ile aynı türetme)
+  const dueBase = inv.due_date ?? inv.invoice_date;
+  if (dueBase) {
+    const due = new Date(dueBase);
+    if (!inv.due_date) due.setDate(due.getDate() + OVERDUE_DAYS);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (due < today) return "overdue";
@@ -145,6 +154,8 @@ export default function FaturalarClient({
   const statusCount = (k: "all" | StatusKey) =>
     k === "all" ? scopeForStatus.length : scopeForStatus.filter((i) => invStatus(i) === k).length;
 
+  const submitLock = useSubmitLock();
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -160,15 +171,29 @@ export default function FaturalarClient({
     const rate = Number(vatRate.replace(",", ".")) || 0;
     const vat = (sub * rate) / 100;
     const total = sub + vat;
-    const number = `${invoicePrefix}${String(nextNumber).padStart(4, "0")}`;
 
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
+      // Numara: mobil ile AYNI atomik RPC → format `PREFIX-000006` + mükerrer numara riski yok.
+      const { data: nextNum, error: rpcErr } = await supabase.rpc(
+        "get_next_invoice_number",
+        { p_profile_id: profileId }
+      );
+      if (rpcErr) throw rpcErr;
+      const number = `${invoicePrefix}-${String(nextNum).padStart(6, "0")}`;
+      const title = `${number} - ${customer.trim()}`;
+      // Vade: web'de alan yok → fatura tarihi + 30g (invStatus türetmesiyle tutarlı, UTC-güvenli)
+      const due = new Date(invoiceDate + "T00:00:00Z");
+      due.setUTCDate(due.getUTCDate() + 30);
+      const dueDate = due.toISOString().slice(0, 10);
+
       const { data, error } = await supabase
         .from("invoices")
         .insert({
           user_id: profileId,
           invoice_number: number,
+          title,
           customer_name: customer.trim(),
           subtotal: sub,
           vat_rate: rate,
@@ -180,39 +205,81 @@ export default function FaturalarClient({
           payment_status: paid ? "paid" : "unpaid",
           paid_amount: paid ? total : 0,
           invoice_date: invoiceDate,
+          due_date: dueDate,
         })
         .select(
-          "id, invoice_number, customer_name, subtotal, vat_rate, vat_amount, amount, currency, payment_status, status, paid_amount, type, invoice_date, created_at"
+          "id, invoice_number, customer_name, subtotal, vat_rate, vat_amount, amount, currency, payment_status, status, paid_amount, type, invoice_date, due_date, created_at"
         )
         .single();
       if (error) throw error;
 
-      // Fatura numarasını ilerlet (mobil ile aynı sayaç)
-      await supabase
-        .from("profiles")
-        .update({ invoice_next_number: nextNumber + 1 })
-        .eq("id", profileId);
+      // Kalem: web basit fatura (kalem editörü yok) → mobil PDF'i boş görmesin diye tek
+      // özet kalem yaz (net tutar = subtotal). Non-fatal: patlarsa fatura yine durur.
+      await supabase.from("invoice_items").insert({
+        invoice_id: (data as Invoice).id,
+        description: customer.trim() || "Fatura",
+        quantity: 1,
+        unit: "adet",
+        unit_price: sub,
+        vat_rate: rate,
+        total: sub,
+      });
 
-      setNextNumber((n) => n + 1);
+      // transactions senkronu (mobil ile parite) → ciro/kâr KPI'ları web faturasını görsün.
+      // Taslak gerçek gelir değil → yalnız kesinleşmiş (draft olmayan) faturada yaz.
+      if (!isDraft) {
+        await supabase.from("transactions").insert({
+          user_id: profileId,
+          invoice_id: (data as Invoice).id,
+          title,
+          amount: total,
+          type,
+          category: "Fatura",
+          date: invoiceDate,
+          currency,
+          source: "web",
+        });
+      }
+
+      setNextNumber((nextNum as number) + 1);
       setList((prev) => [data as Invoice, ...prev]);
       setOpen(false);
     } catch {
       setError("Fatura kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 
   async function markPaid(inv: Invoice) {
     setBusyId(inv.id);
     const total = Number(inv.amount) || 0;
+    // status='paid' de set et (mobil paritesi — mobil ikisini birden yazıyor).
     const { error } = await supabase
       .from("invoices")
-      .update({ payment_status: "paid", paid_amount: total })
+      .update({ payment_status: "paid", status: "paid", paid_amount: total })
       .eq("id", inv.id);
+    if (error) {
+      setBusyId(null);
+      return;
+    }
+    // Taslak faturada oluşturmada transaction yazılmamıştı → paid'e geçince ciroya gir.
+    if (inv.status === "draft") {
+      await supabase.from("transactions").insert({
+        user_id: profileId,
+        invoice_id: inv.id,
+        title: inv.invoice_number ? `${inv.invoice_number} - ${inv.customer_name ?? ""}`.trim() : (inv.customer_name ?? "Fatura"),
+        amount: total,
+        type: inv.type ?? "income",
+        category: "Fatura",
+        date: inv.invoice_date ?? todayStr(),
+        currency: inv.currency ?? currency,
+        source: "web",
+      });
+    }
     setBusyId(null);
-    if (error) return;
-    const upd = { ...inv, payment_status: "paid", paid_amount: String(total) };
+    const upd = { ...inv, payment_status: "paid", status: "paid", paid_amount: String(total) };
     setList((prev) => prev.map((x) => (x.id === inv.id ? upd : x)));
     setSelected((s) => (s && s.id === inv.id ? upd : s));
   }
@@ -240,14 +307,7 @@ export default function FaturalarClient({
         i.currency ?? currency,
       ]),
     ];
-    const csv = rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `faturalar-${todayStr()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`faturalar-${todayStr()}.csv`, toCsv(rows));
   }
 
   const STATUS_CHIPS: ("all" | StatusKey)[] = ["all", "draft", "sent", "overdue", "paid"];

@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import Link from "next/link";
 import { createClient } from "../../../lib/supabase/client";
 import { formatDate } from "../../../lib/format";
@@ -83,6 +84,8 @@ export default function IzinlerClient({
     setOpen(true);
   }
 
+  const submitLock = useSubmitLock();
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -95,6 +98,7 @@ export default function IzinlerClient({
       return;
     }
     const days = diffDays(startDate, endDate);
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       const { data, error } = await supabase
@@ -118,6 +122,7 @@ export default function IzinlerClient({
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 

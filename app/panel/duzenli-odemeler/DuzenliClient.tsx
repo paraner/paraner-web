@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate, parseAmount } from "../../../lib/format";
 import { todayStr, advanceDate } from "../../../lib/date";
@@ -104,6 +105,8 @@ export default function DuzenliClient({
     setOpen(true);
   }
 
+  const submitLock = useSubmitLock();
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -129,6 +132,7 @@ export default function DuzenliClient({
     const cols =
       "id, title, amount, type, category, currency, period, next_due_date, last_confirmed_date, is_active, note";
 
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       if (editing) {
@@ -154,6 +158,7 @@ export default function DuzenliClient({
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 

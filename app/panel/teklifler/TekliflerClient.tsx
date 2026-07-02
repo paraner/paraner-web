@@ -2,6 +2,7 @@
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
@@ -90,6 +91,8 @@ export default function TekliflerClient({
     setItems((prev) => (prev.length === 1 ? prev : prev.filter((_, idx) => idx !== i)));
   }
 
+  const submitLock = useSubmitLock();
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -104,6 +107,7 @@ export default function TekliflerClient({
     }
 
     const number = `TEK${String(counter).padStart(4, "0")}`;
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       const { data: quote, error: qErr } = await supabase
@@ -154,6 +158,7 @@ export default function TekliflerClient({
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 

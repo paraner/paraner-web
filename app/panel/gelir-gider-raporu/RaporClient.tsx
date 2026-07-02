@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { formatCurrency } from "../../../lib/format";
 import { findCategory } from "../../../lib/categories";
+import { toCsv, downloadCsv } from "../../../lib/csv";
 import PageHead from "../../../components/ui/PageHead";
 
 export type Tx = {
@@ -68,14 +69,7 @@ export default function RaporClient({
       ...income.map((x) => ["Gelir", findCategory(x.cat).label, String(x.total)]),
       ...expense.map((x) => ["Gider", findCategory(x.cat).label, String(x.total)]),
     ];
-    const csv = rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `gelir-gider-${period}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`gelir-gider-${period}.csv`, toCsv(rows));
   }
 
   function Block({

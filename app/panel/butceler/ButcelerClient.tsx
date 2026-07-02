@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, parseAmount } from "../../../lib/format";
 import { CATEGORIES, findCategory } from "../../../lib/categories";
@@ -61,6 +62,8 @@ export default function ButcelerClient({
     setOpen(true);
   }
 
+  const submitLock = useSubmitLock();
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -73,6 +76,7 @@ export default function ButcelerClient({
       setError("Geçerli bir limit gir.");
       return;
     }
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       if (editing) {
@@ -98,6 +102,7 @@ export default function ButcelerClient({
       setError("Kaydedilemedi. Bu kategori için bütçe zaten olabilir.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 

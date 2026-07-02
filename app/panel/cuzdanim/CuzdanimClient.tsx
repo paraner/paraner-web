@@ -5,6 +5,7 @@ import { confirmDialog } from "../../components/confirm";
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
@@ -204,6 +205,8 @@ export default function CuzdanimClient({
     }
   }
 
+  const submitLock = useSubmitLock();
+
   // ── Ekle / Düzenle ──
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -218,6 +221,7 @@ export default function CuzdanimClient({
     const avgCost = needsCost && costNum > 0 ? costNum : null;
     const purchase = needsCost && fDate ? fDate : null;
 
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       if (editing) {
@@ -294,6 +298,7 @@ export default function CuzdanimClient({
       setError(err instanceof Error ? err.message : "Kaydedilemedi.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 
@@ -315,6 +320,7 @@ export default function CuzdanimClient({
     const price = parseAmount(sPrice) || null;
     const remaining = selling.amount - num;
 
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       if (remaining <= 1e-9) {

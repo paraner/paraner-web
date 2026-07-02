@@ -27,6 +27,14 @@ function startOf(period: Period) {
   return new Date(now.getFullYear(), 0, 1);
 }
 
+// Dönem üst sınırı (exclusive) — yoksa gelecek tarihli faturalar "Bu Ay"a sızıyordu.
+function endOfExclusive(period: Period) {
+  const now = new Date();
+  if (period === "year") return new Date(now.getFullYear() + 1, 0, 1);
+  // month + q pencereleri içinde bulunduğumuz ayda biter
+  return new Date(now.getFullYear(), now.getMonth() + 1, 1);
+}
+
 export default function KdvRaporClient({
   currency,
   invoices,
@@ -38,13 +46,16 @@ export default function KdvRaporClient({
 
   const r = useMemo(() => {
     const start = startOf(period).getTime();
+    const endEx = endOfExclusive(period).getTime();
     let salesBase = 0,
       salesVat = 0,
       purchaseBase = 0,
       purchaseVat = 0;
     for (const i of invoices) {
       if ((i.currency || currency) !== currency) continue;
-      if (!i.invoice_date || new Date(i.invoice_date).getTime() < start) continue;
+      if (!i.invoice_date) continue;
+      const t = new Date(i.invoice_date).getTime();
+      if (t < start || t >= endEx) continue;
       const base = Number(i.subtotal) || 0;
       const vat = Number(i.vat_amount) || 0;
       if (i.type === "expense") {

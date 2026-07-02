@@ -23,6 +23,7 @@ export default async function DuzenliFaturaPage() {
     <DuzenliFaturaClient
       profileId={profile.id}
       currency={profile.currency ?? "TRY"}
+      invoicePrefix={profile.invoice_prefix ?? "MGZR"}
       items={(data as RecurringInvoice[]) ?? []}
     />
   );

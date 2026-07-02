@@ -6,6 +6,7 @@ import { createClient } from "../../../lib/supabase/client";
 import LogoutButton from "../LogoutButton";
 import { confirmDialog } from "../../components/confirm";
 import { showToast } from "../../components/toast";
+import { toCsv, downloadCsv } from "../../../lib/csv";
 
 export type Profile = {
   id: string;
@@ -81,21 +82,38 @@ export default function AyarlarClient({
   async function saveName() {
     if (!active || !name.trim() || name.trim() === active.profile_name) return;
     setSavingName(true);
-    await supabase
+    const { error } = await supabase
       .from("profiles")
       .update({ profile_name: name.trim() })
       .eq("id", active.id);
     setSavingName(false);
+    if (error) {
+      showToast({ title: "Kaydedilemedi", message: "Profil adı güncellenemedi, tekrar dene.", variant: "error" });
+      return;
+    }
     router.refresh();
   }
 
   async function switchTo(p: Profile) {
     if (p.is_active || switching) return;
     setSwitching(true);
-    const ids = profiles.map((x) => x.id);
-    // Önce hepsini pasifle, sonra seçileni aktifle
-    await supabase.from("profiles").update({ is_active: false }).in("id", ids);
-    await supabase.from("profiles").update({ is_active: true }).eq("id", p.id);
+    // ÖNCE hedefi aktifle, SONRA diğerlerini pasifle. Sıra kritik: ilk adım başarısız
+    // olursa hiçbir şey değişmez (eski profil aktif kalır); ikinci adım başarısız olsa
+    // bile en az bir profil (hem eski hem yeni) aktif kalır → asla "hiç aktif profil yok"
+    // durumu oluşmaz (o durum tüm paneli "Profil bulunamadı"da kilitlerdi).
+    const { error: actErr } = await supabase
+      .from("profiles")
+      .update({ is_active: true })
+      .eq("id", p.id);
+    if (actErr) {
+      showToast({ title: "Profil değiştirilemedi", message: "Tekrar dene.", variant: "error" });
+      setSwitching(false);
+      return;
+    }
+    const others = profiles.filter((x) => x.id !== p.id).map((x) => x.id);
+    if (others.length) {
+      await supabase.from("profiles").update({ is_active: false }).in("id", others);
+    }
     // Tüm panel aktif profile göre değişir → tam yenile
     router.push("/panel");
     router.refresh();
@@ -463,11 +481,15 @@ function InvoiceNumbering({
   async function save() {
     if (!prefix.trim() || saving) return;
     setSaving(true);
-    await supabase
+    const { error } = await supabase
       .from("profiles")
       .update({ invoice_prefix: prefix.trim(), invoice_next_number: next })
       .eq("id", profileId);
     setSaving(false);
+    if (error) {
+      showToast({ title: "Kaydedilemedi", message: "Fatura numaralama güncellenemedi, tekrar dene.", variant: "error" });
+      return;
+    }
     setSaved(true);
     router.refresh();
   }
@@ -630,27 +652,19 @@ function BackupExport({
   const today = new Date().toISOString().slice(0, 10);
   const slug = (profileName ?? "isletme").replace(/[^a-z0-9]/gi, "-").toLowerCase();
 
-  function downloadCsv(name: string, rows: (string | number)[][]) {
-    const csv = rows
-      .map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   async function exportTransactions() {
     if (busy) return;
     setBusy("tx");
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("transactions")
       .select("date, type, title, category, amount, currency")
       .eq("user_id", profileId)
       .order("date", { ascending: false });
+    if (error) {
+      showToast({ title: "Dışa aktarılamadı", message: "İşlemler indirilemedi, tekrar dene.", variant: "error" });
+      setBusy(null);
+      return;
+    }
     const rows: (string | number)[][] = [
       ["Tarih", "Tür", "Açıklama", "Kategori", "Tutar", "Para Birimi"],
       ...(data ?? []).map((t) => [
@@ -662,20 +676,25 @@ function BackupExport({
         t.currency ?? "TRY",
       ]),
     ];
-    downloadCsv(`${slug}-islemler-${today}.csv`, rows);
+    downloadCsv(`${slug}-islemler-${today}.csv`, toCsv(rows));
     setBusy(null);
   }
 
   async function exportInvoices() {
     if (busy) return;
     setBusy("inv");
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("invoices")
       .select(
         "invoice_number, invoice_date, type, customer_name, amount, currency, payment_status"
       )
       .eq("user_id", profileId)
       .order("invoice_date", { ascending: false });
+    if (error) {
+      showToast({ title: "Dışa aktarılamadı", message: "Faturalar indirilemedi, tekrar dene.", variant: "error" });
+      setBusy(null);
+      return;
+    }
     const rows: (string | number)[][] = [
       ["Fatura No", "Tarih", "Tür", "Müşteri", "Tutar", "Para Birimi", "Durum"],
       ...(data ?? []).map((i) => [
@@ -688,7 +707,7 @@ function BackupExport({
         i.payment_status === "paid" ? "Ödendi" : "Ödenmedi",
       ]),
     ];
-    downloadCsv(`${slug}-faturalar-${today}.csv`, rows);
+    downloadCsv(`${slug}-faturalar-${today}.csv`, toCsv(rows));
     setBusy(null);
   }
 

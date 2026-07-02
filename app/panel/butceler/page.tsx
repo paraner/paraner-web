@@ -29,6 +29,8 @@ export default async function ButcelerPage() {
       .select("category, amount")
       .eq("user_id", profile.id)
       .eq("type", "expense")
+      // Bütçeler profilin para biriminde → farklı currency giderleri toplama karıştırma
+      .eq("currency", profile.currency ?? "TRY")
       .gte("date", start)
       .lte("date", end)
       .limit(2000),

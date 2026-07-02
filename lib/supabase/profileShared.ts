@@ -10,6 +10,7 @@ export type ActiveProfile = {
   invoice_prefix: string | null;
   invoice_next_number: number | null;
   is_active: boolean;
+  is_primary?: boolean | null; // "ana profil" (mobil default seçimi)
   avatar_url?: string | null; // bireysel profil fotoğrafı
   company_logo_url?: string | null; // işletme logosu
   // Onboarding durumu (web kurulum modalı için)

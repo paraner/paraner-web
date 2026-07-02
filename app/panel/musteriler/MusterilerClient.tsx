@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useMemo, useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
@@ -96,6 +97,8 @@ export default function MusterilerClient({
     setOpen(true);
   }
 
+  const submitLock = useSubmitLock();
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -117,6 +120,7 @@ export default function MusterilerClient({
     const cols =
       "id, type, name, company_name, phone, email, address, tax_number, tax_office, note";
 
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       if (editing) {
@@ -142,6 +146,7 @@ export default function MusterilerClient({
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 

@@ -30,10 +30,17 @@ export const INCOME_CATEGORIES: Category[] = [
   { id: "iade", label: "İade / Geri Ödeme", icon: "return-down-back", color: "#EF9F27" },
 ];
 
+// Sistem kategorileri (transfer/bakiye düzeltme/tahsilat) — mobil constants/categories.ts
+// ile birebir. Bunlar eksik olunca mobil kaynaklı işlemler web'de ham id ("collection_in")
+// olarak görünüyordu.
 const TRANSFER: Record<string, Category> = {
   transfer_out: { id: "transfer_out", label: "Transfer (Giden)", icon: "swap-horizontal", color: "#378ADD" },
   transfer_in: { id: "transfer_in", label: "Transfer (Gelen)", icon: "swap-horizontal", color: "#378ADD" },
   transfer_fee: { id: "transfer_fee", label: "Transfer Ücreti", icon: "card", color: "#BA7517" },
+  adjust_in: { id: "adjust_in", label: "Bakiye Düzeltmesi (Yatırma)", icon: "add-circle", color: "#378ADD" },
+  adjust_out: { id: "adjust_out", label: "Bakiye Düzeltmesi (Çekme)", icon: "remove-circle", color: "#378ADD" },
+  collection_in: { id: "collection_in", label: "Tahsilat", icon: "swap-horizontal", color: "#00BFA6" },
+  collection_out: { id: "collection_out", label: "Fatura Ödemesi", icon: "swap-horizontal", color: "#00BFA6" },
 };
 
 const OTHER: Category = { id: "", label: "Diğer", icon: "tag", color: "#888780" };

@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useEffect, useRef, useState } from "react";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr, ymd } from "../../../lib/date";
@@ -80,12 +81,14 @@ export type Account = {
 const TX_COLS =
   "id, title, amount, type, category, date, currency, bank_account_id, transfer_group_id, created_at, note, source, receipt_url, receipt_urls, receipt_thumbnails";
 
-// Bir işlemin bakiyeye uyguladığı etki (mobil ile aynı): gelir +, transfer yönü
-// kategoriden (transfer_in/adjust_in +), diğer her şey −.
+// Bir işlemin bakiyeye uyguladığı etki (mobil transactionStore.txBalanceDelta ile aynı):
+// gelir +, transfer yönü kategoriden (transfer_in/adjust_in/collection_in +), diğer her şey −.
+// collection_in EKSİK olması mobil tahsilat transferini web'den silmede bakiyeyi ters bozuyordu.
+const INFLOW_CATEGORIES = new Set(["transfer_in", "adjust_in", "collection_in"]);
 function appliedDelta(type: string, amount: number, category: string | null): number {
   if (type === "income") return amount;
   if (type === "transfer")
-    return category === "transfer_in" || category === "adjust_in" ? amount : -amount;
+    return category && INFLOW_CATEGORIES.has(category) ? amount : -amount;
   return -amount;
 }
 
@@ -415,6 +418,8 @@ export default function IslemlerClient({
     if (error) setError("Hesap bakiyesi güncellenemedi. Hesabı kontrol et.");
   }
 
+  const submitLock = useSubmitLock();
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -437,6 +442,7 @@ export default function IslemlerClient({
       bank_account_id: accountId || null,
     };
 
+    if (!submitLock.acquire()) return;
     setSaving(true);
     try {
       if (editing) {
@@ -507,6 +513,7 @@ export default function IslemlerClient({
       setError("İşlem kaydedilemedi. Tekrar dene.");
     } finally {
       setSaving(false);
+      submitLock.release();
     }
   }
 
