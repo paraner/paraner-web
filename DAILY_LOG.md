@@ -14,6 +14,14 @@
 
 ---
 
+## 2026-07-02 — Ayarlar sayfası SaaS-standardı sekmeli yapıya geçti
+
+Mehmet "SaaS ayarları nasıl olmalı" araştırması istedi (web araştırması: 3-katmanlı kapsam ayrımı kişisel/işletme/hesap, sekme-veya-yan-menü navigasyon, solda etiket/sağda kontrol satırları, hibrit kaydetme, tehlike bölgesi; galeriler: saasinterface/nicelydone/saasframe/Mobbin) → öneri onaylandı, uygulandı (`AyarlarClient.tsx` + globals.css):
+- **4 sekme:** Genel (aktif profil: tip/para birimi/ad + profil değiştir) · İşletme (yalnız business: fatura numaralama, CSV dışa aktarma, roller-yakında) · Bildirimler · Hesap & Güvenlik (e-posta, cihazlar, oturum, tehlike bölgesi). Sekme = `?tab=` derin link (`history.replaceState`, mount'ta URL'den okunur; SSR uyumu için effect'te).
+- **Yerleşim:** `.settings-wrap` 820px; `.set-tabs` alt-çizgili nötr sekmeler (Vercel tarzı, teal yok — [[marka-rengi-degisecek]]); `.set-field` masaüstünde yatay (sol etiket+ipucu `.sf-info`, sağ 240px input); mobilde dikey + sekmeler yatay kaydırma.
+- **Tehlike bölgesi:** Hesabı Sil kırmızı çerçeveli `.danger-zone` kartına taşındı (GitHub deseni).
+- İşlevsel mantığa (Supabase çağrıları, confirmDialog/toast akışları) DOKUNULMADI — yalnız yeniden gruplama+stil. tsc+build temiz; mock veriyle 2 viewport × 4 sekme ekran görüntüsüyle doğrulandı (mock commit'e girmedi).
+
 ## 2026-07-02 — Mobil tarama (hero 320px taşması) + iOS Safari mask-drop beyaz kaması
 
 - **Genel mobil tarama (GOREVLER "Şimdiki"):** headless Chromium ile 320/360/390/560/768px'te ana sayfa + /giris + /kayit gerçek-viewport ölçümü. Paralel statik CSS taramasının "yüksek güven" bulgularının neredeyse tamamı yine yanlış pozitifti (max-width kabı aşamaz) — ölçümle elendi. **Tek gerçek sorun:** 320px'te ana sayfada 11px yatay scroll. Kök neden: ≤900'de `.hero.wrap` kolon flex + `align-items:center` → `.hero-text` genişliğini içerikten alıyor; 3 rozetin tek-satır min-content'i 342px. **Fix:** mobil bloğunda `.hero-text{width:100%}` (rozetler zaten `flex:1 1 0; min-width:0` ile küçülüyor). 5 genişlikte de taşma sıfırlandı; auth sayfaları zaten temizdi. Not: masaüstünde 13px doc-overflow var ama önceden beri ve bilinçli (hero küpün negatif-sağ konumu, `body overflow-x:hidden` kırpıyor, kullanıcı görmez).

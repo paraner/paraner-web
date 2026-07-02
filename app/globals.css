@@ -2341,6 +2341,49 @@ ul { list-style: none; }
 /* Ayarlar */
 .settings-block { margin-bottom: 30px; max-width: 640px; }
 .settings-block h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text-dim); }
+
+/* ─── Ayarlar: sekmeli yerleşim (SaaS standardı) ───
+   Üstte alt-çizgili nötr sekmeler (Vercel/Linear tarzı), içerik 820px'e kadar genişler,
+   alanlar "solda etiket+açıklama / sağda kontrol" satırına oturur. */
+.settings-wrap { max-width: 820px; }
+.settings-wrap .settings-block { max-width: none; }
+.set-tabs {
+  display: flex; gap: 2px; margin: 18px 0 28px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto; scrollbar-width: none;
+}
+.set-tabs::-webkit-scrollbar { display: none; }
+.set-tab {
+  appearance: none; background: none; border: none; cursor: pointer;
+  padding: 10px 14px; font-family: inherit; font-size: 13.5px; font-weight: 600;
+  color: var(--text-dim); white-space: nowrap; position: relative;
+  transition: color 0.15s;
+}
+.set-tab:hover { color: var(--text); }
+.set-tab.active { color: var(--text); }
+.set-tab.active::after {
+  content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px;
+  height: 2px; border-radius: 2px; background: var(--text);
+}
+/* set-field masaüstünde yatay: sol etiket+ipucu, sağ kontrol */
+@media (min-width: 721px) {
+  .settings-wrap .set-field { flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; }
+  .settings-wrap .set-field .set-input { width: 240px; flex-shrink: 0; }
+}
+.sf-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+/* Profil adı satırı: dar ekranda alta sarsın, input esnesin */
+.info-row.name-row { flex-wrap: wrap; }
+.info-row.name-row .inline-edit { flex: 1; min-width: 240px; max-width: 380px; margin-left: auto; }
+/* Tehlike bölgesi — yıkıcı işlemler görsel olarak izole (GitHub deseni) */
+.danger-zone {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+  border: 1px solid rgba(226, 75, 74, 0.35); background: rgba(226, 75, 74, 0.05);
+  border-radius: 14px; padding: 16px 20px;
+}
+.danger-zone .dz-title { font-size: 14px; font-weight: 700; color: var(--danger); }
+.danger-zone .dz-desc { font-size: 12.5px; color: var(--text-dim); margin-top: 3px; max-width: 480px; line-height: 1.5; }
+.danger-zone .dz-btn { color: var(--danger); border-color: rgba(226, 75, 74, 0.5); flex-shrink: 0; }
+.danger-zone .dz-btn:hover:not(:disabled) { background: rgba(226, 75, 74, 0.12); }
 .info-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 18px; border-bottom: 1px solid var(--border); }
 .info-row:last-child { border-bottom: none; }
 .info-row .k { font-size: 13px; color: var(--text-dim); }

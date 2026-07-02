@@ -27,6 +27,12 @@ export type DeviceRow = {
   last_seen: string;
 };
 
+/* Sekmeli ayarlar (SaaS standardı: kapsam ayrımı) —
+   Genel = aktif profile ait · İşletme = yalnız işletme profili · Bildirimler ·
+   Hesap & Güvenlik = kullanıcıya ait (profilden bağımsız) + tehlike bölgesi.
+   Derin link: ?tab=isletme (history.replaceState ile, sayfa yenilenmez). */
+type TabKey = "genel" | "isletme" | "bildirimler" | "hesap";
+
 export default function AyarlarClient({
   email,
   profiles,
@@ -41,6 +47,29 @@ export default function AyarlarClient({
 
   const active = profiles.find((p) => p.is_active) ?? profiles[0];
   const isBusiness = active?.profile_type === "business";
+
+  const tabs: { key: TabKey; label: string }[] = [
+    { key: "genel", label: "Genel" },
+    ...(isBusiness ? [{ key: "isletme" as TabKey, label: "İşletme" }] : []),
+    { key: "bildirimler", label: "Bildirimler" },
+    { key: "hesap", label: "Hesap & Güvenlik" },
+  ];
+
+  const [tab, setTab] = useState<TabKey>("genel");
+
+  // URL'den sekmeyi al (derin link) — yalnız mount'ta; SSR/hydration uyumu için effect'te
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab") as TabKey | null;
+    if (t && tabs.some((x) => x.key === t)) setTab(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function selectTab(k: TabKey) {
+    setTab(k);
+    const u = new URL(window.location.href);
+    u.searchParams.set("tab", k);
+    window.history.replaceState(null, "", u.toString());
+  }
 
   const [name, setName] = useState(active?.profile_name ?? "");
   const [savingName, setSavingName] = useState(false);
@@ -73,99 +102,128 @@ export default function AyarlarClient({
   }
 
   return (
-    <>
+    <div className="settings-wrap">
       <h1 className="panel-h1">Ayarlar</h1>
       <p className="panel-sub">Profil, hesap ve işletme ayarların</p>
 
-      <div className="settings-block">
-        <h3>Profil Bilgileri</h3>
-        <div className="tx-list">
-          <div className="info-row">
-            <span className="k">E-posta</span>
-            <span className="v">{email}</span>
-          </div>
-          <div className="info-row">
-            <span className="k">Profil tipi</span>
-            <span className="v">{typeLabel(active?.profile_type ?? null)}</span>
-          </div>
-          <div className="info-row">
-            <span className="k">Para birimi</span>
-            <span className="v">{active?.currency ?? "TRY"}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="settings-block">
-        <h3>Profil Adı</h3>
-        <div className="inline-edit">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Profil adı"
-          />
+      <div className="set-tabs" role="tablist" aria-label="Ayar bölümleri">
+        {tabs.map((t) => (
           <button
-            className="btn btn-primary btn-sm"
-            onClick={saveName}
-            disabled={savingName || !name.trim() || name.trim() === active?.profile_name}
+            key={t.key}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.key}
+            className={`set-tab${tab === t.key ? " active" : ""}`}
+            onClick={() => selectTab(t.key)}
           >
-            {savingName ? "…" : "Kaydet"}
+            {t.label}
           </button>
-        </div>
+        ))}
       </div>
 
-      {isBusiness && active && (
-        <InvoiceNumbering
-          profileId={active.id}
-          initialPrefix={active.invoice_prefix ?? "MGZR"}
-          initialNext={active.invoice_next_number ?? 1}
-        />
-      )}
-
-      {active && (
-        <NotificationPrefs profileId={active.id} isBusiness={isBusiness} />
-      )}
-
-      {isBusiness && active && (
-        <BackupExport profileId={active.id} profileName={active.profile_name} />
-      )}
-
-      {isBusiness && <RolesSoon />}
-
-      {profiles.length > 1 && (
-        <div className="settings-block">
-          <h3>Profil Değiştir</h3>
-          <div className="tx-list">
-            {profiles.map((p) => (
-              <div
-                key={p.id}
-                className={`profile-row${p.is_active ? " active" : ""}`}
-                onClick={() => switchTo(p)}
-              >
-                <div>
-                  <div className="p-name">{p.profile_name ?? "Profil"}</div>
-                  <div className="p-type">{typeLabel(p.profile_type)}</div>
-                </div>
-                {p.is_active ? (
-                  <span className="badge green">Aktif</span>
-                ) : (
-                  <span className="badge gray">Geç</span>
-                )}
+      {tab === "genel" && (
+        <>
+          <div className="settings-block">
+            <h3>Aktif Profil</h3>
+            <div className="tx-list">
+              <div className="info-row">
+                <span className="k">Profil tipi</span>
+                <span className="v">{typeLabel(active?.profile_type ?? null)}</span>
               </div>
-            ))}
+              <div className="info-row">
+                <span className="k">Para birimi</span>
+                <span className="v">{active?.currency ?? "TRY"}</span>
+              </div>
+              <div className="info-row name-row">
+                <span className="k">Profil adı</span>
+                <div className="inline-edit">
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Profil adı"
+                  />
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={saveName}
+                    disabled={savingName || !name.trim() || name.trim() === active?.profile_name}
+                  >
+                    {savingName ? "…" : "Kaydet"}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+
+          {profiles.length > 1 && (
+            <div className="settings-block">
+              <h3>Profil Değiştir</h3>
+              <div className="tx-list">
+                {profiles.map((p) => (
+                  <div
+                    key={p.id}
+                    className={`profile-row${p.is_active ? " active" : ""}`}
+                    onClick={() => switchTo(p)}
+                  >
+                    <div>
+                      <div className="p-name">{p.profile_name ?? "Profil"}</div>
+                      <div className="p-type">{typeLabel(p.profile_type)}</div>
+                    </div>
+                    {p.is_active ? (
+                      <span className="badge green">Aktif</span>
+                    ) : (
+                      <span className="badge gray">Geç</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
-      <DevicesSection devices={devices} />
+      {tab === "isletme" && isBusiness && active && (
+        <>
+          <InvoiceNumbering
+            profileId={active.id}
+            initialPrefix={active.invoice_prefix ?? "MGZR"}
+            initialNext={active.invoice_next_number ?? 1}
+          />
+          <BackupExport profileId={active.id} profileName={active.profile_name} />
+          <RolesSoon />
+        </>
+      )}
 
-      <div className="settings-block">
-        <h3>Oturum</h3>
-        <LogoutButton />
-      </div>
+      {tab === "bildirimler" &&
+        (active ? (
+          <NotificationPrefs profileId={active.id} isBusiness={isBusiness} />
+        ) : (
+          <p className="panel-sub">Profil bulunamadı.</p>
+        ))}
 
-      <DeleteAccountSection />
-    </>
+      {tab === "hesap" && (
+        <>
+          <div className="settings-block">
+            <h3>Hesap</h3>
+            <div className="tx-list">
+              <div className="info-row">
+                <span className="k">E-posta</span>
+                <span className="v">{email}</span>
+              </div>
+            </div>
+          </div>
+
+          <DevicesSection devices={devices} />
+
+          <div className="settings-block">
+            <h3>Oturum</h3>
+            <LogoutButton />
+          </div>
+
+          <DeleteAccountSection />
+        </>
+      )}
+    </div>
   );
 }
 
@@ -227,18 +285,22 @@ function DeleteAccountSection() {
 
   return (
     <div className="settings-block">
-      <h3>Hesabı Sil</h3>
-      <p className="panel-sub" style={{ marginTop: 4 }}>
-        Hesabın ve tüm verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.
-      </p>
-      <button
-        className="btn btn-sm"
-        onClick={deleteAccount}
-        disabled={busy}
-        style={{ marginTop: 12, color: "#E24B4A", borderColor: "#E24B4A" }}
-      >
-        {busy ? "Siliniyor…" : "Hesabımı Kalıcı Olarak Sil"}
-      </button>
+      <h3>Tehlike Bölgesi</h3>
+      <div className="danger-zone">
+        <div className="dz-info">
+          <div className="dz-title">Hesabı Sil</div>
+          <div className="dz-desc">
+            Hesabın, tüm profillerin ve verilerin kalıcı olarak silinir. Bu işlem geri alınamaz.
+          </div>
+        </div>
+        <button
+          className="btn btn-sm dz-btn"
+          onClick={deleteAccount}
+          disabled={busy}
+        >
+          {busy ? "Siliniyor…" : "Hesabımı Kalıcı Olarak Sil"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -420,8 +482,10 @@ function InvoiceNumbering({
       </div>
 
       <div className="set-field">
-        <label>Fatura Öneki</label>
-        <span className="set-hint">Maksimum 5 karakter, sadece harf ve rakam</span>
+        <div className="sf-info">
+          <label>Fatura Öneki</label>
+          <span className="set-hint">Maksimum 5 karakter, sadece harf ve rakam</span>
+        </div>
         <input
           className="set-input"
           value={prefix}
@@ -431,8 +495,10 @@ function InvoiceNumbering({
       </div>
 
       <div className="set-field">
-        <label>Sonraki Numara</label>
-        <span className="set-hint">Her fatura oluşturulduğunda otomatik artar</span>
+        <div className="sf-info">
+          <label>Sonraki Numara</label>
+          <span className="set-hint">Her fatura oluşturulduğunda otomatik artar</span>
+        </div>
         <input
           className="set-input"
           value={String(next)}
