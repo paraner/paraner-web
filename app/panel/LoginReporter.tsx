@@ -13,6 +13,13 @@ import { reportLogin } from "../../lib/loginAlert";
 //    cihaz listede görünmüyordu).
 //  - SIGNED_IN → tekrar dene: ilk mount'ta oturum henüz hazır değilse (OAuth dönüşü gecikmesi)
 //    rapor kaçmasın.
+//  - In-flight kilidi (04.07): mount + SIGNED_IN aynı sayfa açılışında ikisi de tetikleniyor;
+//    guard rapor DÖNENE kadar boş kaldığından iki paralel istek gidiyor → edge function ikisini
+//    de alarm sayıp çift mail atıyordu. Rapor havadayken ikinci çağrı atlanır (başarısızsa kilit
+//    açılır, sonraki SIGNED_IN/mount yine dener).
+
+let reportInFlight = false;
+
 export default function LoginReporter() {
   useEffect(() => {
     const supabase = createClient();
@@ -23,12 +30,18 @@ export default function LoginReporter() {
       } catch {
         // sessionStorage erişilemezse yine de dene
       }
+      if (reportInFlight) return;
+      reportInFlight = true;
       // Guard'ı SADECE rapor başarılı olursa set et → CORS/ağ/oturum-gecikmesi hatasında tekrar denenir.
-      reportLogin().then((ok) => {
-        if (ok) {
-          try { sessionStorage.setItem("login_reported", "1"); } catch { /* yoksay */ }
-        }
-      });
+      reportLogin()
+        .then((ok) => {
+          if (ok) {
+            try { sessionStorage.setItem("login_reported", "1"); } catch { /* yoksay */ }
+          }
+        })
+        .finally(() => {
+          reportInFlight = false;
+        });
     };
 
     tryReport();
