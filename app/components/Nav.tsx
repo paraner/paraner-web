@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Logo from "./Logo";
 import StoreBadges from "./StoreBadges";
 
@@ -11,6 +12,9 @@ import StoreBadges from "./StoreBadges";
 export default function Nav({ solid = false }: { solid?: boolean }) {
   const [scrolled, setScrolled] = useState(solid);
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+  // Kullanıcı hangi sayfadaysa o link parlak görünsün (ana sayfa çapaları hariç — onlar bölüm, sayfa değil)
+  const isActive = (href: string) => pathname === href;
 
   useEffect(() => {
     if (solid) {
@@ -44,7 +48,13 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
           <nav className="nav-links">
             <a href="/#ozellikler">Özellikler</a>
             <a href="/#fiyatlar">Fiyatlar</a>
-            <Link href="/destek">Destek</Link>
+            <Link
+              href="/destek"
+              className={isActive("/destek") ? "active" : undefined}
+              aria-current={isActive("/destek") ? "page" : undefined}
+            >
+              Destek
+            </Link>
           </nav>
           <div className="nav-actions">
             <Link href="/giris" className="btn btn-ghost">Giriş Yap</Link>
@@ -90,7 +100,12 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
               Fiyatlar
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
             </a>
-            <Link href="/destek" className="mm-row" onClick={close}>
+            <Link
+              href="/destek"
+              className={`mm-row${isActive("/destek") ? " active" : ""}`}
+              aria-current={isActive("/destek") ? "page" : undefined}
+              onClick={close}
+            >
               Destek
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
             </Link>

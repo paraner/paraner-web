@@ -188,6 +188,12 @@ ul { list-style: none; }
   transition: color 0.18s; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
 }
 .nav-links a:hover { color: #fff; }
+/* Bulunulan sayfa: parlak beyaz + hafif ışıma → kullanıcı nerede olduğunu görsün */
+.nav-links a.active {
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.35), 0 1px 6px rgba(0, 0, 0, 0.35);
+}
 .nav-actions { display: flex; gap: 10px; align-items: center; }
 .nav .btn { border-radius: 999px; }
 .nav.scrolled .btn { padding: 7px 16px; font-size: 13px; }
@@ -293,6 +299,9 @@ ul { list-style: none; }
 }
 .mm-links .mm-row:last-child { border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
 .mm-row svg { width: 17px; height: 17px; color: rgba(255, 255, 255, 0.4); }
+/* Mobil menüde de bulunulan sayfa parlak */
+.mm-row.active { color: #fff; text-shadow: 0 0 16px rgba(255, 255, 255, 0.3); }
+.mm-row.active svg { color: rgba(255, 255, 255, 0.75); }
 
 /* App Store + Play Store — en altta yan yana */
 /* Mobil menü alt rozetleri = ana sayfa ile AYNI paylaşılan StoreBadges (3 rozet yan yana) */
