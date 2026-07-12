@@ -2970,3 +2970,98 @@ ul { list-style: none; }
 @media (max-width: 520px) {
   .toast-host { left: 16px; right: 16px; width: auto; }
 }
+
+/* ═══ DESTEK SAYFASI (/destek) ═══
+   SSS = JS'siz <details> akordeon. Renkler nötr/titanyum (teal yok — marka rengi değişecek). */
+.support { position: relative; z-index: 1; max-width: 820px; margin: 0 auto; padding: 96px 28px 64px; }
+
+.support-head { text-align: center; margin-bottom: 48px; }
+.support-head h1 { font-size: clamp(30px, 5vw, 42px); font-weight: 700; letter-spacing: -0.02em; margin-top: 14px; }
+.support-lead { color: var(--text-dim); font-size: 16px; line-height: 1.7; margin: 16px auto 0; max-width: 520px; }
+
+.support-faq h2,
+.support-contact h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 20px; }
+
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.faq-item:hover { border-color: rgba(255, 255, 255, 0.16); }
+.faq-item[open] { background: var(--card-2); border-color: rgba(255, 255, 255, 0.16); }
+
+.faq-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+  color: var(--text);
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary svg {
+  width: 18px; height: 18px; flex-shrink: 0;
+  color: var(--text-faint);
+  transition: transform 0.22s ease;
+}
+.faq-item[open] summary svg { transform: rotate(180deg); }
+.faq-item p {
+  padding: 0 20px 20px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.support-contact { margin-top: 56px; }
+.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.contact-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card);
+  text-decoration: none;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+.contact-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--card-2);
+  transform: translateY(-2px);
+}
+.contact-kind { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
+.contact-value { font-size: 17px; font-weight: 600; color: var(--text); }
+.contact-note { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+
+.support-social {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  font-size: 14px;
+  color: var(--text-faint);
+}
+.support-social a { color: var(--text-dim); text-decoration: none; transition: color 0.15s ease; }
+.support-social a:hover { color: var(--text); }
+
+.support-cta { margin-top: 64px; }
+
+@media (max-width: 640px) {
+  .support { padding: 80px 20px 48px; }
+  .contact-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-item summary svg,
+  .contact-card { transition: none; }
+  .contact-card:hover { transform: none; }
+}

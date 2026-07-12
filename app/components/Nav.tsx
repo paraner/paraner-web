@@ -44,6 +44,7 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
           <nav className="nav-links">
             <a href="/#ozellikler">Özellikler</a>
             <a href="/#fiyatlar">Fiyatlar</a>
+            <Link href="/destek">Destek</Link>
           </nav>
           <div className="nav-actions">
             <Link href="/giris" className="btn btn-ghost">Giriş Yap</Link>
@@ -89,6 +90,10 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
               Fiyatlar
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
             </a>
+            <Link href="/destek" className="mm-row" onClick={close}>
+              Destek
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+            </Link>
           </nav>
 
           <div className="mm-stores">
