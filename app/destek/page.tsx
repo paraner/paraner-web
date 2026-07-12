@@ -82,7 +82,7 @@ export default function Destek() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       <Background />
-      <Nav solid />
+      <Nav />
 
       <main className="support">
         <header className="support-head">
