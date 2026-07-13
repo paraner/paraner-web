@@ -14,11 +14,11 @@ const SITE_URL = "https://paraner.com";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Paraner — Finans & Bütçe Koçun",
+    default: "Şirketinizi ve bütçenizi Paraner ile yönetin | Gelir-Gider ve Ön Muhasebe",
     template: "%s · Paraner",
   },
   description:
-    "Paranı yönet, geleceğini kur. AI destekli kişisel ve işletme finans asistanı. Gelir-gider takibi, bütçe, birikim hedefleri, fiş tarama, döviz & altın ve esnaf için ön muhasebe tek uygulamada.",
+    "Gelir-gider takibi, bütçe, fatura, stok ve KDV tek uygulamada. Esnaf ve KOBİ için ön muhasebe, bireyler için AI finans koçu Parla. Web ve mobilde aynı hesap — ücretsiz başlayın.",
   keywords: [
     "bütçe uygulaması",
     "harcama takip uygulaması",
@@ -45,15 +45,15 @@ export const metadata: Metadata = {
     locale: "tr_TR",
     url: SITE_URL,
     siteName: "Paraner",
-    title: "Paraner — Finans & Bütçe Koçun",
+    title: "Şirketinizi ve bütçenizi Paraner ile yönetin",
     description:
-      "Paranı yönet, geleceğini kur. AI destekli kişisel ve işletme finans asistanı.",
+      "Gelir-gider, bütçe, fatura, stok ve KDV tek uygulamada. Web ve mobilde aynı hesap.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Paraner — Finans & Bütçe Koçun",
+    title: "Şirketinizi ve bütçenizi Paraner ile yönetin",
     description:
-      "Paranı yönet, geleceğini kur. AI destekli kişisel ve işletme finans asistanı.",
+      "Gelir-gider, bütçe, fatura, stok ve KDV tek uygulamada. Web ve mobilde aynı hesap.",
   },
   category: "finance",
 };
@@ -84,15 +84,35 @@ const jsonLd = {
     {
       "@type": "SoftwareApplication",
       name: "Paraner",
-      operatingSystem: "iOS, Android",
+      // Web paneli (app.paraner.com) de var — eskiden yalnız iOS/Android yazıyordu
+      operatingSystem: "Web, iOS, Android",
       applicationCategory: "FinanceApplication",
       description:
         "AI destekli kişisel ve işletme finans asistanı. Bütçe, birikim hedefleri, fiş tarama, döviz & altın ve esnaf ön muhasebesi.",
       url: SITE_URL,
+      featureList: [
+        "Gelir & gider takibi",
+        "Bütçe ve birikim hedefleri",
+        "Parla — AI finans asistanı",
+        "Fatura ve teklif",
+        "Stok & ürün takibi",
+        "Çalışan & maaş",
+        "KDV ve vergi raporları",
+        "Cari hesaplar ve veresiye",
+        "Döviz & altın portföyü",
+      ],
+      // AggregateOffer: tek "price: 0" Offer'ı Plus/İşletme Pro fiyatlarını Google'a hiç göstermiyordu
       offers: {
-        "@type": "Offer",
-        price: "0",
+        "@type": "AggregateOffer",
         priceCurrency: "TRY",
+        lowPrice: "0",
+        highPrice: "349",
+        offerCount: 3,
+        offers: [
+          { "@type": "Offer", name: "Free", price: "0", priceCurrency: "TRY" },
+          { "@type": "Offer", name: "Plus", price: "129", priceCurrency: "TRY" },
+          { "@type": "Offer", name: "İşletme Pro", price: "349", priceCurrency: "TRY" },
+        ],
       },
     },
   ],
