@@ -1,11 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
-// Inter — telefon uygulamasıyla aynı font ailesi
+// Inter — gövde metni + arayüz (telefon uygulamasıyla aynı aile)
 const inter = Inter({
   variable: "--font-inter",
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"], // latin-ext: Türkçe ğ ş ı İ
+  display: "swap",
+});
+
+// Instrument Serif — yalnız BÜYÜK BAŞLIKLAR (h1). Resend'in Domaine'inin ücretsiz
+// muadili; tek ağırlığı var (400) — zaten Resend de başlıkları 400'de kullanıyor.
+// Panelde (app.paraner.com) KULLANILMIYOR: veri ekranlarında serif doğru değil.
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-serif",
+  subsets: ["latin", "latin-ext"],
+  weight: "400",
   display: "swap",
 });
 
@@ -128,7 +138,7 @@ export default function RootLayout({
        kapatmıyor → bu attribute olmadan sayfa geçişinde scroll tepeye ANIMASYONLU gidiyordu
        (dikey zıplama). Bu attribute ile Next geçiş anında auto'ya çevirir (anında scroll);
        in-page çapraz linkler (#ozellikler/#fiyatlar) yine smooth kalır. */
-    <html lang="tr" className={inter.variable} data-scroll-behavior="smooth">
+    <html lang="tr" className={`${inter.variable} ${instrumentSerif.variable}`} data-scroll-behavior="smooth">
       {/* suppressHydrationWarning: bazı tarayıcı eklentileri <body>'ye attribute
           ekleyip hydration uyarısı tetikliyor; bu zararsız farkı görmezden geliriz. */}
       <body suppressHydrationWarning>
