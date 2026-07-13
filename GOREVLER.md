@@ -3,8 +3,47 @@
 > Sadece açık görevler. Tamamlananlar için `DAILY_LOG.md` + git geçmişi.
 
 ## Şimdiki
+
+### 🔴 CANLI GÖZ TEYİDİ BEKLİYOR — 2026-07-13 (18 commit, hepsi deploy edildi)
+> İŞE BAŞLARKEN İLK BUNU SOR. Kod tarafı + headless doğrulandı; gerçek cihaz/göz onayı yok.
+
+**paraner.com (pazarlama)**
+- [ ] **`/destek`** — SSS akordeonları açılıyor mu, WhatsApp kartı doğru numaraya gidiyor mu (`+90 532 237 99 09`)?
+- [ ] **Mega-menü (masaüstü)** — İşletme/Bireysel üstüne gel: panel ORTADA sabit duruyor mu, geçişte kapanmadan içerik KAYARAK mı değişiyor?
+- [ ] **Mobil menü** — drill-down (içeri giriş) akışı + kaydırma çubuğu artık yazılara değmiyor mu?
+- [ ] **Tipografi** — Playfair başlıklar (`/`, `/isletme`, `/bireysel`, `/destek`, `/gizlilik`) düzgün mü? Türkçe ğ/ş/İ harfleri doğru fontta mı?
+- [ ] **Google'da yeni title** — birkaç gün sürer. Search Console → URL Denetimi → "Dizine eklenmeyi iste" (`/`, `/destek`, `/isletme`, `/bireysel`).
+
+**app.paraner.com (panel)**
+- [ ] **Genel Bakış** — ölü boşluk gitti mi? Grafik tam genişlikte okunur mu? Hesap kartları (1 / 2 / 3 hesapla) makul boyutta mı?
+- [ ] **Panel tipografisi** — 800/900 ağırlıklar kalktı; sayfa başlıkları 24/600. Modüllerde bozulan yer var mı?
+
+### Devam eden
 - [ ] **Genel mobil tarama:** ana sayfa + auth ekranlarında telefonda taşma/bozulma var mı, tek tek bak. (Auth + rozetler 06-29'da elden geçti; ana sayfa/diğer bölümler kaldı.)
   - 07-02: Headless tarama (320/360/390/560/768px, ana sayfa + /giris + /kayit): tek gerçek sorun 320px'te hero 11px yatay taşma (rozet satırı min-content 342px) → `.hero-text{width:100%}` fix (≤900 medya bloğu). Ayrıca iOS Safari mask-drop beyaz kaması (beam input) maskesiz tekniğe geçirilerek çözüldü — detay `DAILY_LOG.md` 07-02. İkisi de deploy edildi; **Mehmet'in telefonda göz teyidi bekliyor** (hero taşması + beam input görünümü).
+
+## Rakip denetiminden çıkan (2026-07-13, `RAKIP-defteran.md`)
+
+### Web / pazarlama (sıradaki faz)
+- [ ] **Panel tasarım turu — Genel Bakış PİLOT'u onaylandıysa diğer 33 modüle yay.** Sıra: İşlemler → Hesaplar → Faturalar (en yoğun sayfalar).
+- [ ] **Mega-menüdeki alt sayfalar** (`/isletme/faturalar`, `/bireysel/butce` …). Şu an linkler segment sayfası içi `#çapa`lara gidiyor; sayfa açılınca `navData.ts`'te href değiştirmek yeterli. **Google sitelinks'i bunlar doğurur.**
+- [ ] **Ana sayfayı iki segmente çatalla** (Mehmet karar vermedi): hero altına "İşletmem var" / "Bireysel kullanacağım" iki kart → `/isletme` ve `/bireysel`.
+- [ ] **`llms.txt` + `llms-full.txt`** — Defteran yapmış, robots'ta ClaudeBot/GPTBot'u davet ediyor. Bizde yok. Ucuz AEO kazancı.
+- [ ] **Ücretsiz hesaplayıcılar** — Defteran'ın GİRMEDİĞİ nişler: gecikme faizi/vade farkı, serbest meslek makbuzu + tevkifat, şahıs şirketi vergi yükü simülatörü, ücretsiz fatura oluşturucu, kâr marjı. (Onların KDV/maaş hesaplayıcıları hesaplama.net/EY'ye karşı kaybediyor.)
+- [ ] **Sosyal kanıt** — sitede tek sayı bile yok. App Store puanı varsa hero'ya.
+
+### Ürün (Defteran'da var, bizde yok)
+- [ ] **Fatura kalem editörü** — ⚠️ EN KRİTİK TEKNİK BORÇ. e-Fatura + teklif→fatura + stok düşümü ÜÇÜ birden buna kilitli (`FaturalarClient.tsx:216` kendi notumuz).
+- [ ] **Excel/CSV içe aktarım** (fatura + cari) — bizde sadece export var. Rakipten göç silahı, düşük efor/yüksek dönüşüm.
+- [ ] **Mutabakatta güvenli paylaşım linki** — bizim mutabakat tamamen içeri dönük (bakiyeler elle giriliyor, "Gönderildi" bir dropdown; gönderecek bir şey yok). Token'lı public route + onay = küçük iş, güçlü anlatı.
+- [ ] **Teklif → Fatura tek-tık dönüşümü** — `invoiced` durumu var ama dönüştüren kod yok.
+- [ ] **Fatura → Stok otomatik hareketi** — alış artırmalı, satış azaltmalı; şu an stok manuel.
+- [ ] **PDF rapor** — menüde `href: null`. KOBİ muhasebecisine CSV değil PDF yolluyor.
+- [ ] **Puantaj** — çalışan/maaş/izin var, devam-mesai kaydı yok.
+- [ ] **e-Fatura/GİB** — zaten "Sonraki Faz"da (aşağıda).
+
+### Fiyatlandırma notu
+- [ ] Defteran ₺750/ay **tek paket**, kullanıcı limiti belirsiz, **e-fatura kontörü hakkında TAM SESSİZ** ("kontör" kelimesi fiyat sayfasında 0 kez geçiyor) → *"gizli kontör yok"* bizim saldırı yüzeyimiz.
 
 ## İLERİDE
 - [ ] **Toast sistemini iyileştir:** Sonner-tarzı çalışıyor; Mehmet daha iyi görünüm/UX araştıracak. Temel sistem oturduktan sonra.

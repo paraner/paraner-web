@@ -14,6 +14,38 @@
 
 ---
 
+## 2026-07-13 — Rakip denetimi (Defteran) + web yeniden yapılanma: /destek · İşletme-Bireysel mega-menü · tipografi sistemi · panel
+
+18 commit. Mehmet "rakibi incele" ile başladı, oradan çıkan eksikler sırayla kapatıldı. Referans olarak **resend.com** ölçülerek taklit edildi (tahminle değil: headless ile DOM/CSS/geçiş ölçümü).
+
+**Rakip analizi — `RAKIP-defteran.md`** (4 paralel ajan, 180 URL). Ürün olarak biz öndeyiz (34 modül; bütçe/KDV/vergi takvimi/veresiye/Cüzdanım onlarda YOK), pazarlama makinesi olarak onlar çok önde (bizde 2 URL'lik sitemap, onlarda 180: akademi 32 ders, sözlük 21, 9 hesaplayıcı, `llms.txt`+AI crawler daveti). Fiyat ₺750/ay tek paket. **Her iddia elle doğrulandı** — ajanların 2 SEO yanlışı (canonical/keywords "yok" demişlerdi, VARDI) düzeltildi. Bizde gerçekten eksik: e-Fatura/GİB, **fatura kalem editörü** (e-Fatura + teklif→fatura + stok düşümü üçü buna kilitli), Excel import, mutabakatta paylaşım linki, PDF rapor, puantaj. Onlarda da yok: banka entegrasyonu, OCR, offline.
+
+**Yeni sayfalar + nav:**
+- **`/destek`** — 9 SSS (JS'siz `<details>`) + **FAQPage schema** (ilk rich-snippet fırsatımız), WhatsApp `+90 532 237 99 09` (mobil `help.tsx` ile aynı numara) + destek@paraner.com. e-Fatura sorusuna DÜRÜST yanıt ("yol haritamızda").
+- **`/isletme` + `/bireysel`** + üst barda **İşletme/Bireysel mega-menü**. Alt sayfalar henüz yok → menü linkleri şimdilik segment sayfası içi `#çapa`lara gidiyor (`navData.ts` tek kaynak; alt sayfa açılınca sadece href değişecek).
+- **SEO:** title → "Şirketinizi ve bütçenizi Paraner ile yönetin | Gelir-Gider ve Ön Muhasebe". Schema: `Offer price:"0"` → **AggregateOffer** (₺0/129/349 artık Google'a görünüyor), `operatingSystem` "iOS, Android" → **"Web, iOS, Android"** (web panelini hiç söylemiyorduk), `featureList` (9). Nav'da bulunulan sayfa parlak (`aria-current`).
+
+**Mega-menü — Resend'in GERÇEK deseni (3 turda oturdu, her turda ölçtüm):**
+1. Her tetikleyiciye ayrı panel yaptım → YANLIŞ. Resend'de **TEK panel** var, geçişte kapanmıyor.
+2. Paneli tetikleyicinin altına ortaladım → YANLIŞ. Ölçüm: Resend'de panel merkezi tetikleyici 469'da da 915'te de **hep 720 = ekran ortası**. Panel KIMILDAMIYOR, sadece genişliyor/daralıyor.
+3. İçeriği fade ile geçirdim → YANLIŞ. Kare kare ölçüm: **opacity hep 1, saf KAYDIRMA** — imleç sağa giderse eski içerik sola süzülüp çıkıyor (x: 452→223), yeni içerik sağdan giriyor (788→533); panel `overflow:hidden` ile kırpıyor.
+- ⚠️ **Ders:** `.nav-links`'e `position:relative` EKLEME — o element `position:absolute; left:50%` ile ortalanıyor; relative yazınca ortalama düşer, nav sağa kayıp Giriş/Kayıt butonlarının üstüne biner.
+- **Mobil:** akordeon DEĞİL, **içeri giriş (drill-down)**: kök liste (segmentler sağ oklu, düz linkler oksuz) → basınca ← geri + vurgu kartları + linkler. `<button>` sıfırlamaları (`border:0`, `font:inherit`) `.mm-row`'un çizgisini ve 600 ağırlığını EZİYORDU → düzeltildi. Kaydırma çubuğu içeriğe değiyordu: kaydırılan kap yan dolgunun içinde kalıyordu → negatif margin ile ekran kenarına taşındı.
+
+**Tipografi sistemi (pazarlama):**
+- Resend ölçüldü: h1 = Domaine (serif) **w400**, gövde = Inter 18px/27px w400. Asıl fark font değil **AĞIRLIK**: onlar 400'de, biz 800'deydik.
+- Domaine ticari lisanslı → ücretsiz muadil arandı. Mehmet **Prata**'yı seçti ama entegrede yakalandı: ⚠️ **PRATA TÜRKÇE DESTEKLEMİYOR** (Google Fonts alt kümeleri latin/cyrillic/vietnamese — `latin-ext` YOK → ğ Ğ ş Ş İ ve ₺ fontta yok, Times'tan basılırdı). → **Playfair Display** (geniş + yüksek kontrast + latin-ext).
+- ⚠️ **Ders:** yeni Google Font seçmeden önce `curl "…/css2?family=X" -H "UA:<Chrome>" | grep latin-ext`.
+- **Sistem kuralı:** `h1 { serif, w400 }` global → yeni sayfa otomatik doğru gelir. İstisna (sans): `.panel-shell h1`, `.panel-h1`, `.auth-head h1`, `.reset-card h1`.
+- **Hero başlığı "bozuk" görünüyordu — font değilmiş:** harf-harf animasyon için her harf ayrı `<span>`'di ve gradyan span'a yazılmıştı → **gradyan her harfte sıfırdan başlıyor**, her harf tek tek soluyordu. Resend'in h1'inde animasyon/span YOK. → düz metin + düz renk + line-height 1.04→1.14 (ğ/g kuyrukları kırpılıyordu).
+- **Gövde ölçeği:** 14/15/16/17/18px karışıktı → `--fs-body 18` / `--fs-sub 16` / `--fs-small 14`. Nav 14px/w500 → 15px/w400.
+
+**Panel:**
+- **Tipografi:** 20 farklı boyut (8.5→44px) + 6 ağırlık vardı → 9 boyut / 3 ağırlık. **800 ve 900 KALDIRILDI** (tavan 700). Sayfa başlıkları birleşti: `PageHead` (.panel-h1, 30+ modül) 22/800 ve Genel Bakış (.ov-header h1) 28/800 → ikisi de **24px/600**. Panelde SERİF YOK (veri ekranı) — üretilen CSS'e panel işaretlemesi uygulanarak sızıntı olmadığı test edildi.
+- **Genel Bakış yerleşimi:** grafik ile Kartlarım yan yanaydı; hesap kartları (aspect-ratio 1.6) sütun genişliğinde ~330px, 3 kart ~1000px, grafik 300px → grid stretch grafiği geriyordu → **grafiğin altında ~600px ölü boşluk**. Grafik TAM GENİŞLİĞE alındı, kartlar YATAY sıraya dizildi, `align-items:start`. LineChart viewBox 880x300 → 1400x300 (tam genişlikte 510px'e uzuyor + yazılar 1.7× büyüyordu).
+- ⚠️ **Hata + ders:** yatay sırada `auto-fit + 1fr` kullanınca **tek hesabı olan kullanıcıda kart 1500x940px'e devleşti** (Mehmet yakaladı). Mock'umda 3 hesap vardı, 1-hesap senaryosunu test etmemiştim. → kart genişliği `max-width:360px` + `auto-fill`. **Ders: aspect-ratio'lu kartlarda "1, 2, 3 adet" senaryolarının hepsini test et.**
+- **Panel auth arkasında** → tasarım iterasyonu için GEÇİCİ mock (`MOCK_PANEL=1`) ile headless render edildi; mock commit'e GİRMEDİ (`grep MOCK` = 0 ile doğrulandı).
+
 ## 2026-07-02 — Baştan sona denetim (4 paralel ajan: güvenlik×2 + hata + app↔web parite) + 18 düzeltme
 
 Mehmet "hacker gibi tüm web'i denetle, güvenlik + app↔web tutarsızlık" istedi. 4 paralel ajan + her kritik bulgu gerçek kod/RLS SQL ile ELLE doğrulandı (yanlış pozitif elendi). Genel durum: mimari sağlam (RLS tüm tablolarda UPDATE/DELETE gate ediyor, edge function'lar JWT'yi sunucuda doğruluyor, secret sızıntısı yok, IDOR/XSS/PostgREST-injection YOK). Bulgular ağırlıkla veri-bütünlüğü + parite. **18 kalem düzeltildi + deploy** (31 dosya + `lib/csv.ts` + `lib/useSubmitLock.ts`):
