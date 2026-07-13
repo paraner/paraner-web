@@ -102,7 +102,11 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
     closeTimer.current = setTimeout(() => closeNow(), 160);
   }
 
-  const close = () => setMenuOpen(false);
+  // Menü kapanınca kök listeye dön (tekrar açılınca alt sayfada kalmasın)
+  const close = () => {
+    setMenuOpen(false);
+    setMobileSeg(null);
+  };
   const size = openSeg ? sizes[openSeg] : undefined;
 
   return (
@@ -208,61 +212,77 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
           </button>
         </div>
 
+        {/* Resend mobil deseni: AKORDEON DEĞİL, İÇERİ GİRİŞ (drill-down).
+            Kök liste → segmente basınca liste komple değişir: ← geri, vurgu kartları,
+            sonra o segmentin linkleri. Doğrudan giden satırlarda (Fiyatlar vb.) ok YOK. */}
         <div className="mm-body">
-          <Link href="/kayit" className="btn btn-primary mm-cta" onClick={close}>Kayıt Ol</Link>
-          <Link href="/giris" className="mm-login" onClick={close}>Giriş Yap</Link>
+          {mobileSeg === null ? (
+            <div className="mm-panel">
+              <Link href="/kayit" className="btn btn-primary mm-cta" onClick={close}>Kayıt Ol</Link>
+              <Link href="/giris" className="mm-login" onClick={close}>Giriş Yap</Link>
 
-          <nav className="mm-links">
-            {SEGMENTS.map((seg) => {
-              const open = mobileSeg === seg.key;
-              return (
-                <div key={seg.key} className="mm-group">
+              <nav className="mm-links">
+                {SEGMENTS.map((seg) => (
                   <button
-                    className={`mm-row mm-row-btn${open ? " open" : ""}`}
-                    aria-expanded={open}
-                    onClick={() => setMobileSeg(open ? null : seg.key)}
+                    key={seg.key}
+                    className="mm-row mm-row-btn"
+                    onClick={() => setMobileSeg(seg.key)}
                   >
                     {seg.label}
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                   </button>
-                  {open && (
-                    <div className="mm-sub">
-                      <Link href={seg.href} className="mm-sub-all" onClick={close}>
-                        {seg.label} sayfasına git
+                ))}
+                <a href="/#ozellikler" className="mm-row mm-row-plain" onClick={close}>Özellikler</a>
+                <a href="/#fiyatlar" className="mm-row mm-row-plain" onClick={close}>Fiyatlar</a>
+                <Link
+                  href="/destek"
+                  className={`mm-row mm-row-plain${isActive("/destek") ? " active" : ""}`}
+                  aria-current={isActive("/destek") ? "page" : undefined}
+                  onClick={close}
+                >
+                  Destek
+                </Link>
+              </nav>
+
+              <div className="mm-stores">
+                <StoreBadges />
+              </div>
+            </div>
+          ) : (
+            (() => {
+              const seg = SEGMENTS.find((x) => x.key === mobileSeg)!;
+              return (
+                <div className="mm-panel mm-panel-sub">
+                  <button className="mm-back" aria-label="Geri" onClick={() => setMobileSeg(null)}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M11 18l-6-6 6-6" /></svg>
+                  </button>
+
+                  <div className="mm-cards">
+                    {seg.cards.map((c) => (
+                      <Link key={c.title} href={c.href} className="mm-card" onClick={close}>
+                        <span className="mm-card-art" aria-hidden="true" />
+                        <span className="mm-card-text">
+                          <span className="mm-card-title">{c.title}</span>
+                          <span className="mm-card-desc">{c.desc}</span>
+                        </span>
                       </Link>
-                      {seg.links.map((l) => (
-                        <Link key={l.href} href={l.href} className="mm-sub-row" onClick={close}>
-                          {l.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
+                    ))}
+                  </div>
+
+                  <nav className="mm-links">
+                    <Link href={seg.href} className="mm-row mm-row-plain mm-row-all" onClick={close}>
+                      {seg.label} sayfası
+                    </Link>
+                    {seg.links.map((l) => (
+                      <Link key={l.href} href={l.href} className="mm-row mm-row-plain" onClick={close}>
+                        {l.label}
+                      </Link>
+                    ))}
+                  </nav>
                 </div>
               );
-            })}
-
-            <a href="/#ozellikler" className="mm-row" onClick={close}>
-              Özellikler
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
-            </a>
-            <a href="/#fiyatlar" className="mm-row" onClick={close}>
-              Fiyatlar
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
-            </a>
-            <Link
-              href="/destek"
-              className={`mm-row${isActive("/destek") ? " active" : ""}`}
-              aria-current={isActive("/destek") ? "page" : undefined}
-              onClick={close}
-            >
-              Destek
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
-            </Link>
-          </nav>
-
-          <div className="mm-stores">
-            <StoreBadges />
-          </div>
+            })()
+          )}
         </div>
       </div>
     </>
