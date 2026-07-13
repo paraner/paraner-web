@@ -64,7 +64,7 @@ export default function Bireysel() {
   return (
     <SegmentPage
       eyebrow="Bireysel"
-      title="Paranızı yönetin, geleceğinizi kurun"
+      title="Parasını yöneten, geleceğini yönetir"
       lead="Gelir-gider takibi, bütçe, birikim hedefleri ve AI finans koçunuz Parla — hepsi tek uygulamada. Ücretsiz başlayın."
       sections={SECTIONS}
       ctaTitle="Bütçenizi kontrol altına alın"
