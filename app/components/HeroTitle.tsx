@@ -1,31 +1,16 @@
-// Hero başlığı — harf harf "blur in up" girişi (Magic UI blurInUp/by-character
-// efektinin saf CSS karşılığı; bağımlılıksız). Her harf bir inline-block span,
-// gecikmeli animasyon. Erişilebilirlik: h1'de aria-label, harfler aria-hidden.
-
-const START = 0.1; // sn — ilk harf gecikmesi
-const STEP = 0.025; // sn — harf başına artış
-
-function splitChars(text: string, offset: number, extraClass = "") {
-  return text.split("").map((ch, i) => (
-    <span
-      key={`${offset}-${i}`}
-      className={`hc${extraClass ? " " + extraClass : ""}`}
-      style={{ animationDelay: `${(START + (offset + i) * STEP).toFixed(3)}s` }}
-      aria-hidden
-    >
-      {ch === " " ? " " : ch}
-    </span>
-  ));
-}
-
+// Hero başlığı — DÜZ METİN, animasyon YOK (Resend deseni).
+//
+// Eskiden her harf ayrı <span> idi + "blur in up" giriş animasyonu vardı. İki sorun:
+//  1) Gradyan her span'a yeniden uygulandığından her harf tek tek beyazdan griye
+//     soluyordu → serif başlık dalgalı/bozuk görünüyordu.
+//  2) Resend'in h1'i ölçüldü: animationName none, transform none, opacity 1, span yok.
+// Mehmet "animasyonu kaldır, Resend'deki gibi olsun" dedi → sade metin.
 export default function HeroTitle() {
-  const line1 = "Paranı yönet,";
-  const line2 = "geleceğini kur.";
   return (
-    <h1 className="hero-title" aria-label={`${line1} ${line2}`}>
-      {splitChars(line1, 0)}
+    <h1 className="hero-title">
+      Paranı yönet,
       <br />
-      <em>{splitChars(line2, line1.length, "hc-em")}</em>
+      <em>geleceğini kur.</em>
     </h1>
   );
 }
