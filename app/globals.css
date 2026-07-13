@@ -70,6 +70,17 @@ button { font-family: inherit; cursor: pointer; }
    İSTİSNALAR (bilinçli sans):
      · Panel (.panel-shell) — veri ekranı, serif doğru değil. Panel tipografisi ayrı turda.
      · Auth formları (.auth-head) — 26-30px form başlığı; serif oraya yakışmıyor. */
+/* Gövde ölçeği (Resend: p = 18px/27px w400, tek ölçek — bizde 14/15/16/17/18 karışıktı):
+     --fs-body  18px/1.55  → ana metin, lead, hero alt yazısı
+     --fs-sub   16px/1.6   → ikincil açıklama (bölüm alt yazısı, kart metni)
+     --fs-small 14px/1.5   → küçük not/etiket
+   Yeni sayfa eklerken bu üç kademenin dışına çıkma. */
+:root {
+  --fs-body: 18px;
+  --fs-sub: 16px;
+  --fs-small: 14px;
+}
+
 h1 {
   font-family: var(--font-serif), Georgia, "Times New Roman", serif;
   font-weight: 400;
@@ -209,7 +220,7 @@ ul { list-style: none; }
 }
 .nav.scrolled .nav-links { gap: 26px; }
 .nav-links a {
-  color: rgba(255, 255, 255, 0.78); font-size: 14px; font-weight: 500;
+  color: rgba(255, 255, 255, 0.78); font-size: 15px; font-weight: 400;
   transition: color 0.18s; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
 }
 .nav-links a:hover { color: #fff; }
@@ -565,8 +576,8 @@ ul { list-style: none; }
   color: #c6cbd1;                    /* ikinci satır hafif sönük — vurgu, gradyan değil */
 }
 .hero-sub {
-  color: rgba(255, 255, 255, 0.5); font-size: 18px;
-  max-width: 520px; margin: 0 auto 38px; line-height: 1.6;
+  color: rgba(255, 255, 255, 0.5); font-size: var(--fs-body);
+  max-width: 520px; margin: 0 auto 38px; line-height: 1.55;
 }
 .hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
@@ -711,7 +722,7 @@ ul { list-style: none; }
   font-size: clamp(28px, 4vw, 44px); font-weight: 500;
   letter-spacing: -0.025em; margin-bottom: 12px;
 }
-.section-head p { color: var(--text-dim); font-size: 16px; max-width: 480px; margin: 0 auto; }
+.section-head p { color: var(--text-dim); font-size: var(--fs-sub); line-height: 1.6; max-width: 480px; margin: 0 auto; }
 
 /* ─── ÖZELLİK KARTLARI ─── */
 .features-grid {
@@ -732,7 +743,7 @@ ul { list-style: none; }
   font-size: 20px; margin-bottom: 16px;
 }
 .feature-card h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; letter-spacing: -0.01em; }
-.feature-card p { color: var(--text-dim); font-size: 14px; line-height: 1.55; }
+.feature-card p { color: var(--text-dim); font-size: var(--fs-sub); line-height: 1.6; }
 
 /* ─── FİYAT TEASER ─── */
 .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: start; }
@@ -754,7 +765,7 @@ ul { list-style: none; }
   padding: 4px 16px; border-radius: 20px; white-space: nowrap;
 }
 .price-name { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
-.price-tag { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.5; min-height: 38px; }
+.price-tag { font-size: var(--fs-small); color: var(--text-dim); margin-bottom: 20px; line-height: 1.5; min-height: 38px; }
 .price-amount { font-size: 36px; font-weight: 500; letter-spacing: -0.025em; }
 .price-period { font-size: 13px; color: var(--text-faint); margin-bottom: 22px; margin-top: 4px; }
 .price-features { display: flex; flex-direction: column; gap: 10px; }
@@ -805,10 +816,10 @@ ul { list-style: none; }
 .legal-head { margin-bottom: 40px; }
 .legal-head h1 { font-size: 44px; }
 .legal-updated { color: var(--text-faint); font-size: 14px; margin-top: 10px; }
-.legal-lead { color: var(--text-dim); font-size: 16px; line-height: 1.7; margin-top: 18px; }
+.legal-lead { color: var(--text-dim); font-size: var(--fs-body); line-height: 1.6; margin-top: 18px; }
 .legal section { margin-top: 36px; }
 .legal section h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
-.legal section p { color: rgba(255, 255, 255, 0.7); font-size: 15px; line-height: 1.75; margin-top: 10px; }
+.legal section p { color: rgba(255, 255, 255, 0.7); font-size: var(--fs-sub); line-height: 1.7; margin-top: 10px; }
 .legal a { color: var(--teal); }
 .legal-foot { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--text-faint); font-size: 14px; }
 @media (max-width: 560px) { .legal { padding: 72px 20px 48px; } .legal-head h1 { font-size: 28px; } }
@@ -3013,7 +3024,7 @@ ul { list-style: none; }
   font-size: clamp(36px, 5.4vw, 50px);
   margin-top: 14px;
 }
-.support-lead { color: var(--text-dim); font-size: 16px; line-height: 1.7; margin: 16px auto 0; max-width: 520px; }
+.support-lead { color: var(--text-dim); font-size: var(--fs-body); line-height: 1.55; margin: 16px auto 0; max-width: 520px; }
 
 .support-faq h2,
 .support-contact h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 20px; }
@@ -3051,8 +3062,8 @@ ul { list-style: none; }
 .faq-item p {
   padding: 0 20px 20px;
   color: rgba(255, 255, 255, 0.62);
-  font-size: 15px;
-  line-height: 1.75;
+  font-size: var(--fs-sub);
+  line-height: 1.65;
 }
 
 .support-contact { margin-top: 56px; }
@@ -3112,7 +3123,7 @@ ul { list-style: none; }
 
 .nav-seg-trigger {
   display: inline-flex; align-items: center; gap: 4px;
-  color: rgba(255, 255, 255, 0.78); font-size: 14px; font-weight: 500;
+  color: rgba(255, 255, 255, 0.78); font-size: 15px; font-weight: 400;
   transition: color 0.18s; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
   cursor: pointer;
 }
@@ -3270,7 +3281,7 @@ ul { list-style: none; }
   font-size: clamp(38px, 5.8vw, 58px);
   margin-top: 14px; line-height: 1.08;
 }
-.segment-lead { color: var(--text-dim); font-size: 17px; line-height: 1.65; margin: 18px auto 0; max-width: 600px; }
+.segment-lead { color: var(--text-dim); font-size: var(--fs-body); line-height: 1.55; margin: 18px auto 0; max-width: 600px; }
 .segment-cta { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 28px 0 8px; }
 .segment-note { font-size: 13px; color: var(--text-faint); }
 
@@ -3286,11 +3297,11 @@ ul { list-style: none; }
 .seg-card:hover { border-color: rgba(255, 255, 255, 0.16); background: var(--card-2); }
 .seg-card:target { border-color: rgba(255, 255, 255, 0.3); background: var(--card-2); }
 .seg-card h2 { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
-.seg-card p { color: var(--text-dim); font-size: 15px; line-height: 1.65; margin-top: 10px; }
+.seg-card p { color: var(--text-dim); font-size: var(--fs-sub); line-height: 1.6; margin-top: 10px; }
 .seg-card ul { list-style: none; margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
 .seg-card li {
   position: relative; padding-left: 20px;
-  font-size: 14px; color: rgba(255, 255, 255, 0.72); line-height: 1.5;
+  font-size: var(--fs-small); color: rgba(255, 255, 255, 0.72); line-height: 1.5;
 }
 .seg-card li::before {
   content: ""; position: absolute; left: 4px; top: 8px;
