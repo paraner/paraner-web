@@ -296,7 +296,8 @@ ul { list-style: none; }
   position: fixed; inset: 0; z-index: 60;
   display: flex; flex-direction: column;
   /* padding-top = bar padding (11px) → wordmark/✕ bar ile AYNI konumda açılır */
-  padding: 11px clamp(20px, 4vw, 40px) calc(28px + env(safe-area-inset-bottom, 0px));
+  --mm-pad: clamp(20px, 4vw, 40px);
+  padding: 11px var(--mm-pad) calc(28px + env(safe-area-inset-bottom, 0px));
   background: #07080a;
   opacity: 0; visibility: hidden;
   transition: opacity 0.32s ease, visibility 0.32s ease;
@@ -317,6 +318,12 @@ ul { list-style: none; }
   /* Segment alt sayfasında (kartlar + 9 link) içerik ekranı aşıyor → kaydırılabilir olmalı.
      min-height:0 olmadan flex çocuğu küçülmez ve overflow çalışmaz. */
   min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  /* Kaydırma çubuğu EKRAN KENARINA otursun (Resend'de öyle). Kap menünün yan dolgusunun
+     içinde kalırsa çubuk içeriğin üstüne biner. Negatif margin ile kenardan kenara
+     taşınıp dolgu içeri alınıyor. */
+  margin-inline: calc(-1 * var(--mm-pad));
+  padding-inline: var(--mm-pad);
+  scrollbar-gutter: stable;
   opacity: 0; transform: translateY(-12px);
   transition: opacity 0.4s ease 0.04s, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.04s;
 }
