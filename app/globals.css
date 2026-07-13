@@ -3102,8 +3102,11 @@ ul { list-style: none; }
 
 /* Panel kabı — konum/boyut animasyonu burada */
 .nav-panel {
-  position: absolute; top: 100%; left: 0;
-  margin-top: 14px;                  /* tetikleyiciyle arasındaki boşluk */
+  /* KONUM SABİT: panel hep ekranın ortasında; tetikleyiciye göre kaymaz (Resend ölçüldü).
+     Genişlik/yükseklik JS'ten gelir → merkeze simetrik büyür/küçülür. */
+  position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%);
+  margin-top: 14px;
   opacity: 0; visibility: hidden; pointer-events: none;
   transition: opacity 0.16s ease, visibility 0.16s;
   z-index: 60;
@@ -3112,10 +3115,9 @@ ul { list-style: none; }
   content: ""; position: absolute; left: 0; right: 0; top: -16px; height: 16px;
 }
 .nav-panel.open { opacity: 1; visibility: visible; pointer-events: auto; }
-/* morph = panel zaten açıkken başka menüye geçildi → kaydır + boyutu yumuşat */
+/* morph = panel zaten açıkken başka menüye geçildi → boyutu yumuşat (konum sabit) */
 .nav-panel.morph {
-  transition: transform 0.34s cubic-bezier(0.2, 0.9, 0.25, 1),
-              width 0.34s cubic-bezier(0.2, 0.9, 0.25, 1),
+  transition: width 0.34s cubic-bezier(0.2, 0.9, 0.25, 1),
               height 0.34s cubic-bezier(0.2, 0.9, 0.25, 1),
               opacity 0.16s ease;
 }

@@ -22,9 +22,8 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
   const [openSeg, setOpenSeg] = useState<string | null>(null);
   const [mobileSeg, setMobileSeg] = useState<string | null>(null);
 
-  // Panel geometrisi: ölçülen içerik boyutları + tetikleyiciye göre yatay konum
+  // Panel geometrisi: sadece ölçülen içerik boyutları (konum sabit — ortada)
   const [sizes, setSizes] = useState<Record<string, { w: number; h: number }>>({});
-  const [left, setLeft] = useState(0);
   const [morph, setMorph] = useState(false); // panel zaten açıkken geçiş → animasyonlu
 
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -46,22 +45,11 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
     setSizes(next);
   }, []);
 
-  // Açık menü değişince paneli tetikleyicinin altına ortala.
-  // Ekran kenarına sıkıştır (clamp) — geniş panel sağdan/soldan taşmasın.
-  useLayoutEffect(() => {
-    if (!openSeg) return;
-    const trigger = triggerRefs.current[openSeg];
-    const wrap = linksRef.current;
-    const size = sizes[openSeg];
-    if (!trigger || !wrap || !size) return;
-    const t = trigger.getBoundingClientRect();
-    const w = wrap.getBoundingClientRect();
-    const GUTTER = 20;
-    const centered = t.left + t.width / 2 - size.w / 2;      // viewport koordinatı
-    const maxLeft = window.innerWidth - size.w - GUTTER;
-    const clamped = Math.min(Math.max(centered, GUTTER), Math.max(GUTTER, maxLeft));
-    setLeft(clamped - w.left);                                // .nav-links'e göreceli
-  }, [openSeg, sizes]);
+  // Panel KONUMU SABİT: her zaman ekranın ortasında durur, tetikleyiciye göre KAYMAZ.
+  // (Resend ölçüldü: 1440px ekranda panel merkezi tetikleyici 469'da da 915'te de
+  // hep 720 = ekran ortası. Yalnızca genişlik/yükseklik değişiyor, merkeze simetrik.)
+  // Ortalama CSS'te: .nav-panel { left:50%; transform: translateX(-50%) } — .nav-links
+  // zaten ekran ortasında hizalı olduğundan referans doğru.
 
   useEffect(() => {
     if (solid) {
@@ -160,11 +148,7 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
             {/* ─── TEK PANEL (positioner): konum + boyut animasyonlu ─── */}
             <div
               className={`nav-panel${openSeg ? " open" : ""}${morph ? " morph" : ""}`}
-              style={
-                size
-                  ? { transform: `translateX(${left}px)`, width: size.w, height: size.h }
-                  : undefined
-              }
+              style={size ? { width: size.w, height: size.h } : undefined}
               onMouseEnter={() => { if (closeTimer.current) clearTimeout(closeTimer.current); }}
               onMouseLeave={scheduleClose}
             >
