@@ -2931,11 +2931,14 @@ ul { list-style: none; }
 .lc-tip-row b { margin-left: auto; padding-left: 14px; color: var(--text); font-weight: 600; }
 
 /* Kartlarım — dashboard'da YATAY sıra (Hesaplar sayfasındaki dikey yığın değil).
-   auto-fit + minmax: 3 kart yan yana; dar ekranda alta sarar. */
+   ⚠️ acc-card aspect-ratio 1.6 → GENİŞLİK yüksekliği belirler. auto-fit + 1fr ile TEK
+   hesabı olan kullanıcıda kart tüm satırı kaplayıp devasa oluyordu (Mehmet yakaladı).
+   Bu yüzden kart genişliği ÜSTTEN SINIRLI; 1 kart da 3 kart da aynı boyda görünür. */
 .dash-cards-row {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px;
   align-items: start;
 }
+.dash-cards-row .acc-card-wrap { max-width: 360px; width: 100%; }
 .dash-cards-row .dash-more-link { align-self: center; }
 .dash-chart-card { margin-bottom: 16px; }
 .dash-accounts-card { margin-bottom: 16px; }
