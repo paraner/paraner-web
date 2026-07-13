@@ -10,7 +10,7 @@ export default function Footer() {
       <div className="footer-inner">
         <div>
           <Logo />
-          <p className="footer-copy">Paranı yönet, geleceğini kur.</p>
+          <p className="footer-copy">Parasını yöneten, geleceğini yönetir.</p>
         </div>
         <div className="footer-links">
           <a href="/isletme">İşletme</a>

@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Paraner — Finans & Bütçe Koçun",
     short_name: "Paraner",
     description:
-      "Paranı yönet, geleceğini kur. AI destekli kişisel ve işletme finans asistanı.",
+      "Parasını yöneten, geleceğini yönetir. AI destekli kişisel ve işletme finans asistanı.",
     start_url: "/",
     display: "standalone",
     background_color: "#000000",

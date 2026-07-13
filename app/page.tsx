@@ -133,7 +133,7 @@ export default function Home() {
       {/* ─── CTA BAND ─── */}
       <section className="wrap">
         <div className="cta-band">
-          <h2>Bugün başla, geleceğini kur</h2>
+          <h2>Bugün başla, geleceğini yönet</h2>
           <p>Dakikalar içinde hesabını oluştur, paranı kontrol altına al.</p>
           <Link href="/kayit" className="btn btn-primary btn-lg">Ücretsiz Hesap Oluştur</Link>
         </div>

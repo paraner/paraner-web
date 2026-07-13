@@ -8,9 +8,9 @@
 export default function HeroTitle() {
   return (
     <h1 className="hero-title">
-      Paranı yönet,
+      Parasını yöneten,
       <br />
-      <em>geleceğini kur.</em>
+      <em>geleceğini yönetir.</em>
     </h1>
   );
 }
