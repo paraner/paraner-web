@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "./Logo";
@@ -8,22 +8,60 @@ import StoreBadges from "./StoreBadges";
 import { SEGMENTS, type SegmentMenu } from "./navData";
 
 // Üst bar — masaüstünde banner'a gömülü; kaydırınca iOS Liquid Glass pill'e döner.
-// Mobilde pill YOK: sade bar (wordmark + ☰) + ☰'a basınca tam ekran menü (Resend tarzı).
+// Mobilde pill YOK: sade bar (wordmark + ☰) + tam ekran menü.
 // `solid`: hero banner'ı olmayan sayfalarda en baştan pill durumu.
 //
-// Mega-menü (Resend deseni): İşletme/Bireysel tetikleyicisine gelince altında panel açılır —
-// solda o segmentin sayfa linkleri, sağda vurgu kartları. Tetikleyiciye TIKLAMAK segment
-// sayfasına götürür (/isletme, /bireysel).
+// MEGA-MENÜ (Resend deseni — ölçülerek kopyalandı):
+// TEK panel var, her tetikleyicinin ayrı paneli YOK. Menüler arası geçerken panel
+// kapanmaz: konumu (left) ve boyutu (width/height) içeriğe göre ANİMASYONLA değişir,
+// içerik ise geliş yönüne göre kayarak yer değiştirir. Resend bunu --positioner-width/
+// --positioner-height + transition:all ile yapıyor; aynı yaklaşım.
 export default function Nav({ solid = false }: { solid?: boolean }) {
   const [scrolled, setScrolled] = useState(solid);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [openSeg, setOpenSeg] = useState<string | null>(null); // açık mega-menü
-  const [mobileSeg, setMobileSeg] = useState<string | null>(null); // mobil akordeon
+  const [openSeg, setOpenSeg] = useState<string | null>(null);
+  const [mobileSeg, setMobileSeg] = useState<string | null>(null);
+
+  // Panel geometrisi: ölçülen içerik boyutları + tetikleyiciye göre yatay konum
+  const [sizes, setSizes] = useState<Record<string, { w: number; h: number }>>({});
+  const [left, setLeft] = useState(0);
+  const [morph, setMorph] = useState(false); // panel zaten açıkken geçiş → animasyonlu
+
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const linksRef = useRef<HTMLElement | null>(null);
+  const triggerRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const contentRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const pathname = usePathname();
 
-  // Bulunulan sayfa parlak görünsün
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  const openIdx = openSeg ? SEGMENTS.findIndex((s) => s.key === openSeg) : -1;
+
+  // İçerik kutularının doğal boyutunu bir kez ölç (panel bunlara göre büyüyüp küçülecek)
+  useLayoutEffect(() => {
+    const next: Record<string, { w: number; h: number }> = {};
+    for (const seg of SEGMENTS) {
+      const el = contentRefs.current[seg.key];
+      if (el) next[seg.key] = { w: el.scrollWidth, h: el.scrollHeight };
+    }
+    setSizes(next);
+  }, []);
+
+  // Açık menü değişince paneli tetikleyicinin altına ortala.
+  // Ekran kenarına sıkıştır (clamp) — geniş panel sağdan/soldan taşmasın.
+  useLayoutEffect(() => {
+    if (!openSeg) return;
+    const trigger = triggerRefs.current[openSeg];
+    const wrap = linksRef.current;
+    const size = sizes[openSeg];
+    if (!trigger || !wrap || !size) return;
+    const t = trigger.getBoundingClientRect();
+    const w = wrap.getBoundingClientRect();
+    const GUTTER = 20;
+    const centered = t.left + t.width / 2 - size.w / 2;      // viewport koordinatı
+    const maxLeft = window.innerWidth - size.w - GUTTER;
+    const clamped = Math.min(Math.max(centered, GUTTER), Math.max(GUTTER, maxLeft));
+    setLeft(clamped - w.left);                                // .nav-links'e göreceli
+  }, [openSeg, sizes]);
 
   useEffect(() => {
     if (solid) {
@@ -36,13 +74,12 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, [solid]);
 
-  // Mobil menü açıkken arka plan kaymasın + Esc ile kapat (Esc mega-menüyü de kapatır)
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       setMenuOpen(false);
-      setOpenSeg(null);
+      closeNow();
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -53,23 +90,32 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
 
   // Rota değişince açık menüler kapansın
   useEffect(() => {
-    setOpenSeg(null);
+    closeNow();
     setMenuOpen(false);
   }, [pathname]);
 
   useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
 
-  // Hover kapanışında kısa gecikme: imleç tetikleyiciden panele geçerken menü kapanmasın
-  const openSegNow = (key: string) => {
+  function openSegNow(key: string) {
     if (closeTimer.current) clearTimeout(closeTimer.current);
+    // Panel zaten açıksa geçiş morph olsun (kapanıp açılmasın); kapalıysa yerinde belirsin
+    setMorph((prev) => (openSeg !== null ? true : prev === true ? true : false));
+    if (openSeg !== null && openSeg !== key) setMorph(true);
+    else if (openSeg === null) setMorph(false);
     setOpenSeg(key);
-  };
-  const scheduleClose = () => {
+  }
+  function closeNow() {
     if (closeTimer.current) clearTimeout(closeTimer.current);
-    closeTimer.current = setTimeout(() => setOpenSeg(null), 160);
-  };
+    setOpenSeg(null);
+    setMorph(false);
+  }
+  function scheduleClose() {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => closeNow(), 160);
+  }
 
   const close = () => setMenuOpen(false);
+  const size = openSeg ? sizes[openSeg] : undefined;
 
   return (
     <>
@@ -77,26 +123,70 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
         <div className="nav-inner">
           <Logo spinning active={scrolled} />
 
-          <nav className="nav-links">
+          <nav
+            className="nav-links"
+            ref={linksRef}
+            onMouseLeave={scheduleClose}
+          >
             {SEGMENTS.map((seg) => (
-              <SegmentTrigger
+              <Link
                 key={seg.key}
-                seg={seg}
-                open={openSeg === seg.key}
-                active={isActive(seg.href)}
-                onOpen={() => openSegNow(seg.key)}
-                onClose={scheduleClose}
-              />
+                href={seg.href}
+                ref={(el) => { triggerRefs.current[seg.key] = el; }}
+                className={`nav-seg-trigger${isActive(seg.href) ? " active" : ""}${openSeg === seg.key ? " open" : ""}`}
+                aria-expanded={openSeg === seg.key}
+                aria-current={isActive(seg.href) ? "page" : undefined}
+                onMouseEnter={() => openSegNow(seg.key)}
+                onFocus={() => openSegNow(seg.key)}
+              >
+                {seg.label}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </Link>
             ))}
-            <a href="/#ozellikler">Özellikler</a>
-            <a href="/#fiyatlar">Fiyatlar</a>
+
+            <a href="/#ozellikler" onMouseEnter={scheduleClose}>Özellikler</a>
+            <a href="/#fiyatlar" onMouseEnter={scheduleClose}>Fiyatlar</a>
             <Link
               href="/destek"
               className={isActive("/destek") ? "active" : undefined}
               aria-current={isActive("/destek") ? "page" : undefined}
+              onMouseEnter={scheduleClose}
             >
               Destek
             </Link>
+
+            {/* ─── TEK PANEL (positioner): konum + boyut animasyonlu ─── */}
+            <div
+              className={`nav-panel${openSeg ? " open" : ""}${morph ? " morph" : ""}`}
+              style={
+                size
+                  ? { transform: `translateX(${left}px)`, width: size.w, height: size.h }
+                  : undefined
+              }
+              onMouseEnter={() => { if (closeTimer.current) clearTimeout(closeTimer.current); }}
+              onMouseLeave={scheduleClose}
+            >
+              <div className="nav-panel-surface">
+                {SEGMENTS.map((seg, i) => {
+                  const active = openSeg === seg.key;
+                  // Kayma yönü: aktif olanın soluna düşen içerik sola, sağına düşen sağa kayar
+                  const dir = openIdx < 0 ? 0 : i < openIdx ? -1 : i > openIdx ? 1 : 0;
+                  return (
+                    <div
+                      key={seg.key}
+                      ref={(el) => { contentRefs.current[seg.key] = el; }}
+                      className={`np-content${active ? " active" : ""}`}
+                      style={{ transform: `translateX(${active ? 0 : dir * 16}px)` }}
+                      aria-hidden={!active}
+                    >
+                      <PanelContent seg={seg} tabbable={active} />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </nav>
 
           <div className="nav-actions">
@@ -120,7 +210,7 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
         </div>
       </header>
 
-      {/* ─── MOBİL TAM EKRAN MENÜ — .nav DIŞINDA (backdrop-filter ata sorunu olmasın) ─── */}
+      {/* ─── MOBİL TAM EKRAN MENÜ ─── */}
       <div id="mobile-menu" className={`mobile-menu${menuOpen ? " open" : ""}`} role="dialog" aria-modal="true">
         <div className="mm-head">
           <Logo />
@@ -136,7 +226,6 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
           <Link href="/giris" className="mm-login" onClick={close}>Giriş Yap</Link>
 
           <nav className="mm-links">
-            {/* Segmentler mobilde akordeon: başlığa bas → alt linkler açılır */}
             {SEGMENTS.map((seg) => {
               const open = mobileSeg === seg.key;
               return (
@@ -193,63 +282,27 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
   );
 }
 
-// ─── Mega-menü tetikleyicisi + paneli ───
-// Tetikleyici <Link>: tıklayınca segment sayfasına gider, hover'da panel açılır.
-// Panel tetikleyiciyle AYNI sarmalayıcının içinde → imleç aşağı inerken mouseleave tetiklenmez.
-function SegmentTrigger({
-  seg,
-  open,
-  active,
-  onOpen,
-  onClose,
-}: {
-  seg: SegmentMenu;
-  open: boolean;
-  active: boolean;
-  onOpen: () => void;
-  onClose: () => void;
-}) {
+// Panel içeriği: solda linkler (2 sütun), sağda vurgu kartları
+function PanelContent({ seg, tabbable }: { seg: SegmentMenu; tabbable: boolean }) {
+  const tab = tabbable ? undefined : -1;
   return (
-    <div
-      className="nav-seg"
-      onMouseEnter={onOpen}
-      onMouseLeave={onClose}
-      onFocus={onOpen}
-      onBlur={onClose}
-    >
-      <Link
-        href={seg.href}
-        className={`nav-seg-trigger${active ? " active" : ""}${open ? " open" : ""}`}
-        aria-expanded={open}
-        aria-current={active ? "page" : undefined}
-      >
-        {seg.label}
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </Link>
-
-      <div className={`nav-panel${open ? " open" : ""}`} role="menu" aria-label={seg.label}>
-        <div className="nav-panel-inner">
-          <div className="np-links">
-            {seg.links.map((l) => (
-              <Link key={l.href} href={l.href} className="np-link" role="menuitem">
-                <span className="np-link-label">{l.label}</span>
-                <span className="np-link-desc">{l.desc}</span>
-              </Link>
-            ))}
-          </div>
-
-          <div className="np-cards">
-            {seg.cards.map((c) => (
-              <Link key={c.title} href={c.href} className="np-card" role="menuitem">
-                <span className="np-card-art" aria-hidden="true" />
-                <span className="np-card-title">{c.title}</span>
-                <span className="np-card-desc">{c.desc}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
+    <div className="np-inner">
+      <div className="np-links">
+        {seg.links.map((l) => (
+          <Link key={l.href} href={l.href} className="np-link" tabIndex={tab}>
+            <span className="np-link-label">{l.label}</span>
+            <span className="np-link-desc">{l.desc}</span>
+          </Link>
+        ))}
+      </div>
+      <div className="np-cards">
+        {seg.cards.map((c) => (
+          <Link key={c.title} href={c.href} className="np-card" tabIndex={tab}>
+            <span className="np-card-art" aria-hidden="true" />
+            <span className="np-card-title">{c.title}</span>
+            <span className="np-card-desc">{c.desc}</span>
+          </Link>
+        ))}
       </div>
     </div>
   );

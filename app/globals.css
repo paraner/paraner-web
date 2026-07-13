@@ -3078,9 +3078,12 @@ ul { list-style: none; }
 }
 
 /* ═══ MEGA-MENÜ (üst bar: İşletme / Bireysel) — Resend deseni ═══
-   Solda sayfa linkleri (2 sütun), sağda vurgu kartları. Hover'da açılır; tetikleyici
-   ile panel AYNI .nav-seg sarmalayıcısında → imleç panele inerken kapanmaz. */
-.nav-seg { position: relative; display: flex; align-items: center; }
+   TEK panel ("positioner"): menüler arası geçişte kapanmaz; konumu (translateX) ve
+   boyutu (width/height) içeriğe göre animasyonla değişir, içerik kayarak geçer.
+   Boyutlar JS'te ölçülüp inline style ile veriliyor (Nav.tsx).
+   NOT: .nav-links zaten `position:absolute` ile ortalanıyor (bkz. yukarısı) → panelin
+   konum referansı hazır. Buraya `position:relative` YAZMA: ortalamayı bozar, üst bar
+   sağa kayıp Giriş/Kayıt butonlarının üstüne biner. */
 
 .nav-seg-trigger {
   display: inline-flex; align-items: center; gap: 4px;
@@ -3097,20 +3100,28 @@ ul { list-style: none; }
   text-shadow: 0 0 16px rgba(255, 255, 255, 0.35), 0 1px 6px rgba(0, 0, 0, 0.35);
 }
 
-/* Panel — padding-top ile tetikleyiciye köprü (imleç boşluğa düşüp kapatmasın) */
+/* Panel kabı — konum/boyut animasyonu burada */
 .nav-panel {
-  position: absolute; top: 100%; left: 50%;
-  transform: translate(-50%, 6px);
-  padding-top: 14px;                 /* köprü */
+  position: absolute; top: 100%; left: 0;
+  margin-top: 14px;                  /* tetikleyiciyle arasındaki boşluk */
   opacity: 0; visibility: hidden; pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+  transition: opacity 0.16s ease, visibility 0.16s;
   z-index: 60;
 }
-.nav-panel.open { opacity: 1; visibility: visible; pointer-events: auto; transform: translate(-50%, 0); }
+.nav-panel::before {                 /* köprü: imleç boşluğa düşünce panel kapanmasın */
+  content: ""; position: absolute; left: 0; right: 0; top: -16px; height: 16px;
+}
+.nav-panel.open { opacity: 1; visibility: visible; pointer-events: auto; }
+/* morph = panel zaten açıkken başka menüye geçildi → kaydır + boyutu yumuşat */
+.nav-panel.morph {
+  transition: transform 0.34s cubic-bezier(0.2, 0.9, 0.25, 1),
+              width 0.34s cubic-bezier(0.2, 0.9, 0.25, 1),
+              height 0.34s cubic-bezier(0.2, 0.9, 0.25, 1),
+              opacity 0.16s ease;
+}
 
-.nav-panel-inner {
-  display: flex; gap: 14px;
-  padding: 14px;
+.nav-panel-surface {
+  position: relative; width: 100%; height: 100%;
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   /* NEREDEYSE OPAK bilinçli: arkada dev/parlak hero başlığı var. backdrop-filter yalnız
@@ -3119,28 +3130,36 @@ ul { list-style: none; }
   backdrop-filter: blur(20px) saturate(140%);
   -webkit-backdrop-filter: blur(20px) saturate(140%);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;                  /* geçişte içerik dışarı taşmasın */
 }
 
-/* Sol: linkler, 2 sütun */
-.np-links {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
-  min-width: 380px;
+/* İçerikler üst üste; aktif olan görünür, diğerleri yönüne göre kayık+şeffaf */
+.np-content {
+  position: absolute; inset: 0;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.34s cubic-bezier(0.2, 0.9, 0.25, 1);
 }
+.np-content.active { opacity: 1; pointer-events: auto; }
+
+.np-inner { display: flex; gap: 14px; padding: 14px; width: max-content; }
+
+/* Sol: linkler, 2 sütun */
+.np-links { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
 .np-link {
   display: flex; flex-direction: column; gap: 2px;
   padding: 10px 12px; border-radius: 10px;
-  text-decoration: none;
+  text-decoration: none; min-width: 154px;
   transition: background 0.15s ease;
 }
 .np-link:hover { background: rgba(255, 255, 255, 0.06); }
 .np-link-label { font-size: 14px; font-weight: 500; color: rgba(255, 255, 255, 0.92); }
 .np-link-desc { font-size: 12px; color: var(--text-faint); line-height: 1.35; }
 
-/* Sağ: vurgu kartları (görsel alanı = titanyum degrade) */
+/* Sağ: vurgu kartları */
 .np-cards { display: flex; gap: 10px; }
 .np-card {
   display: flex; flex-direction: column;
-  width: 176px; padding: 12px;
+  width: 152px; padding: 12px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
@@ -3149,7 +3168,7 @@ ul { list-style: none; }
 }
 .np-card:hover { border-color: rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.06); }
 .np-card-art {
-  height: 74px; margin-bottom: 10px; border-radius: 9px;
+  height: 66px; margin-bottom: 10px; border-radius: 9px;
   background:
     radial-gradient(120% 90% at 20% 0%, rgba(255, 255, 255, 0.16), transparent 60%),
     linear-gradient(150deg, #2a2e33, #101214);
@@ -3168,10 +3187,9 @@ ul { list-style: none; }
   color: rgba(255, 255, 255, 0.62); text-decoration: none;
 }
 .mm-sub-all { color: #fff; font-weight: 600; }
-.mm-sub-row:active { color: #fff; }
 
 @media (prefers-reduced-motion: reduce) {
-  .nav-panel, .nav-seg-trigger svg, .mm-row-btn svg { transition: none; }
+  .nav-panel, .nav-panel.morph, .np-content, .nav-seg-trigger svg, .mm-row-btn svg { transition: none; }
 }
 
 /* ═══ SEGMENT SAYFALARI (/isletme, /bireysel) ═══ */
