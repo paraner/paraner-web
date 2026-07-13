@@ -58,6 +58,31 @@ body {
 
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }
+
+/* ═══ TİPOGRAFİ SİSTEMİ (web/pazarlama) ═══
+   Karar (2026-07-13, Mehmet onaylı): büyük başlıklar SERİF + ince (400) — Resend deseni.
+   Resend ölçüldü: h1 = Domaine (serif) w400, gövde = Inter w400. Domaine ticari lisanslı →
+   ücretsiz en yakın Türkçe destekli muadil: Playfair Display (bkz. layout.tsx notu).
+
+   Bu kural GENELDİR: yeni bir pazarlama sayfası eklendiğinde <h1> otomatik doğru gelir,
+   ekstra CSS yazmaya gerek yok. Boyut/renk sayfa kuralında verilir; aile+ağırlık burada.
+
+   İSTİSNALAR (bilinçli sans):
+     · Panel (.panel-shell) — veri ekranı, serif doğru değil. Panel tipografisi ayrı turda.
+     · Auth formları (.auth-head) — 26-30px form başlığı; serif oraya yakışmıyor. */
+h1 {
+  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -0.012em;
+}
+.panel-shell h1,
+.panel-h1,
+.auth-head h1,
+.reset-card h1 {   /* /sifre-sifirla — o da bir form kartı (auth-head sınıfını kullanmıyor) */
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
 ul { list-style: none; }
 
 /* ─── ARKA PLAN KATMANLARI ─── */
@@ -523,8 +548,7 @@ ul { list-style: none; }
 .hero h1 {
   /* Instrument Serif 400 — Resend deseni: büyük başlık SERİF + İNCE (800 değil).
      Serif zaten optik olarak dolgun; kalın ağırlık kabalaştırır. */
-  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
-  font-size: clamp(44px, 7vw, 80px); font-weight: 400;
+  font-size: clamp(44px, 7vw, 80px);
   letter-spacing: -0.015em;
   /* line-height 1.04 serifte ğ/g/y kuyruklarını KIRPIYORDU → 1.14 */
   line-height: 1.14; margin-bottom: 22px;
@@ -776,10 +800,7 @@ ul { list-style: none; }
 /* ─── YASAL METİN (GİZLİLİK / KVKK) ─── */
 .legal { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 96px 28px 64px; }
 .legal-head { margin-bottom: 40px; }
-.legal-head h1 {
-  font-family: var(--font-serif), Georgia, serif;
-  font-size: 44px; font-weight: 400; letter-spacing: -0.012em;
-}
+.legal-head h1 { font-size: 44px; }
 .legal-updated { color: var(--text-faint); font-size: 14px; margin-top: 10px; }
 .legal-lead { color: var(--text-dim); font-size: 16px; line-height: 1.7; margin-top: 18px; }
 .legal section { margin-top: 36px; }
@@ -869,7 +890,7 @@ ul { list-style: none; }
   /* koyu kart → titanyum (gunmetal değil) */
   background: linear-gradient(180deg, #f6f7f9 0%, #c2c7ce 35%, #9499a1 55%, #c8cdd4 75%, #eef0f3 100%);
 }
-.reset-card h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+.reset-card h1 { font-size: 24px; letter-spacing: -0.02em; }
 .reset-card > p { color: var(--text-dim); font-size: 14px; margin: 10px 0 24px; line-height: 1.55; }
 .reset-card form { text-align: left; }
 .reset-card .field input { border-radius: 999px; padding-left: 18px; padding-right: 18px; }
@@ -2986,9 +3007,8 @@ ul { list-style: none; }
 
 .support-head { text-align: center; margin-bottom: 48px; }
 .support-head h1 {
-  font-family: var(--font-serif), Georgia, serif;
-  font-size: clamp(36px, 5.4vw, 50px); font-weight: 400;
-  letter-spacing: -0.012em; margin-top: 14px;
+  font-size: clamp(36px, 5.4vw, 50px);
+  margin-top: 14px;
 }
 .support-lead { color: var(--text-dim); font-size: 16px; line-height: 1.7; margin: 16px auto 0; max-width: 520px; }
 
@@ -3204,9 +3224,8 @@ ul { list-style: none; }
 
 .segment-head { text-align: center; max-width: 720px; margin: 0 auto 56px; }
 .segment-head h1 {
-  font-family: var(--font-serif), Georgia, serif;
-  font-size: clamp(38px, 5.8vw, 58px); font-weight: 400;
-  letter-spacing: -0.012em; margin-top: 14px; line-height: 1.08;
+  font-size: clamp(38px, 5.8vw, 58px);
+  margin-top: 14px; line-height: 1.08;
 }
 .segment-lead { color: var(--text-dim); font-size: 17px; line-height: 1.65; margin: 18px auto 0; max-width: 600px; }
 .segment-cta { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 28px 0 8px; }
