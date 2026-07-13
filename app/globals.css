@@ -346,13 +346,15 @@ ul { list-style: none; }
 
 /* Marketing (nav + hero + cta) — TİTANYUM buton: gümüş gradient, koyu metin (yeşil yok).
    Panel/auth .btn-primary'sine dokunmaz (scope'lu). */
-.nav .btn-primary, .hero .btn-primary, .cta-band .btn-primary, .mobile-menu .btn-primary {
+.nav .btn-primary, .hero .btn-primary, .cta-band .btn-primary, .mobile-menu .btn-primary,
+.segment .btn-primary, .support .btn-primary {
   background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
   color: #0a0b0d;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.85),
     inset 0 -1px 1px rgba(0, 0, 0, 0.18);
 }
-.nav .btn-primary:hover, .hero .btn-primary:hover, .cta-band .btn-primary:hover, .mobile-menu .btn-primary:hover {
+.nav .btn-primary:hover, .hero .btn-primary:hover, .cta-band .btn-primary:hover, .mobile-menu .btn-primary:hover,
+.segment .btn-primary:hover, .support .btn-primary:hover {
   transform: none; /* hover'da yukarı kalkma yok (Mehmet isteği) */
   box-shadow: 0 11px 28px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.92),
     inset 0 -1px 1px rgba(0, 0, 0, 0.22);
@@ -3074,3 +3076,141 @@ ul { list-style: none; }
   .contact-card { transition: none; }
   .contact-card:hover { transform: none; }
 }
+
+/* ═══ MEGA-MENÜ (üst bar: İşletme / Bireysel) — Resend deseni ═══
+   Solda sayfa linkleri (2 sütun), sağda vurgu kartları. Hover'da açılır; tetikleyici
+   ile panel AYNI .nav-seg sarmalayıcısında → imleç panele inerken kapanmaz. */
+.nav-seg { position: relative; display: flex; align-items: center; }
+
+.nav-seg-trigger {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: rgba(255, 255, 255, 0.78); font-size: 14px; font-weight: 500;
+  transition: color 0.18s; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.nav-seg-trigger svg { width: 14px; height: 14px; opacity: 0.55; transition: transform 0.2s ease, opacity 0.2s ease; }
+.nav-seg-trigger:hover,
+.nav-seg-trigger.open { color: #fff; }
+.nav-seg-trigger.open svg { transform: rotate(180deg); opacity: 0.9; }
+.nav-seg-trigger.active {
+  color: #fff; font-weight: 600;
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.35), 0 1px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* Panel — padding-top ile tetikleyiciye köprü (imleç boşluğa düşüp kapatmasın) */
+.nav-panel {
+  position: absolute; top: 100%; left: 50%;
+  transform: translate(-50%, 6px);
+  padding-top: 14px;                 /* köprü */
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+  z-index: 60;
+}
+.nav-panel.open { opacity: 1; visibility: visible; pointer-events: auto; transform: translate(-50%, 0); }
+
+.nav-panel-inner {
+  display: flex; gap: 14px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* NEREDEYSE OPAK bilinçli: arkada dev/parlak hero başlığı var. backdrop-filter yalnız
+     cila — düşerse (iOS Safari, GPU yok) panel yine okunur kalmalı. Bkz. mask dersi. */
+  background: rgba(11, 13, 16, 0.985);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Sol: linkler, 2 sütun */
+.np-links {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+  min-width: 380px;
+}
+.np-link {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 10px 12px; border-radius: 10px;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+.np-link:hover { background: rgba(255, 255, 255, 0.06); }
+.np-link-label { font-size: 14px; font-weight: 500; color: rgba(255, 255, 255, 0.92); }
+.np-link-desc { font-size: 12px; color: var(--text-faint); line-height: 1.35; }
+
+/* Sağ: vurgu kartları (görsel alanı = titanyum degrade) */
+.np-cards { display: flex; gap: 10px; }
+.np-card {
+  display: flex; flex-direction: column;
+  width: 176px; padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  text-decoration: none;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.np-card:hover { border-color: rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.06); }
+.np-card-art {
+  height: 74px; margin-bottom: 10px; border-radius: 9px;
+  background:
+    radial-gradient(120% 90% at 20% 0%, rgba(255, 255, 255, 0.16), transparent 60%),
+    linear-gradient(150deg, #2a2e33, #101214);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.np-card-title { font-size: 13px; font-weight: 600; color: #fff; }
+.np-card-desc { font-size: 12px; color: var(--text-faint); line-height: 1.4; margin-top: 2px; }
+
+/* Mobil menü: segment akordeonu */
+.mm-row-btn { width: 100%; background: none; border: 0; cursor: pointer; text-align: left; font: inherit; }
+.mm-row-btn svg { transition: transform 0.2s ease; }
+.mm-row-btn.open svg { transform: rotate(180deg); }
+.mm-sub { display: flex; flex-direction: column; padding: 4px 0 14px; }
+.mm-sub-row, .mm-sub-all {
+  padding: 11px 2px 11px 14px; font-size: 15px;
+  color: rgba(255, 255, 255, 0.62); text-decoration: none;
+}
+.mm-sub-all { color: #fff; font-weight: 600; }
+.mm-sub-row:active { color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-panel, .nav-seg-trigger svg, .mm-row-btn svg { transition: none; }
+}
+
+/* ═══ SEGMENT SAYFALARI (/isletme, /bireysel) ═══ */
+.segment { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 100px 28px 64px; }
+
+.segment-head { text-align: center; max-width: 720px; margin: 0 auto 56px; }
+.segment-head h1 { font-size: clamp(32px, 5.4vw, 50px); font-weight: 700; letter-spacing: -0.025em; margin-top: 14px; line-height: 1.1; }
+.segment-lead { color: var(--text-dim); font-size: 17px; line-height: 1.65; margin: 18px auto 0; max-width: 600px; }
+.segment-cta { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 28px 0 8px; }
+.segment-note { font-size: 13px; color: var(--text-faint); }
+
+.segment-sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+.seg-card {
+  padding: 26px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--card);
+  scroll-margin-top: 100px;          /* #çapa ile gelince başlık üst barın altında kalmasın */
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.seg-card:hover { border-color: rgba(255, 255, 255, 0.16); background: var(--card-2); }
+.seg-card:target { border-color: rgba(255, 255, 255, 0.3); background: var(--card-2); }
+.seg-card h2 { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+.seg-card p { color: var(--text-dim); font-size: 15px; line-height: 1.65; margin-top: 10px; }
+.seg-card ul { list-style: none; margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.seg-card li {
+  position: relative; padding-left: 20px;
+  font-size: 14px; color: rgba(255, 255, 255, 0.72); line-height: 1.5;
+}
+.seg-card li::before {
+  content: ""; position: absolute; left: 4px; top: 8px;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.segment-foot { margin-top: 56px; }
+
+@media (max-width: 640px) {
+  .segment { padding: 84px 20px 48px; }
+  .segment-sections { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .seg-card { transition: none; } }

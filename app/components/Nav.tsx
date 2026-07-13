@@ -1,20 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "./Logo";
 import StoreBadges from "./StoreBadges";
+import { SEGMENTS, type SegmentMenu } from "./navData";
 
 // Üst bar — masaüstünde banner'a gömülü; kaydırınca iOS Liquid Glass pill'e döner.
 // Mobilde pill YOK: sade bar (wordmark + ☰) + ☰'a basınca tam ekran menü (Resend tarzı).
-// `solid`: hero banner'ı olmayan sayfalarda (ör. /gizlilik) en baştan pill durumu.
+// `solid`: hero banner'ı olmayan sayfalarda en baştan pill durumu.
+//
+// Mega-menü (Resend deseni): İşletme/Bireysel tetikleyicisine gelince altında panel açılır —
+// solda o segmentin sayfa linkleri, sağda vurgu kartları. Tetikleyiciye TIKLAMAK segment
+// sayfasına götürür (/isletme, /bireysel).
 export default function Nav({ solid = false }: { solid?: boolean }) {
   const [scrolled, setScrolled] = useState(solid);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [openSeg, setOpenSeg] = useState<string | null>(null); // açık mega-menü
+  const [mobileSeg, setMobileSeg] = useState<string | null>(null); // mobil akordeon
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pathname = usePathname();
-  // Kullanıcı hangi sayfadaysa o link parlak görünsün (ana sayfa çapaları hariç — onlar bölüm, sayfa değil)
-  const isActive = (href: string) => pathname === href;
+
+  // Bulunulan sayfa parlak görünsün
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   useEffect(() => {
     if (solid) {
@@ -27,16 +36,38 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, [solid]);
 
-  // Menü açıkken arka plan kaymasın + Esc ile kapat
+  // Mobil menü açıkken arka plan kaymasın + Esc ile kapat (Esc mega-menüyü de kapatır)
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setMenuOpen(false);
+      setOpenSeg(null);
+    };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "";
       window.removeEventListener("keydown", onKey);
     };
   }, [menuOpen]);
+
+  // Rota değişince açık menüler kapansın
+  useEffect(() => {
+    setOpenSeg(null);
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
+
+  // Hover kapanışında kısa gecikme: imleç tetikleyiciden panele geçerken menü kapanmasın
+  const openSegNow = (key: string) => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setOpenSeg(key);
+  };
+  const scheduleClose = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setOpenSeg(null), 160);
+  };
 
   const close = () => setMenuOpen(false);
 
@@ -45,7 +76,18 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
       <header className={`nav${scrolled ? " scrolled" : ""}`}>
         <div className="nav-inner">
           <Logo spinning active={scrolled} />
+
           <nav className="nav-links">
+            {SEGMENTS.map((seg) => (
+              <SegmentTrigger
+                key={seg.key}
+                seg={seg}
+                open={openSeg === seg.key}
+                active={isActive(seg.href)}
+                onOpen={() => openSegNow(seg.key)}
+                onClose={scheduleClose}
+              />
+            ))}
             <a href="/#ozellikler">Özellikler</a>
             <a href="/#fiyatlar">Fiyatlar</a>
             <Link
@@ -56,10 +98,12 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
               Destek
             </Link>
           </nav>
+
           <div className="nav-actions">
             <Link href="/giris" className="btn btn-ghost">Giriş Yap</Link>
             <Link href="/kayit" className="btn btn-primary">Kayıt Ol</Link>
           </div>
+
           <button
             className="nav-burger"
             aria-label="Menü"
@@ -92,6 +136,35 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
           <Link href="/giris" className="mm-login" onClick={close}>Giriş Yap</Link>
 
           <nav className="mm-links">
+            {/* Segmentler mobilde akordeon: başlığa bas → alt linkler açılır */}
+            {SEGMENTS.map((seg) => {
+              const open = mobileSeg === seg.key;
+              return (
+                <div key={seg.key} className="mm-group">
+                  <button
+                    className={`mm-row mm-row-btn${open ? " open" : ""}`}
+                    aria-expanded={open}
+                    onClick={() => setMobileSeg(open ? null : seg.key)}
+                  >
+                    {seg.label}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+                  </button>
+                  {open && (
+                    <div className="mm-sub">
+                      <Link href={seg.href} className="mm-sub-all" onClick={close}>
+                        {seg.label} sayfasına git
+                      </Link>
+                      {seg.links.map((l) => (
+                        <Link key={l.href} href={l.href} className="mm-sub-row" onClick={close}>
+                          {l.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
             <a href="/#ozellikler" className="mm-row" onClick={close}>
               Özellikler
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
@@ -117,5 +190,67 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
         </div>
       </div>
     </>
+  );
+}
+
+// ─── Mega-menü tetikleyicisi + paneli ───
+// Tetikleyici <Link>: tıklayınca segment sayfasına gider, hover'da panel açılır.
+// Panel tetikleyiciyle AYNI sarmalayıcının içinde → imleç aşağı inerken mouseleave tetiklenmez.
+function SegmentTrigger({
+  seg,
+  open,
+  active,
+  onOpen,
+  onClose,
+}: {
+  seg: SegmentMenu;
+  open: boolean;
+  active: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="nav-seg"
+      onMouseEnter={onOpen}
+      onMouseLeave={onClose}
+      onFocus={onOpen}
+      onBlur={onClose}
+    >
+      <Link
+        href={seg.href}
+        className={`nav-seg-trigger${active ? " active" : ""}${open ? " open" : ""}`}
+        aria-expanded={open}
+        aria-current={active ? "page" : undefined}
+      >
+        {seg.label}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </Link>
+
+      <div className={`nav-panel${open ? " open" : ""}`} role="menu" aria-label={seg.label}>
+        <div className="nav-panel-inner">
+          <div className="np-links">
+            {seg.links.map((l) => (
+              <Link key={l.href} href={l.href} className="np-link" role="menuitem">
+                <span className="np-link-label">{l.label}</span>
+                <span className="np-link-desc">{l.desc}</span>
+              </Link>
+            ))}
+          </div>
+
+          <div className="np-cards">
+            {seg.cards.map((c) => (
+              <Link key={c.title} href={c.href} className="np-card" role="menuitem">
+                <span className="np-card-art" aria-hidden="true" />
+                <span className="np-card-title">{c.title}</span>
+                <span className="np-card-desc">{c.desc}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -13,6 +13,8 @@ export default function Footer() {
           <p className="footer-copy">Paranı yönet, geleceğini kur.</p>
         </div>
         <div className="footer-links">
+          <a href="/isletme">İşletme</a>
+          <a href="/bireysel">Bireysel</a>
           <a href="/#ozellikler">Özellikler</a>
           <a href="/#fiyatlar">Fiyatlar</a>
           <a href="/destek">Destek</a>
