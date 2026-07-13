@@ -241,48 +241,51 @@ export default async function GenelBakisPage() {
         ))}
       </div>
 
-      {/* ── Trend grafiği + Kartlarım ── */}
-      <div className="dash-grid">
-        <div className="dash-card">
-          <div className="dash-card-head">
-            <div>
-              <h2>Gelir &amp; Gider</h2>
-              <span className="dash-card-sub">Son 6 ay</span>
-            </div>
-            <div className="dash-legend">
-              <span className="dl-item"><i className="dl-dot teal" /> Gelir</span>
-              <span className="dl-item"><i className="dl-dot red" /> Gider</span>
-            </div>
+      {/* ── Trend grafiği (TAM GENİŞLİK) ──
+          Eskiden grafik ile Kartlarım yan yanaydı; hesap kartları (aspect-ratio 1.6) sütun
+          genişliğinde ~330px olduğundan 3 kart ~1000px oluyor, grafik kartı ise 300px'te
+          kalıyordu → grid stretch ile grafiğin altı KOCAMAN boş görünüyordu. Grafik tam
+          genişliğe alındı (veri de daha okunur), kartlar aşağıda yatay sıraya dizildi. */}
+      <div className="dash-card dash-chart-card">
+        <div className="dash-card-head">
+          <div>
+            <h2>Gelir &amp; Gider</h2>
+            <span className="dash-card-sub">Son 6 ay</span>
           </div>
-          <LineChart data={trend} currency={currency} />
+          <div className="dash-legend">
+            <span className="dl-item"><i className="dl-dot teal" /> Gelir</span>
+            <span className="dl-item"><i className="dl-dot red" /> Gider</span>
+          </div>
         </div>
+        <LineChart data={trend} currency={currency} />
+      </div>
 
-        <div className="dash-card">
-          <div className="dash-card-head">
-            <h2>Kartlarım</h2>
-            <a href="/panel/hesaplar" className="ov-link">Tümü <ArrowRight size={13} /></a>
-          </div>
-          {accounts.length === 0 ? (
-            <a href="/panel/hesaplar" className="field-empty-link" style={{ marginTop: 4 }}>
-              <Plus size={15} /> İlk hesabını ekle
-            </a>
-          ) : (
-            <div className="dash-cards-stack">
-              {accounts.slice(0, 3).map((a) => (
-                <div key={a.id} className="acc-card-wrap">
-                  <AccountCard
-                    name={a.name} bankName={a.bank_name} iban={a.iban} accountNo={a.account_no}
-                    balance={Number(a.balance) || 0} currency={a.currency}
-                    type={(a.type as "bank" | "cash" | "pos") || "bank"} theme={a.card_theme}
-                  />
-                </div>
-              ))}
-              {accounts.length > 3 && (
-                <a href="/panel/hesaplar" className="dash-more-link">+{accounts.length - 3} hesap daha →</a>
-              )}
-            </div>
-          )}
+      {/* ── Kartlarım (yatay sıra) ── */}
+      <div className="dash-card dash-accounts-card">
+        <div className="dash-card-head">
+          <h2>Kartlarım</h2>
+          <a href="/panel/hesaplar" className="ov-link">Tümü <ArrowRight size={13} /></a>
         </div>
+        {accounts.length === 0 ? (
+          <a href="/panel/hesaplar" className="field-empty-link" style={{ marginTop: 4 }}>
+            <Plus size={15} /> İlk hesabını ekle
+          </a>
+        ) : (
+          <div className="dash-cards-row">
+            {accounts.slice(0, 3).map((a) => (
+              <div key={a.id} className="acc-card-wrap">
+                <AccountCard
+                  name={a.name} bankName={a.bank_name} iban={a.iban} accountNo={a.account_no}
+                  balance={Number(a.balance) || 0} currency={a.currency}
+                  type={(a.type as "bank" | "cash" | "pos") || "bank"} theme={a.card_theme}
+                />
+              </div>
+            ))}
+            {accounts.length > 3 && (
+              <a href="/panel/hesaplar" className="dash-more-link">+{accounts.length - 3} hesap daha →</a>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── Kategori analizi + Son işlemler ── */}

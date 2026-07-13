@@ -8,7 +8,10 @@ import { formatCurrency } from "../../lib/format";
 
 export type LinePoint = { label: string; income: number; expense: number };
 
-const W = 880;
+// Grafik artık dashboard'da TAM GENİŞLİK. viewBox 880x300 iken (en-boy 2.9) 1500px
+// genişlikte ~510px yüksekliğe uzuyor ve eksen yazıları 1.7× büyüyordu. Daha geniş
+// viewBox → makul yükseklik (~320px) + doğru ölçekli yazılar.
+const W = 1400;
 const H = 300;
 const PAD_L = 50;
 const PAD_R = 16;
