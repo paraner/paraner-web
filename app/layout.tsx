@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Instrument_Serif } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
 // Inter — gövde metni + arayüz (telefon uygulamasıyla aynı aile)
@@ -9,12 +9,19 @@ const inter = Inter({
   display: "swap",
 });
 
-// Instrument Serif — yalnız BÜYÜK BAŞLIKLAR (h1). Resend'in Domaine'inin ücretsiz
-// muadili; tek ağırlığı var (400) — zaten Resend de başlıkları 400'de kullanıyor.
-// Panelde (app.paraner.com) KULLANILMIYOR: veri ekranlarında serif doğru değil.
-const instrumentSerif = Instrument_Serif({
+// Playfair Display — yalnız BÜYÜK BAŞLIKLAR (h1). Resend'in Domaine Display'i ticari
+// lisanslı; ücretsiz adaylar aynı metinle karşılaştırıldı (Instrument Serif fazla DAR,
+// Bodoni Moda fazla ince-kontrastlı, DM Serif fazla kalın).
+//
+// ⚠️ PRATA KULLANILAMAZ: Google Fonts alt kümeleri latin/cyrillic/vietnamese — latin-ext
+// YOK. Yani ğ Ğ ş Ş İ ve ₺ glifleri fontta bulunmuyor; tarayıcı onları Times'tan basardı
+// (karışık font). Türkçe site için eleniyor. Yeni serif seçerken ÖNCE latin-ext'i doğrula:
+//   curl -s "https://fonts.googleapis.com/css2?family=X" -H "UA: <Chrome>" | grep latin-ext
+//
+// Playfair: geniş + yüksek kontrast (Domaine'e yakın) VE latin-ext var. Ağırlık 400.
+const playfair = Playfair_Display({
   variable: "--font-serif",
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin", "latin-ext"], // latin-ext: Türkçe ğ ş İ + ₺
   weight: "400",
   display: "swap",
 });
@@ -138,7 +145,7 @@ export default function RootLayout({
        kapatmıyor → bu attribute olmadan sayfa geçişinde scroll tepeye ANIMASYONLU gidiyordu
        (dikey zıplama). Bu attribute ile Next geçiş anında auto'ya çevirir (anında scroll);
        in-page çapraz linkler (#ozellikler/#fiyatlar) yine smooth kalır. */
-    <html lang="tr" className={`${inter.variable} ${instrumentSerif.variable}`} data-scroll-behavior="smooth">
+    <html lang="tr" className={`${inter.variable} ${playfair.variable}`} data-scroll-behavior="smooth">
       {/* suppressHydrationWarning: bazı tarayıcı eklentileri <body>'ye attribute
           ekleyip hydration uyarısı tetikliyor; bu zararsız farkı görmezden geliriz. */}
       <body suppressHydrationWarning>
