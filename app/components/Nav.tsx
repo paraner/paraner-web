@@ -155,14 +155,17 @@ export default function Nav({ solid = false }: { solid?: boolean }) {
               <div className="nav-panel-surface">
                 {SEGMENTS.map((seg, i) => {
                   const active = openSeg === seg.key;
-                  // Kayma yönü: aktif olanın soluna düşen içerik sola, sağına düşen sağa kayar
-                  const dir = openIdx < 0 ? 0 : i < openIdx ? -1 : i > openIdx ? 1 : 0;
+                  // KAYDIRMA (Resend ölçüldü): solma yok. İmleç sağa giderse eski içerik
+                  // tamamen sola süzülür, yeni içerik sağdan girer. Aktif olanın solundaki
+                  // içerik -%100'de (panel dışı sol), sağındaki +%100'de bekler; panel
+                  // overflow:hidden ile kırpar.
+                  const offset = active ? 0 : openIdx < 0 ? (i === 0 ? 0 : 100) : i < openIdx ? -100 : 100;
                   return (
                     <div
                       key={seg.key}
                       ref={(el) => { contentRefs.current[seg.key] = el; }}
                       className={`np-content${active ? " active" : ""}`}
-                      style={{ transform: `translateX(${active ? 0 : dir * 16}px)` }}
+                      style={{ transform: `translateX(${offset}%)` }}
                       aria-hidden={!active}
                     >
                       <PanelContent seg={seg} tabbable={active} />

@@ -3135,13 +3135,16 @@ ul { list-style: none; }
   overflow: hidden;                  /* geçişte içerik dışarı taşmasın */
 }
 
-/* İçerikler üst üste; aktif olan görünür, diğerleri yönüne göre kayık+şeffaf */
+/* İçerikler üst üste. KAYDIRMA: solma yok (Resend'de opacity hep 1) — aktif olmayan
+   içerik panelin tamamen dışında (±%100) bekler, geçişte imlecin yönüne doğru kayar.
+   Görünürlüğü .nav-panel-surface'ın overflow:hidden'ı sağlar. */
 .np-content {
-  position: absolute; inset: 0;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.22s ease, transform 0.34s cubic-bezier(0.2, 0.9, 0.25, 1);
+  position: absolute; top: 0; left: 0;
+  pointer-events: none;
+  transition: transform 0.42s cubic-bezier(0.32, 0.72, 0.24, 1);
+  will-change: transform;
 }
-.np-content.active { opacity: 1; pointer-events: auto; }
+.np-content.active { pointer-events: auto; }
 
 .np-inner { display: flex; gap: 14px; padding: 14px; width: max-content; }
 
