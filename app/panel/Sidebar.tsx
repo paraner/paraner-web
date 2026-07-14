@@ -37,13 +37,20 @@ const COLLAPSE_KEY = "paraner-sidebar-collapsed";
 const FAV_KEY = "paraner-fav-ops"; // favori işlemler (web'e özel)
 // Sidebar genişlikleri (globals.css ile aynı): sürükle-bırak snap için referans
 // Çekirdek rotalar: menü göründüğü anda TAM YÜK (veri dahil) prefetch edilir → tıklama anında
-// açılır, iskelet görünmez. Yalnız bu 4'ü; alt menülerdeki 30+ link hover'da ısınıyor
-// (unstable_dynamicOnHover) — hepsini peşin çekmek her açılışta 30 sunucu render'ı demek olurdu.
+// açılır, iskelet görünmez. Alt menülerdeki 30+ link hover'da ısınıyor (unstable_dynamicOnHover)
+// — hepsini peşin çekmek her açılışta 30 sunucu render'ı demek olurdu.
+//
+// Neden hover YETMİYOR da peşin liste gerekiyor: canlı ölçüm (2026-07-14, admin hesabı) —
+// hover'lı tıklama 14-26 ms (iskelet YOK), hover'sız ısıtılmamış rota 1554 ms (iskelet VAR).
+// Dokunmatikte hover diye bir şey yok → telefondan panele girenler o 1.5 sn'yi yerdi.
+// Bu yüzden en sık kullanılan rotalar peşin ısıtılıyor.
 const CORE_PREFETCH = new Set([
   "/panel",
   "/panel/islemler",
   "/panel/hesaplar",
   "/panel/cuzdanim",
+  "/panel/faturalar",
+  "/panel/ayarlar",
 ]);
 
 const SIDEBAR_OPEN = 248;
@@ -68,6 +75,21 @@ type Group = { label: string | null; items: Item[] };
 export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
   const pathname = usePathname();
   const router = useRouter();
+
+  // Çekirdek rotaları panel açılır açılmaz ISIT (veri dahil tam yük).
+  // Link'teki prefetch={true} viewport'a bağlıdır: Faturalar gibi KAPALI akordeon içindeki
+  // linkler hiç görünmediği için asla ısınmazdı. router.prefetch viewport'tan bağımsız çalışır.
+  // kind:"full" şart — varsayılan (auto) dinamik rotada yalnız kabuğu getirir, veriyi getirmez.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      CORE_PREFETCH.forEach((href) => {
+        try {
+          router.prefetch(href, { kind: "full" as never });
+        } catch { /* prefetch başarısızsa sayfa yine normal açılır */ }
+      });
+    }, 300); // ilk boyamayı bloklamasın
+    return () => clearTimeout(t);
+  }, [router]);
   const searchParams = useSearchParams();
   const supabase = createClient();
 

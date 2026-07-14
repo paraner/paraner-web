@@ -346,9 +346,10 @@ function PasswordSection({
       setHasPassword(true);
       showToast({
         title: isSet ? "Şifre belirlendi" : "Şifre değişti",
+        // Hangi hesaba kurulduğunu bildir → yanlış hesaba şifre koyup fark etmeme durumu bitsin.
         message: isSet
-          ? "Artık e-posta ve şifrenle de giriş yapabilirsin."
-          : "Diğer cihazlardan çıkış yapıldı.",
+          ? `${email} artık e-posta + şifre ile de giriş yapabilir.`
+          : `${email} şifresi güncellendi. Diğer cihazlardan çıkış yapıldı.`,
         variant: "success",
       });
       close();
@@ -405,6 +406,12 @@ function PasswordSection({
       {open && (
         <Modal title={isSet ? "Şifre Belirle" : "Şifre Değiştir"} onClose={close} busy={saving}>
           <form onSubmit={handleSave}>
+            {/* Şifre HER ZAMAN o an oturum açık olan hesaba kurulur. Hangi hesap olduğu
+                yazılmazsa (birden fazla hesabı olan kullanıcı) yanlış hesaba şifre koyulabilir
+                — Mehmet bunu yaşadı. Hedef hesabı açıkça göster. */}
+            <p className="pw-target">
+              Şifre şu hesap için ayarlanacak: <strong>{email}</strong>
+            </p>
             {!isSet && (
               <Field label="Mevcut Şifre">
                 <input

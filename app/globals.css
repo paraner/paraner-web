@@ -2187,7 +2187,17 @@ ul { list-style: none; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .form-error { color: var(--danger-soft); font-size: 13px; margin-bottom: 12px; }
 
-/* ── Şifre gücü göstergesi (Ayarlar → Şifre Belirle/Değiştir; mobil change-password paritesi) ── */
+/* ── Şifre Belirle/Değiştir (Ayarlar; mobil change-password paritesi) ── */
+/* Hedef hesap uyarısı — şifre oturumdaki hesaba kurulur, hangisi olduğu görünmeli */
+.pw-target {
+  font-size: 13px; color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px; padding: 10px 12px; margin: 0 0 16px;
+}
+.pw-target strong { color: rgba(255, 255, 255, 0.92); font-weight: 600; }
+
+/* Şifre gücü göstergesi */
 .pw-strength { display: flex; align-items: center; gap: 10px; margin: -6px 0 16px; }
 .pw-bar { display: flex; gap: 4px; flex: 1; }
 .pw-seg { flex: 1; height: 4px; border-radius: 2px; transition: background 0.2s; }
