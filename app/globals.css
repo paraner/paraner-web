@@ -6,6 +6,10 @@
 
 :root {
   --teal: #00BFA6;
+  /* Panel form odak çerçevesi. Eskiden doğrudan teal'di (yeşil); marka rengi değişeceği için
+     NÖTR titanyuma çekildi. Marka rengi netleşince BURAYI tek satır değiştirmek yeter —
+     panelin tüm input/select/chip/dropzone odakları bu değişkene bağlı. */
+  --focus-ring: rgba(255, 255, 255, 0.45);
   --teal-2: #00e8ca;
   --purple: #8b5cf6;
   --bg: #000000;
@@ -860,7 +864,7 @@ ul { list-style: none; }
   transition: border-color 0.18s, background 0.18s;
 }
 .field input::placeholder { color: rgba(255, 255, 255, 0.3); }
-.field input:focus { border-color: rgba(0, 191, 166, 0.5); background: rgba(255, 255, 255, 0.07); }
+.field input:focus { border-color: var(--focus-ring); background: rgba(255, 255, 255, 0.07); }
 .field select {
   width: 100%; padding: 13px 15px; border-radius: 12px;
   background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
@@ -868,7 +872,7 @@ ul { list-style: none; }
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5l5-5' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 15px center;
 }
-.field select:focus { border-color: rgba(0, 191, 166, 0.5); }
+.field select:focus { border-color: var(--focus-ring); }
 .field select option { background: #1a1a1a; color: var(--text); }
 .input-wrap .toggle-pw {
   position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
@@ -1848,7 +1852,7 @@ ul { list-style: none; }
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5l5-5' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 13px center;
 }
-.chip-select:focus { border-color: rgba(0, 191, 166, 0.5); }
+.chip-select:focus { border-color: var(--focus-ring); }
 .chip-select option { background: #1a1a1a; color: var(--text); }
 
 /* İşlem satırında düzenle/sil butonları (hover'da belirir) */
@@ -2127,7 +2131,7 @@ ul { list-style: none; }
   background: rgba(255, 255, 255, 0.02); color: var(--text-dim);
   transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
-.dropzone:hover { border-color: rgba(0, 191, 166, 0.5); color: var(--text); }
+.dropzone:hover { border-color: var(--focus-ring); color: var(--text); }
 .dropzone.over { border-color: var(--teal); background: rgba(0, 191, 166, 0.08); color: var(--text); }
 .dropzone.busy { opacity: 0.7; cursor: default; }
 .dropzone.sm { padding: 16px 12px; margin-top: 0; }
@@ -2155,7 +2159,7 @@ ul { list-style: none; }
   color: var(--text); font-size: 13px; font-weight: 600; padding: 7px 14px;
   outline: none; cursor: pointer; color-scheme: dark;
 }
-.chip-month:focus { border-color: rgba(0, 191, 166, 0.5); }
+.chip-month:focus { border-color: var(--focus-ring); }
 
 /* Modal */
 .modal-overlay {
@@ -2267,7 +2271,7 @@ ul { list-style: none; }
   background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
   color: var(--text); outline: none;
 }
-.qi-row input:focus { border-color: rgba(0, 191, 166, 0.5); }
+.qi-row input:focus { border-color: var(--focus-ring); }
 .qi-row input::placeholder { color: rgba(255, 255, 255, 0.3); }
 .qi-del { width: 32px; height: 32px; }
 .qi-add { margin: 10px 0 2px; }
@@ -2519,7 +2523,7 @@ ul { list-style: none; }
 .profile-row .p-type { font-size: 12px; color: var(--text-dim); }
 .inline-edit { display: flex; gap: 8px; }
 .inline-edit input { flex: 1; padding: 11px 14px; border-radius: 11px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); font-size: 14px; outline: none; }
-.inline-edit input:focus { border-color: rgba(0,191,166,0.5); }
+.inline-edit input:focus { border-color: var(--focus-ring); }
 
 /* ── Hesap Bilgileri: alt sekmeler (Profil / Şirket bilgileri) ──
    Üst sekmeler alt-çizgili; alt sekmeler onlarla karışmasın diye ÇERÇEVELİ pill. */
@@ -2592,7 +2596,23 @@ ul { list-style: none; }
   padding: 11px 14px; border-radius: 11px; background: rgba(255,255,255,0.05);
   border: 1px solid var(--border); color: var(--text); font-size: 14px; outline: none;
 }
-.set-input:focus { border-color: rgba(0,191,166,0.5); }
+.set-input:focus { border-color: var(--focus-ring); }
+/* Chrome autofill panel input'larını da BEYAZ zemine çeviriyordu (koyu temayı deliyor,
+   Mehmet canlıda yakaladı: Şirket E-postası alanı beyaz/mavi görünüyordu).
+   BeamInput'taki çözümün aynısı: zemini şeffaf tut, metni açık renkte yaz. */
+.set-input:-webkit-autofill,
+.set-input:-webkit-autofill:hover,
+.set-input:-webkit-autofill:focus,
+.set-input:-webkit-autofill:active,
+.inline-edit input:-webkit-autofill,
+.field input:-webkit-autofill,
+.input:-webkit-autofill {
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--card) inset;
+  box-shadow: 0 0 0 1000px var(--card) inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
 .set-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 4px; }
 .btn-ghost.danger { color: var(--danger); border-color: rgba(226,75,74,0.3); }
 .btn-ghost.danger:hover { background: rgba(226,75,74,0.1); }
@@ -2716,7 +2736,7 @@ ul { list-style: none; }
   transition: border-color 0.15s, background 0.15s;
 }
 .cat-trigger:hover { background: rgba(255,255,255,0.07); }
-.cat-trigger.open, .cat-trigger:focus { border-color: rgba(0,191,166,0.5); outline: none; }
+.cat-trigger.open, .cat-trigger:focus { border-color: var(--focus-ring); outline: none; }
 .cat-trigger-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cat-trigger-name.ph { color: rgba(255,255,255,0.3); }
 .cat-chev { opacity: 0.6; transition: transform 0.2s; flex-shrink: 0; }
@@ -2776,7 +2796,7 @@ ul { list-style: none; }
   background: rgba(255,255,255,0.05); border: 1px solid var(--border);
   color: var(--text); font-size: 14px; outline: none;
 }
-.cat-create-input:focus { border-color: rgba(0,191,166,0.5); }
+.cat-create-input:focus { border-color: var(--focus-ring); }
 .cat-swatches { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 .cat-swatch {
   width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
@@ -2826,7 +2846,7 @@ ul { list-style: none; }
   transition: border-color 0.15s, background 0.15s;
 }
 .dp-trigger:hover { background: rgba(255,255,255,0.07); }
-.dp-trigger.open, .dp-trigger:focus { border-color: rgba(0,191,166,0.5); outline: none; }
+.dp-trigger.open, .dp-trigger:focus { border-color: var(--focus-ring); outline: none; }
 .dp-trigger-ic { color: var(--teal); flex-shrink: 0; }
 .dp-trigger-val { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dp-trigger-val.ph { color: rgba(255,255,255,0.3); }
