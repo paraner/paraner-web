@@ -11,6 +11,12 @@ import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import SaveButton from "../../../components/SaveButton";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
+import {
+  AVATAR_ACCEPT,
+  MAX_AVATAR_BYTES,
+  uploadProfileImage,
+  removeProfileImage,
+} from "../../../lib/profileMedia";
 
 export type Profile = {
   id: string;
@@ -20,6 +26,21 @@ export type Profile = {
   is_active: boolean;
   invoice_prefix: string | null;
   invoice_next_number: number | null;
+  // Kimlik (bireysel + işletme)
+  name: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  company_logo_url: string | null;
+  // Şirket bilgileri (yalnız işletme) — faturaya/resmî belgeye basılan satıcı bilgileri
+  company_name: string | null;
+  tax_number: string | null;
+  tax_office: string | null;
+  company_address: string | null;
+  company_email: string | null;
+  iban: string | null;
+  website: string | null;
+  mersis_no: string | null;
+  trade_registry_no: string | null;
 };
 
 export type DeviceRow = {
@@ -57,7 +78,7 @@ export default function AyarlarClient({
   const isBusiness = active?.profile_type === "business";
 
   const tabs: { key: TabKey; label: string }[] = [
-    { key: "genel", label: "Genel" },
+    { key: "genel", label: "Hesap Bilgileri" },
     ...(isBusiness ? [{ key: "isletme" as TabKey, label: "İşletme" }] : []),
     { key: "bildirimler", label: "Bildirimler" },
     { key: "hesap", label: "Hesap & Güvenlik" },
@@ -79,27 +100,10 @@ export default function AyarlarClient({
     window.history.replaceState(null, "", u.toString());
   }
 
-  const [name, setName] = useState(active?.profile_name ?? "");
-  const [savingName, setSavingName] = useState(false);
   const [switching, setSwitching] = useState(false);
 
   const typeLabel = (t: string | null) =>
     t === "business" ? "İşletme" : "Bireysel";
-
-  async function saveName() {
-    if (!active || !name.trim() || name.trim() === active.profile_name) return;
-    setSavingName(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ profile_name: name.trim() })
-      .eq("id", active.id);
-    setSavingName(false);
-    if (error) {
-      showToast({ title: "Kaydedilemedi", message: "Profil adı güncellenemedi, tekrar dene.", variant: "error" });
-      return;
-    }
-    router.refresh();
-  }
 
   async function switchTo(p: Profile) {
     if (p.is_active || switching) return;
@@ -148,37 +152,11 @@ export default function AyarlarClient({
 
       {tab === "genel" && (
         <>
-          <div className="settings-block">
-            <h3>Aktif Profil</h3>
-            <div className="tx-list">
-              <div className="info-row">
-                <span className="k">Profil tipi</span>
-                <span className="v">{typeLabel(active?.profile_type ?? null)}</span>
-              </div>
-              <div className="info-row">
-                <span className="k">Para birimi</span>
-                <span className="v">{active?.currency ?? "TRY"}</span>
-              </div>
-              <div className="info-row name-row">
-                <span className="k">Profil adı</span>
-                <div className="inline-edit">
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Profil adı"
-                  />
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={saveName}
-                    disabled={savingName || !name.trim() || name.trim() === active?.profile_name}
-                  >
-                    {savingName ? "…" : "Kaydet"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          {active ? (
+            <AccountInfo key={active.id} profile={active} email={email} isBusiness={isBusiness} />
+          ) : (
+            <p className="panel-sub">Profil bulunamadı.</p>
+          )}
 
           {profiles.length > 1 && (
             <div className="settings-block">
@@ -251,6 +229,480 @@ export default function AyarlarClient({
         </>
       )}
     </div>
+  );
+}
+
+/* ══ Hesap Bilgileri ══════════════════════════════════════════════════════════
+   Tek kart, iki alt sekme: Profil (herkes) · Şirket bilgileri (yalnız işletme).
+   Bireysel profilde şirket alt sekmesi HİÇ render edilmez — ihtiyacı yok.
+
+   Not: Buradaki alanların TAMAMI `profiles` tablosunda ZATEN vardı (mobil yazıyor),
+   web hiçbirini göstermiyordu → şemaya dokunulmadı. Şirket bilgileri (unvan/VKN/vergi
+   dairesi) yasal faturanın satıcı tarafıdır; müşteri tarafı (contacts) hep vardı. */
+
+type SubTab = "profil" | "sirket";
+
+function AccountInfo({
+  profile,
+  email,
+  isBusiness,
+}: {
+  profile: Profile;
+  email: string;
+  isBusiness: boolean;
+}) {
+  const [sub, setSub] = useState<SubTab>("profil");
+
+  return (
+    <div className="settings-block">
+      <h3>Hesap Bilgileri</h3>
+      {/* Açıklama alt sekmeye göre değişir — Şirket bölümünün kendi açıklaması var,
+          ikisi birden basılırsa üst üste iki paragraf olurdu. */}
+      {(sub === "profil" || !isBusiness) && (
+        <p className="set-lead">
+          {isBusiness
+            ? "Kimlik ve iletişim bilgilerin; panelde ve belgelerinde görünen logon."
+            : "Kimlik ve iletişim bilgilerin."}
+        </p>
+      )}
+
+      {isBusiness && (
+        <div className="set-subtabs" role="tablist" aria-label="Hesap bilgileri bölümleri">
+          {([
+            { key: "profil", label: "Profil" },
+            { key: "sirket", label: "Şirket bilgileri" },
+          ] as { key: SubTab; label: string }[]).map((s) => (
+            <button
+              key={s.key}
+              type="button"
+              role="tab"
+              aria-selected={sub === s.key}
+              className={`set-subtab${sub === s.key ? " active" : ""}`}
+              onClick={() => setSub(s.key)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {sub === "profil" || !isBusiness ? (
+        <ProfileForm profile={profile} email={email} isBusiness={isBusiness} />
+      ) : (
+        <CompanyForm profile={profile} />
+      )}
+    </div>
+  );
+}
+
+/* ── Profil: ad, iletişim, panelde görünen ad + logo/avatar ── */
+function ProfileForm({
+  profile,
+  email,
+  isBusiness,
+}: {
+  profile: Profile;
+  email: string;
+  isBusiness: boolean;
+}) {
+  const supabase = createClient();
+  const router = useRouter();
+  const lock = useSubmitLock();
+
+  const [name, setName] = useState(profile.name ?? "");
+  const [phone, setPhone] = useState(profile.phone ?? "");
+  const [displayName, setDisplayName] = useState(profile.profile_name ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const dirty =
+    name !== (profile.name ?? "") ||
+    phone !== (profile.phone ?? "") ||
+    displayName !== (profile.profile_name ?? "");
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (!dirty || !lock.acquire()) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        name: name.trim() || null,
+        phone: phone.trim() || null,
+        // Panelde görünen ad boş bırakılamaz (sidebar "Profil" yazardı) → eskisine düş
+        profile_name: displayName.trim() || profile.profile_name,
+      })
+      .eq("id", profile.id);
+    setSaving(false);
+    lock.release();
+    if (error) {
+      showToast({ title: "Kaydedilemedi", message: "Profil bilgileri güncellenemedi, tekrar dene.", variant: "error" });
+      return;
+    }
+    showToast({ title: "Kaydedildi", message: "Profil bilgilerin güncellendi.", variant: "success" });
+    router.refresh(); // istemci önbelleği açık → yoksa geri dönünce bayat veri
+  }
+
+  return (
+    <form onSubmit={save}>
+      <div className="fg-group">Kimlik ve iletişim</div>
+      <div className="form-grid">
+        <div className="fg">
+          <label htmlFor="pf-name">Ad Soyad</label>
+          <input
+            id="pf-name"
+            className="set-input"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Adın ve soyadın"
+            autoComplete="name"
+          />
+        </div>
+        <div className="fg">
+          <label htmlFor="pf-phone">Telefon</label>
+          <input
+            id="pf-phone"
+            className="set-input"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="0(5xx) xxx xx xx"
+            inputMode="tel"
+            autoComplete="tel"
+          />
+        </div>
+        <div className="fg">
+          <label htmlFor="pf-email">E-posta</label>
+          <input id="pf-email" className="set-input" value={email} disabled />
+          <span className="fg-hint">Giriş yaptığın adres. Hesap &amp; Güvenlik bölümünden yönetilir.</span>
+        </div>
+        <div className="fg">
+          <label htmlFor="pf-display">Panelde görünen ad</label>
+          <input
+            id="pf-display"
+            className="set-input"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder={isBusiness ? "İşletme adın" : "Profil adın"}
+          />
+          <span className="fg-hint">Sol menüde ve hesap seçicide bu ad görünür.</span>
+        </div>
+      </div>
+
+      <ProfileImage profile={profile} isBusiness={isBusiness} />
+
+      <div className="fg-actions">
+        <SaveButton busy={saving} disabled={!dirty || saving}>
+          Kaydet
+        </SaveButton>
+      </div>
+    </form>
+  );
+}
+
+/* ── Logo / profil fotoğrafı ── public `avatars` bucket'ı.
+   İşletme → company_logo_url, bireysel → avatar_url (Sidebar profileAvatarUrl ile aynı ayrım). */
+function ProfileImage({ profile, isBusiness }: { profile: Profile; isBusiness: boolean }) {
+  const supabase = createClient();
+  const router = useRouter();
+  const column = isBusiness ? "company_logo_url" : "avatar_url";
+  const current = (isBusiness ? profile.company_logo_url : profile.avatar_url) ?? null;
+
+  const [url, setUrl] = useState<string | null>(current);
+  const [busy, setBusy] = useState(false);
+
+  const label = isBusiness ? "Şirket logosu" : "Profil fotoğrafı";
+
+  async function pick(file: File | undefined) {
+    if (!file || busy) return;
+    if (file.size > MAX_AVATAR_BYTES) {
+      showToast({ title: "Dosya çok büyük", message: "En fazla 5 MB yükleyebilirsin.", variant: "error" });
+      return;
+    }
+    setBusy(true);
+    const previous = url;
+    try {
+      const publicUrl = await uploadProfileImage(profile.id, file);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ [column]: publicUrl })
+        .eq("id", profile.id);
+      if (error) throw error;
+      setUrl(publicUrl);
+      // Yeni görsel kaydedildikten SONRA eskisini sil (önce silersek hata halinde ikisi de gider)
+      removeProfileImage(previous).catch(() => {});
+      showToast({ title: "Yüklendi", message: `${label} güncellendi.`, variant: "success" });
+      router.refresh(); // sidebar da bu görseli gösteriyor
+    } catch {
+      showToast({ title: "Yüklenemedi", message: "Görsel yüklenemedi, tekrar dene.", variant: "error" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function clear() {
+    if (busy || !url) return;
+    setBusy(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ [column]: null })
+      .eq("id", profile.id);
+    if (error) {
+      setBusy(false);
+      showToast({ title: "Kaldırılamadı", message: "Tekrar dene.", variant: "error" });
+      return;
+    }
+    removeProfileImage(url).catch(() => {});
+    setUrl(null);
+    setBusy(false);
+    router.refresh();
+  }
+
+  return (
+    <>
+      <div className="fg-group">{label}</div>
+      <p className="fg-hint" style={{ marginTop: -6, marginBottom: 10 }}>
+        {isBusiness
+          ? "Sol menüde ve belgelerinde görünür; kare, en az 400×400 px önerilir."
+          : "Sol menüde görünür; kare, en az 400×400 px önerilir."}
+      </p>
+
+      <div className="logo-drop">
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element -- kullanıcı yüklemesi, boyut değişken
+          <img src={url} alt={label} className="logo-preview" />
+        ) : (
+          <div className="logo-empty">Henüz görsel yok</div>
+        )}
+        <div className="logo-actions">
+          {/* <label> + gizli input: dosya seçici. Çıplak `.btn` şeffaf (arka plan/çerçevesi yok)
+              → görünür olması için ghost varyantı. */}
+          <label className={`btn btn-ghost btn-sm${busy ? " is-disabled" : ""}`}>
+            {busy ? "Yükleniyor…" : url ? "Değiştir" : "Görsel Seç"}
+            <input
+              type="file"
+              accept={AVATAR_ACCEPT}
+              hidden
+              disabled={busy}
+              onChange={(e) => {
+                pick(e.target.files?.[0]);
+                e.target.value = ""; // aynı dosya tekrar seçilebilsin
+              }}
+            />
+          </label>
+          {url && (
+            <button type="button" className="btn btn-ghost btn-sm danger" onClick={clear} disabled={busy}>
+              Kaldır
+            </button>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ── Şirket bilgileri (yalnız işletme) ── faturaya/resmî belgeye basılan SATICI bilgileri.
+   VKN/TCKN ve vergi dairesi yasal faturada zorunludur; e-Fatura entegrasyonunun da ön koşulu. */
+const onlyDigits = (v: string) => v.replace(/[^0-9]/g, "");
+
+function CompanyForm({ profile }: { profile: Profile }) {
+  const supabase = createClient();
+  const router = useRouter();
+  const lock = useSubmitLock();
+
+  const [f, setF] = useState({
+    company_name: profile.company_name ?? "",
+    tax_number: profile.tax_number ?? "",
+    tax_office: profile.tax_office ?? "",
+    trade_registry_no: profile.trade_registry_no ?? "",
+    mersis_no: profile.mersis_no ?? "",
+    company_email: profile.company_email ?? "",
+    website: profile.website ?? "",
+    company_address: profile.company_address ?? "",
+    iban: profile.iban ?? "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+
+  const set = (k: keyof typeof f, v: string) => {
+    setF((p) => ({ ...p, [k]: v }));
+    setErrors((p) => (p[k] ? { ...p, [k]: "" } : p));
+  };
+
+  const dirty = (Object.keys(f) as (keyof typeof f)[]).some(
+    (k) => f[k] !== ((profile[k as keyof Profile] as string | null) ?? "")
+  );
+
+  function validate(): boolean {
+    const e: Record<string, string> = {};
+    // Boş bırakılabilir; DOLU ise formatı doğru olmalı (yanlış VKN faturayı geçersiz kılar).
+    if (f.tax_number && ![10, 11].includes(f.tax_number.length))
+      e.tax_number = "VKN 10, TCKN 11 haneli olmalı.";
+    if (f.mersis_no && f.mersis_no.length !== 16) e.mersis_no = "MERSİS numarası 16 haneli olmalı.";
+    if (f.iban) {
+      const iban = f.iban.replace(/\s/g, "").toUpperCase();
+      if (!/^TR\d{24}$/.test(iban)) e.iban = "IBAN TR ile başlamalı ve 26 karakter olmalı.";
+    }
+    if (f.company_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.company_email))
+      e.company_email = "Geçerli bir e-posta gir.";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  async function save(ev: React.FormEvent) {
+    ev.preventDefault();
+    if (!dirty || !validate() || !lock.acquire()) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        company_name: f.company_name.trim() || null,
+        tax_number: f.tax_number.trim() || null,
+        tax_office: f.tax_office.trim() || null,
+        trade_registry_no: f.trade_registry_no.trim() || null,
+        mersis_no: f.mersis_no.trim() || null,
+        company_email: f.company_email.trim() || null,
+        website: f.website.trim() || null,
+        company_address: f.company_address.trim() || null,
+        iban: f.iban.replace(/\s/g, "").toUpperCase() || null,
+      })
+      .eq("id", profile.id);
+    setSaving(false);
+    lock.release();
+    if (error) {
+      showToast({ title: "Kaydedilemedi", message: "Şirket bilgileri güncellenemedi, tekrar dene.", variant: "error" });
+      return;
+    }
+    showToast({ title: "Kaydedildi", message: "Şirket bilgilerin güncellendi.", variant: "success" });
+    router.refresh();
+  }
+
+  return (
+    <form onSubmit={save}>
+      <p className="set-lead">
+        Unvan, vergi ve kayıt bilgileri faturalarında ve resmî belgelerinde görünür; ticari kayıtlarınla birebir aynı olmalı.
+      </p>
+
+      <div className="fg-group">Ticari kayıt</div>
+      <div className="form-grid">
+        <div className="fg">
+          <label htmlFor="cf-company">Firma Adı / Unvan</label>
+          <input
+            id="cf-company"
+            className="set-input"
+            value={f.company_name}
+            onChange={(e) => set("company_name", e.target.value)}
+            placeholder="Örn. Paraner Yazılım A.Ş."
+          />
+        </div>
+        <div className="fg">
+          <label htmlFor="cf-tax">Vergi Numarası (VKN/TCKN)</label>
+          <input
+            id="cf-tax"
+            className={`set-input${errors.tax_number ? " has-error" : ""}`}
+            value={f.tax_number}
+            onChange={(e) => set("tax_number", onlyDigits(e.target.value).slice(0, 11))}
+            placeholder="12345678900"
+            inputMode="numeric"
+          />
+          <span className={errors.tax_number ? "fg-error" : "fg-hint"}>
+            {errors.tax_number || "Fatura kesebilmek için gereklidir (VKN 10, TCKN 11 hane)."}
+          </span>
+        </div>
+        <div className="fg">
+          <label htmlFor="cf-office">Vergi Dairesi</label>
+          <input
+            id="cf-office"
+            className="set-input"
+            value={f.tax_office}
+            onChange={(e) => set("tax_office", e.target.value)}
+            placeholder="Örn. Kadıköy"
+          />
+        </div>
+        <div className="fg">
+          <label htmlFor="cf-registry">Ticaret Sicil Numarası</label>
+          <input
+            id="cf-registry"
+            className="set-input"
+            value={f.trade_registry_no}
+            onChange={(e) => set("trade_registry_no", e.target.value)}
+            placeholder="Örn. 123456-5"
+          />
+        </div>
+        <div className="fg">
+          <label htmlFor="cf-mersis">MERSİS Numarası</label>
+          <input
+            id="cf-mersis"
+            className={`set-input${errors.mersis_no ? " has-error" : ""}`}
+            value={f.mersis_no}
+            onChange={(e) => set("mersis_no", onlyDigits(e.target.value).slice(0, 16))}
+            placeholder="1234567890123456"
+            inputMode="numeric"
+          />
+          <span className={errors.mersis_no ? "fg-error" : "fg-hint"}>
+            {errors.mersis_no || "16 haneli rakamdan oluşur."}
+          </span>
+        </div>
+      </div>
+
+      <div className="fg-group">İletişim ve adres</div>
+      <div className="form-grid">
+        <div className="fg">
+          <label htmlFor="cf-email">Şirket E-postası</label>
+          <input
+            id="cf-email"
+            className={`set-input${errors.company_email ? " has-error" : ""}`}
+            value={f.company_email}
+            onChange={(e) => set("company_email", e.target.value)}
+            placeholder="info@sirketin.com"
+            inputMode="email"
+          />
+          {errors.company_email && <span className="fg-error">{errors.company_email}</span>}
+        </div>
+        <div className="fg">
+          <label htmlFor="cf-web">Web Sitesi</label>
+          <input
+            id="cf-web"
+            className="set-input"
+            value={f.website}
+            onChange={(e) => set("website", e.target.value)}
+            placeholder="sirketin.com"
+          />
+        </div>
+        <div className="fg fg-full">
+          <label htmlFor="cf-address">Adres</label>
+          <textarea
+            id="cf-address"
+            className="set-input"
+            rows={3}
+            value={f.company_address}
+            onChange={(e) => set("company_address", e.target.value)}
+            placeholder="Mahalle, cadde, kapı no, ilçe / il"
+          />
+        </div>
+      </div>
+
+      <div className="fg-group">Ödeme</div>
+      <div className="form-grid">
+        <div className="fg fg-full">
+          <label htmlFor="cf-iban">IBAN</label>
+          <input
+            id="cf-iban"
+            className={`set-input${errors.iban ? " has-error" : ""}`}
+            value={f.iban}
+            onChange={(e) => set("iban", e.target.value.toUpperCase())}
+            placeholder="TR00 0000 0000 0000 0000 0000 00"
+          />
+          <span className={errors.iban ? "fg-error" : "fg-hint"}>
+            {errors.iban || "Faturalarında ödeme bilgisi olarak görünür."}
+          </span>
+        </div>
+      </div>
+
+      <div className="fg-actions">
+        <SaveButton busy={saving} disabled={!dirty || saving}>
+          Kaydet
+        </SaveButton>
+      </div>
+    </form>
   );
 }
 
