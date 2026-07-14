@@ -2428,10 +2428,48 @@ ul { list-style: none; }
 .settings-block h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--text-dim); }
 
 /* ─── Ayarlar: sekmeli yerleşim (SaaS standardı) ───
-   Üstte alt-çizgili nötr sekmeler (Vercel/Linear tarzı), içerik 820px'e kadar genişler,
-   alanlar "solda etiket+açıklama / sağda kontrol" satırına oturur. */
-.settings-wrap { max-width: 820px; }
-.settings-wrap .settings-block { max-width: none; }
+   Üstte alt-çizgili nötr sekmeler (Vercel/Linear tarzı), her bölüm KENDİ KARTINDA.
+   Eskiden içerik 820px'lik dar bir kolondaydı ve sağ taraf boş kalıyordu (kötü duruyordu);
+   artık panelin içerik alanının TAMAMINI kullanır (diğer modüllerle aynı genişlik). */
+.settings-wrap { max-width: none; }
+
+/* Her ayar bölümü = kart. (Panelin geri kalanındaki .settings-block'ları etkilemesin diye
+   yalnızca .settings-wrap içinde.) */
+.settings-wrap .settings-block {
+  max-width: none;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 22px 20px;
+  margin-bottom: 16px;
+}
+.settings-wrap .settings-block h3 {
+  font-size: 15px; font-weight: 600; color: var(--text);
+  margin: 0 0 14px;
+}
+/* Kart İÇİNDE ikinci bir çerçeve olmasın (kutu içinde kutu) — satırlar doğrudan karta otursun */
+.settings-wrap .settings-block .tx-list {
+  background: transparent; border: none; border-radius: 0; padding: 0; overflow: visible;
+}
+/* Kart içindeki tüm satır türleri (bilgi / bildirim / dışa aktarma) kart başlığıyla AYNI
+   hizada başlasın — kendi yan dolguları kartın dolgusuna eklenip içeri kaçıyordu. */
+.settings-wrap .settings-block .info-row,
+.settings-wrap .settings-block .notif-row,
+.settings-wrap .settings-block .profile-row { padding-left: 0; padding-right: 0; }
+.settings-wrap .settings-block .profile-row { border-radius: 8px; padding-left: 10px; padding-right: 10px; margin: 0 -10px; }
+/* Kartın son satırının altındaki çizgi gereksiz */
+.settings-wrap .settings-block .tx-list > :last-child { border-bottom: none; }
+/* Tehlike bölgesinin kendi kırmızı çerçevesi var → dış kartı kaldır (çift çerçeve olmasın) */
+.settings-wrap .settings-block:has(.danger-zone) {
+  background: transparent; border: none; padding: 0;
+}
+/* set-field satırları kart içinde: alt ayraçlı liste görünümü */
+.settings-wrap .settings-block .set-field {
+  padding: 14px 0; margin-bottom: 0;
+  border-bottom: 1px solid var(--border);
+}
+.settings-wrap .settings-block .set-field:first-of-type { padding-top: 0; }
+.settings-wrap .settings-block .set-field:last-of-type { border-bottom: none; padding-bottom: 0; }
 .set-tabs {
   display: flex; gap: 2px; margin: 18px 0 28px;
   border-bottom: 1px solid var(--border);

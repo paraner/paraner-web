@@ -391,7 +391,8 @@ function PasswordSection({
       <h3>Şifre</h3>
       <div className="set-field">
         <div className="sf-info">
-          <label>{hasPassword ? "Şifre Değiştir" : "Şifre Belirle"}</label>
+          {/* Kart başlığı zaten "Şifre" → etiket onu tekrar etmesin (durumu anlatsın) */}
+          <label>{hasPassword ? "Hesap şifresi tanımlı" : "Henüz şifre yok"}</label>
           <span className="sf-hint">
             {hasPassword
               ? "Şifreni güncelle. Değiştirince diğer cihazlardaki oturumlar kapanır."
