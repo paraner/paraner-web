@@ -11,6 +11,29 @@
 - **`FAREWELL_HOOK_SECRET`** Supabase Secrets'ta + DB function gövdesinde; repo'da YOK (placeholder).
 - **Canlı göz kontrolü bekleyenler:** mobil↔web çapraz senkron (Cüzdanım, hesap kartları, işlemler, özel kategoriler); onboarding tam akış (panel-içi); Google One Tap (gerçek Gmail oturumuyla). Kod tarafı doğrulandı.
 - **Eski/ölü asset'ler (temizlenebilir):** `public/paraner-auth-bg.mp4/.jpg`, `paraner-cube.mp4/.jpg` (artık referans yok). `public/auth-bg.webp` = resend.com/signup görseli (Mehmet verdi) → lansmanda telifsiz muadille değiştirilebilir.
+- **PANEL TEST HESABI (kalıcı):** `admin@paraner.com` — canlıda oturum gerektiren doğrulama/ölçüm bu hesapla yapılır. **Şifre repoya YAZILMAZ** (bu repo herkese açık); şifre Mehmet'te + Claude'un yerel hafızasında. ⚠️ Headless giriş her seferinde **yeni cihaz bildirimi maili** tetikler → puppeteer'da **kalıcı `userDataDir`** kullan. ⚠️ Supabase sızmış-şifre koruması açık (`1234567890` reddedilir). ⚠️ Şifre HER ZAMAN oturumdaki hesaba kurulur (Mehmet farkında olmadan başka hesabına şifre koydu → modal artık hedef e-postayı yazıyor).
+- **Panel hızı kuralları (yeni modülde ZORUNLU, CLAUDE.md'ye de yazıldı):** her mutasyondan sonra `router.refresh()` (istemci önbelleği açık — yoksa bayat veri); server page sorguları `Promise.all`; listelerde `.limit()`. ⚠️ **Prefetch DEV'de kapalıdır** → hız yalnız prod'da ölçülür.
+
+---
+
+## 2026-07-14 — Panel hızı (iskelet → 20 ms) · slogan · Şifre Belirle · Ayarlar yerleşimi
+
+**Slogan değişti:** "Paranı yönet, geleceğini kur" → **"Parasını yöneten, geleceğini yönetir."** (hero + footer + PWA manifest + CTA bandı + `/bireysel`). Mobil app'te zaten 21.06'da değişmişti (cross-repo notu app GOREVLER'inde açıktı, kapatıldı). Hero başlığı yeni sloganda 4 satıra kırılıyordu → metin kutusu 520→580px, ölçek `clamp(44,7vw,80)` → `clamp(48,5vw,68)` (+mobil `clamp(33,9.5vw,56)`), `.hero-sub` `text-wrap:pretty` (öksüz "al." satırı). 7 genişlikte gerçek tarayıcıda ölçüldü: hepsinde tam 2 satır.
+
+**PANEL YAVAŞLIĞI — kök neden bulundu ve çözüldü (ölçüm: ~1.5 sn + iskelet → 14-26 ms, iskelet YOK).**
+Mehmet "Defteran'da tıklayınca anında açılıyor, bizde bekletiyor" dedi. İki bağımsız denetim aynı yere çıktı:
+- ⚠️ **ASIL SEBEP:** Next 16'da `<Link>` **dinamik** rotalarda yalnız `loading.tsx` sınırına kadar prefetch eder, **SAYFA VERİSİNİ GETİRMEZ** (docs `prefetching.md`: "Server roundtrip on click: Yes"). Tıklamada veri turu sıfırdan başlıyordu = gördüğümüz iskelet. İstemci bundle'ı suçsuz (geçişte inen JS 4-22 KB gzip — ölçüldü).
+- **Çözüm:** `experimental.dynamicOnHover` + Link'lerde `unstable_dynamicOnHover` (**ikisi birden şart**) → hover'da tam yük. + `Sidebar`'da `CORE_PREFETCH` (6 rota) `router.prefetch(href, {kind:"full"})` ile **programatik** ısıtma. ⚠️ `prefetch={true}` **VIEWPORT'a bağlıdır** → kapalı akordeon içindeki Faturalar hiç görünmediği için asla ısınmıyordu; dokunmatikte hover da yok. Ölçüm: hover'sız ısıtılmamış rota **1554 ms + iskelet** → programatik ısıtma sonrası **5-8 ms**.
+- **Diğer turlar:** `proxy.ts` `getUser()` → **`getClaims()`** (proje ES256 JWKS yayınlıyor → token YERELDE doğrulanır, ağ turu yok; eski HS256 token'da auth-js kendisi getUser'a düşer). JWKS önbelleği auth-js'te zaten **modül düzeyinde** (`GLOBAL_JWKS`) — kendi eklediğim önbellek katmanı gereksizdi, silindi.
+- **`staleTimes {dynamic:30}`** açıldı → geri dönüşler anında. ⚠️ Bir tur AÇILDI-GERİ ALINDI-tekrar açıldı: panel CRUD ekranlarının HİÇBİRİ `router.refresh()` çağırmıyordu; sunucu verisi `initialX` prop'u olarak `useState`'e tohumlandığı için önbellek açıkken sayfadan çıkıp dönmek **bayat payload**'u geri getiriyordu ("eklediğim işlem kayboldu", "bakiye güncellenmedi"). → **20 CRUD ekranı / ~52 handler**'a başarı yolunda `router.refresh()` eklendi (4 paralel ajan, diff elle denetlendi), sonra önbellek güvenle açıldı. Next 16'da tek `refresh()` **TÜM** segment önbelleğini düşürüyor (kaynak: `segment-cache/cache.js:238` `currentSegmentCacheVersion++`) → çapraz sayfa bayatlığı da çözülüyor.
+- **Vercel region `fra1` → `lhr1`** (Supabase `eu-west-2` Londra; her sorguda boşuna ~15-20 ms gidiyordu). **Plan: Hobby** → soğuk başlangıç var; prefetch onu maskeliyor (fonksiyon kullanıcı tıklamadan ısınıyor).
+- **Sıralı sorgular paralelleştirildi:** ayarlar (3 tur → paralel + mükerrer `profiles` sorgusu kalktı), izinler, stok.
+- **`AccountStatusGuard`:** 30sn yoklama → 5dk (realtime DELETE kanalı + sekmeye dönüş zaten yakalıyor; saatte ~240 gereksiz istek) + `focus`/`visibilitychange` çift tetikleme giderildi.
+- **proxy sertleştirmesi (denetimden):** `getClaims`'in 403'ü ALTYAPIDAN da gelebilir (jwks.json'a 403 → WAF/duraklatma) ve eski kod bunu "hesap silinmiş" sayıp **tüm kullanıcıların çerezini silip** `/giris?closed=1`'e atardı → çerez silme artık `getUser` ile teyit ediliyor. Ayrıca `getClaims` AuthError olmayan istisnaları rethrow ediyor (bozuk JWK'da WebCrypto) → `try/catch` yoksa panelin tamamı 500.
+
+**Şifre Belirle / Değiştir (web, Ayarlar → Hesap & Güvenlik):** mobil `change-password.tsx` paritesi. "Şifresi var mı" = **`user_metadata.has_password` ortak bayrağı** (⚠️ provider'a bakmak YANLIŞ: e-posta+OTP kullanıcısının da şifresi yok). Belirlemede mevcut şifre sorulmaz; değiştirmede önce `signInWithPassword` ile doğrulanır + sonra `signOut({scope:'others'})`. Şifre gücü göstergesi + Supabase hatalarının TR karşılıkları. Modal **hedef e-postayı** yazıyor.
+
+**Ayarlar yerleşimi:** 820px dar kolon (sağ taraf boş) → **tam genişlik + her bölüm kendi kartında**. Kutu-içinde-kutu ve hizasız satırlar giderildi; Tehlike Bölgesi'nde çift çerçeve önlendi (`:has()`). 4 sekme de canlı oturumla (test hesabı) headless doğrulandı.
 
 ---
 

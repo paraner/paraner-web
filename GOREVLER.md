@@ -4,19 +4,30 @@
 
 ## Şimdiki
 
-### 🔴 CANLI GÖZ TEYİDİ BEKLİYOR — 2026-07-13 (18 commit, hepsi deploy edildi)
+### 🔴 CANLI GÖZ TEYİDİ BEKLİYOR
 > İŞE BAŞLARKEN İLK BUNU SOR. Kod tarafı + headless doğrulandı; gerçek cihaz/göz onayı yok.
 
-**paraner.com (pazarlama)**
+**2026-07-14 turu**
+- [ ] **Mobil/tablet panel hızı** — telefondan panele gir, menüde gez: iskelet çıkıyor mu? (Masaüstü canlıda ölçüldü: 14-26 ms, iskelet yok. Dokunmatikte hover olmadığı için ayrı teyit gerekir; 6 çekirdek rota peşin ısıtılıyor, alt menüdekiler dokunuşta.)
+- [ ] **Yeni slogan** — hero/footer/CTA/`/bireysel` başlığında yazım + satır kırılması gözle düzgün mü?
+- [ ] **Şifre Belirle akışı (mobil↔web)** — web'den şifre belirlenen hesap MOBİLDE de e-posta+şifre ile giriyor mu? Mobil Profil → Güvenlik'te etiket "Şifre Değiştir"e döndü mü (ortak `has_password` bayrağı)?
+- [ ] **Ayarlar yeni yerleşim** — 4 sekme (Genel/İşletme/Bildirimler/Hesap & Güvenlik) senin gözünde de düzgün mü?
+
+**2026-07-13 turundan kalan**
 - [ ] **`/destek`** — SSS akordeonları açılıyor mu, WhatsApp kartı doğru numaraya gidiyor mu (`+90 532 237 99 09`)?
 - [ ] **Mega-menü (masaüstü)** — İşletme/Bireysel üstüne gel: panel ORTADA sabit duruyor mu, geçişte kapanmadan içerik KAYARAK mı değişiyor?
 - [ ] **Mobil menü** — drill-down (içeri giriş) akışı + kaydırma çubuğu artık yazılara değmiyor mu?
 - [ ] **Tipografi** — Playfair başlıklar (`/`, `/isletme`, `/bireysel`, `/destek`, `/gizlilik`) düzgün mü? Türkçe ğ/ş/İ harfleri doğru fontta mı?
 - [ ] **Google'da yeni title** — birkaç gün sürer. Search Console → URL Denetimi → "Dizine eklenmeyi iste" (`/`, `/destek`, `/isletme`, `/bireysel`).
+- [x] **Genel Bakış / hesap kartları** — Mehmet onayladı ("kartlarım tarafında güzel gözüküyor").
 
-**app.paraner.com (panel)**
-- [ ] **Genel Bakış** — ölü boşluk gitti mi? Grafik tam genişlikte okunur mu? Hesap kartları (1 / 2 / 3 hesapla) makul boyutta mı?
-- [ ] **Panel tipografisi** — 800/900 ağırlıklar kalktı; sayfa başlıkları 24/600. Modüllerde bozulan yer var mı?
+### 🐞 2026-07-14'te ortaya çıkan, HENÜZ YAPILMADI
+- [ ] **Yanlış şifreyle girişte kullanıcı hata görmüyor** — canlı denemede giriş reddedildi ama ekranda kalıcı bir uyarı yok (toast birkaç saniyede kayboluyor). `/giris` şifre akışında inline hata gösterilmeli.
+- [ ] **Apple "e-postamı gizle" (`@privaterelay.appleid.com`) + şifreyle giriş** — bu kullanıcılar giriş formuna hangi adresi yazacak? Web + mobil ortak soru; akış netleşmeli.
+- [ ] **Sayfa-özel iskeletler** — tek `app/panel/loading.tsx` (3 KPI + 6 satır) 29 sayfada gösteriliyor; Stok/Ayarlar gibi benzemeyen sayfalarda "yanlış iskelet" hissi veriyor. (Prefetch sayesinde artık nadir görünüyor → düşük öncelik.)
+- [ ] **`/panel/islemler` ikon yükü** — `lib/categoryIcons.tsx` 86 lucide ikonunu barrel import ediyor → o rotaya ~15 KB gzip (rota-özel yükün 2/3'ü). Tembel/parça import'a çevrilebilir.
+- [ ] **Genel Bakış `transactions` limitsiz** — 6 ayın tüm işlemleri çekiliyor (limit yok). Yoğun hesapta payload şişer; özet için RPC gerekir → **DB şeması = önce sor**.
+- [ ] **Vercel Hobby soğuk başlangıç** — prefetch maskeliyor ama ilk istek hâlâ soğuk. Pro + Fluid Compute değerlendirilebilir (ücret kararı Mehmet'te).
 
 ### Devam eden
 - [ ] **Genel mobil tarama:** ana sayfa + auth ekranlarında telefonda taşma/bozulma var mı, tek tek bak. (Auth + rozetler 06-29'da elden geçti; ana sayfa/diğer bölümler kaldı.)
@@ -72,7 +83,7 @@
 
 ### App Store gönderimi (web destek)
 - [ ] **Privacy Nutrition Labels** — App Store Connect anketi (panel işi, kod değil).
-- [ ] **Reviewer demo hesabı** — çalışan test e-posta+şifre (`admin@paraner.com`) + "işletme profili hazır" notu.
+- [x] **Reviewer demo hesabı** — `admin@paraner.com` (2026-07-14, işletme profili hazır; şifre Mehmet'te — **repo public, şifre buraya yazılmaz**). Aynı hesap canlı ölçüm/doğrulama için de kullanılıyor. App Store Connect'e girilecek.
 - [ ] Mobil gizlilik metnini değiştirirse `/gizlilik` ile eşitle.
 
 ### Auth / hesap
