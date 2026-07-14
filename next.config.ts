@@ -22,6 +22,14 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  experimental: {
+    // İstemci önbelleği (client cache) — panel sayfaları çerez okuduğu için hepsi DİNAMİK,
+    // dinamikte varsayılan TTL 0'dır (Next 15'te 30sn'den 0'a düştü) → aynı sayfaya geri
+    // dönmek bile sunucuya tam tur atıyordu. 30sn'ye çekildi: menüde gidip gelmek anında olur.
+    // Veri bayatlaması riski yok — ekleme/silme yapan client bileşenleri router.refresh()
+    // çağırıyor, bu da önbelleği tazeler.
+    staleTimes: { dynamic: 30, static: 180 },
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

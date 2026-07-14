@@ -10,18 +10,21 @@ export default async function IzinlerPage() {
     return <div className="panel-empty">Profil bulunamadı.</div>;
   }
 
-  const { data: employees } = await supabase
-    .from("employees")
-    .select("id, name")
-    .eq("user_id", profile.id)
-    .order("name", { ascending: true });
-
-  const { data: leaves } = await supabase
-    .from("employee_leaves")
-    .select("id, employee_id, leave_type, start_date, end_date, days, reason, status")
-    .eq("profile_id", profile.id)
-    .order("start_date", { ascending: false })
-    .limit(200);
+  // İki sorgu birbirinden BAĞIMSIZ (izinler employee_id'ye değil profile_id'ye bağlı)
+  // → paralel. Eskiden art arda await ediliyordu = boşuna bir ağ turu.
+  const [{ data: employees }, { data: leaves }] = await Promise.all([
+    supabase
+      .from("employees")
+      .select("id, name")
+      .eq("user_id", profile.id)
+      .order("name", { ascending: true }),
+    supabase
+      .from("employee_leaves")
+      .select("id, employee_id, leave_type, start_date, end_date, days, reason, status")
+      .eq("profile_id", profile.id)
+      .order("start_date", { ascending: false })
+      .limit(200),
+  ]);
 
   return (
     <IzinlerClient

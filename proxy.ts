@@ -53,10 +53,24 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  // Oturum doğrulama — getUser() DEĞİL, getClaims().
+  //
+  // getUser() her istekte Supabase Auth sunucusuna GERÇEK BİR HTTP TURU atıyordu; proxy
+  // panelin her isteğinde (RSC sayfa geçişleri dahil) çalıştığı için bu, her tıklamaya
+  // sabit ~150-250ms ekliyordu.
+  //
+  // getClaims() bu projede ağ turu YAPMAZ: proje asimetrik imza anahtarı (ES256) kullanıyor
+  // → JWKS bir kez çekilip önbelleğe alınır, token yerelde WebCrypto ile doğrulanır.
+  // Geriye dönük güvenli: token eski simetrik (HS256) anahtarla imzalıysa auth-js kendisi
+  // getUser()'a düşer (yani eski oturumlarda davranış aynen korunur). Süresi dolmuş token
+  // yine tazelenir (içeride getSession → refresh → setAll ile çerezler yazılır).
+  //
+  // Kayıp: silinmiş hesabın 403'ü artık burada görülmez (token exp'e kadar imzaca geçerli).
+  // Bunu zaten AccountStatusGuard (client) yakalıyor: getUser 403 → /giris?closed=1, hem
+  // açılışta hem odakta hem 30sn'de bir. Aşağıdaki 403 dalı, getClaims'in getUser'a düştüğü
+  // durumlar için korunuyor.
+  const { data: claimsData, error: userError } = await supabase.auth.getClaims();
+  const user = claimsData?.claims ? { id: claimsData.claims.sub } : null;
 
   const { pathname } = request.nextUrl;
 
