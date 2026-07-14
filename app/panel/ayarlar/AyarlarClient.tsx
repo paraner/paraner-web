@@ -6,7 +6,8 @@ import { createClient } from "../../../lib/supabase/client";
 import LogoutButton from "../LogoutButton";
 import { confirmDialog } from "../../components/confirm";
 import { showToast } from "../../components/toast";
-import { toCsv, downloadCsv } from "../../../lib/csv";
+import { toCsv, downloadCsv, parseCsv } from "../../../lib/csv";
+import { parseAmount } from "../../../lib/format";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import SaveButton from "../../../components/SaveButton";
@@ -53,11 +54,14 @@ export type DeviceRow = {
   last_seen: string;
 };
 
-/* Sekmeli ayarlar (SaaS standardı: kapsam ayrımı) —
-   Genel = aktif profile ait · İşletme = yalnız işletme profili · Bildirimler ·
-   Hesap & Güvenlik = kullanıcıya ait (profilden bağımsız) + tehlike bölgesi.
-   Derin link: ?tab=isletme (history.replaceState ile, sayfa yenilenmez). */
-type TabKey = "genel" | "isletme" | "bildirimler" | "hesap";
+/* Sekmeli ayarlar (SaaS standardı: kapsam ayrımı).
+   ⚠️ Eski "İşletme" sekmesi ÜÇ ilgisiz şeyi (fatura numaralama + veri yedekleme + roller)
+   tek çuvala koyuyordu → ayrıldı:
+     Hesap Bilgileri (profil/şirket) · Fatura (numaralama; ileride tasarım) ·
+     Veri & Yedekleme (dışa/içe aktarma — bireyselde de var) · Bildirimler ·
+     Hesap & Güvenlik (kullanıcıya ait + tehlike bölgesi).
+   Derin link: ?tab=veri (history.replaceState ile, sayfa yenilenmez). */
+type TabKey = "genel" | "fatura" | "veri" | "bildirimler" | "hesap";
 
 export default function AyarlarClient({
   email,
@@ -79,7 +83,9 @@ export default function AyarlarClient({
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: "genel", label: "Hesap Bilgileri" },
-    ...(isBusiness ? [{ key: "isletme" as TabKey, label: "İşletme" }] : []),
+    // Fatura yalnız işletmede; Veri & Yedekleme HERKESTE (bireysel de işlemlerini indirebilmeli)
+    ...(isBusiness ? [{ key: "fatura" as TabKey, label: "Fatura" }] : []),
+    { key: "veri", label: "Veri & Yedekleme" },
     { key: "bildirimler", label: "Bildirimler" },
     { key: "hesap", label: "Hesap & Güvenlik" },
   ];
@@ -182,20 +188,34 @@ export default function AyarlarClient({
               </div>
             </div>
           )}
+
+          {/* Ekip erişimi "kim bu hesaba girebilir" sorusudur → İşletme/Fatura değil,
+              Hesap Bilgileri'nin altına ait. Planı: COKLU-HESAP.md */}
+          {isBusiness && <RolesSoon />}
         </>
       )}
 
-      {tab === "isletme" && isBusiness && active && (
+      {tab === "fatura" && isBusiness && active && (
         <>
           <InvoiceNumbering
             profileId={active.id}
             initialPrefix={active.invoice_prefix ?? "MGZR"}
             initialNext={active.invoice_next_number ?? 1}
           />
-          <BackupExport profileId={active.id} profileName={active.profile_name} />
-          <RolesSoon />
+          <InvoiceDesignSoon />
         </>
       )}
+
+      {tab === "veri" &&
+        (active ? (
+          <DataBackup
+            profileId={active.id}
+            profileName={active.profile_name}
+            isBusiness={isBusiness}
+          />
+        ) : (
+          <p className="panel-sub">Profil bulunamadı.</p>
+        ))}
 
       {tab === "bildirimler" &&
         (active ? (
@@ -1329,114 +1349,509 @@ function NotificationPrefs({
   );
 }
 
-/* ── Yedekleme / Veri Dışa Aktarma ── */
-function BackupExport({
+
+/* ══ Veri & Yedekleme ═══════════════════════════════════════════════════════
+   Dışa aktarma: her modül ayrı CSV + tümü tek JSON yedek.
+   İçe aktarma: CSV → müşteri/tedarikçi VEYA ürün (rakipten göç silahı — Defteran'da yok).
+   Hepsi profil-bazlı (.eq user_id/profile_id); insert kolonları modüllerin kendi
+   kullandığı kolonlarla birebir. */
+
+type ExportDef = {
+  key: string;
+  label: string;
+  desc: string;
+  business?: boolean;
+  run: (sb: ReturnType<typeof createClient>, profileId: string) => Promise<(string | number | null)[][]>;
+};
+
+const EXPORTS: ExportDef[] = [
+  {
+    key: "islemler",
+    label: "İşlemler",
+    desc: "Tüm gelir-gider kayıtları",
+    run: async (sb, pid) => {
+      const { data, error } = await sb
+        .from("transactions")
+        .select("date, type, title, category, amount, currency")
+        .eq("user_id", pid)
+        .order("date", { ascending: false });
+      if (error) throw error;
+      return [
+        ["Tarih", "Tür", "Açıklama", "Kategori", "Tutar", "Para Birimi"],
+        ...(data ?? []).map((t) => [
+          t.date ?? "",
+          t.type === "income" ? "Gelir" : "Gider",
+          t.title ?? "",
+          t.category ?? "",
+          t.amount ?? 0,
+          t.currency ?? "TRY",
+        ]),
+      ];
+    },
+  },
+  {
+    key: "faturalar",
+    label: "Faturalar",
+    desc: "Satış ve alış faturaları",
+    business: true,
+    run: async (sb, pid) => {
+      const { data, error } = await sb
+        .from("invoices")
+        .select("invoice_number, invoice_date, type, customer_name, amount, currency, payment_status")
+        .eq("user_id", pid)
+        .order("invoice_date", { ascending: false });
+      if (error) throw error;
+      return [
+        ["Fatura No", "Tarih", "Tür", "Müşteri", "Tutar", "Para Birimi", "Durum"],
+        ...(data ?? []).map((i) => [
+          i.invoice_number ?? "",
+          i.invoice_date ?? "",
+          i.type === "income" ? "Satış" : "Alış",
+          i.customer_name ?? "",
+          i.amount ?? 0,
+          i.currency ?? "TRY",
+          i.payment_status === "paid" ? "Ödendi" : "Ödenmedi",
+        ]),
+      ];
+    },
+  },
+  {
+    key: "musteriler",
+    label: "Müşteriler & Tedarikçiler",
+    desc: "Cari kartları (vergi bilgileriyle)",
+    business: true,
+    run: async (sb, pid) => {
+      const { data, error } = await sb
+        .from("contacts")
+        .select("type, name, company_name, phone, email, tax_number, tax_office, address, note")
+        .eq("profile_id", pid)
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return [
+        ["Tür", "Ad", "Firma", "Telefon", "E-posta", "Vergi No", "Vergi Dairesi", "Adres", "Not"],
+        ...(data ?? []).map((c) => [
+          c.type === "supplier" ? "Tedarikçi" : "Müşteri",
+          c.name ?? "",
+          c.company_name ?? "",
+          c.phone ?? "",
+          c.email ?? "",
+          c.tax_number ?? "",
+          c.tax_office ?? "",
+          c.address ?? "",
+          c.note ?? "",
+        ]),
+      ];
+    },
+  },
+  {
+    key: "urunler",
+    label: "Ürün & Hizmetler",
+    desc: "Ürün kataloğu ve stok",
+    business: true,
+    run: async (sb, pid) => {
+      const { data, error } = await sb
+        .from("products")
+        .select("name, type, code, unit, buy_price, sell_price, vat_rate, stock_quantity, category")
+        .eq("user_id", pid)
+        .eq("is_active", true)
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return [
+        ["Ad", "Tür", "Kod", "Birim", "Alış Fiyatı", "Satış Fiyatı", "KDV %", "Stok", "Kategori"],
+        ...(data ?? []).map((p) => [
+          p.name ?? "",
+          p.type === "service" ? "Hizmet" : "Ürün",
+          p.code ?? "",
+          p.unit ?? "",
+          p.buy_price ?? 0,
+          p.sell_price ?? 0,
+          p.vat_rate ?? 0,
+          p.stock_quantity ?? 0,
+          p.category ?? "",
+        ]),
+      ];
+    },
+  },
+];
+
+function DataBackup({
   profileId,
   profileName,
+  isBusiness,
 }: {
   profileId: string;
   profileName: string | null;
+  isBusiness: boolean;
 }) {
   const supabase = createClient();
   const [busy, setBusy] = useState<string | null>(null);
 
   const today = new Date().toISOString().slice(0, 10);
-  const slug = (profileName ?? "isletme").replace(/[^a-z0-9]/gi, "-").toLowerCase();
+  const slug = (profileName ?? "paraner").replace(/[^a-z0-9]/gi, "-").toLowerCase();
+  const items = EXPORTS.filter((e) => isBusiness || !e.business);
 
-  async function exportTransactions() {
+  async function exportOne(def: ExportDef) {
     if (busy) return;
-    setBusy("tx");
-    const { data, error } = await supabase
-      .from("transactions")
-      .select("date, type, title, category, amount, currency")
-      .eq("user_id", profileId)
-      .order("date", { ascending: false });
-    if (error) {
-      showToast({ title: "Dışa aktarılamadı", message: "İşlemler indirilemedi, tekrar dene.", variant: "error" });
+    setBusy(def.key);
+    try {
+      const rows = await def.run(supabase, profileId);
+      if (rows.length <= 1) {
+        showToast({ title: "Kayıt yok", message: `${def.label} için dışa aktarılacak veri bulunamadı.`, variant: "error" });
+        return;
+      }
+      downloadCsv(`${slug}-${def.key}-${today}.csv`, toCsv(rows));
+    } catch {
+      showToast({ title: "Dışa aktarılamadı", message: `${def.label} indirilemedi, tekrar dene.`, variant: "error" });
+    } finally {
       setBusy(null);
-      return;
     }
-    const rows: (string | number)[][] = [
-      ["Tarih", "Tür", "Açıklama", "Kategori", "Tutar", "Para Birimi"],
-      ...(data ?? []).map((t) => [
-        t.date ?? "",
-        t.type === "income" ? "Gelir" : "Gider",
-        t.title ?? "",
-        t.category ?? "",
-        t.amount ?? 0,
-        t.currency ?? "TRY",
-      ]),
-    ];
-    downloadCsv(`${slug}-islemler-${today}.csv`, toCsv(rows));
-    setBusy(null);
   }
 
-  async function exportInvoices() {
+  // Tam yedek: tüm modüller tek JSON. (İnsan okumak için değil, taşımak/arşivlemek için.)
+  async function exportFullBackup() {
     if (busy) return;
-    setBusy("inv");
-    const { data, error } = await supabase
-      .from("invoices")
-      .select(
-        "invoice_number, invoice_date, type, customer_name, amount, currency, payment_status"
-      )
-      .eq("user_id", profileId)
-      .order("invoice_date", { ascending: false });
-    if (error) {
-      showToast({ title: "Dışa aktarılamadı", message: "Faturalar indirilemedi, tekrar dene.", variant: "error" });
+    setBusy("full");
+    try {
+      const bundle: Record<string, unknown> = {
+        exported_at: new Date().toISOString(),
+        profile: profileName,
+      };
+      for (const def of items) {
+        const rows = await def.run(supabase, profileId);
+        const [header, ...body] = rows;
+        bundle[def.key] = body.map((r) => Object.fromEntries((header as string[]).map((h, i) => [h, r[i]])));
+      }
+      const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${slug}-tam-yedek-${today}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      showToast({ title: "Yedek alınamadı", message: "Tam yedek oluşturulamadı, tekrar dene.", variant: "error" });
+    } finally {
       setBusy(null);
-      return;
     }
-    const rows: (string | number)[][] = [
-      ["Fatura No", "Tarih", "Tür", "Müşteri", "Tutar", "Para Birimi", "Durum"],
-      ...(data ?? []).map((i) => [
-        i.invoice_number ?? "",
-        i.invoice_date ?? "",
-        i.type === "income" ? "Satış" : "Alış",
-        i.customer_name ?? "",
-        i.amount ?? 0,
-        i.currency ?? "TRY",
-        i.payment_status === "paid" ? "Ödendi" : "Ödenmedi",
-      ]),
-    ];
-    downloadCsv(`${slug}-faturalar-${today}.csv`, toCsv(rows));
-    setBusy(null);
+  }
+
+  return (
+    <>
+      <div className="settings-block">
+        <h3>Dışa Aktarma</h3>
+        <p className="set-lead">
+          Verilerin her zaman senin. İstediğin an CSV olarak indir; Excel ve Google E-Tablolar ile açılır.
+        </p>
+        <div className="tx-list">
+          {items.map((def) => (
+            <div key={def.key} className="notif-row">
+              <div className="notif-info">
+                <div className="notif-label">{def.label}</div>
+                <div className="notif-desc">{def.desc}</div>
+              </div>
+              <button className="btn btn-ghost btn-sm" onClick={() => exportOne(def)} disabled={!!busy}>
+                {busy === def.key ? "Hazırlanıyor…" : "CSV indir"}
+              </button>
+            </div>
+          ))}
+          <div className="notif-row">
+            <div className="notif-info">
+              <div className="notif-label">Tam Yedek (JSON)</div>
+              <div className="notif-desc">Tüm modüller tek dosyada — arşiv ve taşıma için</div>
+            </div>
+            <button className="btn btn-ghost btn-sm" onClick={exportFullBackup} disabled={!!busy}>
+              {busy === "full" ? "Hazırlanıyor…" : "Yedek al"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {isBusiness && <CsvImport profileId={profileId} />}
+    </>
+  );
+}
+
+/* ── CSV İçe Aktarma ── başka programdan (Paraşüt/Defteran/Excel) göç.
+   İki hedef: müşteri/tedarikçi (contacts) veya ürün (products). Kullanıcı CSV yükler,
+   sütunları EŞLER (otomatik tahmin + elle düzelt), önizler, sonra toplu insert. */
+type ImportKind = "contacts" | "products";
+
+const IMPORT_SCHEMAS: Record<ImportKind, { label: string; fields: { key: string; label: string; required?: boolean }[] }> = {
+  contacts: {
+    label: "Müşteri / Tedarikçi",
+    fields: [
+      { key: "name", label: "Ad", required: true },
+      { key: "company_name", label: "Firma" },
+      { key: "phone", label: "Telefon" },
+      { key: "email", label: "E-posta" },
+      { key: "tax_number", label: "Vergi No" },
+      { key: "tax_office", label: "Vergi Dairesi" },
+      { key: "address", label: "Adres" },
+      { key: "note", label: "Not" },
+    ],
+  },
+  products: {
+    label: "Ürün / Hizmet",
+    fields: [
+      { key: "name", label: "Ad", required: true },
+      { key: "code", label: "Kod" },
+      { key: "unit", label: "Birim" },
+      { key: "buy_price", label: "Alış Fiyatı" },
+      { key: "sell_price", label: "Satış Fiyatı" },
+      { key: "vat_rate", label: "KDV %" },
+      { key: "stock_quantity", label: "Stok" },
+      { key: "category", label: "Kategori" },
+    ],
+  },
+};
+
+// Başlık adından hedef alanı tahmin et (TR eş anlamlılar)
+const HEADER_HINTS: Record<string, string> = {
+  ad: "name", isim: "name", "ad soyad": "name", "müşteri": "name", "unvan": "company_name",
+  firma: "company_name", "şirket": "company_name", telefon: "phone", tel: "phone", gsm: "phone",
+  "e-posta": "email", eposta: "email", mail: "email", "email": "email",
+  "vergi no": "tax_number", vkn: "tax_number", tckn: "tax_number", "vergi dairesi": "tax_office",
+  adres: "address", not: "note", "açıklama": "note",
+  kod: "code", "stok kodu": "code", birim: "unit", "alış": "buy_price", "alış fiyatı": "buy_price",
+  "satış": "sell_price", "satış fiyatı": "sell_price", fiyat: "sell_price", kdv: "vat_rate",
+  "kdv %": "vat_rate", "kdv oranı": "vat_rate", stok: "stock_quantity", miktar: "stock_quantity",
+  kategori: "category",
+};
+
+const NUMERIC_FIELDS = new Set(["buy_price", "sell_price", "vat_rate", "stock_quantity"]);
+
+function CsvImport({ profileId }: { profileId: string }) {
+  const router = useRouter();
+  const supabase = createClient();
+  const lock = useSubmitLock();
+
+  const [kind, setKind] = useState<ImportKind>("contacts");
+  const [rows, setRows] = useState<string[][] | null>(null);
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [map, setMap] = useState<Record<string, number>>({}); // alan → sütun index
+  const [importing, setImporting] = useState(false);
+  const [done, setDone] = useState<string | null>(null);
+
+  const schema = IMPORT_SCHEMAS[kind];
+
+  function onFile(file: File | undefined) {
+    if (!file) return;
+    setDone(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const parsed = parseCsv(String(reader.result ?? ""));
+      if (parsed.length < 2) {
+        showToast({ title: "Boş dosya", message: "CSV'de başlık + en az bir satır olmalı.", variant: "error" });
+        return;
+      }
+      const [head, ...body] = parsed;
+      setHeaders(head);
+      setRows(body);
+      // Otomatik eşleme: başlık ipuçlarından
+      const auto: Record<string, number> = {};
+      head.forEach((h, i) => {
+        const target = HEADER_HINTS[h.toLowerCase().trim()];
+        if (target && schema.fields.some((f) => f.key === target) && auto[target] === undefined) auto[target] = i;
+      });
+      setMap(auto);
+    };
+    reader.readAsText(file, "UTF-8");
+  }
+
+  function switchKind(k: ImportKind) {
+    setKind(k);
+    setMap({}); // şema değişti → eşlemeyi sıfırla
+    setDone(null);
+    if (rows) {
+      const auto: Record<string, number> = {};
+      headers.forEach((h, i) => {
+        const target = HEADER_HINTS[h.toLowerCase().trim()];
+        if (target && IMPORT_SCHEMAS[k].fields.some((f) => f.key === target) && auto[target] === undefined) auto[target] = i;
+      });
+      setMap(auto);
+    }
+  }
+
+  const nameMapped = map["name"] !== undefined;
+
+  async function runImport() {
+    if (!rows || !nameMapped || importing || !lock.acquire()) return;
+    setImporting(true);
+    try {
+      const payload = rows
+        .map((r) => {
+          const obj: Record<string, unknown> = kind === "contacts" ? { type: "customer" } : { is_active: true };
+          for (const f of schema.fields) {
+            const idx = map[f.key];
+            if (idx === undefined) continue;
+            let val: string | number | null = (r[idx] ?? "").trim() || null;
+            if (val !== null && NUMERIC_FIELDS.has(f.key)) {
+              const n = parseAmount(String(val));
+              val = isNaN(n) ? 0 : n;
+            }
+            obj[f.key] = val;
+          }
+          obj[kind === "contacts" ? "profile_id" : "user_id"] = profileId;
+          return obj;
+        })
+        .filter((o) => (o.name as string | null)?.toString().trim()); // adsız satırı atla
+
+      if (!payload.length) {
+        showToast({ title: "Geçerli satır yok", message: "Ad sütunu boş olmayan satır bulunamadı.", variant: "error" });
+        setImporting(false);
+        lock.release();
+        return;
+      }
+
+      const { error } = await supabase.from(kind === "contacts" ? "contacts" : "products").insert(payload);
+      if (error) throw error;
+
+      setDone(`${payload.length} kayıt içe aktarıldı.`);
+      setRows(null);
+      setHeaders([]);
+      setMap({});
+      showToast({ title: "İçe aktarıldı", message: `${payload.length} ${schema.label} kaydı eklendi.`, variant: "success" });
+      router.refresh();
+    } catch {
+      showToast({ title: "İçe aktarılamadı", message: "Kayıtlar eklenemedi, CSV'yi kontrol edip tekrar dene.", variant: "error" });
+    } finally {
+      setImporting(false);
+      lock.release();
+    }
   }
 
   return (
     <div className="settings-block">
-      <h3>Yedekleme &amp; Dışa Aktarma</h3>
-      <div className="tx-list">
-        <div className="notif-row">
-          <div className="notif-info">
-            <div className="notif-label">İşlemler (CSV)</div>
-            <div className="notif-desc">Tüm gelir-gider kayıtlarını indir</div>
-          </div>
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={exportTransactions}
-            disabled={busy === "tx"}
-          >
-            {busy === "tx" ? "Hazırlanıyor…" : "İndir"}
-          </button>
-        </div>
-        <div className="notif-row">
-          <div className="notif-info">
-            <div className="notif-label">Faturalar (CSV)</div>
-            <div className="notif-desc">Satış ve alış faturalarını indir</div>
-          </div>
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={exportInvoices}
-            disabled={busy === "inv"}
-          >
-            {busy === "inv" ? "Hazırlanıyor…" : "İndir"}
-          </button>
-        </div>
-      </div>
-      <p className="set-note">
-        Dosyalar Excel ve Google E-Tablolar ile açılır. Verilerin her zaman
-        güvende ve dışa aktarılabilir.
+      <h3>İçe Aktarma</h3>
+      <p className="set-lead">
+        Başka bir programdan (Excel, Paraşüt, Defteran…) müşteri veya ürün listeni CSV olarak buraya taşı.
       </p>
+
+      <div className="set-subtabs" role="tablist">
+        {(Object.keys(IMPORT_SCHEMAS) as ImportKind[]).map((k) => (
+          <button
+            key={k}
+            type="button"
+            role="tab"
+            aria-selected={kind === k}
+            className={`set-subtab${kind === k ? " active" : ""}`}
+            onClick={() => switchKind(k)}
+          >
+            {IMPORT_SCHEMAS[k].label}
+          </button>
+        ))}
+      </div>
+
+      {!rows ? (
+        <label className="logo-drop" style={{ cursor: "pointer", justifyContent: "center" }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>CSV dosyası seç</div>
+            <div className="fg-hint" style={{ marginTop: 4 }}>İlk satır başlık olmalı · UTF-8</div>
+          </div>
+          <input
+            type="file"
+            accept=".csv,text/csv"
+            hidden
+            onChange={(e) => {
+              onFile(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+        </label>
+      ) : (
+        <>
+          <p className="set-note" style={{ marginTop: 0 }}>
+            {rows.length} satır bulundu. Sütunları eşle (Ad zorunlu):
+          </p>
+          <div className="map-grid">
+            {schema.fields.map((f) => (
+              <div key={f.key} className="fg">
+                <label>
+                  {f.label}
+                  {f.required && <span style={{ color: "var(--danger)" }}> *</span>}
+                </label>
+                <select
+                  className="set-input"
+                  value={map[f.key] ?? ""}
+                  onChange={(e) =>
+                    setMap((p) => {
+                      const v = e.target.value;
+                      const n = { ...p };
+                      if (v === "") delete n[f.key];
+                      else n[f.key] = Number(v);
+                      return n;
+                    })
+                  }
+                >
+                  <option value="">— eşleşme yok —</option>
+                  {headers.map((h, i) => (
+                    <option key={i} value={i}>
+                      {h || `Sütun ${i + 1}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+
+          {nameMapped && (
+            <div className="import-preview">
+              <div className="fg-hint" style={{ marginBottom: 6 }}>Önizleme (ilk 3 satır):</div>
+              {rows.slice(0, 3).map((r, ri) => (
+                <div key={ri} className="import-preview-row">
+                  {schema.fields
+                    .filter((f) => map[f.key] !== undefined)
+                    .map((f) => (
+                      <span key={f.key}>
+                        <b>{f.label}:</b> {r[map[f.key]] || "—"}
+                      </span>
+                    ))}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {done && <p className="form-success">{done}</p>}
+
+          <div className="fg-actions" style={{ justifyContent: "space-between" }}>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => {
+                setRows(null);
+                setHeaders([]);
+                setMap({});
+                setDone(null);
+              }}
+              disabled={importing}
+            >
+              Vazgeç
+            </button>
+            {/* CsvImport bir <form> DEĞİL (dinamik alan eşleme UI'ı) → SaveButton'ın varsayılan
+                type="submit"'i hiçbir şey tetiklemez; type="button" + onClick şart. */}
+            <SaveButton type="button" onClick={runImport} busy={importing} disabled={!nameMapped || importing}>
+              {`${rows.length} Kaydı İçe Aktar`}
+            </SaveButton>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ── Fatura Tasarımı (Yakında) ── PDF/çıktı motoru + şema (kaşe/yazı tipi) gerektirir.
+   Önce fatura kalem editörü + PDF çıktısı gelmeli; tasarlanacak belge yokken ayar boşta kalır. */
+function InvoiceDesignSoon() {
+  return (
+    <div className="settings-block">
+      <h3>Fatura Tasarımı</h3>
+      <div className="soon-card">
+        <div className="soon-badge">Yakında</div>
+        <p>
+          Faturalarına logo, kaşe/imza ve kendi notlarını ekle; yazı tipini ve düzeni
+          seç. e-Fatura & e-Arşiv çıktısıyla birlikte geliyor.
+        </p>
+      </div>
     </div>
   );
 }

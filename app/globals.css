@@ -2581,14 +2581,32 @@ ul { list-style: none; }
 .logo-actions label.btn { cursor: pointer; }
 .logo-actions label.btn.is-disabled { opacity: 0.6; cursor: default; }
 
-/* ── İşletme ayarları: fatura numaralama ── */
-.np-preview {
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  padding: 20px; border-radius: 14px; margin-bottom: 18px;
-  background: rgba(0,191,166,0.08); border: 1px solid rgba(0,191,166,0.22);
+/* ── Veri & Yedekleme: CSV içe aktarma sütun eşleme ── */
+.map-grid { display: grid; grid-template-columns: 1fr; gap: 14px 20px; margin: 16px 0; }
+@media (min-width: 721px) { .map-grid { grid-template-columns: 1fr 1fr; } }
+.map-grid .fg select.set-input { width: 100%; cursor: pointer; }
+.import-preview {
+  border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px;
+  background: var(--card-2); margin-bottom: 16px;
 }
-.np-preview-label { font-size: 12px; font-weight: 600; color: var(--teal); }
-.np-preview-num { font-size: 28px; font-weight: 700; letter-spacing: 2px; color: var(--teal-2); }
+.import-preview-row {
+  display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px;
+  padding: 6px 0; border-bottom: 1px solid var(--border); color: var(--text-dim);
+}
+.import-preview-row:last-child { border-bottom: none; }
+.import-preview-row b { color: var(--text); font-weight: 600; }
+.form-success { font-size: 13px; color: #3BA55D; margin: 10px 0; font-weight: 600; }
+
+/* ── İşletme ayarları: fatura numaralama ── */
+/* Fatura no önizlemesi — eskiden kocaman yeşil kutuydu (teal), marka değişecek + boş boş
+   duruyordu. Kompakt, nötr rozet: sadece sonraki numarayı gösterir. */
+.np-preview {
+  display: inline-flex; align-items: baseline; gap: 10px;
+  padding: 12px 18px; border-radius: 12px; margin-bottom: 18px;
+  background: var(--card-2); border: 1px solid var(--border);
+}
+.np-preview-label { font-size: 12px; font-weight: 600; color: var(--text-dim); }
+.np-preview-num { font-size: 20px; font-weight: 700; letter-spacing: 1px; color: var(--text); font-family: var(--font-mono, ui-monospace, monospace); }
 .set-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
 .set-field label { font-size: 13px; font-weight: 600; }
 .set-hint { font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
