@@ -23,6 +23,18 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   experimental: {
+    // ─── "Tıkla → anında açıl" — İSKELETİN ASIL SEBEBİ VE ÇÖZÜMÜ ───
+    // Next, DİNAMİK sayfalarda link'leri önceden çekerken yalnızca loading.tsx sınırına kadar
+    // olan kabuğu getirir, VERİYİ GETİRMEZ (Next 16 docs, prefetching.md: "Server roundtrip on
+    // click: Yes"). Yani tıklandığı anda veri yolculuğu sıfırdan başlıyordu → iskelet.
+    // dynamicOnHover: fare linkin üstüne gelince (veya dokununca) prefetch TAM YÜKE yükselir
+    // → veri tıklamadan ÖNCE gelir, tıklama anında sayfa hazır olur, iskelet görünmez.
+    // Ayrıca Hobby planındaki soğuk başlangıcı da gizler: fonksiyon kullanıcı tıklamadan
+    // önce ısınmış olur. Maliyet yalnız kullanıcı NİYET gösterince (hover) ödenir.
+    // ⚠️ Bu bayrak OLMADAN Link'teki unstable_dynamicOnHover prop'u çalışmaz (ikisi de şart)
+    // ve prefetch DEV'de kapalıdır → yalnız prod build'de ölçülebilir.
+    dynamicOnHover: true,
+
     // İstemci önbelleği (client segment cache). Panel sayfaları çerez okuduğu için hepsi
     // DİNAMİK sayılır ve dinamikte varsayılan TTL 0'dır → aynı sayfaya geri dönmek bile
     // sunucuya tam tur atıyordu. 30sn: menüde gidip gelmek anında olur.

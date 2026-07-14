@@ -25,10 +25,27 @@ import {
 } from "lucide-react";
 import { BUSINESS_SECTIONS, type BusinessMenuItem } from "./businessMenu";
 
+// `unstable_dynamicOnHover` App Router Link'inde VAR (next/dist/client/app-dir/link.d.ts:125)
+// ama `next/link` girişinin tip tanımına henüz yansımamış → prop'u tipe tanıtan ince sarmalayıcı.
+// Davranış: fare linkin üstüne gelince prefetch TAM YÜKE (veri dahil) yükselir.
+const NavLink = Link as unknown as React.ComponentType<
+  React.ComponentProps<typeof Link> & { unstable_dynamicOnHover?: boolean }
+>;
+
 const MAX_PROFILES = 3; // mobil ile aynı: kullanıcı en fazla 3 hesap açabilir
 const COLLAPSE_KEY = "paraner-sidebar-collapsed";
 const FAV_KEY = "paraner-fav-ops"; // favori işlemler (web'e özel)
 // Sidebar genişlikleri (globals.css ile aynı): sürükle-bırak snap için referans
+// Çekirdek rotalar: menü göründüğü anda TAM YÜK (veri dahil) prefetch edilir → tıklama anında
+// açılır, iskelet görünmez. Yalnız bu 4'ü; alt menülerdeki 30+ link hover'da ısınıyor
+// (unstable_dynamicOnHover) — hepsini peşin çekmek her açılışta 30 sunucu render'ı demek olurdu.
+const CORE_PREFETCH = new Set([
+  "/panel",
+  "/panel/islemler",
+  "/panel/hesaplar",
+  "/panel/cuzdanim",
+]);
+
 const SIDEBAR_OPEN = 248;
 const SIDEBAR_COLLAPSED = 74;
 const SIDEBAR_MID = (SIDEBAR_OPEN + SIDEBAR_COLLAPSED) / 2;
@@ -227,13 +244,14 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
     return (
       <div key={favKey} className="nav-subitem-row">
         {item.href ? (
-          <Link
+          <NavLink
             href={item.href}
             className={`nav-subitem${isActive(item.href) ? " active" : ""}`}
+            unstable_dynamicOnHover
           >
             <span className="nav-subicon">{item.icon}</span>
             <span className="nav-label">{item.label}</span>
-          </Link>
+          </NavLink>
         ) : (
           <div className="nav-subitem soon">
             <span className="nav-subicon">{item.icon}</span>
@@ -572,15 +590,20 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
             <div key={gi} className="nav-group">
               {g.label && <div className="nav-group-label">{g.label}</div>}
               {g.items.map((item) => (
-                <Link
+                <NavLink
                   key={item.href}
                   href={item.href}
                   className={`panel-nav-item${isActive(item.href) ? " active" : ""}`}
                   title={collapsed ? item.label : undefined}
+                  // Çekirdek rotalar (Genel Bakış / İşlemler / Hesaplar / Cüzdanım): hover'ı
+                  // BEKLEMEDEN tam yükü (veri dahil) çek → menüde bunlar hep sıcak, tıklama anında.
+                  // Alt menülerdeki 30+ link'e verilmez; onlar hover'da yükseliyor (aşağıda).
+                  prefetch={CORE_PREFETCH.has(item.href) ? true : undefined}
+                  unstable_dynamicOnHover
                 >
                   {item.icon}
                   <span className="nav-label">{item.label}</span>
-                </Link>
+                </NavLink>
               ))}
             </div>
           ))}
@@ -641,14 +664,15 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
 
       {/* Ayarlar — kaydırmadan bağımsız, en altta sabit */}
       <div className="nav-footer">
-        <Link
+        <NavLink
           href="/panel/ayarlar"
           className={`panel-nav-item${pathname === "/panel/ayarlar" ? " active" : ""}`}
           title={collapsed ? "Ayarlar" : undefined}
+          unstable_dynamicOnHover
         >
           <Settings />
           <span className="nav-label">Ayarlar</span>
-        </Link>
+        </NavLink>
       </div>
 
       {/* Daralt / genişlet — sağ kenara yüzen yuvarlak kol.

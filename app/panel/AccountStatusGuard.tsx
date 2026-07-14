@@ -121,14 +121,19 @@ export default function AccountStatusGuard() {
     })();
 
     check();
+    // Sekmeye dönüş: SADECE visibilitychange dinleniyor. Eskiden "focus" da dinleniyordu →
+    // sekmeye dönüşte check() İKİ KEZ çalışıyor, her seferinde 2 ağ isteği (getUser +
+    // user_devices) gidiyordu.
     const onVisible = () => {
       if (!document.hidden) check();
     };
-    window.addEventListener("focus", check);
     document.addEventListener("visibilitychange", onVisible);
-    const pollTimer = setInterval(check, 30_000);
+    // Yoklama 30sn → 5dk. Uzaktan çıkış/silme zaten (a) realtime DELETE kanalıyla ANINDA ve
+    // (b) sekmeye her dönüşte yakalanıyor; 30sn'lik yoklama sekme açık kaldıkça saatte ~240
+    // gereksiz istek üretiyordu. 5dk yalnızca "sekme hiç kapanmıyor + realtime düştü" için
+    // güvenlik ağı.
+    const pollTimer = setInterval(check, 5 * 60_000);
     return () => {
-      window.removeEventListener("focus", check);
       document.removeEventListener("visibilitychange", onVisible);
       clearInterval(pollTimer);
       if (channel) supabase.removeChannel(channel);
