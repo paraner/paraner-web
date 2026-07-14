@@ -22,12 +22,17 @@ export default async function AyarlarPage() {
   ]);
 
   const email = userData?.user?.email ?? "—";
+  // Şifresi var mı? Mobil ile ORTAK bayrak (auth user_metadata.has_password) — Google/Apple ve
+  // e-posta+OTP kullanıcılarının şifresi yoktur → "Şifre Belirle" gösterilir. Provider'a bakmak
+  // yanlış olurdu (OTP kullanıcısının provider'ı "email" ama şifresi yok).
+  const hasPassword = Boolean(userData?.user?.user_metadata?.has_password);
 
   return (
     <AyarlarClient
       email={email}
       profiles={profiles as unknown as Profile[]}
       devices={(devices as DeviceRow[]) ?? []}
+      hasPassword={hasPassword}
     />
   );
 }

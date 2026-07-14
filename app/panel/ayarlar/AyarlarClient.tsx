@@ -7,6 +7,10 @@ import LogoutButton from "../LogoutButton";
 import { confirmDialog } from "../../components/confirm";
 import { showToast } from "../../components/toast";
 import { toCsv, downloadCsv } from "../../../lib/csv";
+import Modal from "../../../components/ui/Modal";
+import Field from "../../../components/ui/Field";
+import SaveButton from "../../../components/SaveButton";
+import { useSubmitLock } from "../../../lib/useSubmitLock";
 
 export type Profile = {
   id: string;
@@ -38,10 +42,13 @@ export default function AyarlarClient({
   email,
   profiles,
   devices,
+  hasPassword,
 }: {
   email: string;
   profiles: Profile[];
   devices: DeviceRow[];
+  /** Kullanıcının şifresi var mı (auth user_metadata.has_password) → "Şifre Belirle" / "Şifre Değiştir" */
+  hasPassword: boolean;
 }) {
   const supabase = createClient();
   const router = useRouter();
@@ -231,6 +238,8 @@ export default function AyarlarClient({
             </div>
           </div>
 
+          <PasswordSection email={email} initialHasPassword={hasPassword} />
+
           <DevicesSection devices={devices} />
 
           <div className="settings-block">
@@ -240,6 +249,228 @@ export default function AyarlarClient({
 
           <DeleteAccountSection />
         </>
+      )}
+    </div>
+  );
+}
+
+/* ── Şifre Belirle / Şifre Değiştir ── Mobil `app/change-password.tsx` paritesi.
+   Google/Apple ile kayıt olan (ve e-posta+OTP ile kayıt olan) kullanıcının şifresi YOKTUR →
+   burada belirler; sonra e-posta+şifre ile de girebilir.
+
+   ⚠️ "Şifresi var mı" kararı PROVIDER'a bakılarak verilemez: e-posta+OTP kullanıcısının da
+   şifresi yoktur. Mobil bunun için `user_metadata.has_password` bayrağını kullanıyor; web de
+   aynı bayrağı okuyup yazıyor (tek kaynak → iki uygulamada da doğru etiket). */
+function strengthOf(pw: string): { level: number; label: string; color: string } {
+  if (!pw) return { level: 0, label: "", color: "" };
+  let score = 0;
+  if (pw.length >= 6) score++;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  if (score <= 1) return { level: 1, label: "Zayıf", color: "#E24B4A" };
+  if (score <= 2) return { level: 2, label: "Orta", color: "#E0A030" };
+  if (score <= 3) return { level: 3, label: "İyi", color: "#E0A030" };
+  return { level: 4, label: "Güçlü", color: "#3BA55D" };
+}
+
+function PasswordSection({
+  email,
+  initialHasPassword,
+}: {
+  email: string;
+  initialHasPassword: boolean;
+}) {
+  const supabase = createClient();
+  const [hasPassword, setHasPassword] = useState(initialHasPassword);
+  const [open, setOpen] = useState(false);
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [show, setShow] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const lock = useSubmitLock();
+
+  // Şifre YOKSA "belirleme" modu: mevcut şifre sorulmaz (oturum zaten geçerli).
+  const isSet = !hasPassword;
+  const strength = strengthOf(next);
+  const canSubmit =
+    (isSet || current.length > 0) && next.length >= 6 && confirm.length > 0 && next === confirm;
+
+  function close() {
+    if (saving) return;
+    setOpen(false);
+    setCurrent("");
+    setNext("");
+    setConfirm("");
+    setError(null);
+  }
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    if (!canSubmit || !lock.acquire()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      // Değiştirme modunda önce ESKİ şifreyi doğrula (belirleme modunda böyle bir şifre yok).
+      if (!isSet) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password: current,
+        });
+        if (signInError) {
+          setError("Mevcut şifren yanlış.");
+          return;
+        }
+        if (current === next) {
+          setError("Yeni şifre, mevcut şifrenden farklı olmalı.");
+          return;
+        }
+      }
+
+      const { error: updErr } = await supabase.auth.updateUser({
+        password: next,
+        data: { has_password: true }, // mobil ile ortak bayrak → etiket iki uygulamada da doğru
+      });
+      if (updErr) throw updErr;
+
+      // Şifre DEĞİŞTİRİLDİYSE diğer cihazların oturumunu kapat (güvenlik).
+      // Belirleme modunda kapatılmaz: kullanıcının başka şifreli oturumu zaten yok, telefonundan
+      // durduk yere atmanın anlamı olmaz (mobil de böyle yapıyor).
+      if (!isSet) {
+        try { await supabase.auth.signOut({ scope: "others" }); } catch { /* önemsiz */ }
+      }
+
+      setHasPassword(true);
+      showToast({
+        title: isSet ? "Şifre belirlendi" : "Şifre değişti",
+        message: isSet
+          ? "Artık e-posta ve şifrenle de giriş yapabilirsin."
+          : "Diğer cihazlardan çıkış yapıldı.",
+        variant: "success",
+      });
+      close();
+    } catch (err) {
+      // Supabase hata metinlerini kullanıcı diline çevir (mobil ile aynı eşleme).
+      const raw = ((err as Error)?.message || "").toLowerCase();
+      if (raw.includes("different") || raw.includes("same")) {
+        if (isSet) {
+          // Hesapta ZATEN şifre var ama bayrak işaretsizmiş → bayrağı düzelt (etiket artık doğru olur).
+          try {
+            await supabase.auth.updateUser({ data: { has_password: true } });
+            setHasPassword(true);
+          } catch { /* yoksay */ }
+          setError(
+            "Bu hesapta zaten bir şifre tanımlı. Onunla giriş yapabilirsin; değiştirmek istersen FARKLI bir şifre gir."
+          );
+        } else {
+          setError("Yeni şifre, mevcut şifrenden farklı olmalı.");
+        }
+      } else if (
+        raw.includes("weak") || raw.includes("pwned") || raw.includes("leaked") || raw.includes("compromised")
+      ) {
+        setError("Bu şifre çok yaygın/güvensiz. Daha güçlü bir şifre seç.");
+      } else if (raw.includes("at least") || raw.includes("6 characters") || raw.includes("short")) {
+        setError("Şifre en az 6 karakter olmalı.");
+      } else if (raw.includes("network") || raw.includes("fetch") || raw.includes("timeout")) {
+        setError("Bağlantı hatası. İnternetini kontrol edip tekrar dene.");
+      } else {
+        setError(isSet ? "Şifre belirlenemedi. Tekrar dene." : "Şifre değiştirilemedi. Tekrar dene.");
+      }
+    } finally {
+      setSaving(false);
+      lock.release();
+    }
+  }
+
+  return (
+    <div className="settings-block">
+      <h3>Şifre</h3>
+      <div className="set-field">
+        <div className="sf-info">
+          <label>{hasPassword ? "Şifre Değiştir" : "Şifre Belirle"}</label>
+          <span className="sf-hint">
+            {hasPassword
+              ? "Şifreni güncelle. Değiştirince diğer cihazlardaki oturumlar kapanır."
+              : "Hesabına şifre belirle; doğrulama kodunun yanı sıra e-posta ve şifrenle de giriş yapabilirsin."}
+          </span>
+        </div>
+        <button type="button" className="btn btn-sm" onClick={() => setOpen(true)}>
+          {hasPassword ? "Değiştir" : "Şifre Belirle"}
+        </button>
+      </div>
+
+      {open && (
+        <Modal title={isSet ? "Şifre Belirle" : "Şifre Değiştir"} onClose={close} busy={saving}>
+          <form onSubmit={handleSave}>
+            {!isSet && (
+              <Field label="Mevcut Şifre">
+                <input
+                  className="input"
+                  type={show ? "text" : "password"}
+                  value={current}
+                  onChange={(e) => setCurrent(e.target.value)}
+                  placeholder="Mevcut şifreni gir"
+                  autoComplete="current-password"
+                />
+              </Field>
+            )}
+
+            <Field label={isSet ? "Şifre" : "Yeni Şifre"}>
+              <input
+                className="input"
+                type={show ? "text" : "password"}
+                value={next}
+                onChange={(e) => setNext(e.target.value)}
+                placeholder="En az 6 karakter"
+                autoComplete="new-password"
+              />
+            </Field>
+
+            {next.length > 0 && (
+              <div className="pw-strength">
+                <div className="pw-bar">
+                  {[1, 2, 3, 4].map((i) => (
+                    <span
+                      key={i}
+                      className="pw-seg"
+                      style={{ background: i <= strength.level ? strength.color : "rgba(255,255,255,0.12)" }}
+                    />
+                  ))}
+                </div>
+                <span className="pw-label" style={{ color: strength.color }}>{strength.label}</span>
+              </div>
+            )}
+
+            <Field label={isSet ? "Şifre (Tekrar)" : "Yeni Şifre (Tekrar)"}>
+              <input
+                className="input"
+                type={show ? "text" : "password"}
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                placeholder="Şifreyi tekrar gir"
+                autoComplete="new-password"
+              />
+            </Field>
+
+            {confirm.length > 0 && next !== confirm && (
+              <p className="form-error">Şifreler eşleşmiyor</p>
+            )}
+
+            <label className="pw-show">
+              <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />
+              <span>Şifreyi göster</span>
+            </label>
+
+            {error && <p className="form-error">{error}</p>}
+
+            <SaveButton busy={saving} disabled={!canSubmit || saving}>
+              {isSet ? "Şifreyi Belirle" : "Şifreyi Değiştir"}
+            </SaveButton>
+          </form>
+        </Modal>
       )}
     </div>
   );

@@ -2186,6 +2186,18 @@ ul { list-style: none; }
 
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .form-error { color: var(--danger-soft); font-size: 13px; margin-bottom: 12px; }
+
+/* ── Şifre gücü göstergesi (Ayarlar → Şifre Belirle/Değiştir; mobil change-password paritesi) ── */
+.pw-strength { display: flex; align-items: center; gap: 10px; margin: -6px 0 16px; }
+.pw-bar { display: flex; gap: 4px; flex: 1; }
+.pw-seg { flex: 1; height: 4px; border-radius: 2px; transition: background 0.2s; }
+.pw-label { font-size: 12px; font-weight: 600; min-width: 38px; }
+.pw-show {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 16px; cursor: pointer; user-select: none;
+}
+.pw-show input { width: 15px; height: 15px; accent-color: var(--primary); cursor: pointer; }
 .form-hint { color: var(--text-dim); font-size: 13px; margin-bottom: 12px; }
 .form-hint strong { color: var(--text); font-weight: 600; }
 
