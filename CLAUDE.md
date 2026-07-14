@@ -35,4 +35,10 @@ lib/
 
 **Kurallar:** Aktif profil = `profiles.is_active`; veri sorguları `user_id = aktif profil id` ile filtreli (RLS `user_profile_ids()`). Yeni modül = mevcut desen (server page + client component), `lib/format` + `lib/categories` kullan. Dil TR. Tek primary renk #00BFA6, koyu tema.
 
+### ⚠️ Yeni panel modülü eklerken ZORUNLU (panel hızı — 2026-07-14)
+1. **Her mutasyondan sonra `router.refresh()`** (insert/update/delete/upsert/rpc; yalnız BAŞARI yolunda, handler sonunda bir kez).
+   Sebep: `next.config.ts`'te istemci önbelleği AÇIK (`staleTimes.dynamic: 30`). Sunucu verisi Client'a `initialX` prop'u olarak geçip `useState`'e tohumlandığı için, refresh çağrılmazsa kullanıcı sayfadan çıkıp 30sn içinde dönünce **BAYAT veri** görür ("eklediğim kayıt kayboldu", "bakiye güncellenmedi"). Next 16'da tek `refresh()` TÜM segment önbelleğini düşürür → çapraz sayfa etkisi de çözülür.
+2. **Server page'de sorgular `Promise.all` ile PARALEL.** Ardışık `await` = fazladan ağ turu. (Profil id'ye gerçekten bağımlı olan sorgu zorunlu istisnadır.)
+3. **Listelere `.limit()`** koy; `select("*")` yok, kolon listesi yaz.
+
 > İş akışı (işe başla / işi bitir) + bekleyenler: `GOREVLER.md`, `DAILY_LOG.md`.
