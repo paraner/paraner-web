@@ -65,12 +65,28 @@ export async function proxy(request: NextRequest) {
   // getUser()'a düşer (yani eski oturumlarda davranış aynen korunur). Süresi dolmuş token
   // yine tazelenir (içeride getSession → refresh → setAll ile çerezler yazılır).
   //
+  // JWKS önbelleği auth-js'te MODÜL düzeyinde (GLOBAL_JWKS, storageKey ile paylaşılır) →
+  // proxy her istekte yeni istemci kursa bile anahtar süreç başına 10 dakikada bir çekilir.
+  //
   // Kayıp: silinmiş hesabın 403'ü artık burada görülmez (token exp'e kadar imzaca geçerli).
   // Bunu zaten AccountStatusGuard (client) yakalıyor: getUser 403 → /giris?closed=1, hem
-  // açılışta hem odakta hem 30sn'de bir. Aşağıdaki 403 dalı, getClaims'in getUser'a düştüğü
-  // durumlar için korunuyor.
-  const { data: claimsData, error: userError } = await supabase.auth.getClaims();
-  const user = claimsData?.claims ? { id: claimsData.claims.sub } : null;
+  // açılışta hem odakta hem 30sn'de bir.
+  //
+  // try/catch ŞART: getClaims, AuthError olmayan istisnaları (bozuk JWK'da WebCrypto'nun
+  // OperationError'ı gibi) yeniden fırlatıyor. Yakalanmazsa proxy patlar → panelin TAMAMI
+  // 500 döner. Böyle bir durumda kullanıcıyı atmıyoruz: "oturum çözülemedi" gibi davranıp
+  // aşağıdaki güvenlik ağına (çerez varsa içeride bırak) düşürüyoruz.
+  let claims: { sub?: string } | null = null;
+  let authError: { status?: number } | null = null;
+  try {
+    const { data, error } = await supabase.auth.getClaims();
+    claims = data?.claims ?? null;
+    authError = (error as { status?: number } | null) ?? null;
+  } catch {
+    authError = {}; // status yok → "geçici hata" dalı (aşağıda: çerez varsa ATMA)
+  }
+  const user = claims?.sub ? { id: claims.sub } : null;
+  const userError = authError;
 
   const { pathname } = request.nextUrl;
 
@@ -94,10 +110,16 @@ export async function proxy(request: NextRequest) {
   // yoksa (gerçekten çıkış yapılmış) girişe yönlendir. (Eskiden her getUser=null'da atıyordu →
   // sayfa geçişlerinde durduk yere giriş ekranına düşüyordu.)
   if (!user) {
-    // KESİN silinme: getUser HTTP 403 → kullanıcı sunucuda yok (hesap kalıcı kapatılmış).
-    // Çerezleri temizle + girişe at + ?closed=1 ile bildir. (Geçici ağ hatası status
-    // vermez → aşağıdaki "içeride bırak" dalına düşer, ATMAZ — 23.06 kararlılık kuralı.)
-    if ((userError as { status?: number } | null)?.status === 403) {
+    // KESİN silinme: kullanıcı sunucuda yok (hesap kalıcı kapatılmış) → çerezleri temizle +
+    // girişe at + ?closed=1 ile bildir. (Geçici hata status vermez → aşağıdaki "içeride bırak"
+    // dalına düşer, ATMAZ — 23.06 kararlılık kuralı.)
+    //
+    // ⚠️ 403'e KÖRÜ KÖRÜNE GÜVENME: getClaims'in hatası kullanıcıdan değil ALTYAPIDAN da
+    // gelebilir (ör. .well-known/jwks.json'a 403 → WAF/CDN engeli, proje duraklatma). Öyle bir
+    // 403'te herkesin çerezini silip "hesabınız kapatıldı" demek olurdu. Bu yüzden çerez silme
+    // kararını, KULLANICIYA ÖZGÜ bir 403 ile teyit ediyoruz: getUser (uzak tur) da 403 derse
+    // hesap gerçekten silinmiştir. Bu ekstra tur sadece bu nadir dalda ödenir.
+    if (userError?.status === 403 && (await isUserDeleted(supabase))) {
       const url = request.nextUrl.clone();
       url.hostname = hostname.replace(/^app\./, "");
       url.pathname = "/giris";
@@ -136,6 +158,20 @@ export async function proxy(request: NextRequest) {
   }
 
   return response;
+}
+
+// Hesap sunucuda KALICI silinmiş mi? Yalnızca 403 teyidi için çağrılır (nadir dal).
+// getUser kullanıcıya özgü yanıt verir: 403 → kullanıcı yok. Ağ/altyapı hatasında false
+// döner (yani "silinmiş" sayılmaz) → kullanıcı yanlışlıkla dışarı atılmaz.
+async function isUserDeleted(
+  supabase: ReturnType<typeof createServerClient>
+): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    return (error as { status?: number } | null)?.status === 403 && !data?.user;
+  } catch {
+    return false;
+  }
 }
 
 // Tazelenen oturum cookie'lerini yeni yanıta (redirect/rewrite) taşır

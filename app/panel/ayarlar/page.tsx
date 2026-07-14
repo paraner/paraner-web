@@ -6,12 +6,14 @@ export default async function AyarlarPage() {
   const supabase = await createClient();
 
   // Eskiden 3 ağ turu ART ARDA gidiyordu: auth.getUser() → profiles → user_devices.
-  //  - getUser() (uzak tur) yerine getClaims(): e-posta JWT'nin içinde, yerelde okunur.
+  // Artık üçü de PARALEL + profiles sorgusu tamamen eksildi:
   //  - profiles: layout zaten getProfiles() ile çekiyor ve React cache()'li → aynı istekte
-  //    ikinci kez sorgulamak yerine paylaşılan sonucu kullanıyoruz (bir sorgu eksildi).
-  //  - devices: artık claims/profiles ile PARALEL.
-  const [claimsRes, profiles, { data: devices }] = await Promise.all([
-    supabase.auth.getClaims(),
+  //    ikinci kez sorgulamak yerine paylaşılan sonucu kullanıyoruz.
+  //  - getUser() burada BİLEREK korundu (getClaims'e çevrilmedi): e-posta JWT'nin içinde
+  //    yazıldığı andaki değerdir; kullanıcı e-postasını değiştirince token tazelenene kadar
+  //    (~1 saat) ESKİ adres görünürdü. Ayarlar nadiren açılan bir sayfa, doğruluk hızdan önce.
+  const [{ data: userData }, profiles, { data: devices }] = await Promise.all([
+    supabase.auth.getUser(),
     getProfiles(),
     supabase
       .from("user_devices")
@@ -19,7 +21,7 @@ export default async function AyarlarPage() {
       .order("last_seen", { ascending: false }),
   ]);
 
-  const email = (claimsRes.data?.claims?.email as string | undefined) ?? "—";
+  const email = userData?.user?.email ?? "—";
 
   return (
     <AyarlarClient

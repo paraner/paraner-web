@@ -22,14 +22,15 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
-  experimental: {
-    // İstemci önbelleği (client cache) — panel sayfaları çerez okuduğu için hepsi DİNAMİK,
-    // dinamikte varsayılan TTL 0'dır (Next 15'te 30sn'den 0'a düştü) → aynı sayfaya geri
-    // dönmek bile sunucuya tam tur atıyordu. 30sn'ye çekildi: menüde gidip gelmek anında olur.
-    // Veri bayatlaması riski yok — ekleme/silme yapan client bileşenleri router.refresh()
-    // çağırıyor, bu da önbelleği tazeler.
-    staleTimes: { dynamic: 30, static: 180 },
-  },
+  // ⚠️ experimental.staleTimes (istemci önbelleği) BİLEREK KAPALI.
+  // Bir tur açıldı (dynamic: 30) ve geri alındı: panel CRUD ekranlarının HİÇBİRİ
+  // mutasyondan sonra router.refresh() çağırmıyor (yalnız Ayarlar + Sidebar profil işlemleri
+  // çağırıyor). Sunucu verisi Client'a initialX prop'u olarak geçip useState'e tohumlandığı
+  // için, önbellek açıkken sayfadan çıkıp 30sn içinde geri dönmek yerel state'i siler ve
+  // BAYAT RSC payload'unu geri getirir → "eklediğim işlem kayboldu", "bakiye güncellenmedi",
+  // "transfer listede yok". Para ekranında kabul edilemez.
+  // Geri açmanın ön koşulu: her mutasyondan sonra router.refresh() (Next 16'da tek çağrı
+  // TÜM segment önbelleğini geçersiz kılar → çapraz sayfa bayatlığını da çözer).
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
