@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import PageHead from "../../../components/ui/PageHead";
@@ -27,6 +28,7 @@ export default function CalisanlarClient({
   employees: Employee[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<Employee[]>(initial);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
@@ -97,6 +99,8 @@ export default function CalisanlarClient({
         setList((prev) => [data as Employee, ...prev]);
       }
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -110,6 +114,7 @@ export default function CalisanlarClient({
     const { error } = await supabase.from("employees").delete().eq("id", emp.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== emp.id));
+    router.refresh();
   }
 
   return (

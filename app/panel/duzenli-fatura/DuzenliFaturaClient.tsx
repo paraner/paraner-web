@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { showToast } from "../../components/toast";
@@ -49,6 +50,7 @@ export default function DuzenliFaturaClient({
   items: RecurringInvoice[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<RecurringInvoice[]>(initial);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RecurringInvoice | null>(null);
@@ -138,6 +140,8 @@ export default function DuzenliFaturaClient({
         setList((prev) => [data as RecurringInvoice, ...prev]);
       }
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat liste/bakiye görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -153,6 +157,7 @@ export default function DuzenliFaturaClient({
       .eq("id", r.id);
     if (error) return;
     setList((prev) => prev.map((x) => (x.id === r.id ? { ...x, is_active: !r.is_active } : x)));
+    router.refresh();
   }
 
   const genLock = useSubmitLock();
@@ -242,6 +247,7 @@ export default function DuzenliFaturaClient({
         )
       );
       showToast({ title: "Fatura oluşturuldu", message: `${number} kesildi.`, variant: "success" });
+      router.refresh();
     } catch {
       showToast({ title: "Oluşturulamadı", message: "Fatura üretilemedi, tekrar dene.", variant: "error" });
     } finally {
@@ -255,6 +261,7 @@ export default function DuzenliFaturaClient({
     const { error } = await supabase.from("recurring_invoices").delete().eq("id", r.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== r.id));
+    router.refresh();
   }
 
   const today = todayStr();

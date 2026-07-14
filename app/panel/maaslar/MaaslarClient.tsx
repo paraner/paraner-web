@@ -2,6 +2,7 @@
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import Link from "next/link";
 import { createClient } from "../../../lib/supabase/client";
@@ -34,6 +35,7 @@ export default function MaaslarClient({
   payments: SalaryPayment[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<SalaryPayment[]>(initial);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -89,6 +91,8 @@ export default function MaaslarClient({
       if (error) throw error;
       setList((prev) => [data as SalaryPayment, ...prev]);
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -102,6 +106,7 @@ export default function MaaslarClient({
     const { error } = await supabase.from("salary_payments").delete().eq("id", p.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== p.id));
+    router.refresh();
   }
 
   if (employees.length === 0) {

@@ -294,6 +294,8 @@ export default function CuzdanimClient({
         });
       }
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
+      router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Kaydedilemedi.");
     } finally {
@@ -350,6 +352,7 @@ export default function CuzdanimClient({
         date: sDate,
       });
       setSelling(null);
+      router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Satış kaydedilemedi.");
     } finally {
@@ -364,6 +367,7 @@ export default function CuzdanimClient({
     setList((s) => s.filter((x) => x.id !== a.id));
     const { error: err } = await supabase.from("savings_assets").delete().eq("id", a.id);
     if (err) setList(prev); // geri al
+    else router.refresh();
   }
 
   return (

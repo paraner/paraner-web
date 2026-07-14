@@ -2,6 +2,7 @@
 import { confirmDialog } from "../../components/confirm";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
@@ -80,6 +81,7 @@ export default function FaturalarClient({
   initialFilter: "all" | "income" | "expense";
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<Invoice[]>(initial);
   // Tür filtresi (Tümü / Satış / Alış) — derin-link ?type= ile başlar
   const [listFilter, setListFilter] = useState(initialFilter);
@@ -244,6 +246,8 @@ export default function FaturalarClient({
       setNextNumber((nextNum as number) + 1);
       setList((prev) => [data as Invoice, ...prev]);
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat liste/bakiye görünmez.
+      router.refresh();
     } catch {
       setError("Fatura kaydedilemedi. Tekrar dene.");
     } finally {
@@ -282,6 +286,7 @@ export default function FaturalarClient({
     const upd = { ...inv, payment_status: "paid", status: "paid", paid_amount: String(total) };
     setList((prev) => prev.map((x) => (x.id === inv.id ? upd : x)));
     setSelected((s) => (s && s.id === inv.id ? upd : s));
+    router.refresh();
   }
 
   async function handleDelete(inv: Invoice) {
@@ -290,6 +295,7 @@ export default function FaturalarClient({
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== inv.id));
     setSelected((s) => (s && s.id === inv.id ? null : s));
+    router.refresh();
   }
 
   function exportCsv() {

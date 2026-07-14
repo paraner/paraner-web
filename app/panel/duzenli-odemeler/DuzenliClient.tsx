@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate, parseAmount } from "../../../lib/format";
@@ -57,6 +58,7 @@ export default function DuzenliClient({
   items: Recurring[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<Recurring[]>(initial);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Recurring | null>(null);
@@ -154,6 +156,8 @@ export default function DuzenliClient({
         setList((prev) => [data as Recurring, ...prev]);
       }
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -174,6 +178,7 @@ export default function DuzenliClient({
         x.id === r.id ? { ...x, next_due_date: next, last_confirmed_date: todayStr() } : x
       )
     );
+    router.refresh();
   }
 
   async function toggleActive(r: Recurring) {
@@ -183,6 +188,7 @@ export default function DuzenliClient({
       .eq("id", r.id);
     if (error) return;
     setList((prev) => prev.map((x) => (x.id === r.id ? { ...x, is_active: !r.is_active } : x)));
+    router.refresh();
   }
 
   async function handleDelete(r: Recurring) {
@@ -190,6 +196,7 @@ export default function DuzenliClient({
     const { error } = await supabase.from("recurring_payments").delete().eq("id", r.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== r.id));
+    router.refresh();
   }
 
   const today = todayStr();

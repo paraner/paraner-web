@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
@@ -138,6 +139,7 @@ export default function IslemlerClient({
   initialTransactions: Tx[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<Tx[]>(initialTransactions);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Tx | null>(null);
@@ -368,6 +370,8 @@ export default function IslemlerClient({
         .eq("id", t.id);
       if (error) throw error;
       applyReceipts(t.id, urls, thumbs);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat liste/bakiye görünmez.
+      router.refresh();
     } catch {
       setError("Dosya yüklenemedi. Tekrar dene.");
     } finally {
@@ -397,6 +401,7 @@ export default function IslemlerClient({
         .eq("id", t.id);
       if (error) throw error;
       applyReceipts(t.id, urls, thumbs);
+      router.refresh();
     } catch {
       setError("Ek kaldırılamadı. Tekrar dene.");
     } finally {
@@ -509,6 +514,7 @@ export default function IslemlerClient({
       }
       setOpen(false);
       setEditing(null);
+      router.refresh();
     } catch {
       setError("İşlem kaydedilemedi. Tekrar dene.");
     } finally {
@@ -545,6 +551,7 @@ export default function IslemlerClient({
       }
       const ids = new Set(legs.map((l) => l.id));
       setList((prev) => prev.filter((x) => !ids.has(x.id)));
+      router.refresh();
       return;
     }
 
@@ -558,6 +565,7 @@ export default function IslemlerClient({
       await adjustBalance(t.bank_account_id, t.type === "expense" ? amt : -amt);
     }
     setList((prev) => prev.filter((x) => x.id !== t.id));
+    router.refresh();
   }
 
   const hasAny = list.length > 0 || month !== "";

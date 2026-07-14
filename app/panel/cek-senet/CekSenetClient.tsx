@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
@@ -48,6 +49,7 @@ export default function CekSenetClient({
   items: CheckNote[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<CheckNote[]>(initial);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<CheckNote | null>(null);
@@ -156,6 +158,8 @@ export default function CekSenetClient({
         setList((prev) => [data as CheckNote, ...prev]);
       }
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -169,6 +173,7 @@ export default function CekSenetClient({
     const { error } = await supabase.from("checks_notes").delete().eq("id", x.id);
     if (error) return;
     setList((prev) => prev.filter((i) => i.id !== x.id));
+    router.refresh();
   }
 
   return (

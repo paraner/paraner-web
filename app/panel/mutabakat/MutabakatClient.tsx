@@ -2,6 +2,7 @@
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
@@ -46,6 +47,7 @@ export default function MutabakatClient({
   accounts: AccountRef[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<Reconciliation[]>(initial);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Reconciliation | null>(null);
@@ -141,6 +143,8 @@ export default function MutabakatClient({
         setList((prev) => [data as Reconciliation, ...prev]);
       }
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -154,6 +158,7 @@ export default function MutabakatClient({
     const { error } = await supabase.from("reconciliations").delete().eq("id", r.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== r.id));
+    router.refresh();
   }
 
   return (

@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, parseAmount } from "../../../lib/format";
@@ -31,6 +32,7 @@ export default function ButcelerClient({
   spent: Record<string, number>;
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<Budget[]>(initial);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Budget | null>(null);
@@ -98,6 +100,8 @@ export default function ButcelerClient({
         setList((prev) => [...prev, data as Budget]);
       }
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Bu kategori için bütçe zaten olabilir.");
     } finally {
@@ -111,6 +115,7 @@ export default function ButcelerClient({
     const { error } = await supabase.from("category_budgets").delete().eq("id", b.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== b.id));
+    router.refresh();
   }
 
   return (

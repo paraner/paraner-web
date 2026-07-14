@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import PageHead from "../../../components/ui/PageHead";
@@ -33,6 +34,7 @@ export default function MusterilerClient({
   contacts: Contact[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<Contact[]>(initial);
   const [filter, setFilter] = useState<"all" | "customer" | "supplier">("all");
   const [query, setQuery] = useState("");
@@ -142,6 +144,8 @@ export default function MusterilerClient({
         setList((prev) => [data as Contact, ...prev]);
       }
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -155,6 +159,7 @@ export default function MusterilerClient({
     const { error } = await supabase.from("contacts").delete().eq("id", c.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== c.id));
+    router.refresh();
   }
 
   return (

@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import Link from "next/link";
 import { createClient } from "../../../lib/supabase/client";
@@ -58,6 +59,7 @@ export default function IzinlerClient({
   leaves: Leave[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<Leave[]>(initial);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -118,6 +120,8 @@ export default function IzinlerClient({
       if (error) throw error;
       setList((prev) => [data as Leave, ...prev]);
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -133,6 +137,7 @@ export default function IzinlerClient({
       .eq("id", l.id);
     if (error) return;
     setList((prev) => prev.map((x) => (x.id === l.id ? { ...x, status: next } : x)));
+    router.refresh();
   }
 
   async function handleDelete(l: Leave) {
@@ -140,6 +145,7 @@ export default function IzinlerClient({
     const { error } = await supabase.from("employee_leaves").delete().eq("id", l.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== l.id));
+    router.refresh();
   }
 
   if (employees.length === 0) {

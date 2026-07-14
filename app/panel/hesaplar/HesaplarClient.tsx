@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency } from "../../../lib/format";
@@ -95,6 +96,7 @@ export default function HesaplarClient({
   accounts: Account[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<Account[]>(initial);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Account | null>(null);
@@ -288,6 +290,8 @@ export default function HesaplarClient({
         })
       );
       setTOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat liste/bakiye görünmez.
+      router.refresh();
     } catch {
       setTError("Transfer kaydedilemedi. Tekrar dene.");
     } finally {
@@ -370,6 +374,7 @@ export default function HesaplarClient({
         setList((prev) => [...prev, data as Account]);
       }
       setOpen(false);
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -383,6 +388,7 @@ export default function HesaplarClient({
     const { error } = await supabase.from("bank_accounts").delete().eq("id", a.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== a.id));
+    router.refresh();
   }
 
   const balPreview = Number(balance.replace(",", ".")) || 0;

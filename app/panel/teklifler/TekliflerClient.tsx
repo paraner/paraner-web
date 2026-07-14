@@ -2,6 +2,7 @@
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
@@ -50,6 +51,7 @@ export default function TekliflerClient({
   nextNumber: number;
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<Quote[]>(initial);
   const [counter, setCounter] = useState(nextNumber);
   const [open, setOpen] = useState(false);
@@ -154,6 +156,8 @@ export default function TekliflerClient({
       setList((prev) => [quote as Quote, ...prev]);
       setCounter((c) => c + 1);
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -166,6 +170,7 @@ export default function TekliflerClient({
     const { error } = await supabase.from("quotes").update({ status }).eq("id", q.id);
     if (error) return;
     setList((prev) => prev.map((x) => (x.id === q.id ? { ...x, status } : x)));
+    router.refresh();
   }
 
   async function handleDelete(q: Quote) {
@@ -173,6 +178,7 @@ export default function TekliflerClient({
     const { error } = await supabase.from("quotes").delete().eq("id", q.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== q.id));
+    router.refresh();
   }
 
   const acceptedTotal = list

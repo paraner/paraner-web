@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency } from "../../../lib/format";
@@ -38,6 +39,7 @@ export default function CarilerClient({
   cariler: Cari[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<Cari[]>(initial);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -80,6 +82,8 @@ export default function CarilerClient({
       if (error) throw error;
       setList((prev) => [...prev, data as Cari]);
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -93,6 +97,7 @@ export default function CarilerClient({
     const { error } = await supabase.from("current_accounts").delete().eq("id", c.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== c.id));
+    router.refresh();
   }
 
   return (

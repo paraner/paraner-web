@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency } from "../../../lib/format";
@@ -30,6 +31,7 @@ export default function VeresiyeClient({
   customers: CreditCustomer[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<CreditCustomer[]>(initial);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +84,8 @@ export default function VeresiyeClient({
       if (error) throw error;
       setList((prev) => [data as CreditCustomer, ...prev]);
       setCustOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat liste/bakiye görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -134,6 +138,7 @@ export default function VeresiyeClient({
         prev.map((c) => (c.id === target.id ? { ...c, total_debt: String(newTotal) } : c))
       );
       setMoveOpen(false);
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -147,6 +152,7 @@ export default function VeresiyeClient({
     const { error } = await supabase.from("credit_book").delete().eq("id", c.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== c.id));
+    router.refresh();
   }
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
@@ -62,6 +63,7 @@ export default function StokClient({
   movements: Movement[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [products, setProducts] = useState<StokProduct[]>(initialProducts);
   const [movements, setMovements] = useState<Movement[]>(initialMovements);
   const [open, setOpen] = useState(false);
@@ -157,6 +159,8 @@ export default function StokClient({
         ...prev,
       ]);
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {

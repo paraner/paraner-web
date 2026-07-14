@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency } from "../../../lib/format";
@@ -50,6 +51,7 @@ export default function UrunlerClient({
   products: Product[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<Product[]>(initial);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -165,6 +167,8 @@ export default function UrunlerClient({
         setList((prev) => [data as Product, ...prev]);
       }
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -182,6 +186,7 @@ export default function UrunlerClient({
       .eq("id", p.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== p.id));
+    router.refresh();
   }
 
   return (

@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency } from "../../../lib/format";
@@ -31,6 +32,7 @@ export default function BorcAlacakClient({
   items: Debt[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<Debt[]>(initial);
   const [filter, setFilter] = useState<"all" | "debt" | "credit">("all");
   const [open, setOpen] = useState(false);
@@ -88,6 +90,8 @@ export default function BorcAlacakClient({
       if (error) throw error;
       setList((prev) => [data as Debt, ...prev]);
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -103,6 +107,7 @@ export default function BorcAlacakClient({
       .eq("id", x.id);
     if (error) return;
     setList((prev) => prev.map((d) => (d.id === x.id ? { ...d, is_paid: !x.is_paid } : d)));
+    router.refresh();
   }
 
   async function handleDelete(x: Debt) {
@@ -110,6 +115,7 @@ export default function BorcAlacakClient({
     const { error } = await supabase.from("debts").delete().eq("id", x.id);
     if (error) return;
     setList((prev) => prev.filter((d) => d.id !== x.id));
+    router.refresh();
   }
 
   return (

@@ -4,6 +4,7 @@ import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import Link from "next/link";
 import { createClient } from "../../../lib/supabase/client";
@@ -33,6 +34,7 @@ export default function HarcamalarClient({
   expenses: Expense[];
 }) {
   const supabase = createClient();
+  const router = useRouter();
   const [list, setList] = useState<Expense[]>(initial);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -89,6 +91,8 @@ export default function HarcamalarClient({
       if (error) throw error;
       setList((prev) => [data as Expense, ...prev]);
       setOpen(false);
+      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
+      router.refresh();
     } catch {
       setError("Kaydedilemedi. Tekrar dene.");
     } finally {
@@ -102,6 +106,7 @@ export default function HarcamalarClient({
     const { error } = await supabase.from("employee_expenses").delete().eq("id", x.id);
     if (error) return;
     setList((prev) => prev.filter((e) => e.id !== x.id));
+    router.refresh();
   }
 
   if (employees.length === 0) {

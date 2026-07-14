@@ -22,15 +22,20 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
-  // ⚠️ experimental.staleTimes (istemci önbelleği) BİLEREK KAPALI.
-  // Bir tur açıldı (dynamic: 30) ve geri alındı: panel CRUD ekranlarının HİÇBİRİ
-  // mutasyondan sonra router.refresh() çağırmıyor (yalnız Ayarlar + Sidebar profil işlemleri
-  // çağırıyor). Sunucu verisi Client'a initialX prop'u olarak geçip useState'e tohumlandığı
-  // için, önbellek açıkken sayfadan çıkıp 30sn içinde geri dönmek yerel state'i siler ve
-  // BAYAT RSC payload'unu geri getirir → "eklediğim işlem kayboldu", "bakiye güncellenmedi",
-  // "transfer listede yok". Para ekranında kabul edilemez.
-  // Geri açmanın ön koşulu: her mutasyondan sonra router.refresh() (Next 16'da tek çağrı
-  // TÜM segment önbelleğini geçersiz kılar → çapraz sayfa bayatlığını da çözer).
+  experimental: {
+    // İstemci önbelleği (client segment cache). Panel sayfaları çerez okuduğu için hepsi
+    // DİNAMİK sayılır ve dinamikte varsayılan TTL 0'dır → aynı sayfaya geri dönmek bile
+    // sunucuya tam tur atıyordu. 30sn: menüde gidip gelmek anında olur.
+    //
+    // ÖN KOŞUL SAĞLANDI (bu olmadan AÇMA): panelde veri yazan TÜM handler'lar artık başarı
+    // yolunda router.refresh() çağırıyor (23 dosya / ~60 handler). Next 16'da tek refresh
+    // TÜM segment önbelleğini geçersiz kılıyor (cache.js: currentSegmentCacheVersion++ —
+    // global sürüm sayacı), yani bir sayfada yapılan yazma diğer sayfaların önbelleğini de
+    // düşürüyor: "işlem ekledim, Hesaplar'da bakiye eski" sınıfı hatalar oluşmuyor.
+    // Kalan tek bayatlık penceresi: BAŞKA cihazdan (mobil) yapılan değişiklik en fazla 30sn
+    // geç görünür — kabul edilebilir.
+    staleTimes: { dynamic: 30, static: 180 },
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
