@@ -2581,6 +2581,93 @@ ul { list-style: none; }
 .logo-actions label.btn { cursor: pointer; }
 .logo-actions label.btn.is-disabled { opacity: 0.6; cursor: default; }
 
+/* ══ Yazdırılabilir fatura (InvoicePrint) ═══════════════════════════════════
+   Ekranda: koyu overlay + üstte araç çubuğu + ortada BEYAZ A4 kağıt (önizleme).
+   Yazdırmada: @media print ile SADECE .invoice-print-sheet basılır (panel + toolbar gizli). */
+.invoice-print-root {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0, 0, 0, 0.78);
+  display: flex; flex-direction: column;
+}
+.ip-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; background: var(--card); border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.ip-toolbar-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.ip-toolbar-actions { display: flex; gap: 10px; }
+.ip-scroll { flex: 1; overflow: auto; padding: 28px 16px; display: flex; justify-content: center; }
+
+/* A4 kağıt — beyaz, koyu metin (yazdırma için sabit; temadan bağımsız) */
+.invoice-print-sheet {
+  background: #fff; color: #1a1a1a;
+  width: 210mm; min-height: 297mm; box-sizing: border-box;
+  padding: 20mm 18mm; align-self: flex-start;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  font-size: 12px; line-height: 1.5;
+}
+.ip-head { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; }
+.ip-seller { display: flex; gap: 14px; align-items: flex-start; max-width: 62%; }
+.ip-logo { width: 64px; height: 64px; object-fit: contain; flex-shrink: 0; }
+.ip-seller-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.ip-seller-line { font-size: 11px; color: #444; line-height: 1.45; }
+.ip-meta { text-align: right; flex-shrink: 0; }
+.ip-doc-title { font-size: 22px; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px; color: #111; }
+.ip-meta-table { border-collapse: collapse; margin-left: auto; }
+.ip-meta-table td { padding: 3px 0 3px 14px; font-size: 11px; text-align: right; }
+.ip-meta-table td:first-child { color: #666; font-weight: 600; }
+.ip-buyer {
+  margin: 22px 0; padding: 12px 14px; border: 1px solid #e2e2e2; border-radius: 6px;
+  background: #fafafa;
+}
+.ip-buyer-label { font-size: 10px; font-weight: 700; color: #888; letter-spacing: 0.5px; }
+.ip-buyer-name { font-size: 14px; font-weight: 700; margin: 2px 0 4px; }
+.ip-buyer-line { font-size: 11px; color: #444; }
+.ip-items { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.ip-items th {
+  background: #f2f2f2; font-size: 10px; font-weight: 700; color: #333;
+  text-align: left; padding: 8px 10px; border-bottom: 2px solid #ddd; text-transform: uppercase;
+}
+.ip-items td { padding: 9px 10px; border-bottom: 1px solid #eee; font-size: 11px; vertical-align: top; }
+.ip-c-no { width: 32px; }
+.ip-c-num { text-align: right; white-space: nowrap; }
+.ip-items th.ip-c-num { text-align: right; }
+.ip-totals { display: flex; justify-content: flex-end; margin-top: 14px; }
+.ip-totals table { border-collapse: collapse; min-width: 240px; }
+.ip-totals td { padding: 6px 10px; font-size: 12px; }
+.ip-totals td:first-child { color: #555; }
+.ip-totals td:last-child { text-align: right; font-weight: 600; }
+.ip-totals .ip-grand td {
+  border-top: 2px solid #333; font-size: 14px; font-weight: 800; color: #111; padding-top: 9px;
+}
+.ip-foot-info {
+  margin-top: 24px; padding-top: 14px; border-top: 1px solid #eee;
+  font-size: 11px; color: #444; display: flex; flex-direction: column; gap: 5px;
+}
+.ip-foot-info b { color: #222; }
+.ip-footer { margin-top: 28px; text-align: center; font-size: 10px; color: #999; }
+
+@media (max-width: 760px) {
+  .invoice-print-sheet { width: 100%; min-height: auto; padding: 24px 18px; }
+  .ip-head { flex-direction: column; }
+  .ip-meta { text-align: left; }
+  .ip-meta-table { margin-left: 0; }
+  .ip-meta-table td { text-align: left; padding-left: 0; padding-right: 14px; }
+}
+
+@media print {
+  /* Panelin ve overlay kabuğunun tamamını gizle → sadece kağıt bassın */
+  body * { visibility: hidden !important; }
+  .invoice-print-sheet, .invoice-print-sheet * { visibility: visible !important; }
+  .invoice-print-root { position: static; background: none; display: block; }
+  .ip-toolbar, .ip-scroll { padding: 0; overflow: visible; }
+  .invoice-print-sheet {
+    position: absolute; left: 0; top: 0; width: 100%; min-height: auto;
+    box-shadow: none; padding: 0;
+  }
+  @page { size: A4; margin: 14mm; }
+}
+
 /* ── Veri & Yedekleme: CSV içe aktarma sütun eşleme ── */
 .map-grid { display: grid; grid-template-columns: 1fr; gap: 14px 20px; margin: 16px 0; }
 @media (min-width: 721px) { .map-grid { grid-template-columns: 1fr 1fr; } }

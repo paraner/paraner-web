@@ -1,5 +1,6 @@
 "use client";
 import { confirmDialog } from "../../components/confirm";
+import { showToast } from "../../components/toast";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,12 +15,19 @@ import SaveButton from "../../../components/SaveButton";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
-import { X, Search, Download, Check } from "lucide-react";
+import { X, Search, Download, Check, Printer } from "lucide-react";
+import InvoicePrint, {
+  type PrintSeller,
+  type PrintItem,
+} from "../../../components/InvoicePrint";
 
 export type Invoice = {
   id: string;
   invoice_number: string | null;
   customer_name: string | null;
+  customer_tax_number: string | null;
+  customer_address: string | null;
+  note: string | null;
   subtotal: string | null;
   vat_rate: number | null;
   vat_amount: string | null;
@@ -71,6 +79,7 @@ export default function FaturalarClient({
   invoicePrefix,
   invoiceNextNumber,
   invoices: initial,
+  seller,
   initialFilter,
 }: {
   profileId: string;
@@ -78,6 +87,7 @@ export default function FaturalarClient({
   invoicePrefix: string;
   invoiceNextNumber: number;
   invoices: Invoice[];
+  seller: PrintSeller | null;
   initialFilter: "all" | "income" | "expense";
 }) {
   const supabase = createClient();
@@ -99,6 +109,33 @@ export default function FaturalarClient({
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Invoice | null>(null); // sağ detay paneli
   const [busyId, setBusyId] = useState<string | null>(null); // ödendi işaretleme
+
+  // Yazdırılabilir fatura önizlemesi (Aşama 1)
+  const [printInv, setPrintInv] = useState<Invoice | null>(null);
+  const [printItems, setPrintItems] = useState<PrintItem[]>([]);
+  const [printLoading, setPrintLoading] = useState(false);
+
+  async function openPrint(inv: Invoice) {
+    if (printLoading) return;
+    // Satıcı bilgisi yoksa çıktı yasal olmaz → kullanıcıyı Ayarlar'a yönlendir
+    if (!seller || !(seller.company_name || seller.profile_name)) {
+      showToast({
+        title: "Şirket bilgileri eksik",
+        message: "Yazdırmadan önce Ayarlar → Hesap Bilgileri'nden şirket bilgilerini gir.",
+        variant: "error",
+      });
+      return;
+    }
+    setPrintLoading(true);
+    // Kalemleri çek (web bunları hiç okumuyordu — çıktı için ilk kez lazım).
+    const { data } = await supabase
+      .from("invoice_items")
+      .select("description, quantity, unit, unit_price, vat_rate, total")
+      .eq("invoice_id", inv.id);
+    setPrintItems((data as PrintItem[]) ?? []);
+    setPrintInv(inv);
+    setPrintLoading(false);
+  }
 
   // Form
   const [type, setType] = useState<"income" | "expense">("income");
@@ -532,6 +569,13 @@ export default function FaturalarClient({
               </div>
 
               <div className="drawer-actions">
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => openPrint(inv)}
+                  disabled={printLoading}
+                >
+                  <Printer size={15} /> {printLoading ? "Hazırlanıyor…" : "Yazdır / PDF"}
+                </button>
                 {inv.payment_status !== "paid" && (
                   <button
                     className="btn btn-ghost"
@@ -548,6 +592,15 @@ export default function FaturalarClient({
             </aside>
           );
         })()}
+
+      {printInv && seller && (
+        <InvoicePrint
+          invoice={printInv}
+          items={printItems}
+          seller={seller}
+          onClose={() => setPrintInv(null)}
+        />
+      )}
 
       {open && (
         <Modal title="Fatura Oluştur" onClose={() => setOpen(false)} busy={saving}>

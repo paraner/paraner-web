@@ -1848,8 +1848,9 @@ function InvoiceDesignSoon() {
       <div className="soon-card">
         <div className="soon-badge">Yakında</div>
         <p>
-          Faturalarına logo, kaşe/imza ve kendi notlarını ekle; yazı tipini ve düzeni
-          seç. e-Fatura & e-Arşiv çıktısıyla birlikte geliyor.
+          Faturalarını artık <b>Faturalar</b> ekranından yazdırabilir ya da PDF olarak
+          kaydedebilirsin (şirket bilgilerin ve logon çıktıda görünür). Yakında: kaşe/imza,
+          yazı tipi ve renk seçimiyle özelleştirme.
         </p>
       </div>
     </div>
