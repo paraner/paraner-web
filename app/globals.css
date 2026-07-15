@@ -1677,7 +1677,72 @@ ul { list-style: none; }
   cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 .topbar-icon-btn:hover { background: var(--card-2); border-color: var(--border); color: var(--text); }
+.topbar-icon-btn.active { background: var(--card-2); border-color: var(--border); color: var(--text); }
 .topbar-icon-btn svg { width: 19px; height: 19px; }
+
+/* ── Bildirim çanı açılır menüsü ── (üst bar, sağa hizalı) */
+.notif-wrap { position: relative; }
+.notif-dot {
+  position: absolute; top: 7px; right: 7px; width: 8px; height: 8px;
+  border-radius: 50%; background: var(--danger); border: 2px solid #000;
+}
+.notif-menu {
+  position: absolute; top: calc(100% + 10px); right: 0; z-index: 200;
+  width: 360px; max-width: calc(100vw - 24px);
+  background: var(--surface-modal, var(--card)); border: 1px solid var(--border-strong);
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  animation: notifIn 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes notifIn { from { transform: translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+.notif-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 18px; border-bottom: 1px solid var(--border); background: var(--card-2);
+}
+.notif-head-ic {
+  display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0;
+  border-radius: 10px; background: var(--card); border: 1px solid var(--border); color: var(--text-dim);
+}
+.notif-head-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.notif-head-sub { font-size: 12px; color: var(--text-dim); margin-top: 1px; }
+.notif-tabs { display: flex; gap: 4px; padding: 8px 10px 0; border-bottom: 1px solid var(--border); }
+.notif-tab {
+  appearance: none; background: none; border: none; cursor: pointer; font-family: inherit;
+  font-size: 13px; font-weight: 600; color: var(--text-dim);
+  padding: 9px 12px; border-radius: 10px 10px 0 0; position: relative;
+  transition: color 0.15s, background 0.15s;
+}
+.notif-tab:hover { color: var(--text); }
+.notif-tab.active { color: var(--text); background: var(--card-2); }
+.notif-tab.active::after {
+  content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px;
+  background: var(--text); border-radius: 2px;
+}
+.notif-body { max-height: 360px; overflow-y: auto; padding: 8px; }
+/* Boş durum */
+.notif-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 34px 24px 38px; gap: 4px; }
+.notif-empty-ic {
+  display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 10px;
+  border-radius: 14px; background: var(--card-2); border: 1px solid var(--border); color: var(--text-dim);
+}
+.notif-empty-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.notif-empty-sub { font-size: 12px; color: var(--text-dim); line-height: 1.5; max-width: 240px; }
+/* Bildirim satırı */
+.notif-row {
+  display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left;
+  appearance: none; background: none; border: none; cursor: pointer; font-family: inherit;
+  padding: 12px; border-radius: 12px; transition: background 0.15s;
+}
+.notif-row:hover { background: var(--card-2); }
+.notif-row-ic {
+  display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0;
+  border-radius: 9px; background: var(--card-2); border: 1px solid var(--border); color: var(--text-dim);
+}
+.notif-row-main { min-width: 0; flex: 1; }
+.notif-row-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.notif-row-body { font-size: 12px; color: var(--text-dim); line-height: 1.45; margin-top: 2px; }
+.notif-row-time { font-size: 11px; color: var(--text-faint, var(--text-dim)); margin-top: 5px; }
+.notif-row-chevron { color: var(--text-dim); flex-shrink: 0; margin-top: 8px; }
 
 .panel-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .panel-topbar {

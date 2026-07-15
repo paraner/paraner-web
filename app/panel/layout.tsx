@@ -7,7 +7,8 @@ import LoginReporter from "./LoginReporter";
 import AccountStatusGuard from "./AccountStatusGuard";
 import ToastHost from "../components/ToastHost";
 import ConfirmProvider from "../components/ConfirmProvider";
-import { SparkleIcon, BellIcon, GearIcon } from "../../components/icons";
+import { SparkleIcon, GearIcon } from "../../components/icons";
+import NotificationBell from "./NotificationBell";
 
 // Panel uygulamanın içi — tüm /panel sayfaları arama motorlarına kapalı
 export const metadata: Metadata = {
@@ -55,9 +56,7 @@ export default function PanelLayout({
             <button type="button" className="topbar-icon-btn" aria-label="AI Sohbet" title="AI Sohbet">
               <SparkleIcon />
             </button>
-            <button type="button" className="topbar-icon-btn" aria-label="Bildirimler" title="Bildirimler">
-              <BellIcon />
-            </button>
+            <NotificationBell />
             <Link href="/panel/ayarlar" className="topbar-icon-btn" aria-label="Ayarlar" title="Ayarlar">
               <GearIcon />
             </Link>
