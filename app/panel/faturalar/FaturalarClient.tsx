@@ -459,7 +459,7 @@ export default function FaturalarClient({
             </div>
           </div>
 
-          <div className={`tx-area${selected ? " shifted" : ""}`}>
+          <div>
             {filtered.length === 0 ? (
               <div className="panel-empty">Bu filtrede fatura yok.</div>
             ) : (
