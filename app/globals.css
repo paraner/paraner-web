@@ -2513,25 +2513,78 @@ ul { list-style: none; }
 .link-teal { color: var(--teal); font-weight: 600; }
 .link-teal:hover { text-decoration: underline; }
 
-/* Destek sayfası — iletişim kanalı kartları */
-.support-grid { display: grid; grid-template-columns: 1fr; gap: 12px; max-width: 560px; }
-.support-card {
-  display: flex; align-items: flex-start; gap: 14px;
-  padding: 16px 18px; border-radius: 14px;
-  background: var(--card); border: 1px solid var(--border);
-  transition: background 0.15s, border-color 0.15s, transform 0.15s;
-}
-.support-card:hover { background: var(--card-2); border-color: var(--border-strong); transform: translateY(-1px); }
+/* ══ Destek sayfası (panel) ══ rakip deseni: üst kart + kanallar + hazır soru-yanıt */
 .support-ic {
-  display: grid; place-items: center; width: 42px; height: 42px; flex-shrink: 0;
+  display: grid; place-items: center; width: 38px; height: 38px; flex-shrink: 0;
   border-radius: 11px; background: var(--card-2); border: 1px solid var(--border); color: var(--text-dim);
 }
 .support-ic.wa { color: #25d366; }
 .support-ic.mail { color: #6ea8fe; }
-.support-main { min-width: 0; }
-.support-title { font-size: 14px; font-weight: 600; color: var(--text); }
-.support-sub { font-size: 13px; color: var(--text); margin-top: 1px; }
-.support-hint { font-size: 12px; color: var(--text-dim); margin-top: 4px; line-height: 1.45; }
+
+/* Üst başlık kartı */
+.support-hero {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 20px 22px; border-radius: 16px; margin-bottom: 16px;
+  background: var(--card); border: 1px solid var(--border);
+}
+.support-hero-ic {
+  display: grid; place-items: center; width: 48px; height: 48px; flex-shrink: 0;
+  border-radius: 13px; background: var(--card-2); border: 1px solid var(--border); color: var(--text);
+}
+.support-hero-main { flex: 1; min-width: 200px; }
+.support-hero-title { font-size: 17px; font-weight: 700; color: var(--text); }
+.support-hero-sub { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+.support-hero .btn { flex-shrink: 0; }
+
+/* Hızlı iletişim kanalları */
+.support-channels { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 22px; }
+@media (min-width: 640px) { .support-channels { grid-template-columns: 1fr 1fr; } }
+.support-channel {
+  display: flex; align-items: center; gap: 13px; padding: 14px 16px;
+  border-radius: 13px; background: var(--card); border: 1px solid var(--border);
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.support-channel:hover { background: var(--card-2); border-color: var(--border-strong); transform: translateY(-1px); }
+.support-channel-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.support-channel-sub { font-size: 12px; color: var(--text-dim); margin-top: 1px; }
+
+/* Hazır soru ve yanıtlar paneli */
+.support-faq-panel {
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px 8px;
+}
+.support-faq-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.support-faq-head h3 { font-size: 15px; font-weight: 600; color: var(--text); margin: 0 0 2px; }
+.support-search {
+  display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px;
+  border: 1px solid var(--border); border-radius: 11px; background: var(--card-2); color: var(--text-dim);
+}
+.support-search input {
+  border: none; background: transparent; color: var(--text); font-size: 14px; width: 190px; outline: none;
+}
+.support-search input::placeholder { color: var(--text-faint, var(--text-dim)); }
+.support-faq-list { display: flex; flex-direction: column; }
+.support-faq-item { border-top: 1px solid var(--border); }
+.support-faq-item:first-child { border-top: none; }
+.support-faq-q {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%;
+  appearance: none; background: none; border: none; cursor: pointer; font-family: inherit; text-align: left;
+  padding: 15px 2px; font-size: 14px; font-weight: 600; color: var(--text);
+  transition: color 0.15s;
+}
+.support-faq-q:hover { color: #fff; }
+.support-faq-chevron { color: var(--text-dim); flex-shrink: 0; transition: transform 0.2s; }
+.support-faq-item.open .support-faq-chevron { transform: rotate(180deg); }
+.support-faq-a {
+  font-size: 13px; color: var(--text-dim); line-height: 1.6; padding: 0 2px 16px; max-width: 760px;
+  animation: faqIn 0.18s ease;
+}
+@keyframes faqIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* Talep modalı alt aksiyonları */
+.support-ticket-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 
 /* Ayarlar */
 .settings-block { margin-bottom: 30px; max-width: 640px; }
