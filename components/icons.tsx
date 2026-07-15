@@ -4,7 +4,5 @@
 export {
   Trash2 as TrashIcon,
   Pencil as EditIcon,
-  MessageCircle as SparkleIcon, // üst bar: AI sohbet
   Bell as BellIcon, // üst bar: bildirimler
-  Settings as GearIcon, // üst bar: ayarlar
 } from "lucide-react";

@@ -6,7 +6,6 @@ import LoginReporter from "./LoginReporter";
 import AccountStatusGuard from "./AccountStatusGuard";
 import ToastHost from "../components/ToastHost";
 import ConfirmProvider from "../components/ConfirmProvider";
-import { SparkleIcon } from "../../components/icons";
 import NotificationBell from "./NotificationBell";
 
 // Panel uygulamanın içi — tüm /panel sayfaları arama motorlarına kapalı
@@ -52,11 +51,8 @@ export default function PanelLayout({
       <div className="panel-main">
         <header className="panel-topbar">
           <div className="panel-topbar-actions">
-            {/* Bildirim en solda (ilk). Ayarlar üst bardan kaldırıldı → sol menüde zaten var. */}
+            {/* Yalnız bildirim (sağda). Ayarlar sol menüde; AI Sohbet butonu işlevsizdi → kaldırıldı. */}
             <NotificationBell />
-            <button type="button" className="topbar-icon-btn" aria-label="AI Sohbet" title="AI Sohbet">
-              <SparkleIcon />
-            </button>
           </div>
         </header>
         <div className="panel-content">{children}</div>
