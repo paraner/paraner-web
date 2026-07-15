@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Bell, ChevronRight } from "lucide-react";
 import { BellIcon } from "../../components/icons";
 
@@ -56,42 +57,75 @@ function NotifRow({ n }: { n: Notif }) {
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"active" | "history">("active");
-  const ref = useRef<HTMLDivElement>(null);
+  // Menü body'ye portal ile taşınır (üst bar bir stacking context oluşturuyor → içeride
+  // kalırsa z-index yükseltilse bile çekmece/modal ARKASINDA kalır). Konum trigger'dan.
+  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  function toggle() {
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 10, right: window.innerWidth - r.right });
+    }
+    setOpen((o) => !o);
+  }
 
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (btnRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
+    // Pencere boyutu/scroll değişince menü trigger'la hizalı kalsın
+    const reposition = () => {
+      if (btnRef.current) {
+        const r = btnRef.current.getBoundingClientRect();
+        setPos({ top: r.bottom + 10, right: window.innerWidth - r.right });
+      }
+    };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
+    window.addEventListener("resize", reposition);
+    window.addEventListener("scroll", reposition, true);
     return () => {
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", reposition);
+      window.removeEventListener("scroll", reposition, true);
     };
   }, [open]);
 
   const rows = tab === "active" ? ACTIVE : HISTORY;
 
   return (
-    <div className="notif-wrap" ref={ref}>
+    <div className="notif-wrap">
       <button
+        ref={btnRef}
         type="button"
         className={`topbar-icon-btn${open ? " active" : ""}`}
         aria-label="Bildirimler"
         title="Bildirimler"
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
       >
         <BellIcon />
         {ACTIVE.length > 0 && <span className="notif-dot" aria-hidden />}
       </button>
 
-      {open && (
-        <div className="notif-menu" role="dialog" aria-label="Bildirimler">
+      {open && pos && typeof document !== "undefined" &&
+        createPortal(
+        <div
+          className="notif-menu"
+          role="dialog"
+          aria-label="Bildirimler"
+          ref={menuRef}
+          style={{ top: pos.top, right: pos.right }}
+        >
           <div className="notif-head">
             <span className="notif-head-ic">
               <Bell size={16} />
@@ -130,7 +164,8 @@ export default function NotificationBell() {
               rows.map((n) => <NotifRow key={n.id} n={n} />)
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

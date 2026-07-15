@@ -1687,7 +1687,9 @@ ul { list-style: none; }
   border-radius: 50%; background: var(--danger); border: 2px solid #000;
 }
 .notif-menu {
-  position: absolute; top: calc(100% + 10px); right: 0; z-index: 200;
+  /* body'ye portal ile taşınıyor (üst bar stacking context'inden çıksın) → position:fixed,
+     top/right inline style'dan (trigger'a göre). z-index çekmece (91) üstünde, modal (1000) altında. */
+  position: fixed; z-index: 300;
   width: 360px; max-width: calc(100vw - 24px);
   background: var(--surface-modal, var(--card)); border: 1px solid var(--border-strong);
   border-radius: 16px; overflow: hidden;
