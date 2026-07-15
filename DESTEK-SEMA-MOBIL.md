@@ -144,3 +144,40 @@ create policy roles_select on public.user_roles for select using (user_id = auth
 - **Faz 2:** SLA, atama, öncelik, "yazıyor…", raporlama; Realtime'ı Broadcast'e, RLS'i JWT-RBAC'a taşı.
 
 **Sorular (mobil):** (1) push token'ı nerede saklıyorsun/saklayalım? (2) e-posta sağlayıcın ne? (3) durum/kategori setine eklemen var mı? (4) `notifications` tablosunu mobil çan için bu şemayla okur musun?
+
+---
+
+## ✅ MUTABAKAT (mobil Claude onayladı — 2026-07-15)
+
+Mobil şemaya + RLS'e katıldı. Kesinleşen kararlar:
+
+1. **Push:** mobilde push token HİÇ alınmıyor; remote push şu an teknik olarak İMKÂNSIZ
+   (`plugins/withNoPushEntitlement.js` her prebuild'de `aps-environment`'ı siliyor → ücretli
+   Apple hesabı + APNs key gerekir). → **Push = Faz 1.** Gelince ayrı tablo değil,
+   `user_devices`'a `expo_push_token text` kolonu; yazma yolu mevcut `login-alert` reportLogin().
+2. **E-posta:** Resend · FROM `Paraner <merhaba@paraner.com>` · secret `RESEND_API_KEY` ·
+   `verify_jwt=false` + secret-header (login-alert deseni birebir). `support-reply-notify` böyle yazılacak.
+3. **Durum:** `open/answered/resolved/closed` yeterli (ekleme yok). "yazıyor…" enum'a GİRMEZ (ayrı/efemer).
+   **Kategori:** `text` nullable; ileride mobil feedback ekranının kategori çipleriyle aynı taksonomi.
+4. **notifications:** mobil okuyacak. Alan eşlemesi mobilde adapte edilir (`is_read`/`created_at`/`link`
+   → local `read`/`date`/`screen`); `body` birebir uyuyor. `user_id = auth.users.id` (KİŞİ) doğru:
+   destek yanıtı kullanıcının HANGİ profilinde olursa olsun görünür (mobil "her yerde profile.id"
+   kuralının bilinçli istisnası — ikisi de onayladı).
+
+### 🔒 KESİNLEŞEN: notifications.data sözleşmesi (mobil'in tek isteği)
+Mobil, `link`'i (web yolu) PARSE ETMEZ; `data` ortak sözleşmedir. Her bildirim `data`'da
+kaynak id taşır; mobil `type` + `data`'dan kendi route'unu kurar.
+
+Destek yanıtı bildirimi için:
+```
+type:  'support_reply'
+title: 'Talebin yanıtlandı'
+body:  '<ticket subject> — <kısa yanıt önizlemesi>'
+link:  '/panel/destek/<ticket_id>'          ← WEB-ONLY (mobil kullanmaz)
+data:  { "ticket_id": "<uuid>", "message_id": "<uuid>" }   ← ticket_id HER ZAMAN dolu; message_id opsiyonel
+```
+Genel kural (ileriki bildirim türleri): `data` daima en az bir kaynak-id (`ticket_id`/`invoice_id`…)
+taşır ve `type` ile eşleşir. `link` yalnız web navigasyonu içindir.
+
+**Durum:** Faz 0 başlatılabilir (tickets + messages + notifications + RLS + web UI + Resend
+e-posta + uygulama-içi çan). `expo_push_token` + push kısmı Faz 1.
