@@ -131,19 +131,26 @@ drop trigger if exists trg_touch_ticket on public.ticket_messages;
 create trigger trg_touch_ticket after insert on public.ticket_messages
   for each row execute function public.touch_ticket_on_message();
 
--- ── Agent yanıtı → kullanıcıya uygulama-içi bildirim (çan) ─────────────────
+-- ── Agent yanıtı → kullanıcıya (1) uygulama-içi bildirim + (2) e-posta ──────
 -- SECURITY DEFINER: agent, kullanıcının notifications satırını RLS'e takılmadan oluşturur.
 -- data.ticket_id HER ZAMAN dolu (mobil + web route bundan kuruluyor; link web-only kolaylık).
+-- E-posta: Database Webhook UI'sına GEREK YOK — pg_net ile support-reply-notify doğrudan
+-- çağrılır (async, mesaj INSERT'ini bloke etmez). Secret Vault'tan okunur (repoya sızmaz).
+-- ⚠️ ÖN KOŞUL (Mehmet, SQL Editor'da bir kez — secret'ı Notlar'dan, bu dosyaya YAZMA):
+--     select vault.create_secret('<SUPPORT_WEBHOOK_SECRET değeri>', 'support_webhook_secret');
 create or replace function public.notify_on_agent_reply()
-returns trigger language plpgsql security definer set search_path = public as $$
+returns trigger language plpgsql security definer set search_path = public, net, vault as $$
 declare
   v_user_id uuid;
   v_subject text;
+  v_secret text;
 begin
   if new.sender_type <> 'agent' then return new; end if;
   select user_id, subject into v_user_id, v_subject
     from public.support_tickets where id = new.ticket_id;
   if v_user_id is null then return new; end if;
+
+  -- (1) uygulama-içi bildirim (çan) — web + mobil realtime
   insert into public.notifications (user_id, type, title, body, link, data)
   values (
     v_user_id,
@@ -153,6 +160,24 @@ begin
     '/panel/destek/' || new.ticket_id::text,
     jsonb_build_object('ticket_id', new.ticket_id, 'message_id', new.id)
   );
+
+  -- (2) e-posta — support-reply-notify edge function (Resend). Vault'ta secret yoksa sessiz atla.
+  begin
+    select decrypted_secret into v_secret
+      from vault.decrypted_secrets where name = 'support_webhook_secret' limit 1;
+    if v_secret is not null then
+      perform net.http_post(
+        url := 'https://oqhonmmbcqrkcaoijgnb.supabase.co/functions/v1/support-reply-notify',
+        headers := jsonb_build_object('Content-Type', 'application/json', 'x-support-secret', v_secret),
+        body := jsonb_build_object('type', 'INSERT', 'table', 'ticket_messages',
+                                   'schema', 'public', 'record', to_jsonb(new))
+      );
+    end if;
+  exception when others then
+    -- e-posta göndermek mesaj kaydını asla bozmasın (çan zaten yazıldı)
+    null;
+  end;
+
   return new;
 end $$;
 drop trigger if exists trg_notify_agent_reply on public.ticket_messages;
