@@ -494,6 +494,29 @@ export default function FaturalarClient({
                         <span className="tx-amount">
                           {formatCurrency(Number(inv.amount) || 0, inv.currency || currency)}
                         </span>
+                        {/* Hover'da açılan eylemler — İşlemler satırıyla aynı desen (.anim-act) */}
+                        <div className="tx-actions">
+                          <button
+                            className="anim-act print"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openPrint(inv);
+                            }}
+                            aria-label="Yazdır"
+                          >
+                            <Printer size={16} />
+                          </button>
+                          <button
+                            className="anim-act del"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(inv);
+                            }}
+                            aria-label="Sil"
+                          >
+                            <TrashIcon />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -568,25 +591,35 @@ export default function FaturalarClient({
                 </div>
               </div>
 
+              {/* Çekmece eylemleri — İşlemler çekmecesiyle aynı desen (hover'da açılan .anim-act) */}
               <div className="drawer-actions">
                 <button
-                  className="btn btn-ghost"
+                  className="anim-act print"
+                  aria-label="Yazdır"
                   onClick={() => openPrint(inv)}
                   disabled={printLoading}
                 >
-                  <Printer size={15} /> {printLoading ? "Hazırlanıyor…" : "Yazdır / PDF"}
+                  <Printer size={16} />
                 </button>
                 {inv.payment_status !== "paid" && (
                   <button
-                    className="btn btn-ghost"
+                    className="anim-act paid"
+                    aria-label="Ödendi işaretle"
                     onClick={() => markPaid(inv)}
                     disabled={busyId === inv.id}
                   >
-                    <Check size={15} /> {busyId === inv.id ? "İşleniyor…" : "Ödendi işaretle"}
+                    <Check size={16} />
                   </button>
                 )}
-                <button className="btn btn-danger" onClick={() => handleDelete(inv)}>
-                  <TrashIcon /> Sil
+                <button
+                  className="anim-act del"
+                  aria-label="Sil"
+                  onClick={async () => {
+                    await handleDelete(inv);
+                    setSelected(null);
+                  }}
+                >
+                  <TrashIcon />
                 </button>
               </div>
             </aside>

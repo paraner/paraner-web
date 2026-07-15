@@ -1897,6 +1897,11 @@ ul { list-style: none; }
 .anim-act.edit:hover { background: var(--teal); border-color: var(--teal); }
 .anim-act.cls::before { content: "Kapat"; }
 .anim-act.cls:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.24); }
+/* Faturalar: Yazdır (nötr) + Ödendi (yeşil) — İşlemler'in edit/del deseniyle aynı */
+.anim-act.print::before { content: "Yazdır"; }
+.anim-act.print:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.24); }
+.anim-act.paid::before { content: "Ödendi"; }
+.anim-act.paid:hover { background: var(--success, #3BA55D); border-color: var(--success, #3BA55D); }
 
 /* "Ekle" butonları (tüm modüller) — uiverse (JaydipPrajapati1910) sade buton, TİTANYUM.
    Tek hover efekti: sağdaki + kutusu genişler. Paylaşımlı AddButton bileşeni kullanır. */
