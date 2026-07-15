@@ -4,8 +4,28 @@
 
 ## Şimdiki
 
+### 🎫 DESTEK SİSTEMİ — Faz 0 (kaldığımız yer, tek eksik: e-posta webhook)
+> Detay: `DESTEK-SISTEMI.md` + `DESTEK-SEMA-MOBIL.md` + `destek-faz0.sql`. Web+mobil Faz 0 KURULDU
+> (ticket + chat thread + realtime çan + agent gelen kutusu). ⚠️ **Tek eksik e-posta bildirimi:**
+> Supabase Database Webhook (`ticket_messages` INSERT → `support-reply-notify` + `x-support-secret`)
+> "schema supabase_functions does not exist" hatası verdi (pg_net açık; sebep Supabase'in "technical
+> issue" banner'ı). **Karar: BEKLE**, Supabase düzelince Integrations→Database Webhooks'tan 2 dk'da kur.
+> `SUPPORT_WEBHOOK_SECRET` Edge Function Secrets'ta hazır (değer Mehmet'in Notlar'ında). Kurulunca
+> mobil zaten deploy edildi → uçtan uca test: web talep → mobil çan → mobil yanıt → web agent → agent yanıt → mobil çan + mail.
+- [ ] **E-posta webhook'unu kur** (Supabase technical issue geçince). Alternatif: trigger + `pg_net.http_post` + Vault.
+- [ ] **Gerçek uçtan uca test** (iki cihaz/hesap): agent yanıtı → çan + e-posta akışı.
+- [ ] **admin@paraner.com agent** yapıldı (test için). Gerçek destek ekibi hesapları `user_roles`'e eklenecek.
+- [ ] Test verisi temizliği: `delete from support_tickets where subject like 'ZZTEST%';` (Mehmet SQL Editor).
+- [ ] **Faz 1 (sonra):** mobil push — `user_devices.expo_push_token` + Expo push (mobilde şu an `withNoPushEntitlement` yüzünden remote push KAPALI, ücretli Apple hesabı ister).
+
 ### 🔴 CANLI GÖZ TEYİDİ BEKLİYOR
 > İŞE BAŞLARKEN İLK BUNU SOR. Kod tarafı + headless doğrulandı; gerçek cihaz/göz onayı yok.
+
+**2026-07-15 turu (bu oturum)**
+- [ ] **Ayarlar → Hesap Bilgileri** (Profil + Şirket bilgileri alt sekmeleri; logo yükleme) gözünde düzgün mü?
+- [ ] **Fatura Yazdır/PDF** — bir faturayı yazdır, A4 çıktı (logo+VKN+kalem+toplam) düzgün mü?
+- [ ] **Veri & Yedekleme** — CSV dışa/içe aktarma çalışıyor mu?
+- [ ] **Köşe yarıçapı + bildirim çanı + Destek sayfası** genel görünüm.
 
 **2026-07-14 turu**
 - [ ] **Mobil/tablet panel hızı** — telefondan panele gir, menüde gez: iskelet çıkıyor mu? (Masaüstü canlıda ölçüldü: 14-26 ms, iskelet yok. Dokunmatikte hover olmadığı için ayrı teyit gerekir; 6 çekirdek rota peşin ısıtılıyor, alt menüdekiler dokunuşta.)

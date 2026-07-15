@@ -16,6 +16,32 @@
 
 ---
 
+## 2026-07-15 — Ayarlar rakip paritesi · fatura yazdırma · bildirim menüsü · DESTEK SİSTEMİ (Faz 0)
+
+Uzun oturum, çoğu Defteran (rakip) paritesi. Sırayla:
+
+**Ayarlar → Hesap Bilgileri (Profil + Şirket bilgileri).** İlk sekme "Genel" → "Hesap Bilgileri"; alt sekmeler Profil (herkes) + Şirket bilgileri (yalnız işletme). ⚠️ **Şema keşfi:** `profiles`'ta web'in HİÇ kullanmadığı kolonlar zaten VARDI (mobil yazıyor): `company_name, tax_number, tax_office, company_address, company_email, phone, iban, website, mersis_no, company_logo_url, name` + abonelik (`is_premium, subscription_tier, trial_*`). Şemaya dokunmadan Şirket Bilgileri + logo yükleme (`avatars` bucket, `lib/profileMedia.ts`) kuruldu. Bunlar yasal faturanın SATICI tarafı — şimdiye dek hiç tutulmuyordu. Kolonlar paylaşılan `getProfiles()`'e EKLENMEDİ (her sayfada çalışıyor) → Ayarlar'a özel paralel sorgu.
+
+**Ayarlar sekme mimarisi ayrıldı:** eski "İşletme" 3 ilgisiz şeyi tek çuvaldaydı → Hesap Bilgileri · Fatura · **Veri & Yedekleme** · Bildirimler · Hesap & Güvenlik. Veri & Yedekleme: dışa aktarma 2→5 kalem + Tam Yedek (JSON) + **CSV içe aktarma** (müşteri/ürün, TR başlık otomatik eşleme — "rakipten göç silahı", Defteran'da yok). `lib/csv.ts`'e `parseCsv`.
+
+**Faturalar: yazdırılabilir fatura / PDF (Aşama 1).** `components/InvoicePrint.tsx` — A4 çıktı (satıcı=şirket bilgileri+logo, alıcı, kalem tablosu, KDV/toplam, IBAN/not). `@media print` izolasyonu. Bugüne dek web'de fatura çıktısı YOKTU (PDF sadece mobilde). Çekmeceye "Yazdır/PDF". ⚠️ Kalem editörü hâlâ yok → tek özet kalem, çıktıda generic "Mal/Hizmet".
+
+**Faturalar cila:** satır hover + çekmece eylemleri İşlemler `.anim-act` desenine hizalandı. ⚠️ **Ders:** çekmece açılınca içerik FAZLA daralıyordu → Faturalar'da ZATEN bir iç `.tx-area` varmış, dış bir tane daha ekleyince `padding-right:408` İKİ KEZ uygulandı (816px). Desen taşırken "zaten kısmen var mı" kontrol et. [[değişiklikte detaylı kontrol]]
+
+**Köşe yarıçapı tutarlılığı (tüm panel):** çipler + çekmece/satır butonları + badge → tek yumuşak-köşe dili (12px / 8px). Odak halkası da teal → nötr `--focus-ring` (11 kural). Marka rengi değişecek [[marka-rengi-degisecek]].
+
+**Üst bar bildirim çanı:** ölü çan → açılır menü (2 sekme, boş durum). ⚠️ Menü çekmece ARKASINDA kalıyordu (üst bar stacking context) → `createPortal(body)` + fixed + z-index 300. Ayarlar dişlisi kaldırıldı (sol menüde var), işlevsiz AI Sohbet butonu kaldırıldı → üst barda tek çan.
+
+**Sol menü:** Ayarlar + **Destek** + **Çıkış Yap** (rakip paritesi). `/panel/destek` sayfası: rakip deseni (üst kart + Talep Oluştur + hazır soru-yanıt + WhatsApp/e-posta).
+
+**★ DESTEK SİSTEMİ — Faz 0 (web + mobil, ORTAK Supabase) ★** — detay `DESTEK-SISTEMI.md` + `DESTEK-SEMA-MOBIL.md`. Mehmet gerçek ticket+chat sistemi istedi (talep → taleplerim → agent yanıtı → e-posta + çan + push). 2 araştırma (sektör mimarisi + altyapı denetimi) → "conversational ticketing". **Mobil Claude ile mutabakat sağlandı** (Mehmet kopyala-yapıştır ile iki Claude'u konuşturdu). Kuruldu:
+- **Şema (`destek-faz0.sql`, Supabase'de çalıştırıldı):** `support_tickets`, `ticket_messages`, `notifications`, `user_roles` + RLS (kullanıcı kendi / agent hepsi, `is_support_agent()`) + realtime publication + `notify_on_agent_reply` trigger (agent mesajı → `notifications` INSERT, `data.ticket_id` HER ZAMAN) + DELETE policy. Sahiplik `auth.users.id` (KİŞİ — "her yerde profile.id" kuralının bilinçli istisnası, iki taraf onayladı).
+- **Web:** `lib/support.ts` (createTicket/sendMessage/resolveTicket/subscribeMessages realtime), Destek DB'li (Talep Oluştur + Taleplerim + agent "Gelen Talepler"), chat thread `/panel/destek/[id]` (balonlar + realtime + Çözüldü), NotificationBell → gerçek `notifications` (fetch + realtime INSERT + okundu + tıkla-route).
+- **Mobil (mobil repo):** aynı tablolar, hibrit çan (local+remote), thread, `support-reply-notify` edge function (Resend, `merhaba@paraner.com`, `RESEND_API_KEY`, `x-support-secret`) — notifications INSERT'i YAPMAZ (trigger yapıyor), sadece e-posta. Deploy edildi ✅.
+- **Test:** web'de talep→thread→mesaj→Taleplerim + agent gelen kutusu (admin@paraner.com agent yapıldı) headless doğrulandı. e-posta hariç çekirdek çalışıyor.
+
+⚠️ **KALDIĞIMIZ YER (bir dahaki destek işinde):** Sadece **e-posta bildirimi** eksik. Supabase Database Webhook (`ticket_messages` INSERT → `support-reply-notify` + `x-support-secret` header) kurulamadı: **`schema "supabase_functions" does not exist`** hatası — pg_net AÇIK ama Supabase'in "technical issue" banner'ı webhook altyapısını engelliyor. Karar: **BEKLE**, Supabase düzelince webhook 2 dk'da kurulur (`SUPPORT_WEBHOOK_SECRET` Edge Function Secrets'ta zaten var — değeri Mehmet'in Notlar'ında). Alternatif (istenirse): webhook yerine trigger içinde `pg_net.http_post` + Vault. Çan+thread e-postasız zaten tam çalışıyor.
+
 ## 2026-07-14 — Panel hızı (iskelet → 20 ms) · slogan · Şifre Belirle · Ayarlar yerleşimi
 
 **Slogan değişti:** "Paranı yönet, geleceğini kur" → **"Parasını yöneten, geleceğini yönetir."** (hero + footer + PWA manifest + CTA bandı + `/bireysel`). Mobil app'te zaten 21.06'da değişmişti (cross-repo notu app GOREVLER'inde açıktı, kapatıldı). Hero başlığı yeni sloganda 4 satıra kırılıyordu → metin kutusu 520→580px, ölçek `clamp(44,7vw,80)` → `clamp(48,5vw,68)` (+mobil `clamp(33,9.5vw,56)`), `.hero-sub` `text-wrap:pretty` (öksüz "al." satırı). 7 genişlikte gerçek tarayıcıda ölçüldü: hepsinde tam 2 satır.
