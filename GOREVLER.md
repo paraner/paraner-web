@@ -4,19 +4,18 @@
 
 ## Şimdiki
 
-### 🎫 DESTEK SİSTEMİ — Faz 0 (kaldığımız yer, tek eksik: e-posta webhook)
-> Detay: `DESTEK-SISTEMI.md` + `DESTEK-SEMA-MOBIL.md` + `destek-faz0.sql`. Web+mobil Faz 0 KURULDU
-> (ticket + chat thread + realtime çan + agent gelen kutusu). ⚠️ **Tek eksik e-posta bildirimi:**
-> Supabase Database Webhook (`ticket_messages` INSERT → `support-reply-notify` + `x-support-secret`)
-> "schema supabase_functions does not exist" hatası verdi (pg_net açık; sebep Supabase'in "technical
-> issue" banner'ı). **Karar: BEKLE**, Supabase düzelince Integrations→Database Webhooks'tan 2 dk'da kur.
-> `SUPPORT_WEBHOOK_SECRET` Edge Function Secrets'ta hazır (değer Mehmet'in Notlar'ında). Kurulunca
-> mobil zaten deploy edildi → uçtan uca test: web talep → mobil çan → mobil yanıt → web agent → agent yanıt → mobil çan + mail.
-- [ ] **E-posta webhook'unu kur** (Supabase technical issue geçince). Alternatif: trigger + `pg_net.http_post` + Vault.
-- [ ] **Gerçek uçtan uca test** (iki cihaz/hesap): agent yanıtı → çan + e-posta akışı.
-- [ ] **admin@paraner.com agent** yapıldı (test için). Gerçek destek ekibi hesapları `user_roles`'e eklenecek.
-- [ ] Test verisi temizliği: `delete from support_tickets where subject like 'ZZTEST%';` (Mehmet SQL Editor).
-- [ ] **Faz 1 (sonra):** mobil push — `user_devices.expo_push_token` + Expo push (mobilde şu an `withNoPushEntitlement` yüzünden remote push KAPALI, ücretli Apple hesabı ister).
+### 🎫 DESTEK SİSTEMİ — Faz 0 ✅ TAMAMLANDI (2026-07-16, uçtan uca doğrulandı)
+> Detay: `DESTEK-SISTEMI.md` + `DESTEK-SEMA-MOBIL.md` + `destek-faz0.sql`. Web+mobil (ortak Supabase,
+> iki Claude mutabakatı). **Uçtan uca ÇALIŞIYOR:** agent yanıtı → çan bildirimi (realtime web+mobil) +
+> e-posta (Resend, `merhaba@paraner.com`). Mehmet canlı doğruladı (web çanı yandı + mail geldi).
+> ⚠️ E-posta Database Webhook UI ile DEĞİL (o "supabase_functions does not exist" verdi) → webhook'suz:
+> `notify_on_agent_reply` trigger'ı `pg_net.http_post` ile support-reply-notify'ı çağırıyor, secret Vault'ta
+> (`support_webhook_secret`) + Edge Function Secrets (`SUPPORT_WEBHOOK_SECRET`) — ikisi aynı değer.
+- [ ] **Test verisi temizle:** `delete from notifications where data->>'ticket_id' in (select id::text from support_tickets where subject like 'ZZTEST%'); delete from support_tickets where subject like 'ZZTEST%';`
+- [ ] **Gerçek destek ekibi hesapları** `user_roles`'e (şu an sadece admin@paraner.com agent).
+- [ ] **Faz 1:** mobil push — mobilde `withNoPushEntitlement` yüzünden remote push KAPALI, **ücretli Apple hesabı + APNs** ister (Mehmet kararı).
+- [ ] **Faz 2 (opsiyonel):** kullanıcı yeni mesajında agent'a bildirim · agent atama/öncelik/filtre · ek dosya yükleme (ticket-attachments bucket) · çanda "tümünü okundu".
+- [ ] ⚠️ **Google Workspace ödeme** — `merhaba@paraner.com` aboneliği 3 Ağu 2026'ya kadar yenilenmeli, yoksa TÜM sistem mailleri durur.
 
 ### 🔴 CANLI GÖZ TEYİDİ BEKLİYOR
 > İŞE BAŞLARKEN İLK BUNU SOR. Kod tarafı + headless doğrulandı; gerçek cihaz/göz onayı yok.
