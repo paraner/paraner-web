@@ -4,6 +4,16 @@
 
 ## Şimdiki
 
+### 🛠️ ADMIN / İÇ EKİP PANELİ (/admin) — Faz 1 iskeleti kuruldu, 2 adım bekliyor
+> Plan: `ADMIN-PANEL.md`. Mehmet: kurucu+çalışanlar için müşteri yönetim paneli (üyeleri tür/abonelik
+> analiz + destek). Aynı repo içinde `/admin` route (Next code-split → müşteri bundle'ını şişirmez).
+> Kuruldu: rol guard (`lib/adminGuard`), service_role client (`lib/supabase/admin`, server-only),
+> layout+sidebar (Müşteriler/Ekip admin-only), Dashboard (metrik), Müşteriler (liste+filtre), Destek
+> (ticket listesi), Ekip (yakında). ⚠️ Mehmet "tam anlamadım, bir dahaki işte anlat" dedi → AKIŞI baştan anlat.
+- [ ] **Mehmet: service_role key ekle** (.env.local `SUPABASE_SERVICE_ROLE_KEY` + Vercel env → redeploy). Yoksa Dashboard/Müşteriler "AdminKeyNotice" gösterir.
+- [ ] **Mehmet: admin@paraner.com'u admin yap** — `insert into user_roles(user_id,role) select id,'admin' from auth.users where email='admin@paraner.com' on conflict do nothing;` (şu an sadece agent → Müşteriler'i görmüyor).
+- [ ] **Sonraki (kod):** müşteri **detay/analiz sayfası** (üyeye tıkla → işlemleri/faturaları/aktivitesi) · çalışan davet UI + audit log · `admin.paraner.com` host bağlama (proxy.ts `isAdmin` + `replace(/^(app|admin)\./,...)`, ~4-5 satır).
+
 ### 🎫 DESTEK SİSTEMİ — Faz 0 ✅ TAMAMLANDI (2026-07-16, uçtan uca doğrulandı)
 > Detay: `DESTEK-SISTEMI.md` + `DESTEK-SEMA-MOBIL.md` + `destek-faz0.sql`. Web+mobil (ortak Supabase,
 > iki Claude mutabakatı). **Uçtan uca ÇALIŞIYOR:** agent yanıtı → çan bildirimi (realtime web+mobil) +
