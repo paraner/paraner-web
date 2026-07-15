@@ -2374,7 +2374,7 @@ ul { list-style: none; }
 .total-banner .t-item .t-value { font-size: 20px; font-weight: 700; margin-top: 6px; color: var(--teal); letter-spacing: -0.02em; }
 
 /* Durum rozeti (fatura) */
-.badge { font-size: 11px; font-weight: 600; border-radius: 999px; padding: 4px 11px; white-space: nowrap; }
+.badge { font-size: 11px; font-weight: 600; border-radius: 8px; padding: 4px 11px; white-space: nowrap; }
 .badge.gray { background: rgba(255,255,255,0.08); color: var(--text-dim); }
 .badge.green { background: rgba(0,191,166,0.15); color: var(--teal); }
 .badge.amber { background: rgba(186,117,23,0.18); color: var(--warning); }
