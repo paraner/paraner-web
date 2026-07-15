@@ -98,11 +98,14 @@ create policy messages_insert on public.ticket_messages for insert
     )
   );
 
--- notifications: kullanıcı kendi (okur + okundu). INSERT service_role (edge fn) → policy yok.
+-- notifications: kullanıcı kendi (okur + okundu + siler). INSERT trigger/service_role (SECURITY DEFINER).
 drop policy if exists notif_select on public.notifications;
 create policy notif_select on public.notifications for select using (user_id = auth.uid());
 drop policy if exists notif_update on public.notifications;
 create policy notif_update on public.notifications for update using (user_id = auth.uid());
+-- DELETE: mobilin "Tümünü sil"/× için istediği (yoksa sadece okundu yapılıyordu)
+drop policy if exists notif_delete on public.notifications;
+create policy notif_delete on public.notifications for delete using (user_id = auth.uid());
 
 -- user_roles: kendi rolünü okur; yazma service_role/manuel (Dashboard'dan atanır)
 drop policy if exists roles_select on public.user_roles;
@@ -127,6 +130,34 @@ end $$;
 drop trigger if exists trg_touch_ticket on public.ticket_messages;
 create trigger trg_touch_ticket after insert on public.ticket_messages
   for each row execute function public.touch_ticket_on_message();
+
+-- ── Agent yanıtı → kullanıcıya uygulama-içi bildirim (çan) ─────────────────
+-- SECURITY DEFINER: agent, kullanıcının notifications satırını RLS'e takılmadan oluşturur.
+-- data.ticket_id HER ZAMAN dolu (mobil + web route bundan kuruluyor; link web-only kolaylık).
+create or replace function public.notify_on_agent_reply()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_user_id uuid;
+  v_subject text;
+begin
+  if new.sender_type <> 'agent' then return new; end if;
+  select user_id, subject into v_user_id, v_subject
+    from public.support_tickets where id = new.ticket_id;
+  if v_user_id is null then return new; end if;
+  insert into public.notifications (user_id, type, title, body, link, data)
+  values (
+    v_user_id,
+    'support_reply',
+    'Talebin yanıtlandı',
+    coalesce(v_subject, 'Destek talebi') || ' — ' || left(new.body, 120),
+    '/panel/destek/' || new.ticket_id::text,
+    jsonb_build_object('ticket_id', new.ticket_id, 'message_id', new.id)
+  );
+  return new;
+end $$;
+drop trigger if exists trg_notify_agent_reply on public.ticket_messages;
+create trigger trg_notify_agent_reply after insert on public.ticket_messages
+  for each row execute function public.notify_on_agent_reply();
 
 -- ── NOTLAR ─────────────────────────────────────────────────────────────────
 -- 1) Storage bucket 'ticket-attachments' (private) → Dashboard > Storage'dan oluştur
