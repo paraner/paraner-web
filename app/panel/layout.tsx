@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import Link from "next/link";
 import { getProfiles } from "../../lib/supabase/profile";
 import Sidebar from "./Sidebar";
 import LoginReporter from "./LoginReporter";
 import AccountStatusGuard from "./AccountStatusGuard";
 import ToastHost from "../components/ToastHost";
 import ConfirmProvider from "../components/ConfirmProvider";
-import { SparkleIcon, GearIcon } from "../../components/icons";
+import { SparkleIcon } from "../../components/icons";
 import NotificationBell from "./NotificationBell";
 
 // Panel uygulamanın içi — tüm /panel sayfaları arama motorlarına kapalı
@@ -53,13 +52,11 @@ export default function PanelLayout({
       <div className="panel-main">
         <header className="panel-topbar">
           <div className="panel-topbar-actions">
+            {/* Bildirim en solda (ilk). Ayarlar üst bardan kaldırıldı → sol menüde zaten var. */}
+            <NotificationBell />
             <button type="button" className="topbar-icon-btn" aria-label="AI Sohbet" title="AI Sohbet">
               <SparkleIcon />
             </button>
-            <NotificationBell />
-            <Link href="/panel/ayarlar" className="topbar-icon-btn" aria-label="Ayarlar" title="Ayarlar">
-              <GearIcon />
-            </Link>
           </div>
         </header>
         <div className="panel-content">{children}</div>
