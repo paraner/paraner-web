@@ -1,9 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { LogOut } from "lucide-react";
 import { createClient } from "../../lib/supabase/client";
 
-export default function LogoutButton() {
+export default function LogoutButton({
+  variant = "button",
+  collapsed = false,
+}: {
+  /** "button" = Ayarlar sayfası (kutu buton) · "nav" = Sidebar alt menü öğesi */
+  variant?: "button" | "nav";
+  collapsed?: boolean;
+} = {}) {
   const [loading, setLoading] = useState(false);
 
   async function handleLogout() {
@@ -19,6 +27,22 @@ export default function LogoutButton() {
     const { protocol, hostname, port } = window.location;
     const marketingHost = hostname.replace(/^app\./, "");
     window.location.href = `${protocol}//${marketingHost}${port ? ":" + port : ""}/`;
+  }
+
+  // Sidebar alt menüsünde: Ayarlar/Destek ile aynı görünüm (panel-nav-item)
+  if (variant === "nav") {
+    return (
+      <button
+        type="button"
+        onClick={handleLogout}
+        disabled={loading}
+        className="panel-nav-item nav-logout"
+        title={collapsed ? "Çıkış Yap" : undefined}
+      >
+        <LogOut />
+        <span className="nav-label">{loading ? "Çıkış yapılıyor…" : "Çıkış Yap"}</span>
+      </button>
+    );
   }
 
   return (

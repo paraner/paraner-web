@@ -22,8 +22,10 @@ import {
   Lock,
   User,
   Building2,
+  LifeBuoy,
 } from "lucide-react";
 import { BUSINESS_SECTIONS, type BusinessMenuItem } from "./businessMenu";
+import LogoutButton from "./LogoutButton";
 
 // `unstable_dynamicOnHover` App Router Link'inde VAR (next/dist/client/app-dir/link.d.ts:125)
 // ama `next/link` girişinin tip tanımına henüz yansımamış → prop'u tipe tanıtan ince sarmalayıcı.
@@ -684,7 +686,7 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
         </nav>
       </div>
 
-      {/* Ayarlar — kaydırmadan bağımsız, en altta sabit */}
+      {/* Alt menü (Ayarlar · Destek · Çıkış) — kaydırmadan bağımsız, en altta sabit */}
       <div className="nav-footer">
         <NavLink
           href="/panel/ayarlar"
@@ -695,6 +697,16 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
           <Settings />
           <span className="nav-label">Ayarlar</span>
         </NavLink>
+        <NavLink
+          href="/panel/destek"
+          className={`panel-nav-item${pathname === "/panel/destek" ? " active" : ""}`}
+          title={collapsed ? "Destek" : undefined}
+          unstable_dynamicOnHover
+        >
+          <LifeBuoy />
+          <span className="nav-label">Destek</span>
+        </NavLink>
+        <LogoutButton variant="nav" collapsed={collapsed} />
       </div>
 
       {/* Daralt / genişlet — sağ kenara yüzen yuvarlak kol.
