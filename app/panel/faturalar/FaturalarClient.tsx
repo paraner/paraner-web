@@ -357,6 +357,9 @@ export default function FaturalarClient({
 
   return (
     <>
+      {/* Çekmece açıkken içerik sola daralır (padding-right) → liste drawer'ın ALTINA girmez.
+          İşlemler ile aynı desen (.tx-area / .shifted). */}
+      <div className={`tx-area${selected ? " shifted" : ""}`}>
       <PageHead
         title={head.title}
         sub={head.sub}
@@ -526,6 +529,7 @@ export default function FaturalarClient({
           </div>
         </>
       )}
+      </div>
 
       {/* Sağ detay çekmecesi */}
       {selected &&
