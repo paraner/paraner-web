@@ -111,9 +111,17 @@ create policy notif_delete on public.notifications for delete using (user_id = a
 drop policy if exists roles_select on public.user_roles;
 create policy roles_select on public.user_roles for select using (user_id = auth.uid());
 
--- ── Realtime yayını (in-app çan + canlı thread) ────────────────────────────
-alter publication supabase_realtime add table public.ticket_messages;
-alter publication supabase_realtime add table public.notifications;
+-- ── Realtime yayını (in-app çan + canlı thread) ── idempotent (zaten üyeyse atla)
+do $$ begin
+  if not exists (select 1 from pg_publication_tables
+    where pubname='supabase_realtime' and schemaname='public' and tablename='ticket_messages') then
+    alter publication supabase_realtime add table public.ticket_messages;
+  end if;
+  if not exists (select 1 from pg_publication_tables
+    where pubname='supabase_realtime' and schemaname='public' and tablename='notifications') then
+    alter publication supabase_realtime add table public.notifications;
+  end if;
+end $$;
 
 -- ── updated_at / last_message_at otomatik güncelleme ───────────────────────
 create or replace function public.touch_ticket_on_message()
