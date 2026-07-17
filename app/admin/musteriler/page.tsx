@@ -9,5 +9,7 @@ export default async function AdminMusterilerPage() {
   // Müşteri = KİŞİ (auth.users), profiller onun altında. E-posta profiles'ta yok → auth'tan gelir.
   const { people, truncated } = await listPeople();
 
-  return <MusterilerClient people={people} truncated={truncated} />;
+  // Zaman damgası SUNUCUDA alınır → durum rozetleri ilk boyamada dolu gelir ve
+  // sunucu/istemci aynı anı hesapladığı için hydration ayrışması olmaz.
+  return <MusterilerClient people={people} truncated={truncated} now={Date.now()} />;
 }

@@ -15,6 +15,9 @@ export type AdminPersonProfile = {
   subscription_tier: string | null;
   currency: string | null;
   created_at: string | null;
+  /* Gerçek durum bunlardan HESAPLANIR (is_premium bayat olabilir) → lib/lifecycle.ts */
+  trial_plan: string | null;
+  trial_start_date: string | null;
 };
 
 export type AdminPerson = {
@@ -35,7 +38,7 @@ type AuthUser = {
 };
 
 const PROFILE_COLS =
-  "id, auth_user_id, profile_name, name, profile_type, is_premium, subscription_tier, currency, created_at";
+  "id, auth_user_id, profile_name, name, profile_type, is_premium, subscription_tier, currency, created_at, trial_plan, trial_start_date";
 
 /* auth.users'ın tamamı — listUsers sayfalıdır ve toplam sayı DÖNMEZ; son sayfa perPage'den
    kısa gelene kadar dönülür. MAX_PAGES: bozuk yanıtta sonsuz döngü olmasın diye emniyet freni

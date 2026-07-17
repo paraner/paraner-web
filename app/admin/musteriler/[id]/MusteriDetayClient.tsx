@@ -14,6 +14,8 @@ import {
   type ActionResult,
 } from "../../../../lib/adminActions";
 import type { AdminPerson } from "../../../../lib/adminUsers";
+import { profileLifecycle, lifecycleLabel, LIFECYCLE_META } from "../../../../lib/lifecycle";
+import { tierLabel } from "../../../../lib/plans";
 
 export type ProfileUsage = {
   profileId: string;
@@ -103,9 +105,21 @@ export default function MusteriDetayClient({
                       <span className={`badge ${p.profile_type === "business" ? "blue" : "gray"}`}>
                         {p.profile_type === "business" ? "İşletme" : "Bireysel"}
                       </span>{" "}
-                      <span className={`badge ${p.is_premium ? "green" : "gray"}`}>
-                        {p.is_premium ? p.subscription_tier || "Premium" : "Free"}
-                      </span>
+                      {/* Durum HESAPLANIR — is_premium bayat olabilir (bkz. lib/lifecycle.ts).
+                          Ham tier'ı da gösteriyoruz: geçersiz/kirli değer gözden kaçmasın. */}
+                      {(() => {
+                        const l = profileLifecycle(p);
+                        return (
+                          <>
+                            <span className={`badge ${LIFECYCLE_META[l.kind].badge}`}>
+                              {lifecycleLabel(l)}
+                            </span>{" "}
+                            <span className="admin-td-dim" style={{ fontSize: 12 }}>
+                              {tierLabel(p.subscription_tier)}
+                            </span>
+                          </>
+                        );
+                      })()}
                     </div>
                     <button
                       type="button"

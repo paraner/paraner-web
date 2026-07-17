@@ -3885,6 +3885,16 @@ ul { list-style: none; }
 .admin-bar-legend .dot.prem { background: var(--teal); }
 .admin-bar-legend .dot.free { background: var(--text-dim); }
 
+/* --- Müşteri listesi: sıralama + aksiyon gerektiren segment --- */
+.admin-select {
+  background: var(--card-2); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-size: 13px; padding: 7px 10px; cursor: pointer;
+}
+.admin-select:focus { outline: none; border-color: var(--focus-ring, rgba(255,255,255,0.3)); }
+/* Zombi segmenti dikkat çekmeli — aksiyon listesi, dekor değil */
+.admin-chip.danger { border-color: rgba(226,75,74,0.4); color: var(--danger); }
+.admin-chip.danger.active { background: rgba(226,75,74,0.15); border-color: var(--danger); }
+
 /* --- Müşteri detayı + ekip --- */
 .admin-row-click { cursor: pointer; }
 .admin-row-click:hover { background: rgba(255,255,255,0.03); }
