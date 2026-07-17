@@ -114,6 +114,15 @@ export const LOST_AFTER_DAYS = 30;
 
 /** Kişinin gerçek aktifliği: cihaz last_seen'i; yoksa (hiç cihaz kaydı yoksa) girişe düş. */
 export const lastActivity = (p: AdminPerson): string | null => p.last_seen_at ?? p.last_sign_in_at;
+
+/* ŞU AN AKTİF: kalp atışı 5 dk'da bir vuruyor (web app/panel/Heartbeat.tsx + mobil
+   lib/heartbeat.ts → touch_device RPC). Eşik 12 dk: bir atış kaçsa (ağ/uyku/sekme
+   arka planda) kullanıcı hemen "offline" görünmesin. `last_sign_in_at`e ASLA düşme —
+   o donuk alan aylar önce giriş yapmış birini "şu an aktif" gösterirdi. */
+export const ONLINE_WITHIN_MS = 12 * 60 * 1000;
+
+export const isOnline = (p: AdminPerson, now = Date.now()): boolean =>
+  p.last_seen_at != null && now - new Date(p.last_seen_at).getTime() < ONLINE_WITHIN_MS;
 /** "Yeni" sayılma eşiği: son 7 günde kayıt. */
 export const NEW_WITHIN_DAYS = 7;
 /** Deneme "bitmek üzere" eşiği. */

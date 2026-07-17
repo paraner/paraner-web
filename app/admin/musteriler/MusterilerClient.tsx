@@ -15,6 +15,7 @@ import {
   relativeDays,
   relativeLabel,
   lastActivity,
+  isOnline,
   LOST_AFTER_DAYS,
   NEW_WITHIN_DAYS,
   TRIAL_ENDING_DAYS,
@@ -22,12 +23,13 @@ import {
 
 /* Segment = "şu an ne yapmam gerek" listesi. Sıra bilinçli: aksiyon gerektirenler önde.
    Tür (İşletme/Bireysel) ikincil filtre — ana eksen yaşam döngüsü (17.07.2026 kararı). */
-type Segment = "all" | "new" | "trial" | "ending" | "zombie" | "paid" | "free" | "banned" | "lost" | "no_profile";
+type Segment = "all" | "online" | "new" | "trial" | "ending" | "zombie" | "paid" | "free" | "banned" | "lost" | "no_profile";
 type TypeFilter = "all" | "business" | "individual";
 type Sort = "created_desc" | "created_asc" | "seen_desc" | "seen_asc" | "trial_end" | "email";
 
 const SEGMENTS: { id: Segment; label: string }[] = [
   { id: "all", label: "Tümü" },
+  { id: "online", label: "🟢 Şu an aktif" },
   { id: "zombie", label: "⚠️ Deneme bitti · premium açık" },
   { id: "ending", label: "Denemesi bitiyor" },
   { id: "trial", label: "Denemede" },
@@ -103,6 +105,8 @@ export default function MusterilerClient({
       switch (s) {
         case "all":
           return true;
+        case "online":
+          return isOnline(p, now);
         case "banned":
           return banned;
         case "zombie":
@@ -289,7 +293,15 @@ export default function MusterilerClient({
                         {lifecycleLabel(l)}
                       </span>
                     </td>
-                    <td className="admin-td-dim">{relativeLabel(lastActivity(p), now)}</td>
+                    <td className="admin-td-dim">
+                      {isOnline(p, now) ? (
+                        <span className="admin-online" title="Son 12 dakika içinde aktif">
+                          <i /> şu an aktif
+                        </span>
+                      ) : (
+                        relativeLabel(lastActivity(p), now)
+                      )}
+                    </td>
                     <td className="admin-td-dim">{fmtDate(p.created_at)}</td>
                   </tr>
                 );

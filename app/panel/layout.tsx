@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { getProfiles } from "../../lib/supabase/profile";
 import Sidebar from "./Sidebar";
 import LoginReporter from "./LoginReporter";
+import Heartbeat from "./Heartbeat";
 import AccountStatusGuard from "./AccountStatusGuard";
 import ToastHost from "../components/ToastHost";
 import ConfirmProvider from "../components/ConfirmProvider";
@@ -39,6 +40,8 @@ export default function PanelLayout({
     <div className="panel-shell">
       {/* Girişten sonra (oturum başına bir kez) güvenlik: yeni cihaz/konum bildirimi */}
       <LoginReporter />
+      {/* Canlı aktiflik: panel görünürken last_seen'i tazeler (admin paneli buradan okur) */}
+      <Heartbeat />
       {/* Hesap kalıcı kapatıldıysa (sunucuda silindiyse) oturumu kapat + girişe at */}
       <AccountStatusGuard />
       {/* Uygulama geneli bildirim + onay kutusu sistemi */}
