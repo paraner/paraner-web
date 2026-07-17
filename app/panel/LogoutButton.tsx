@@ -24,9 +24,11 @@ export default function LogoutButton({
     await supabase.auth.signOut({ scope: "local" });
     // Çıkışta pazarlama anasayfasına (paraner.com) at — app.paraner.com → paraner.com,
     // dev'de app.localhost → localhost. Tam yeniden yükleme (server oturumu da temizlensin).
+    // İSTİSNA admin.*: iç ekip pazarlama sayfasına düşmesin → kendi host'unda kalır, proxy
+    // oturumsuz kullanıcıyı admin.paraner.com/giris'e alır (tekrar girmek tek tık).
     const { protocol, hostname, port } = window.location;
-    const marketingHost = hostname.replace(/^app\./, "");
-    window.location.href = `${protocol}//${marketingHost}${port ? ":" + port : ""}/`;
+    const target = hostname.startsWith("admin.") ? hostname : hostname.replace(/^app\./, "");
+    window.location.href = `${protocol}//${target}${port ? ":" + port : ""}/`;
   }
 
   // Sidebar alt menüsünde: Ayarlar/Destek ile aynı görünüm (panel-nav-item)

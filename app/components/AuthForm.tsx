@@ -55,7 +55,10 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
 
   const goPanel = useCallback(() => {
     const { protocol, hostname } = window.location;
-    if (hostname.endsWith("paraner.com")) {
+    // admin.* → iç ekip kendi host'unda kalır (kök → /admin, proxy yönlendirir); app.*'a atma.
+    if (hostname.startsWith("admin.")) {
+      window.location.assign(`${protocol}//${hostname}/`);
+    } else if (hostname.endsWith("paraner.com")) {
       window.location.assign(`${protocol}//app.paraner.com/`);
     } else {
       router.push("/panel");

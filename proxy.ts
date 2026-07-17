@@ -5,14 +5,20 @@ import { cookieDomain } from "./lib/supabase/cookieDomain";
 // "Trafik polisi": gelen isteğin adresine (host) göre karar verir.
 //  - paraner.com (pazarlama)     → dokunma, olduğu gibi geçir
 //  - app.paraner.com (panel)     → oturumu kontrol et; yoksa girişe at, varsa paneli göster
+//  - admin.paraner.com (iç ekip) → aynı oturum kontrolü; kök → /admin. Rol guard KODA ait
+//    (app/admin/layout.tsx): staff olmayan buraya girse bile müşteri paneline atılır.
 export async function proxy(request: NextRequest) {
   const host = request.headers.get("host") || "";
   const hostname = host.split(":")[0];
   // app.* öneki olan her host panel sayılır (app.paraner.com, app.localhost, preview app.*)
   const isApp = hostname.startsWith("app.");
+  // admin.* → iç ekip paneli (admin.paraner.com, admin.localhost)
+  const isAdmin = hostname.startsWith("admin.");
+  // İkisi de oturum gerektiren "kapalı" host'lar — aşağıdaki tüm auth mantığı ortak.
+  const isPrivate = isApp || isAdmin;
 
   // Pazarlama domaini → panel yolu sadece app.* üzerinde olsun
-  if (!isApp) {
+  if (!isPrivate) {
     if (
       request.nextUrl.pathname.startsWith("/panel") &&
       (hostname === "paraner.com" || hostname === "www.paraner.com")
@@ -24,8 +30,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // --- Buradan sonrası SADECE app.* subdomain'i için ---
+  // --- Buradan sonrası SADECE app.* / admin.* subdomain'leri için ---
   const domain = cookieDomain(host);
+  // Girişli kullanıcının bu host'ta göreceği kök sayfa
+  const homePath = isAdmin ? "/admin" : "/panel";
+  // Girişsiz kullanıcı nereye atılır: app.* → pazarlama girişi (app.paraner.com → paraner.com),
+  // admin.* → KENDİ host'unda kal (iç ekip admin.paraner.com'da giriş yapar, pazarlamaya düşmez).
+  const loginHostname = isAdmin ? hostname : hostname.replace(/^app\./, "");
 
   // Supabase oturumunu cookie üzerinden tazele
   let response = NextResponse.next({ request });
@@ -93,8 +104,24 @@ export async function proxy(request: NextRequest) {
   // Girişli kullanıcı /giris veya /kayit'a gelirse panele al (tekrar giriş/OTP olmasın)
   if (user && (pathname.startsWith("/giris") || pathname.startsWith("/kayit"))) {
     const url = request.nextUrl.clone();
-    url.pathname = "/panel";
+    url.pathname = homePath;
     url.search = "";
+    return copyCookies(NextResponse.redirect(url), response);
+  }
+
+  // admin.* üzerinde KAYIT yok — iç ekip hesabı davetle/elle açılır, kimse buradan üye olmaz.
+  if (isAdmin && pathname.startsWith("/kayit")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/giris";
+    url.search = "";
+    return copyCookies(NextResponse.redirect(url), response);
+  }
+
+  // İki panel iki adreste: müşteri paneli admin.* üzerinden SERVİS EDİLMEZ.
+  // (admin/layout.tsx staff olmayanı /panel'e atıyor → admin.paraner.com/panel'e düşerdi.)
+  if (isAdmin && pathname.startsWith("/panel")) {
+    const url = request.nextUrl.clone();
+    url.hostname = hostname.replace(/^admin\./, "app."); // admin.paraner.com → app.paraner.com
     return copyCookies(NextResponse.redirect(url), response);
   }
 
@@ -121,7 +148,7 @@ export async function proxy(request: NextRequest) {
     // hesap gerçekten silinmiştir. Bu ekstra tur sadece bu nadir dalda ödenir.
     if (userError?.status === 403 && (await isUserDeleted(supabase))) {
       const url = request.nextUrl.clone();
-      url.hostname = hostname.replace(/^app\./, "");
+      url.hostname = loginHostname;
       url.pathname = "/giris";
       url.searchParams.set("closed", "1");
       const redirect = copyCookies(NextResponse.redirect(url), response);
@@ -145,15 +172,15 @@ export async function proxy(request: NextRequest) {
       return response;
     }
     const url = request.nextUrl.clone();
-    url.hostname = hostname.replace(/^app\./, ""); // app.paraner.com → paraner.com
+    url.hostname = loginHostname; // app.paraner.com → paraner.com | admin.paraner.com → kendisi
     url.pathname = "/giris";
     return copyCookies(NextResponse.redirect(url), response);
   }
 
-  // Girişliyse: app kökü (/) → paneli göster
+  // Girişliyse: host kökü (/) → o host'un paneli (app → /panel, admin → /admin)
   if (pathname === "/") {
     const url = request.nextUrl.clone();
-    url.pathname = "/panel";
+    url.pathname = homePath;
     return copyCookies(NextResponse.rewrite(url), response);
   }
 

@@ -61,7 +61,7 @@ export default function MusterilerClient({ rows }: { rows: AdminProfile[] }) {
   return (
     <div>
       <h1 className="admin-h1">Müşteriler</h1>
-      <p className="admin-sub">{rows.length.toLocaleString("tr-TR")} üye · filtrele, ara ve detaya in.</p>
+      <p className="admin-sub">{rows.length.toLocaleString("tr-TR")} profil · filtrele, ara ve detaya in.</p>
 
       <div className="admin-filters">
         <div className="admin-chip-row">
@@ -94,7 +94,7 @@ export default function MusterilerClient({ rows }: { rows: AdminProfile[] }) {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={5} className="admin-empty-cell">Eşleşen üye yok.</td>
+                <td colSpan={5} className="admin-empty-cell">Eşleşen profil yok.</td>
               </tr>
             ) : (
               filtered.slice(0, 300).map((r) => (
