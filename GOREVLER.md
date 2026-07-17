@@ -14,8 +14,12 @@
 - [x] **admin@paraner.com admin yapıldı** (2026-07-17, service_role ile `user_roles`'e insert; `agent` satırı da duruyor, kod admin>agent okuyor).
 - [x] **`admin.paraner.com` host bağlama (kod)** — 2026-07-17 `b21300c`: proxy `isAdmin`/`isPrivate`, kök→`/admin`, giriş admin host'unda, `/kayit` kapalı, `admin.*/panel`→`app.*`; AuthForm.goPanel + LogoutButton admin-farkında.
 - [ ] **Mehmet: Vercel → Domains → `admin.paraner.com` ekle** (DNS). Yapılmadan adres açılmaz — kod hazır.
-- [ ] **Canlı teyit:** admin.paraner.com → giriş → yönetim paneli; müşteri hesabıyla girince app.paraner.com/panel'e atılıyor mu?
-- [ ] **Sonraki (kod):** müşteri **detay/analiz sayfası** (üyeye tıkla → işlemleri/faturaları/aktivitesi) · çalışan davet UI + audit log.
+- [x] **İç ekip giriş ekranı** (`3f01f6c`) — admin.paraner.com/giris: e-posta+şifre, kayıt/sosyal YOK.
+- [x] **Müşteri detay + aksiyonlar + ekip yönetimi** (`62a10ab`, canlı doğrulandı): kişi bazlı liste (e-posta ile arama), detay (profiller + işlem/fatura/hesap + son hareket), şifre sıfırlama maili · premium/free · askıya al (Supabase ban) · kalıcı sil, ekip davet/rol ver-al.
+- [ ] ⚠️ **Mehmet: `admin-audit-log.sql`'i Supabase SQL Editor'de çalıştır.** Yapılmadan aksiyonlar ÇALIŞIR ama iz bırakmaz (log hatası sunucu konsoluna yazılır, aksiyon düşmez).
+- [ ] **Canlı GÖZ teyidi:** admin.paraner.com → giriş → panel; müşteriye tıkla → detay; müşteri hesabıyla girince app.paraner.com/panel'e atılıyor mu?
+- [ ] **Şifre sıfırlama maili ön koşulu:** Supabase → Auth → URL Configuration → Redirect URLs'te `https://paraner.com/sifre-sifirla` YOKSA link reddedilir (DAILY_LOG'da zaten bekleyen madde). Aksiyonu ilk kullanmadan teyit et.
+- [ ] **Sonraki (kod):** audit log'u panelde GÖSTER (şu an yalnız yazılıyor) · müşterinin destek talepleri detay sayfasında · trial/abonelik analizi.
 - [ ] **Karar:** `app.paraner.com/admin` hâlâ açık (rol-korumalı, açık değil). DNS canlıya alınınca admin host'una redirect edilsin mi (tek adres) — Mehmet.
 - [ ] **Ölçek notu:** Dashboard "Toplam Üye" = distinct `auth_user_id` (PostgREST'te distinct count yok → kolon çekilip Set'leniyor, `.limit(10000)`). Binlerce profilde RPC gerekir → **DB şeması = önce sor**.
 
