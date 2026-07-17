@@ -6,6 +6,22 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 > ⚠️ Next 16: `middleware` → **`proxy`** olarak yeniden adlandırıldı (`proxy.ts`, fonksiyon adı `proxy`).
 
+# ⚠️ KODA BAŞLAMADAN ÖNCE: ETKİ HARİTASI ÇIKAR (2026-07-17)
+
+Paraner tek kod tabanı DEĞİL: **paraner-web + paraner-app (`~/Developer/Paraner/paraner-app`) + ORTAK Supabase**.
+Bir yeri değiştirip diğerini atlamak = kullanıcının gördüğü tutarsızlık. Değişiklik/ekleme isteği gelince
+**önce şu katmanları tek tek tara, etkilenenleri çıkar, yol haritasını Mehmet'e sun; sonra kodla:**
+
+1. **web kodu** · 2. **mobil kodu** (aynı iş orada da var mı?) · 3. **DB**: şema/RPC/trigger
+   (⚠️ asıl karar sıklıkla BURADA — ör. deneme süresini `get_trial_status` RPC'si belirliyor, koddaki sabit değil)
+4. **edge function'lar** (kod yetmez → `supabase functions deploy X`) · 5. **kullanıcıya görünen metinler** (tüm sayfalar)
+6. **SEO şeması** (`app/layout.tsx` AggregateOffer → Google'a yayınlanıyor; fiyat değişince BURASI da değişir)
+7. **pazarlama sayfaları + onboarding** · 8. **ileriye dönük:** "ödeme entegrasyonu gelince burası kırılır" notunu kod/SQL'e + GOREVLER'e yaz.
+
+**Gerçeği kaynaktan doğrula, varsayma** (Mehmet'in verdiği bilgi de yanlış olabilir — "trial 14 gün" dedi, kaynak 7'ydi).
+**Tek doğru kaynak:** sabit/sözlük tek dosyada (`lib/plans.ts`, `lib/supportShared.ts` `TICKET_COLS`, mobil `TRIAL_DAYS`) — kopyalama yok.
+İş kararı (fiyat/plan/süre) Mehmet'in; ben seçenek sunarım. Fiyat/plan tek doğru kaynağı: **mobil `app/premium.tsx`**.
+
 # Proje Yapısı
 
 İki domain, tek Next.js projesi (Vercel):
