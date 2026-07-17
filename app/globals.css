@@ -3853,12 +3853,15 @@ ul { list-style: none; }
   font-size: 11px; font-weight: 700; color: var(--teal); background: rgba(0,191,166,0.1);
   border: 1px solid rgba(0,191,166,0.2); border-radius: 8px; padding: 5px 10px; text-align: center;
 }
-.admin-main { flex: 1; min-width: 0; }
-/* Yönetim paneli TAM GENİŞLİK: burada 1200px sınırı vardı → geniş ekranda içerik sola
-   sıkışıp sağı boş kalıyordu. Bu bir veri ekranı (tablo/metrik) — okuma kolonu değil,
-   dar tutmanın faydası yok. Çok geniş ekranda satırlar aşırı uzamasın diye üst sınır
-   1800px (pratikte 4K dışında devreye girmez). */
-.admin-content { padding: 28px 32px; max-width: 1800px; }
+/* Müşteri paneliyle BİREBİR aynı kabuk (.panel-main / .panel-content) — orası her ekrana
+   sorunsuz oturuyor, admin kendi çözümünü uydurmasın. */
+.admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+/* `.panel-content` ile AYNI: genişlik sınırı YOK, içerik ekranı doldurur.
+   Tarihçe (bir daha tavan koymayalım): önce 1200px vardı → içerik sola sıkışıp sağı boş
+   kalıyordu. 1800'e çıkardım, o da yetmedi — Mehmet'in ekranı 2294 CSS px, sınır hâlâ
+   bağlayıcıydı. Müşteri paneli baştan beri sınırsız ve her ekrana oturuyor; doğru çözüm
+   onun desenini kopyalamaktı. Burası veri ekranı (tablo/metrik) — okuma kolonu değil. */
+.admin-content { padding: 28px 32px; width: 100%; }
 .admin-h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
 .admin-sub { color: var(--text-dim); font-size: 13px; margin-top: 3px; margin-bottom: 24px; }
 
@@ -3957,7 +3960,9 @@ ul { list-style: none; }
 }
 
 /* --- Canlı Görünüm sayfası --- */
-.live-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 16px; margin-top: 20px; }
+/* Sol (aktif kullanıcılar) esner, sağ (konum/platform) SABİT 360px — oransal (2fr/1fr)
+   olsaydı 2294px ekranda yan panel ~700px'e şişip şehir barları saçma görünürdü. */
+.live-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; margin-top: 20px; }
 @media (max-width: 1000px) { .live-grid { grid-template-columns: 1fr; } }
 .live-side { display: flex; flex-direction: column; }
 .live-search { margin-left: auto; font-weight: 400; }
