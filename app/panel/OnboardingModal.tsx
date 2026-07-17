@@ -15,38 +15,39 @@ type StepKey = "currency" | "account" | "company" | "name" | "plan";
 
 type PlanDef = { id: Plan; name: string; price: string; tag?: string; perks: string[] };
 
-/* Planlar HESAP TÜRÜNE göre — tek liste kullanmak iki hata üretiyordu (17.07.2026):
-   1) İşletmeye de "Pro ₺149,90" deniyordu; mobilde İşletme Pro ₺490 (app/premium.tsx).
-   2) Bireysele "Max" sunuluyordu → `individual_max_monthly` yazılıyordu; mobilde böyle bir
-      tier YOK (stores/authStore.ts) → plan mobilde etiketsiz görünüyordu.
-   Fiyatlar mobil premium.tsx ile birebir (Mehmet kararı: mobil doğru kaynak).
-   Seçilen id → `${accountType}_${plan}_monthly` olarak yazılıyor; üretilen tüm değerler
-   lib/plans.ts'teki geçerli sözlükte olmalı. */
+/* Planlar HESAP TÜRÜNE göre — MOBİL GERÇEĞİYLE BİREBİR (17.07.2026, Mehmet: "mobil ne ise
+   web'de de o olacak"). Kaynak: paraner-app/app/premium.tsx + app/plan-detail.tsx.
+
+   Önceki hâlde tek liste vardı ve mobilden 3 yerde sapıyordu:
+   1) İşletmeye "Pro ₺149,90" deniyordu → mobilde İşletme Pro ₺490.
+   2) Bireysele "Max" sunuluyordu → `individual_max_monthly` yazıyordu; mobilde böyle bir tier
+      YOK (stores/authStore.ts) → plan mobilde etiketsiz görünüyordu.
+   3) İşletmeye "Ücretsiz" sunuluyordu → mobil: "İşletme hesaplarında ücretsiz plan
+      bulunmamaktadır" (plan-detail.tsx:103), işletme zorunlu trial ile başlar.
+
+   MAX PLANLARI BURADA YOK — bilinçli: mobilde trial verilen planlar yalnızca
+   individual_pro_monthly ve business_pro_monthly (premium.tsx:167 TRIAL_PLANS). Max "ödeme
+   gerekli" diyor, ödeme sistemi ise henüz YOK ("çok yakında aktif olacak"). Ödeme gelince
+   Max buraya mobil ile birlikte eklenir. */
 const INDIVIDUAL_PLANS: PlanDef[] = [
   { id: "free", name: "Ücretsiz", price: "₺0", perks: ["Temel gelir-gider", "30 işlem/ay", "Günde 5 AI mesaj"] },
   {
     id: "pro",
     name: "Pro",
     price: "₺149,90/ay",
-    tag: "Popüler",
+    tag: "14 gün ücretsiz",
     perks: ["Sınırsız işlem", "Sınırsız Parla AI", "Döviz & altın takibi", "Detaylı raporlar"],
   },
 ];
 
+/* İşletmede ücretsiz plan YOK → tek seçenek İşletme Pro (14 gün deneme ile başlar). */
 const BUSINESS_PLANS: PlanDef[] = [
-  { id: "free", name: "Ücretsiz", price: "₺0", perks: ["Temel gelir-gider", "30 işlem/ay", "Günde 5 AI mesaj"] },
   {
     id: "pro",
     name: "İşletme Pro",
     price: "₺490/ay",
-    tag: "Popüler",
+    tag: "14 gün ücretsiz · kredi kartı gerekmez",
     perks: ["KDV & stopaj takibi", "Fatura & teklif", "Kâr/zarar raporu", "Cari hesap yönetimi"],
-  },
-  {
-    id: "max",
-    name: "İşletme Max",
-    price: "₺890/ay",
-    perks: ["Pro'daki her şey", "Çalışan harcama yönetimi", "Çoklu kullanıcı", "Öncelikli 7/24 destek"],
   },
 ];
 
@@ -71,12 +72,13 @@ export default function OnboardingModal({
 
   const isBusiness = accountType === "business";
 
-  /* Hesap türü değişince plan seçimini sıfırla. Yoksa: işletmede "Max" seçip bireysele
-     dönen kullanıcıda plan="max" state'te kalır → `individual_max_monthly` yazılırdı
-     (mobilde geçersiz tier). Bireysel listede Max hiç yok, seçim görünmez de kalırdı. */
+  /* Hesap türü değişince planı o türün varsayılanına al. İki ayrı hatayı önlüyor:
+     • İşletmede ücretsiz plan YOK (mobil paritesi) → plan "free" kalırsa kullanıcı hiç trial
+       başlatmadan işletme hesabı açardı; mobilde bu mümkün değil.
+     • Tür değiştirince eski seçim sızarsa geçersiz tier üretilir (ör. individual + max). */
   function pickAccountType(t: "individual" | "business") {
     setAccountType(t);
-    setPlan("free");
+    setPlan(t === "business" ? "pro" : "free");
   }
   const firstName = (initialName || "").trim().split(" ")[0];
 
@@ -246,8 +248,14 @@ export default function OnboardingModal({
         {/* Plan */}
         {current === "plan" && (
           <div className="onb-step">
-            <h2>Bir plan seç</h2>
-            <p>Ödeme yakında — şimdilik dilediğin planla başla, sonra istediğin zaman değiştir.</p>
+            <h2>{isBusiness ? "İşletme Pro ile başlıyorsun" : "Bir plan seç"}</h2>
+            {/* Mobil paritesi (plan-detail.tsx:103): işletmede ücretsiz plan yok, 14 gün deneme
+                ile başlar, kredi kartı istenmez. */}
+            <p>
+              {isBusiness
+                ? "İşletme hesaplarında ücretsiz plan bulunmuyor. 14 gün ücretsiz denersin, kredi kartı gerekmez."
+                : "Ödeme yakında — şimdilik dilediğin planla başla, sonra istediğin zaman değiştir."}
+            </p>
             <div className="onb-plans">
               {(isBusiness ? BUSINESS_PLANS : INDIVIDUAL_PLANS).map((p) => (
                 <button key={p.id} className={`onb-plan ${plan === p.id ? "sel" : ""}`} onClick={() => setPlan(p.id)}>
