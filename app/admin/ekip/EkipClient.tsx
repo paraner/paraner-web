@@ -47,7 +47,7 @@ export default function EkipClient({ staff }: { staff: StaffMember[] }) {
       </p>
 
       {/* --- Ekle / davet --- */}
-      <div className="admin-panel" style={{ maxWidth: 640 }}>
+      <div className="admin-panel" style={{ maxWidth: 760 }}>
         <div className="admin-panel-head">
           <UserPlus size={16} /> Ekibe kişi ekle
         </div>
@@ -93,7 +93,7 @@ export default function EkipClient({ staff }: { staff: StaffMember[] }) {
       </div>
 
       {/* --- Mevcut ekip --- */}
-      <div className="admin-panel" style={{ marginTop: 16, maxWidth: 640 }}>
+      <div className="admin-panel" style={{ marginTop: 16 }}>
         <div className="admin-panel-head">Ekip ({staff.length})</div>
         {staff.length === 0 ? (
           <p className="admin-td-dim" style={{ fontSize: 13 }}>Henüz kimse yok.</p>

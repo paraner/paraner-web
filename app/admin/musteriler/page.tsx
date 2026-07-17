@@ -3,6 +3,7 @@ import { requireAdminPage } from "../../../lib/adminGuard";
 import { listPeople } from "../../../lib/adminUsers";
 import AdminKeyNotice from "../AdminKeyNotice";
 import MusterilerClient from "./MusterilerClient";
+import LiveRefresh from "../LiveRefresh";
 
 export default async function AdminMusterilerPage() {
   await requireAdminPage(); // agent müşteri verisi göremez (layout guard'ı yalnız "staff mi" der)
@@ -23,5 +24,11 @@ export default async function AdminMusterilerPage() {
 
   // Zaman damgası SUNUCUDA alınır → durum rozetleri ilk boyamada dolu gelir ve
   // sunucu/istemci aynı anı hesapladığı için hydration ayrışması olmaz.
-  return <MusterilerClient people={people} truncated={truncated} now={Date.now()} />;
+  return (
+    <>
+      {/* "Şu an aktif" yeşil noktaları bayat kalmasın — görünürken 60 sn'de bir tazeler */}
+      <LiveRefresh />
+      <MusterilerClient people={people} truncated={truncated} now={Date.now()} />
+    </>
+  );
 }

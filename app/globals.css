@@ -3854,7 +3854,11 @@ ul { list-style: none; }
   border: 1px solid rgba(0,191,166,0.2); border-radius: 8px; padding: 5px 10px; text-align: center;
 }
 .admin-main { flex: 1; min-width: 0; }
-.admin-content { padding: 28px 32px; max-width: 1200px; }
+/* Yönetim paneli TAM GENİŞLİK: burada 1200px sınırı vardı → geniş ekranda içerik sola
+   sıkışıp sağı boş kalıyordu. Bu bir veri ekranı (tablo/metrik) — okuma kolonu değil,
+   dar tutmanın faydası yok. Çok geniş ekranda satırlar aşırı uzamasın diye üst sınır
+   1800px (pratikte 4K dışında devreye girmez). */
+.admin-content { padding: 28px 32px; max-width: 1800px; }
 .admin-h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
 .admin-sub { color: var(--text-dim); font-size: 13px; margin-top: 3px; margin-bottom: 24px; }
 
@@ -3886,6 +3890,18 @@ ul { list-style: none; }
 .admin-bar-legend .dot.free { background: var(--text-dim); }
 
 /* --- Canlı aktiflik göstergesi --- */
+/* "Şu an aktif" KPI kartı — yeşil, diğerlerinden ayrışsın (canlı veri) */
+.admin-kpi.live { border-color: rgba(74,222,128,0.35); background: rgba(74,222,128,0.05); }
+.admin-kpi.live .admin-kpi-ic { color: #4ade80; border-color: rgba(74,222,128,0.3); }
+.admin-kpi-label { display: flex; align-items: center; gap: 6px; }
+.admin-live-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0;
+  box-shadow: 0 0 0 0 rgba(74,222,128,0.7); animation: adminPulse 2s infinite;
+}
+.admin-live-pill {
+  margin-left: 6px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  background: rgba(74,222,128,0.15); color: #4ade80;
+}
 .admin-online { display: inline-flex; align-items: center; gap: 6px; color: #4ade80; font-weight: 600; }
 .admin-online i {
   width: 7px; height: 7px; border-radius: 50%; background: #4ade80;
