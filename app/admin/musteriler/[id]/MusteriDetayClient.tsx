@@ -14,7 +14,7 @@ import {
   type ActionResult,
 } from "../../../../lib/adminActions";
 import type { AdminPerson } from "../../../../lib/adminUsers";
-import { profileLifecycle, lifecycleLabel, LIFECYCLE_META } from "../../../../lib/lifecycle";
+import { profileLifecycle, lifecycleLabel, LIFECYCLE_META, relativeLabel } from "../../../../lib/lifecycle";
 import { tierLabel } from "../../../../lib/plans";
 
 export type ProfileUsage = {
@@ -83,9 +83,13 @@ export default function MusteriDetayClient({
               </span>
             )}
           </h1>
+          {/* İkisi AYNI ŞEY DEĞİL: "son aktiflik" uygulamayı en son ne zaman açtığı
+              (user_devices.last_seen), "son giriş" en son ne zaman kimlik doğruladığı
+              (auth.last_sign_in_at — oturum açık kaldıkça aylarca değişmez). */}
           <p className="admin-sub" style={{ marginBottom: 0 }}>
-            Kayıt {fmtDate(person.created_at)} · Son giriş {fmtDate(person.last_sign_in_at)} ·{" "}
-            {person.profiles.length} profil
+            Kayıt {fmtDate(person.created_at)} · Son aktiflik{" "}
+            {person.last_seen_at ? relativeLabel(person.last_seen_at, now) : "bilinmiyor"} · Son giriş{" "}
+            {fmtDate(person.last_sign_in_at)} · {person.profiles.length} profil
           </p>
         </div>
       </div>

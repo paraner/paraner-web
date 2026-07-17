@@ -14,6 +14,7 @@ import {
   trialDaysLeft,
   relativeDays,
   relativeLabel,
+  lastActivity,
   LOST_AFTER_DAYS,
   NEW_WITHIN_DAYS,
   TRIAL_ENDING_DAYS,
@@ -41,8 +42,8 @@ const SEGMENTS: { id: Segment; label: string }[] = [
 const SORTS: { id: Sort; label: string }[] = [
   { id: "created_desc", label: "Kayıt · yeni → eski" },
   { id: "created_asc", label: "Kayıt · eski → yeni" },
-  { id: "seen_desc", label: "Son giriş · yeni → eski" },
-  { id: "seen_asc", label: "Son giriş · eski → yeni (kaybolanlar)" },
+  { id: "seen_desc", label: "Son aktiflik · yeni → eski" },
+  { id: "seen_asc", label: "Son aktiflik · eski → yeni (kaybolanlar)" },
   { id: "trial_end", label: "Denemesi önce bitecek" },
   { id: "email", label: "E-posta · A → Z" },
 ];
@@ -121,7 +122,7 @@ export default function MusterilerClient({
           return d != null && d <= NEW_WITHIN_DAYS;
         }
         case "lost": {
-          const d = relativeDays(p.last_sign_in_at, now);
+          const d = relativeDays(lastActivity(p), now);
           return d == null || d >= LOST_AFTER_DAYS;
         }
       }
@@ -149,9 +150,9 @@ export default function MusterilerClient({
         case "created_asc":
           return byDate(b.created_at, a.created_at);
         case "seen_desc":
-          return byDate(a.last_sign_in_at, b.last_sign_in_at);
+          return byDate(lastActivity(a), lastActivity(b));
         case "seen_asc":
-          return byDate(b.last_sign_in_at, a.last_sign_in_at);
+          return byDate(lastActivity(b), lastActivity(a));
         case "trial_end": {
           // Denemesi olmayanlar sona; olanlar arasında en yakın biten önce.
           const da = trialDaysLeft(a, t);
@@ -239,7 +240,7 @@ export default function MusterilerClient({
               <th>Ad</th>
               <th>Profiller</th>
               <th>Durum</th>
-              <th>Son giriş</th>
+              <th>Son aktiflik</th>
               <th>Kayıt</th>
             </tr>
           </thead>
@@ -288,7 +289,7 @@ export default function MusterilerClient({
                         {lifecycleLabel(l)}
                       </span>
                     </td>
-                    <td className="admin-td-dim">{relativeLabel(p.last_sign_in_at, now)}</td>
+                    <td className="admin-td-dim">{relativeLabel(lastActivity(p), now)}</td>
                     <td className="admin-td-dim">{fmtDate(p.created_at)}</td>
                   </tr>
                 );

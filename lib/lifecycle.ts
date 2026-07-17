@@ -108,8 +108,12 @@ export function relativeLabel(iso: string | null, now = Date.now()): string {
   return `${Math.floor(d / 365)} yıl önce`;
 }
 
-/** Kayıp sayılma eşiği: 30+ gündür giriş yok. */
+/** Kayıp sayılma eşiği: 30+ gündür ORTALIKTA YOK (last_seen'e göre — last_sign_in_at'e değil,
+    o oturumu açık olan aktif kullanıcıyı da "kayıp" gösterirdi). */
 export const LOST_AFTER_DAYS = 30;
+
+/** Kişinin gerçek aktifliği: cihaz last_seen'i; yoksa (hiç cihaz kaydı yoksa) girişe düş. */
+export const lastActivity = (p: AdminPerson): string | null => p.last_seen_at ?? p.last_sign_in_at;
 /** "Yeni" sayılma eşiği: son 7 günde kayıt. */
 export const NEW_WITHIN_DAYS = 7;
 /** Deneme "bitmek üzere" eşiği. */

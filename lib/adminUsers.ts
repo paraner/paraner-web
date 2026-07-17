@@ -24,7 +24,13 @@ export type AdminPerson = {
   id: string; // auth.users.id
   email: string;
   created_at: string | null;
+  /** auth.users.last_sign_in_at — SADECE gerçek kimlik doğrulamada (şifre/Google/OTP) güncellenir.
+      Token yenilemede DEĞİŞMEZ → oturumu açık olan aktif kullanıcı burada "15 gün önce" görünür.
+      "Ne zaman giriş yaptı" sorusunun cevabı; "ne zaman kullandı" DEĞİL. */
   last_sign_in_at: string | null;
+  /** GERÇEK AKTİFLİK: user_devices.last_seen'in en yenisi (kullanıcının tüm cihazları arasında).
+      Kullanıcı uygulamayı/paneli her açtığında login-alert edge function'ı günceller. */
+  last_seen_at: string | null;
   banned_until: string | null;
   profiles: AdminPersonProfile[];
 };
@@ -76,11 +82,22 @@ export async function listPeople(): Promise<{
   const admin = createAdminClient();
   if (!admin) return { people: [], truncated: false };
 
-  const [usersRes, { data: profileRows, error: profErr }] = await Promise.all([
+  const [usersRes, { data: profileRows, error: profErr }, { data: deviceRows }] = await Promise.all([
     listAuthUsers(),
     admin.from("profiles").select(PROFILE_COLS).limit(10000),
+    // Gerçek aktiflik burada; auth.last_sign_in_at yanıltıcı (bkz. AdminPerson.last_sign_in_at).
+    // Hatası kritik değil → aktiflik boş kalır, liste yine çizilir (fail-soft, bilinçli).
+    admin.from("user_devices").select("user_id, last_seen").limit(10000),
   ]);
   const { users, truncated } = usersRes;
+
+  // Kişinin EN YENİ cihaz aktifliği (birden fazla cihazı olabilir: telefon + tarayıcı).
+  const lastSeenByUser = new Map<string, string>();
+  for (const d of (deviceRows ?? []) as { user_id: string; last_seen: string | null }[]) {
+    if (!d.last_seen) continue;
+    const cur = lastSeenByUser.get(d.user_id);
+    if (!cur || d.last_seen > cur) lastSeenByUser.set(d.user_id, d.last_seen);
+  }
 
   /* ⚠️ profiles sorgusunun hatası YUTULMAMALI: PROFILE_COLS'ta olmayan bir kolon olsa
      PostgREST 400 döner, profileRows null gelir ve liste DOLU ama TAMAMEN YANLIŞ çizilir
@@ -102,6 +119,7 @@ export async function listPeople(): Promise<{
     email: u.email ?? "—",
     created_at: u.created_at ?? null,
     last_sign_in_at: u.last_sign_in_at ?? null,
+    last_seen_at: lastSeenByUser.get(u.id) ?? null,
     banned_until: u.banned_until ?? null,
     profiles: byUser.get(u.id) ?? [],
   }));
@@ -115,10 +133,17 @@ export async function getPerson(userId: string): Promise<AdminPerson | null> {
   const admin = createAdminClient();
   if (!admin) return null;
 
-  const [{ data, error }, { data: profileRows, error: profErr }] = await Promise.all([
-    admin.auth.admin.getUserById(userId),
-    admin.from("profiles").select(PROFILE_COLS).eq("auth_user_id", userId),
-  ]);
+  const [{ data, error }, { data: profileRows, error: profErr }, { data: deviceRows }] =
+    await Promise.all([
+      admin.auth.admin.getUserById(userId),
+      admin.from("profiles").select(PROFILE_COLS).eq("auth_user_id", userId),
+      admin
+        .from("user_devices")
+        .select("last_seen")
+        .eq("user_id", userId)
+        .order("last_seen", { ascending: false })
+        .limit(1),
+    ]);
   if (error || !data?.user) return null;
   // Profil sorgusu patlarsa "profili yok" DEME — yanlış teşhis olur (sayfa "kuruluma hiç
   // girmemiş" der). Hatayı yukarı taşı: çağıran 404 verir, sessiz yalan yerine görünür hata.
@@ -130,6 +155,7 @@ export async function getPerson(userId: string): Promise<AdminPerson | null> {
     email: u.email ?? "—",
     created_at: u.created_at ?? null,
     last_sign_in_at: u.last_sign_in_at ?? null,
+    last_seen_at: ((deviceRows ?? [])[0] as { last_seen: string | null } | undefined)?.last_seen ?? null,
     banned_until: u.banned_until ?? null,
     profiles: (profileRows ?? []) as AdminPersonProfile[],
   };
