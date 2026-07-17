@@ -13,6 +13,8 @@ import {
   LifeBuoy,
   UserPlus,
   Clock,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import type { LiveSnapshot, FeedEvent } from "../../../lib/adminLive";
 
@@ -41,9 +43,14 @@ const FEED_META: Record<FeedEvent["kind"], { icon: typeof Receipt; tone: string 
   signup: { icon: UserPlus, tone: "up" },
 };
 
+/* Sayfa başına kişi: 3000 aktif kullanıcıda liste sayfayı kilometrelerce uzatmasın.
+   Sayfalama İSTEMCİ tarafında — veri zaten tek seferde geldi (adminLive PEOPLE_LIMIT). */
+const PER_PAGE = 10;
+
 export default function CanliClient({ snap, now }: { snap: LiveSnapshot; now: number }) {
   const router = useRouter();
   const [q, setQ] = useState("");
+  const [page, setPage] = useState(0);
 
   const people = useMemo(() => {
     const query = q.trim().toLocaleLowerCase("tr");
@@ -52,6 +59,11 @@ export default function CanliClient({ snap, now }: { snap: LiveSnapshot; now: nu
       `${p.email} ${p.name ?? ""} ${p.city ?? ""}`.toLocaleLowerCase("tr").includes(query),
     );
   }, [snap.people, q]);
+
+  const pageCount = Math.max(1, Math.ceil(people.length / PER_PAGE));
+  // Arama sonucu kısalınca mevcut sayfa boşta kalabilir → son sayfaya kenetle (boş ekran olmasın).
+  const safePage = Math.min(page, pageCount - 1);
+  const pageItems = people.slice(safePage * PER_PAGE, safePage * PER_PAGE + PER_PAGE);
 
   const kpis = [
     { label: "Şu an aktif", value: snap.counts.online, sub: "son 12 dakika", live: true },
@@ -89,73 +101,142 @@ export default function CanliClient({ snap, now }: { snap: LiveSnapshot; now: nu
       </div>
 
       <div className="live-grid">
-        {/* --- Sol: şu an uygulamada --- */}
-        <div className="admin-panel">
-          <div className="admin-panel-head">
-            <Radio size={16} /> Şu an uygulamada
-            {snap.counts.online > 0 && <span className="admin-live-pill">{snap.counts.online}</span>}
+        {/* SOL: canlı akış (geniş) — SAĞ: şu an uygulamada + konum/platform (dar).
+            Mehmet: "uygulama bölümünü en sağa al, mailler alt alta". */}
+        <div className="live-main">
+        <div className="admin-panel live-feed-panel">
+        <div className="admin-panel-head">
+          <Clock size={16} /> Canlı akış
+          <span className="admin-td-dim" style={{ fontWeight: 400, fontSize: 12, marginLeft: 6 }}>
+            son 24 saat
+          </span>
+        </div>
+        {snap.feed.length === 0 ? (
+          <p className="live-empty">
+            Son 24 saatte hareket yok.
+            <span>İşlem, fatura, destek talebi ve yeni kayıtlar burada anlık akar.</span>
+          </p>
+        ) : (
+          <div className="live-feed">
+            {snap.feed.map((e) => {
+              const M = FEED_META[e.kind];
+              const Icon = M.icon;
+              return (
+                <div key={e.id} className={`live-feed-row ${M.tone}`}>
+                  <span className="live-feed-ic">
+                    <Icon size={14} />
+                  </span>
+                  <span className="live-feed-main">
+                    <b>{e.title}</b>
+                    {e.detail && <small>{e.detail}</small>}
+                  </span>
+                  <span className="live-feed-ago">{agoLabel(e.at, now)}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        </div>
+        </div>
+
+        <div className="live-side">
+          {/* Dar kolonda: e-posta üstte, şehir/cihaz ALTINDA (yan yana sığmaz) */}
+          <div className="admin-panel">
+            <div className="admin-panel-head">
+              <Radio size={16} /> Şu an uygulamada
+              {snap.counts.online > 0 && <span className="admin-live-pill">{snap.counts.online}</span>}
+            </div>
             <label className="admin-search live-search">
               <Search size={14} />
               <input
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={(e) => {
+                  setQ(e.target.value);
+                  setPage(0); // arama değişince başa dön, yoksa boş sayfada kalırsın
+                }}
                 placeholder="E-posta, isim veya şehir…"
               />
             </label>
-          </div>
 
-          {snap.counts.online === 0 ? (
-            <p className="live-empty">
-              Şu anda kimse uygulamada değil.
-              <span>Biri paneli veya mobil uygulamayı açtığında burada anında belirir.</span>
-            </p>
-          ) : people.length === 0 ? (
-            <p className="live-empty">Aramanla eşleşen aktif kullanıcı yok.</p>
-          ) : (
-            <div className="live-people">
-              {people.map((p) => (
-                <button
-                  key={p.userId}
-                  type="button"
-                  className="live-person"
-                  onClick={() => router.push(`/admin/musteriler/${p.userId}`)}
-                  title="Müşteri detayını aç"
-                >
-                  <span className="live-person-dot" />
-                  <span className="live-person-main">
-                    <b>{p.email}</b>
-                    {p.name && <small>{p.name}</small>}
-                  </span>
-                  <span className="live-person-meta">
-                    {p.city && (
-                      <span>
-                        <MapPin size={12} /> {p.city}
+            {snap.counts.online === 0 ? (
+              <p className="live-empty">
+                Şu anda kimse uygulamada değil.
+                <span>Biri paneli veya mobil uygulamayı açtığında burada anında belirir.</span>
+              </p>
+            ) : people.length === 0 ? (
+              <p className="live-empty">Aramanla eşleşen aktif kullanıcı yok.</p>
+            ) : (
+              <>
+                <div className="live-people">
+                  {pageItems.map((p) => (
+                    <button
+                      key={p.userId}
+                      type="button"
+                      className="live-person"
+                      onClick={() => router.push(`/admin/musteriler/${p.userId}`)}
+                      title="Müşteri detayını aç"
+                    >
+                      <span className="live-person-top">
+                        <span className="live-person-dot" />
+                        <b>{p.email}</b>
+                        <span className="live-person-ago">{agoLabel(p.lastSeen, now)}</span>
                       </span>
-                    )}
-                    <span>
-                      {p.platform === "ios" || p.platform === "android" ? (
-                        <Smartphone size={12} />
-                      ) : (
-                        <Monitor size={12} />
-                      )}{" "}
-                      {p.device || platformLabel(p.platform)}
-                    </span>
-                    <span className="live-person-ago">{agoLabel(p.lastSeen, now)}</span>
-                  </span>
-                </button>
-              ))}
-              {snap.hiddenPeople > 0 && (
-                <p className="admin-td-dim" style={{ fontSize: 12, margin: "6px 0 0" }}>
-                  +{snap.hiddenPeople} kişi daha aktif (ilk {snap.people.length} gösteriliyor).
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+                      <span className="live-person-sub">
+                        {p.name && <span>{p.name}</span>}
+                        {p.city && (
+                          <span>
+                            <MapPin size={11} /> {p.city}
+                          </span>
+                        )}
+                        <span>
+                          {p.platform === "ios" || p.platform === "android" ? (
+                            <Smartphone size={11} />
+                          ) : (
+                            <Monitor size={11} />
+                          )}{" "}
+                          {p.device || platformLabel(p.platform)}
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
 
-        {/* --- Sağ: konum + platform --- */}
-        <div className="live-side">
-          <div className="admin-panel">
+                {/* Sayfalama: 3000 aktif kullanıcıda liste sayfayı uzatmasın */}
+                {pageCount > 1 && (
+                  <div className="live-pager">
+                    <button
+                      type="button"
+                      className="live-pager-btn"
+                      onClick={() => setPage((n) => Math.max(0, n - 1))}
+                      disabled={safePage === 0}
+                      aria-label="Önceki sayfa"
+                    >
+                      <ChevronLeft size={14} />
+                    </button>
+                    <span>
+                      {safePage + 1} / {pageCount}
+                    </span>
+                    <button
+                      type="button"
+                      className="live-pager-btn"
+                      onClick={() => setPage((n) => Math.min(pageCount - 1, n + 1))}
+                      disabled={safePage >= pageCount - 1}
+                      aria-label="Sonraki sayfa"
+                    >
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                )}
+
+                {snap.hiddenPeople > 0 && (
+                  <p className="admin-td-dim" style={{ fontSize: 11, margin: "8px 0 0", lineHeight: 1.5 }}>
+                    +{snap.hiddenPeople} kişi daha aktif — ilk {snap.people.length} gösteriliyor.
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+          <div className="admin-panel" style={{ marginTop: 16 }}>
             <div className="admin-panel-head">
               <MapPin size={16} /> Konuma göre
             </div>
@@ -199,41 +280,6 @@ export default function CanliClient({ snap, now }: { snap: LiveSnapshot; now: nu
             )}
           </div>
         </div>
-      </div>
-
-      {/* --- Canlı akış --- */}
-      <div className="admin-panel" style={{ marginTop: 16 }}>
-        <div className="admin-panel-head">
-          <Clock size={16} /> Canlı akış
-          <span className="admin-td-dim" style={{ fontWeight: 400, fontSize: 12, marginLeft: 6 }}>
-            son 24 saat
-          </span>
-        </div>
-        {snap.feed.length === 0 ? (
-          <p className="live-empty">
-            Son 24 saatte hareket yok.
-            <span>İşlem, fatura, destek talebi ve yeni kayıtlar burada anlık akar.</span>
-          </p>
-        ) : (
-          <div className="live-feed">
-            {snap.feed.map((e) => {
-              const M = FEED_META[e.kind];
-              const Icon = M.icon;
-              return (
-                <div key={e.id} className={`live-feed-row ${M.tone}`}>
-                  <span className="live-feed-ic">
-                    <Icon size={14} />
-                  </span>
-                  <span className="live-feed-main">
-                    <b>{e.title}</b>
-                    {e.detail && <small>{e.detail}</small>}
-                  </span>
-                  <span className="live-feed-ago">{agoLabel(e.at, now)}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
     </div>
   );

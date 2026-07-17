@@ -3964,33 +3964,55 @@ ul { list-style: none; }
    olsaydı 2294px ekranda yan panel ~700px'e şişip şehir barları saçma görünürdü. */
 .live-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; margin-top: 20px; }
 @media (max-width: 1000px) { .live-grid { grid-template-columns: 1fr; } }
-.live-side { display: flex; flex-direction: column; }
-.live-search { margin-left: auto; font-weight: 400; }
-.live-search input { font-size: 13px; }
+.live-main { min-width: 0; }
+.live-side { display: flex; flex-direction: column; min-width: 0; }
+/* Dar kolonda arama başlıkla aynı satıra sığmaz → altına, tam genişlik */
+.live-search { display: flex; width: 100%; margin: 0 0 12px; font-weight: 400; }
+.live-search input { font-size: 13px; width: 100%; }
+.live-feed-panel { padding: 0; }
+.live-feed-panel .admin-panel-head { padding: 18px 20px 12px; margin-bottom: 0; }
+.live-feed-panel .live-feed { padding: 0 12px 14px; max-height: none; }
+.live-feed-panel .live-empty { padding: 0 20px 18px; }
+
+/* Sayfalama — 10'ar kişi (3000 aktif kullanıcıda liste sayfayı uzatmasın) */
+.live-pager {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  margin-top: 12px; font-size: 12px; color: var(--text-dim);
+}
+.live-pager-btn {
+  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; cursor: pointer;
+  background: var(--card-2); border: 1px solid var(--border); color: var(--text);
+}
+.live-pager-btn:hover:not(:disabled) { border-color: rgba(255,255,255,0.25); }
+.live-pager-btn:disabled { opacity: 0.35; cursor: default; }
 
 .live-empty { font-size: 13px; color: var(--text-dim); margin: 0; line-height: 1.7; }
 .live-empty span { display: block; font-size: 12px; opacity: 0.7; }
 
-.live-people { display: grid; gap: 8px; max-height: 460px; overflow-y: auto; }
+/* Dar kolon düzeni: e-posta ÜSTTE (alt alta), şehir/cihaz ALTINDA — yan yana sığmıyordu.
+   Sayfalama devrede (10/sayfa) → sabit yükseklik/scroll gerekmiyor. */
+.live-people { display: grid; gap: 8px; }
 .live-person {
-  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; cursor: pointer;
+  display: flex; flex-direction: column; gap: 5px; width: 100%; text-align: left; cursor: pointer;
   padding: 10px 12px; border-radius: 10px; background: var(--card-2);
   border: 1px solid var(--border); color: inherit; font: inherit;
 }
 .live-person:hover { border-color: rgba(74,222,128,0.35); background: rgba(74,222,128,0.05); }
+.live-person-top { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.live-person-top b {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; /* uzun e-posta taşmasın */
+}
 .live-person-dot {
   width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0;
   box-shadow: 0 0 0 0 rgba(74,222,128,0.7); animation: adminPulse 2s infinite;
 }
-.live-person-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.live-person-main b { font-size: 13px; font-weight: 600; color: var(--text); }
-.live-person-main small { font-size: 11px; color: var(--text-dim); }
-.live-person-meta {
-  margin-left: auto; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: flex-end;
-  font-size: 12px; color: var(--text-dim);
+.live-person-sub {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px;
+  padding-left: 14px; font-size: 11px; color: var(--text-dim);
 }
-.live-person-meta > span { display: inline-flex; align-items: center; gap: 4px; }
-.live-person-ago { color: #4ade80; font-weight: 600; }
+.live-person-sub > span { display: inline-flex; align-items: center; gap: 3px; }
+.live-person-ago { margin-left: auto; flex-shrink: 0; font-size: 11px; color: #4ade80; font-weight: 600; }
 
 .live-bars { display: grid; gap: 10px; }
 .live-bar-row { display: grid; grid-template-columns: 90px 1fr 24px; align-items: center; gap: 10px; font-size: 12px; }
