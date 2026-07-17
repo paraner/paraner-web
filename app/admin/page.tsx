@@ -20,6 +20,18 @@ export default async function AdminDashboard() {
     admin.from("profiles").select("auth_user_id").limit(10000),
   ]);
 
+  /* ⚠️ Hataları GÖSTER, yutma: `count ?? 0` sessizce 0'a düşüyordu → kolon/izin hatasında
+     panelin ilk ekranı "Toplam Üye 0 · %0" der ve kimse sebebini bilmez. */
+  const err = [totalR, businessR, premiumR, recentR, ownersR].find((r) => r.error)?.error;
+  if (err) {
+    return (
+      <div>
+        <h1 className="admin-h1">Genel Bakış</h1>
+        <p className="admin-sub">Metrikler yüklenemedi: {err.message}</p>
+      </div>
+    );
+  }
+
   const total = totalR.count ?? 0;
   const business = businessR.count ?? 0;
   const premium = premiumR.count ?? 0;

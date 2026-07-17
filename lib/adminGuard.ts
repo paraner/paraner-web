@@ -1,4 +1,5 @@
 import "server-only";
+import { notFound } from "next/navigation";
 import { createClient } from "./supabase/server";
 
 export type StaffRole = "admin" | "agent";
@@ -17,4 +18,15 @@ export async function getStaffRole(): Promise<StaffRole | null> {
   if (roles.includes("admin")) return "admin";
   if (roles.includes("agent")) return "agent";
   return null;
+}
+
+/* Yalnız-yönetici SAYFA guard'ı — müşteri verisi açan her sayfanın İLK satırı bu olmalı.
+   ⚠️ Layout'taki guard YETMEZ: o sadece "staff mi" diye bakıyor, agent de geçiyor. Sidebar'da
+   linki gizlemek de yetmez — agent URL'yi elle yazabilir. Müşteri sayfaları service_role ile
+   veri çektiği için (RLS bypass) burada durdurulmazsa destek personeli TÜM müşterilerin
+   e-postasını/planını/işlem sayısını görürdü. (Aksiyonlar ayrıca lib/adminActions.requireAdmin
+   ile korunuyor; bu okuma tarafının karşılığı.)
+   notFound(): "yetkin yok" demektense sayfanın varlığını bile sızdırma. */
+export async function requireAdminPage(): Promise<void> {
+  if ((await getStaffRole()) !== "admin") notFound();
 }

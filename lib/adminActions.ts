@@ -107,9 +107,22 @@ export async function setProfilePlan(
     nextTier = FREE_TIER;
   }
 
+  /* ⚠️ DENEME ALANLARI DA TEMİZLENMELİ — yoksa aksiyon kendi kendini sabote eder:
+     lib/lifecycle.ts "trial alanları dolu + süre geçmiş + is_premium" gördüğünde ZOMBİ der.
+     Sadece is_premium yazsaydık: ödeme alıp "Premium yap" dediğin müşteri panelde kırmızı
+     "⚠️ Deneme X gün önce bitti" rozetiyle zombi segmentine düşerdi → ekip onu "bozuk kayıt"
+     sanıp tekrar free'ye düşürebilirdi. Free'ye düşerken de temizliyoruz: yoksa rozet hâlâ
+     "Deneme · 5 gün kaldı" der, aksiyon işe yaramamış görünür.
+     Deneme geçmişi zaten `admin_audit_log`'da ve mobil yeni deneme başlatırken bu alanları
+     kendisi yazıyor (lib/trial.ts startTrial) → veri kaybı yok. */
   const { error } = await admin
     .from("profiles")
-    .update({ is_premium: isPremium, subscription_tier: nextTier })
+    .update({
+      is_premium: isPremium,
+      subscription_tier: nextTier,
+      trial_plan: null,
+      trial_start_date: null,
+    })
     .eq("id", profileId);
   if (error) return { ok: false, message: `Güncellenemedi: ${error.message}` };
 
@@ -231,8 +244,14 @@ export async function inviteStaff(email: string, role: "admin" | "agent"): Promi
   if (!admin) return { ok: false, message: "Sunucu anahtarı eksik." };
 
   const target = email.trim().toLowerCase();
+  /* ⚠️ redirectTo ŞİFRE BELİRLEME sayfası olmalı — /giris DEĞİL. Davet edilen kişinin şifresi
+     YOK; admin host'unun /giris'i (AdminLogin) e-posta+şifre formu gösteriyor ve davet
+     token'ını işlemiyor → kişi maildeki linke tıklar, giremez, çıkmaz sokak.
+     /sifre-sifirla token'ı işleyip şifre kurduruyor (ResetPasswordClient); sonra
+     admin.paraner.com'a girer. ⚠️ Bu URL Supabase → Auth → URL Configuration →
+     Redirect URLs listesinde OLMALI, yoksa link reddedilir. */
   const { data, error } = await admin.auth.admin.inviteUserByEmail(target, {
-    redirectTo: "https://admin.paraner.com/giris",
+    redirectTo: "https://paraner.com/sifre-sifirla",
   });
   if (error) return { ok: false, message: `Davet gönderilemedi: ${error.message}` };
 

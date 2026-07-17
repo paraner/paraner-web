@@ -24,7 +24,7 @@ const FAQ = [
   },
   {
     q: "Ücretsiz kullanabilir miyim?",
-    a: "Evet. Free planda sınırsız gelir-gider kaydı, hazır kategoriler ve bir birikim hedefi süresiz ücretsizdir. Plus ve İşletme Pro planları 14 gün ücretsiz denemeyle başlar.",
+    a: "Evet. Free planda sınırsız gelir-gider kaydı, hazır kategoriler ve bir birikim hedefi süresiz ücretsizdir. Pro ve İşletme Pro planları 14 gün ücretsiz denemeyle başlar.",
   },
   {
     q: "İşletme panelinde neler var?",
@@ -36,7 +36,7 @@ const FAQ = [
   },
   {
     q: "Parla nasıl çalışır?",
-    a: "Parla, harcama alışkanlıklarınızı analiz edip size özel öneriler sunar. Ücretsiz planda günde 5 mesaj, Plus planda sınırsız mesaj hakkınız vardır.",
+    a: "Parla, harcama alışkanlıklarınızı analiz edip size özel öneriler sunar. Ücretsiz planda günde 5 mesaj, Pro planda sınırsız mesaj hakkınız vardır.",
   },
   {
     q: "Verilerim güvenli mi?",

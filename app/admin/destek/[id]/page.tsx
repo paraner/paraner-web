@@ -21,7 +21,7 @@ export default async function AdminTicketThreadPage({
   } = await supabase.auth.getUser();
   const userId = user?.id ?? "";
 
-  const [{ data: ticket }, { data: messages }] = await Promise.all([
+  const [{ data: ticket }, { data: messages, error: msgErr }] = await Promise.all([
     supabase
       .from("support_tickets")
       .select(TICKET_COLS)
@@ -36,6 +36,11 @@ export default async function AdminTicketThreadPage({
 
   if (!ticket) {
     return <div className="panel-empty">Talep bulunamadı ya da erişimin yok.</div>;
+  }
+  /* Mesaj sorgusu patlarsa thread'i BOŞ gösterme: agent, müşterinin ne yazdığını görmeden
+     yanıt yazardı. Hatayı söyle. */
+  if (msgErr) {
+    return <div className="panel-empty">Mesajlar yüklenemedi: {msgErr.message}</div>;
   }
 
   // Buraya yalnız staff girebilir (layout guard) → isAgent sabit true.

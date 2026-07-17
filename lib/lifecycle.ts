@@ -15,7 +15,8 @@ export type LifecycleKind =
   | "trial" // deneme sürüyor
   | "zombie" // deneme bitti ama premium açık kalmış (düşürülmemiş)
   | "paid" // premium, denemesi yok → gerçek/manuel abonelik
-  | "free"; // ücretsiz (hiç deneme yok ya da bitmiş + düzgün düşmüş)
+  | "free" // ücretsiz (hiç deneme yok ya da bitmiş + düzgün düşmüş)
+  | "no_profile"; // kayıt olmuş ama hiç profili yok → onboarding'e girmemiş
 
 export type ProfileLifecycle = {
   kind: LifecycleKind;
@@ -37,9 +38,19 @@ export function profileLifecycle(p: AdminPersonProfile, now = Date.now()): Profi
 /* Kişi satırında TEK durum gösteriyoruz ama kişinin birden fazla profili olabilir
    (bireysel + işletme). Öncelik: zombi (aksiyon gerekir) > deneme (satış fırsatı) >
    ücretli > ücretsiz. Detay sayfasında profil profil gösteriliyor. */
-const PRIORITY: Record<LifecycleKind, number> = { zombie: 3, trial: 2, paid: 1, free: 0 };
+const PRIORITY: Record<LifecycleKind, number> = {
+  zombie: 3,
+  trial: 2,
+  paid: 1,
+  free: 0,
+  no_profile: -1, // hiç profil yoksa döngü dönmez; başlangıç değeri olarak kalır
+};
 
 export function personLifecycle(person: AdminPerson, now = Date.now()): ProfileLifecycle {
+  // Profili hiç olmayan kişi "Ücretsiz" DEĞİL: kayıt olup kuruluma girmemiş. Ayrı gösterilmezse
+  // "Ücretsiz" segmenti bu insanlarla şişer ve gerçek free kullanıcı sayısı yanlış okunur.
+  if (person.profiles.length === 0) return { kind: "no_profile", days: 0 };
+
   let best: ProfileLifecycle = { kind: "free", days: 0 };
   for (const p of person.profiles) {
     const cur = profileLifecycle(p, now);
@@ -71,6 +82,7 @@ export const LIFECYCLE_META: Record<LifecycleKind, { label: string; badge: strin
   zombie: { label: "Deneme bitti · premium açık", badge: "red" },
   paid: { label: "Ücretli", badge: "green" },
   free: { label: "Ücretsiz", badge: "gray" },
+  no_profile: { label: "Kurulum yapılmamış", badge: "amber" },
 };
 
 /** Rozet metni: deneme "2 gün kaldı", zombi "5 gün geçti". */

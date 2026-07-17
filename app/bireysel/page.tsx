@@ -26,13 +26,13 @@ const SECTIONS: Section[] = [
     id: "hedef",
     title: "Birikim Hedefleri",
     body: "Ev, araba, tatil… Hedefi koyun, ne kadar kaldığını görün. İlerleme sizi motive etsin.",
-    bullets: ["Sınırsız hedef (Plus)", "İlerleme takibi", "Hedefe katkı kaydı"],
+    bullets: ["Sınırsız hedef (Pro)", "İlerleme takibi", "Hedefe katkı kaydı"],
   },
   {
     id: "parla",
     title: "Parla — AI finans koçunuz",
     body: "“Bu ay ne kadar harcadım?”, “nerede tasarruf edebilirim?” diye sorun; Parla harcama alışkanlıklarınızı analiz edip yanıtlasın.",
-    bullets: ["Doğal dille soru-cevap", "Kişiye özel tasarruf önerileri", "Ücretsiz planda günde 5 mesaj, Plus'ta sınırsız"],
+    bullets: ["Doğal dille soru-cevap", "Kişiye özel tasarruf önerileri", "Ücretsiz planda günde 5 mesaj, Pro'da sınırsız"],
   },
   {
     id: "fis",

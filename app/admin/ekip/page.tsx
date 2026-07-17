@@ -1,18 +1,30 @@
 import { createAdminClient, hasAdminKey } from "../../../lib/supabase/admin";
 import { listAuthUsers } from "../../../lib/adminUsers";
+import { requireAdminPage } from "../../../lib/adminGuard";
 import AdminKeyNotice from "../AdminKeyNotice";
 import EkipClient, { type StaffMember } from "./EkipClient";
 
 export const metadata = { title: "Ekip", robots: { index: false, follow: false } };
 
 export default async function AdminEkipPage() {
+  await requireAdminPage(); // ekip yönetimi + davet yalnız yöneticide
   if (!hasAdminKey()) return <AdminKeyNotice />;
   const admin = createAdminClient()!;
 
-  const [{ data: roleRows }, { users }] = await Promise.all([
+  const [{ data: roleRows, error: roleErr }, { users, error: userErr }] = await Promise.all([
     admin.from("user_roles").select("user_id, role, created_at"),
     listAuthUsers(),
   ]);
+
+  // Hata yutulursa "Ekip (0) · Henüz kimse yok" der → yönetici rolleri silinmiş sanır.
+  if (roleErr || userErr) {
+    return (
+      <div>
+        <h1 className="admin-h1">Ekip</h1>
+        <p className="admin-sub">Ekip listesi yüklenemedi: {roleErr?.message ?? userErr}</p>
+      </div>
+    );
+  }
 
   // Aynı kişinin birden fazla rolü olabilir (ör. hem agent hem admin) → tek satırda topla.
   const byUser = new Map<string, StaffMember>();

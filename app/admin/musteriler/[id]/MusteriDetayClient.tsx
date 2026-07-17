@@ -37,14 +37,18 @@ function fmtDate(s: string | null) {
 export default function MusteriDetayClient({
   person,
   usage,
+  now,
 }: {
   person: AdminPerson;
   usage: ProfileUsage[];
+  /** Liste sayfasıyla AYNI sebep: zaman sunucudan gelir → SSR ile hydrate aynı günü hesaplar
+      (yoksa rozet "3 gün kaldı"dan "2 gün kaldı"ya atlar) ve liste ile detay aynı şeyi der. */
+  now: number;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
-  const banned = Boolean(person.banned_until && new Date(person.banned_until) > new Date());
+  const banned = Boolean(person.banned_until && new Date(person.banned_until).getTime() > now);
 
   // Tüm aksiyonlar tek kapıdan: kilit + sonuç toast'ı + sunucu verisini tazele.
   async function run(key: string, fn: () => Promise<ActionResult>, afterDelete = false) {
@@ -108,7 +112,7 @@ export default function MusteriDetayClient({
                       {/* Durum HESAPLANIR — is_premium bayat olabilir (bkz. lib/lifecycle.ts).
                           Ham tier'ı da gösteriyoruz: geçersiz/kirli değer gözden kaçmasın. */}
                       {(() => {
-                        const l = profileLifecycle(p);
+                        const l = profileLifecycle(p, now);
                         return (
                           <>
                             <span className={`badge ${LIFECYCLE_META[l.kind].badge}`}>

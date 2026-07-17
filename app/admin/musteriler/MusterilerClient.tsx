@@ -21,7 +21,7 @@ import {
 
 /* Segment = "şu an ne yapmam gerek" listesi. Sıra bilinçli: aksiyon gerektirenler önde.
    Tür (İşletme/Bireysel) ikincil filtre — ana eksen yaşam döngüsü (17.07.2026 kararı). */
-type Segment = "all" | "new" | "trial" | "ending" | "zombie" | "paid" | "free" | "banned" | "lost";
+type Segment = "all" | "new" | "trial" | "ending" | "zombie" | "paid" | "free" | "banned" | "lost" | "no_profile";
 type TypeFilter = "all" | "business" | "individual";
 type Sort = "created_desc" | "created_asc" | "seen_desc" | "seen_asc" | "trial_end" | "email";
 
@@ -33,6 +33,7 @@ const SEGMENTS: { id: Segment; label: string }[] = [
   { id: "new", label: "Yeni" },
   { id: "paid", label: "Ücretli" },
   { id: "free", label: "Ücretsiz" },
+  { id: "no_profile", label: "Kurulum yapılmamış" },
   { id: "lost", label: "Kayıp" },
   { id: "banned", label: "Askıda" },
 ];
@@ -113,6 +114,8 @@ export default function MusterilerClient({
           return l.kind === "paid";
         case "free":
           return l.kind === "free";
+        case "no_profile":
+          return l.kind === "no_profile";
         case "new": {
           const d = relativeDays(p.created_at, now);
           return d != null && d <= NEW_WITHIN_DAYS;

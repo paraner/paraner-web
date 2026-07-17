@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createAdminClient, hasAdminKey } from "../../../../lib/supabase/admin";
 import { getPerson } from "../../../../lib/adminUsers";
+import { requireAdminPage } from "../../../../lib/adminGuard";
 import AdminKeyNotice from "../../AdminKeyNotice";
 import MusteriDetayClient, { type ProfileUsage } from "./MusteriDetayClient";
 
@@ -37,6 +38,7 @@ async function usageOf(
 }
 
 export default async function MusteriDetayPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdminPage(); // agent müşteri detayını (+ silme butonunu) göremez
   if (!hasAdminKey()) return <AdminKeyNotice />;
   const { id } = await params;
 
@@ -49,5 +51,5 @@ export default async function MusteriDetayPage({ params }: { params: Promise<{ i
     person.profiles.map(async (p) => ({ profileId: p.id, ...(await usageOf(admin, p.id)) })),
   );
 
-  return <MusteriDetayClient person={person} usage={usage} />;
+  return <MusteriDetayClient person={person} usage={usage} now={Date.now()} />;
 }

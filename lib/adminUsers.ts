@@ -43,7 +43,11 @@ const PROFILE_COLS =
 /* auth.users'ın tamamı — listUsers sayfalıdır ve toplam sayı DÖNMEZ; son sayfa perPage'den
    kısa gelene kadar dönülür. MAX_PAGES: bozuk yanıtta sonsuz döngü olmasın diye emniyet freni
    (10 × 1000 = 10.000 kullanıcı; aşılırsa liste sessizce kırpılmaz, çağıran truncated görür). */
-export async function listAuthUsers(): Promise<{ users: AuthUser[]; truncated: boolean }> {
+export async function listAuthUsers(): Promise<{
+  users: AuthUser[];
+  truncated: boolean;
+  error?: string;
+}> {
   const admin = createAdminClient();
   if (!admin) return { users: [], truncated: false };
 
@@ -52,7 +56,9 @@ export async function listAuthUsers(): Promise<{ users: AuthUser[]; truncated: b
   const users: AuthUser[] = [];
   for (let page = 1; page <= MAX_PAGES; page++) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
-    if (error) break;
+    // ⚠️ Hatayı YUTMA. Eskiden `break` ediyordu → çağıran "kırpıldı" sanıyordu: liste boş/eksik
+    // gelirken ekranda "10.000'de kırpıldı" yazıyordu. Yanlış teşhis, gerçek sorun görünmez.
+    if (error) return { users, truncated: false, error: error.message };
     const batch = (data?.users ?? []) as AuthUser[];
     users.push(...batch);
     if (batch.length < perPage) return { users, truncated: false };
@@ -60,15 +66,28 @@ export async function listAuthUsers(): Promise<{ users: AuthUser[]; truncated: b
   return { users, truncated: true };
 }
 
-/** Müşteri listesi: her kişi + altındaki profiller. En yeni kayıt üstte. */
-export async function listPeople(): Promise<{ people: AdminPerson[]; truncated: boolean }> {
+/** Müşteri listesi: her kişi + altındaki profiller. En yeni kayıt üstte.
+    `error` dolu dönerse çağıran EKRANDA göstermeli — sessizce boş liste ÇİZME. */
+export async function listPeople(): Promise<{
+  people: AdminPerson[];
+  truncated: boolean;
+  error?: string;
+}> {
   const admin = createAdminClient();
   if (!admin) return { people: [], truncated: false };
 
-  const [{ users, truncated }, { data: profileRows }] = await Promise.all([
+  const [usersRes, { data: profileRows, error: profErr }] = await Promise.all([
     listAuthUsers(),
     admin.from("profiles").select(PROFILE_COLS).limit(10000),
   ]);
+  const { users, truncated } = usersRes;
+
+  /* ⚠️ profiles sorgusunun hatası YUTULMAMALI: PROFILE_COLS'ta olmayan bir kolon olsa
+     PostgREST 400 döner, profileRows null gelir ve liste DOLU ama TAMAMEN YANLIŞ çizilir
+     (herkes "0 profil / Ücretsiz / ad —"). Bugün /admin/destek'te tam bu yaşandı. */
+  if (usersRes.error || profErr) {
+    return { people: [], truncated: false, error: usersRes.error ?? profErr?.message };
+  }
 
   const byUser = new Map<string, AdminPersonProfile[]>();
   for (const row of (profileRows ?? []) as (AdminPersonProfile & { auth_user_id: string | null })[]) {
@@ -96,11 +115,14 @@ export async function getPerson(userId: string): Promise<AdminPerson | null> {
   const admin = createAdminClient();
   if (!admin) return null;
 
-  const [{ data, error }, { data: profileRows }] = await Promise.all([
+  const [{ data, error }, { data: profileRows, error: profErr }] = await Promise.all([
     admin.auth.admin.getUserById(userId),
     admin.from("profiles").select(PROFILE_COLS).eq("auth_user_id", userId),
   ]);
   if (error || !data?.user) return null;
+  // Profil sorgusu patlarsa "profili yok" DEME — yanlış teşhis olur (sayfa "kuruluma hiç
+  // girmemiş" der). Hatayı yukarı taşı: çağıran 404 verir, sessiz yalan yerine görünür hata.
+  if (profErr) throw new Error(`Profiller okunamadı: ${profErr.message}`);
 
   const u = data.user as AuthUser;
   return {
