@@ -36,6 +36,16 @@
 - [ ] **Karar:** `app.paraner.com/admin` hâlâ açık (rol-korumalı, açık değil). DNS canlıya alınınca admin host'una redirect edilsin mi (tek adres) — Mehmet.
 - [ ] **Ölçek notu:** Dashboard "Toplam Üye" = distinct `auth_user_id` (PostgREST'te distinct count yok → kolon çekilip Set'leniyor, `.limit(10000)`). Binlerce profilde RPC gerekir → **DB şeması = önce sor**.
 
+### 🤖 AI TOKEN + MALİYET TAKİBİ (/admin/ai) ✅ TAMAMLANDI (2026-07-17)
+> "Hangi hesap ne kadar AI harcadı?" — Gemini `usageMetadata` (token) döndürüyordu ama `ai-chat`
+> atıyordu. Fiyat kodda sabit (`lib/aiPricing.ts`) — **Google fiyat API'si yok**, değişirse orası elle.
+> ⚠️ İKİ REPO + DB + EDGE, SIRA KRİTİK: web `admin-panel-rpc.sql` → mobil `ai-token-maliyet.sql` → EN SON `functions deploy ai-chat`.
+- [x] **DB** (`paraner-app/supabase/ai-token-maliyet.sql`) çalıştırıldı + **service_role ile canlı doğrulandı**: `daily_ai_usage`'a `prompt_tokens`+`completion_tokens` (DEFAULT 0, kota mantığı korunur) · `increment_ai_usage` 3→5 param (eski çağrılar hâlâ çalışır) · `ai_usage_monthly` özet tablosu · `ai_usage_rollup()` + 02:00 UTC cron · `admin_ai_usage(p_ay)` panel RPC'si (`assert_admin` guard, canlı ay + geçmiş UNION, çift sayma korumalı).
+- [x] **Edge** `supabase functions deploy ai-chat` (`oqhonmmbcqrkcaoijgnb`) — `readUsage()` ile token okunup RPC'ye geçiliyor.
+- [x] **Web** `/admin/ai` paneli (ay seçici + hesap bazlı token/maliyet tablosu) + `lib/aiPricing.ts`.
+- [ ] ⚠️ **GERİYE DÖNÜK VERİ YOK:** token bu deploy'dan sonra başlar; `daily_ai_usage` şu an boş → panel yeni kullanımla dolar.
+- [ ] **Canlı teyit (bekliyor):** test hesabıyla gerçek AI mesajı → `daily_ai_usage`'da token > 0 + `/admin/ai`'da satır görünmesi.
+
 ### 🎫 DESTEK SİSTEMİ — Faz 0 ✅ TAMAMLANDI (2026-07-16, uçtan uca doğrulandı)
 > Detay: `DESTEK-SISTEMI.md` + `DESTEK-SEMA-MOBIL.md` + `destek-faz0.sql`. Web+mobil (ortak Supabase,
 > iki Claude mutabakatı). **Uçtan uca ÇALIŞIYOR:** agent yanıtı → çan bildirimi (realtime web+mobil) +

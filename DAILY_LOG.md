@@ -16,6 +16,24 @@
 
 ---
 
+## 2026-07-17 — /admin iç ekip paneli · AI TOKEN + MALİYET takibi (hesap bazlı)
+
+Admin paneli (`/admin`, `admin-panel-rpc.sql` + `admin-audit-log.sql`) üstüne AI maliyet ölçümü eklendi. **Amaç:** "Hangi hesap ne kadar AI maliyeti harcadı?" — cevabı yoktu; Gemini her yanıtta `usageMetadata` (token) döndürüyordu ama `ai-chat` edge function'ı metni alıp gerisini ATIYORDU → token hiç kaydedilmemişti.
+
+**⚠️ İki repo + DB + edge — sıra kritikti** (yanlış sıra kota sayacını bozup kullanıcılara sınırsız AI verebilirdi). Uygulanan sıra:
+1. **DB** (`paraner-web/admin-panel-rpc.sql` → sonra `paraner-app/supabase/ai-token-maliyet.sql`) — çalıştırıldı + **service_role ile canlı doğrulandı** (kolonlar, tablo, RPC'ler, geriye uyum hepsi ✅).
+2. **Edge** (`supabase functions deploy ai-chat`) — **deploy edildi** (`oqhonmmbcqrkcaoijgnb`). Bu adım EN SON: yeni RPC imzası DEFAULT'lu olduğu için deploy gecikse bile AI bozulmuyordu.
+
+**DB (mobil `ai-token-maliyet.sql`):** `daily_ai_usage`'a `prompt_tokens`+`completion_tokens` (DEFAULT 0, mobil kota mantığı etkilenmez) · `increment_ai_usage` 3→**5 parametreli** (eski imza DROP+yeni DEFAULT'lu → eski 3-arg çağrılar hâlâ çalışır, geriye uyum) · yeni `ai_usage_monthly` tablosu (90 günlük silme cron'u geçmişi yok etmesin diye aylık özet) · `ai_usage_rollup()` + gece 02:00 UTC cron · `admin_ai_usage(p_ay)` panel RPC'si (canlı ay `daily_ai_usage` + geçmiş `ai_usage_monthly` UNION, çift sayma korumalı, `assert_admin()` guard).
+
+**Edge (mobil `ai-chat/index.ts`):** `readUsage()` ile `usageMetadata` güvenli okunuyor (alan değişirse 0, çağrı bozulmaz) → `increment_ai_usage`'a `p_prompt`/`p_completion` geçiliyor.
+
+**Web:** `/admin/ai` paneli (ay seçici, hesap bazlı token + maliyet tablosu, en çok harcayan üstte) · `lib/aiPricing.ts` fiyat sabiti (⚠️ **Google fiyat API'si YOK** — 17.07'de kontrol; fiyat kodda sabit: giriş $0.30/1M, çıkış $2.50/1M, 17.07.2026 dokümanından; Google değiştirirse burası elle güncellenir. Panel token'ı DB'den alır, parayı burada hesaplar).
+
+⚠️ **GERİYE DÖNÜK VERİ YOK:** token kaydı bu deploy'dan SONRA başlar; bugüne kadarki kullanım hesaplanamaz. `daily_ai_usage` şu an boş (90 günlük temizlik cron'u sildi) → panel dolmaya yeni kullanımla başlayacak.
+
+**Bekleyen (canlı teyit):** gerçek bir AI mesajı sonrası `daily_ai_usage`'da token > 0 + `/admin/ai` panelinde satır görünmesi (test hesabıyla).
+
 ## 2026-07-15 — Ayarlar rakip paritesi · fatura yazdırma · bildirim menüsü · DESTEK SİSTEMİ (Faz 0)
 
 Uzun oturum, çoğu Defteran (rakip) paritesi. Sırayla:
