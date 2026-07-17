@@ -71,9 +71,9 @@ export default function CanliClient({ snap, now }: { snap: LiveSnapshot; now: nu
         Sayfa 30 saniyede bir kendini tazeler.
       </p>
 
+      {/* Kartlar NÖTR — hepsi aynı görünür. Canlılık sinyali yalnız etiketteki nabız noktası. */}
       <div className="admin-kpi-grid">
         {kpis.map((k) => (
-          {/* Kart nötr — diğer KPI'larla aynı. Canlılık yalnız etiketteki nabız noktasıyla. */}
           <div key={k.label} className="admin-kpi">
             <span className="admin-kpi-ic">
               {k.live ? <Radio size={18} /> : <Clock size={18} />}
