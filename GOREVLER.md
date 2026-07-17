@@ -4,15 +4,20 @@
 
 ## Şimdiki
 
-### 🛠️ ADMIN / İÇ EKİP PANELİ (/admin) — Faz 1 iskeleti kuruldu, 2 adım bekliyor
+### 🛠️ ADMIN / İÇ EKİP PANELİ — kendi adresinde (admin.paraner.com), 1 adım bekliyor
 > Plan: `ADMIN-PANEL.md`. Mehmet: kurucu+çalışanlar için müşteri yönetim paneli (üyeleri tür/abonelik
 > analiz + destek). Aynı repo içinde `/admin` route (Next code-split → müşteri bundle'ını şişirmez).
 > Kuruldu: rol guard (`lib/adminGuard`), service_role client (`lib/supabase/admin`, server-only),
 > layout+sidebar (Müşteriler/Ekip admin-only), Dashboard (metrik), Müşteriler (liste+filtre), Destek
-> (ticket listesi), Ekip (yakında). ⚠️ Mehmet "tam anlamadım, bir dahaki işte anlat" dedi → AKIŞI baştan anlat.
-- [ ] **Mehmet: service_role key ekle** (.env.local `SUPABASE_SERVICE_ROLE_KEY` + Vercel env → redeploy). Yoksa Dashboard/Müşteriler "AdminKeyNotice" gösterir.
-- [ ] **Mehmet: admin@paraner.com'u admin yap** — `insert into user_roles(user_id,role) select id,'admin' from auth.users where email='admin@paraner.com' on conflict do nothing;` (şu an sadece agent → Müşteriler'i görmüyor).
-- [ ] **Sonraki (kod):** müşteri **detay/analiz sayfası** (üyeye tıkla → işlemleri/faturaları/aktivitesi) · çalışan davet UI + audit log · `admin.paraner.com` host bağlama (proxy.ts `isAdmin` + `replace(/^(app|admin)\./,...)`, ~4-5 satır).
+> (ticket listesi), Ekip (yakında).
+- [x] **service_role key** — `.env.local` + Vercel Production ✓ (anahtar canlı doğrulandı: auth admin API 200). ⚠️ Preview'e EKLENMEDİ (Vercel ortam dropdown'ı Production sayfasından kilitli; gerekirse Environments → Preview → ayrıca ekle).
+- [x] **admin@paraner.com admin yapıldı** (2026-07-17, service_role ile `user_roles`'e insert; `agent` satırı da duruyor, kod admin>agent okuyor).
+- [x] **`admin.paraner.com` host bağlama (kod)** — 2026-07-17 `b21300c`: proxy `isAdmin`/`isPrivate`, kök→`/admin`, giriş admin host'unda, `/kayit` kapalı, `admin.*/panel`→`app.*`; AuthForm.goPanel + LogoutButton admin-farkında.
+- [ ] **Mehmet: Vercel → Domains → `admin.paraner.com` ekle** (DNS). Yapılmadan adres açılmaz — kod hazır.
+- [ ] **Canlı teyit:** admin.paraner.com → giriş → yönetim paneli; müşteri hesabıyla girince app.paraner.com/panel'e atılıyor mu?
+- [ ] **Sonraki (kod):** müşteri **detay/analiz sayfası** (üyeye tıkla → işlemleri/faturaları/aktivitesi) · çalışan davet UI + audit log.
+- [ ] **Karar:** `app.paraner.com/admin` hâlâ açık (rol-korumalı, açık değil). DNS canlıya alınınca admin host'una redirect edilsin mi (tek adres) — Mehmet.
+- [ ] **Ölçek notu:** Dashboard "Toplam Üye" = distinct `auth_user_id` (PostgREST'te distinct count yok → kolon çekilip Set'leniyor, `.limit(10000)`). Binlerce profilde RPC gerekir → **DB şeması = önce sor**.
 
 ### 🎫 DESTEK SİSTEMİ — Faz 0 ✅ TAMAMLANDI (2026-07-16, uçtan uca doğrulandı)
 > Detay: `DESTEK-SISTEMI.md` + `DESTEK-SEMA-MOBIL.md` + `destek-faz0.sql`. Web+mobil (ortak Supabase,
