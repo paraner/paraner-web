@@ -73,7 +73,8 @@ export default function CanliClient({ snap, now }: { snap: LiveSnapshot; now: nu
 
       <div className="admin-kpi-grid">
         {kpis.map((k) => (
-          <div key={k.label} className={`admin-kpi${k.live ? " live" : ""}`}>
+          {/* Kart nötr — diğer KPI'larla aynı. Canlılık yalnız etiketteki nabız noktasıyla. */}
+          <div key={k.label} className="admin-kpi">
             <span className="admin-kpi-ic">
               {k.live ? <Radio size={18} /> : <Clock size={18} />}
             </span>

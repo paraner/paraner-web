@@ -3890,9 +3890,8 @@ ul { list-style: none; }
 .admin-bar-legend .dot.free { background: var(--text-dim); }
 
 /* --- Canlı aktiflik göstergesi --- */
-/* "Şu an aktif" KPI kartı — yeşil, diğerlerinden ayrışsın (canlı veri) */
-.admin-kpi.live { border-color: rgba(74,222,128,0.35); background: rgba(74,222,128,0.05); }
-.admin-kpi.live .admin-kpi-ic { color: #4ade80; border-color: rgba(74,222,128,0.3); }
+/* "Şu an aktif" KPI kartı diğer kartlarla AYNI görünür (Mehmet: yeşil çerçeve/zemin
+   istemiyor). Canlılık sinyali yalnız etiketteki küçük nabız noktası — kart kendisi nötr. */
 .admin-kpi-label { display: flex; align-items: center; gap: 6px; }
 .admin-live-dot {
   width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0;
