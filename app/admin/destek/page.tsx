@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { createClient } from "../../../lib/supabase/server";
-import { TICKET_STATUS_META, type Ticket } from "../../../lib/support";
+import { TICKET_COLS, TICKET_STATUS_META, type Ticket } from "../../../lib/supportShared";
 
 function fmt(s: string | null) {
   if (!s) return "";
@@ -13,14 +13,23 @@ function fmt(s: string | null) {
 }
 
 // Staff (agent/admin) RLS ile TÜM talepleri görür — service_role gerekmez.
-// Thread şimdilik mevcut /panel/destek/[id] sayfasını kullanır (agent olarak yanıt verilir).
+// Thread admin shell'i içinde: /admin/destek/[id] (ThreadClient paylaşılır).
 export default async function AdminDestekPage() {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("support_tickets")
-    .select("id, subject, status, last_message_at, user_id, priority, category, created_at, updated_at, assignee_id, currency")
+    .select(TICKET_COLS)
     .order("last_message_at", { ascending: false })
     .limit(200);
+
+  if (error) {
+    return (
+      <div>
+        <h1 className="admin-h1">Destek Talepleri</h1>
+        <p className="admin-sub">Talepler yüklenemedi: {error.message}</p>
+      </div>
+    );
+  }
 
   const tickets = (data as Ticket[]) ?? [];
   const open = tickets.filter((t) => t.status === "open" || t.status === "answered").length;
@@ -38,7 +47,7 @@ export default async function AdminDestekPage() {
             {tickets.map((t) => {
               const meta = TICKET_STATUS_META[t.status] ?? TICKET_STATUS_META.open;
               return (
-                <Link key={t.id} href={`/panel/destek/${t.id}`} className="admin-ticket-row">
+                <Link key={t.id} href={`/admin/destek/${t.id}`} className="admin-ticket-row">
                   <div className="admin-ticket-main">
                     <div className="admin-ticket-subject">{t.subject}</div>
                     <div className="admin-ticket-meta">#{t.id.slice(0, 8)} · {fmt(t.last_message_at)}</div>

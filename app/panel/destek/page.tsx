@@ -1,11 +1,8 @@
 import { createClient } from "../../../lib/supabase/server";
 import DestekClient from "./DestekClient";
-import type { Ticket } from "../../../lib/support";
+import { TICKET_COLS, type Ticket } from "../../../lib/supportShared";
 
 export const metadata = { title: "Destek", robots: { index: false, follow: false } };
-
-const TICKET_COLS =
-  "id, user_id, subject, status, priority, category, assignee_id, created_at, updated_at, last_message_at";
 
 export default async function DestekPage() {
   const supabase = await createClient();

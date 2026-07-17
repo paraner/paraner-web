@@ -5,37 +5,18 @@
 // destek talebi kullanıcının HANGİ profilinde olursa olsun ortak görünür.
 import { createClient } from "./supabase/client";
 
-export type TicketStatus = "open" | "answered" | "resolved" | "closed";
-
-export type Ticket = {
-  id: string;
-  user_id: string;
-  subject: string;
-  status: TicketStatus;
-  priority: string;
-  category: string | null;
-  assignee_id: string | null;
-  created_at: string;
-  updated_at: string;
-  last_message_at: string;
-};
-
-export type TicketMessage = {
-  id: string;
-  ticket_id: string;
-  sender_id: string;
-  sender_type: "user" | "agent";
-  body: string;
-  attachment_url: string | null;
-  created_at: string;
-};
-
-export const TICKET_STATUS_META: Record<TicketStatus, { label: string; badge: string }> = {
-  open: { label: "Açık", badge: "amber" },
-  answered: { label: "Yanıtlandı", badge: "blue" },
-  resolved: { label: "Çözüldü", badge: "green" },
-  closed: { label: "Kapandı", badge: "gray" },
-};
+/* Tipler + sabitler `supportShared.ts`'te (istemci-DEĞİL modül) — sunucu sayfaları oradan
+   okumalı, buradan DEĞİL: "use client" modülünden sunucuya import edilen sabit, değer değil
+   istemci-referansı proxy'si olarak gelir ve kullanıldığı yerde patlar.
+   Buradaki re-export yalnız İSTEMCİ bileşenlerinin tek yerden import edebilmesi için. */
+export {
+  TICKET_COLS,
+  TICKET_STATUS_META,
+  type TicketStatus,
+  type Ticket,
+  type TicketMessage,
+} from "./supportShared";
+import { type TicketStatus, type TicketMessage } from "./supportShared";
 
 // Yeni talep = ticket + ilk kullanıcı mesajı. Thread'e gitmek için ticket id döner.
 export async function createTicket(subject: string, body: string): Promise<string | null> {

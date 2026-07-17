@@ -1,20 +1,34 @@
-import { UsersRound } from "lucide-react";
+import { createAdminClient, hasAdminKey } from "../../../lib/supabase/admin";
+import { listAuthUsers } from "../../../lib/adminUsers";
+import AdminKeyNotice from "../AdminKeyNotice";
+import EkipClient, { type StaffMember } from "./EkipClient";
 
-export default function AdminEkipPage() {
-  return (
-    <div>
-      <h1 className="admin-h1">Ekip</h1>
-      <p className="admin-sub">Destek personeli ve yöneticileri buradan yöneteceksin.</p>
-      <div className="admin-panel" style={{ maxWidth: 560 }}>
-        <div className="admin-panel-head">
-          <UsersRound size={16} /> Yakında
-        </div>
-        <p style={{ fontSize: 13, color: "var(--text-dim)", lineHeight: 1.6, margin: "6px 0 0" }}>
-          E-posta ile personel davet et; her birine <b>Destek</b> (agent) ya da <b>Yönetici</b> (admin)
-          rolü ver. Şimdilik roller Supabase&apos;den <code>user_roles</code> tablosuna elle ekleniyor;
-          davet arayüzü bir sonraki adımda gelecek.
-        </p>
-      </div>
-    </div>
-  );
+export const metadata = { title: "Ekip", robots: { index: false, follow: false } };
+
+export default async function AdminEkipPage() {
+  if (!hasAdminKey()) return <AdminKeyNotice />;
+  const admin = createAdminClient()!;
+
+  const [{ data: roleRows }, { users }] = await Promise.all([
+    admin.from("user_roles").select("user_id, role, created_at"),
+    listAuthUsers(),
+  ]);
+
+  // Aynı kişinin birden fazla rolü olabilir (ör. hem agent hem admin) → tek satırda topla.
+  const byUser = new Map<string, StaffMember>();
+  for (const r of (roleRows ?? []) as { user_id: string; role: "admin" | "agent"; created_at: string }[]) {
+    const u = users.find((x) => x.id === r.user_id);
+    const entry = byUser.get(r.user_id) ?? {
+      id: r.user_id,
+      email: u?.email ?? "(kullanıcı bulunamadı)",
+      roles: [],
+      since: r.created_at,
+    };
+    entry.roles.push(r.role);
+    if (r.created_at < entry.since) entry.since = r.created_at;
+    byUser.set(r.user_id, entry);
+  }
+
+  const staff = [...byUser.values()].sort((a, b) => a.email.localeCompare(b.email, "tr"));
+  return <EkipClient staff={staff} />;
 }

@@ -3885,6 +3885,36 @@ ul { list-style: none; }
 .admin-bar-legend .dot.prem { background: var(--teal); }
 .admin-bar-legend .dot.free { background: var(--text-dim); }
 
+/* --- Müşteri detayı + ekip --- */
+.admin-row-click { cursor: pointer; }
+.admin-row-click:hover { background: rgba(255,255,255,0.03); }
+.admin-badge-row { display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.admin-detail-head { display: flex; align-items: flex-start; gap: 12px; }
+.admin-profile-list { display: grid; gap: 12px; }
+.admin-profile-card {
+  background: var(--card-2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+}
+.admin-profile-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.admin-profile-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.admin-profile-stats {
+  display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px;
+  font-size: 12px; color: var(--text-dim);
+}
+.admin-action-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.admin-invite-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.admin-staff-list { display: grid; gap: 8px; }
+.admin-staff-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 10px 12px; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px;
+}
+.admin-staff-email { font-size: 13px; color: var(--text); }
+.admin-role-x {
+  background: none; border: 0; padding: 0 0 0 5px; margin: 0; color: inherit;
+  opacity: 0.55; cursor: pointer; display: inline-flex; vertical-align: middle;
+}
+.admin-role-x:hover { opacity: 1; }
+.admin-role-x:disabled { cursor: default; opacity: 0.3; }
+
 /* --- İç ekip giriş ekranı (admin.paraner.com/giris) --- */
 /* Admin shell diliyle aynı: koyu, nötr, marka rengi yok. Müşteri auth ekranıyla kasıtlı
    olarak akraba değil (orada 3B logo/sosyal giriş/rozetler var, burada hiçbiri yok). */

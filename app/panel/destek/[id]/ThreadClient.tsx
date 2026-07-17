@@ -30,11 +30,15 @@ export default function ThreadClient({
   initialMessages,
   userId,
   isAgent,
+  backHref = "/panel/destek",
 }: {
   ticket: Ticket;
   initialMessages: TicketMessage[];
   userId: string;
   isAgent: boolean;
+  /** Geri oku nereye dönsün — admin panelinden açılınca /admin/destek (yoksa ekip
+      müşteri paneline düşer; admin.* host'unda /panel app.paraner.com'a redirect edilir). */
+  backHref?: string;
 }) {
   const router = useRouter();
   const lock = useSubmitLock();
@@ -91,7 +95,7 @@ export default function ThreadClient({
   return (
     <div className="thread-wrap">
       <div className="thread-head">
-        <Link href="/panel/destek" className="thread-back" aria-label="Geri">
+        <Link href={backHref} className="thread-back" aria-label="Geri">
           <ArrowLeft size={18} />
         </Link>
         <div className="thread-head-main">

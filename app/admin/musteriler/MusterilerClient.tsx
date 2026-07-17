@@ -1,19 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
-
-export type AdminProfile = {
-  id: string;
-  profile_name: string | null;
-  name: string | null;
-  profile_type: string | null;
-  is_premium: boolean | null;
-  subscription_tier: string | null;
-  trial_plan: string | null;
-  currency: string | null;
-  created_at: string | null;
-};
+import { useRouter } from "next/navigation";
+import { Search, Ban } from "lucide-react";
+import type { AdminPerson } from "../../../lib/adminUsers";
 
 type TypeFilter = "all" | "business" | "individual";
 type PlanFilter = "all" | "premium" | "free";
@@ -27,25 +17,41 @@ function fmtDate(s: string | null) {
   }
 }
 
-export default function MusterilerClient({ rows }: { rows: AdminProfile[] }) {
+const isBanned = (p: AdminPerson) => Boolean(p.banned_until && new Date(p.banned_until) > new Date());
+const hasBusiness = (p: AdminPerson) => p.profiles.some((x) => x.profile_type === "business");
+const isPremium = (p: AdminPerson) => p.profiles.some((x) => x.is_premium);
+const displayName = (p: AdminPerson) =>
+  p.profiles.find((x) => x.profile_name || x.name)?.profile_name ??
+  p.profiles.find((x) => x.name)?.name ??
+  "—";
+
+export default function MusterilerClient({
+  people,
+  truncated,
+}: {
+  people: AdminPerson[];
+  truncated: boolean;
+}) {
+  const router = useRouter();
   const [type, setType] = useState<TypeFilter>("all");
   const [plan, setPlan] = useState<PlanFilter>("all");
   const [q, setQ] = useState("");
 
   const filtered = useMemo(() => {
     const query = q.trim().toLocaleLowerCase("tr");
-    return rows.filter((r) => {
-      if (type === "business" && r.profile_type !== "business") return false;
-      if (type === "individual" && r.profile_type === "business") return false;
-      if (plan === "premium" && !r.is_premium) return false;
-      if (plan === "free" && r.is_premium) return false;
+    return people.filter((p) => {
+      if (type === "business" && !hasBusiness(p)) return false;
+      if (type === "individual" && hasBusiness(p)) return false;
+      if (plan === "premium" && !isPremium(p)) return false;
+      if (plan === "free" && isPremium(p)) return false;
       if (query) {
-        const hay = `${r.profile_name ?? ""} ${r.name ?? ""}`.toLocaleLowerCase("tr");
+        // E-posta ile arama ŞART: destekte müşteri kendini e-postasıyla tanıtır.
+        const hay = `${p.email} ${displayName(p)}`.toLocaleLowerCase("tr");
         if (!hay.includes(query)) return false;
       }
       return true;
     });
-  }, [rows, type, plan, q]);
+  }, [people, type, plan, q]);
 
   const chip = <T,>(val: T, cur: T, set: (v: T) => void, label: string, count?: number) => (
     <button type="button" className={`admin-chip${cur === val ? " active" : ""}`} onClick={() => set(val)}>
@@ -54,29 +60,36 @@ export default function MusterilerClient({ rows }: { rows: AdminProfile[] }) {
     </button>
   );
 
-  const nBiz = rows.filter((r) => r.profile_type === "business").length;
-  const nInd = rows.length - nBiz;
-  const nPrem = rows.filter((r) => r.is_premium).length;
+  const nBiz = people.filter(hasBusiness).length;
+  const nPrem = people.filter(isPremium).length;
+  const nProfiles = people.reduce((n, p) => n + p.profiles.length, 0);
 
   return (
     <div>
       <h1 className="admin-h1">Müşteriler</h1>
-      <p className="admin-sub">{rows.length.toLocaleString("tr-TR")} profil · filtrele, ara ve detaya in.</p>
+      <p className="admin-sub">
+        {people.length.toLocaleString("tr-TR")} üye · {nProfiles.toLocaleString("tr-TR")} profil ·
+        satıra tıkla, detayı aç.
+      </p>
 
       <div className="admin-filters">
         <div className="admin-chip-row">
-          {chip<TypeFilter>("all", type, setType, "Tümü", rows.length)}
+          {chip<TypeFilter>("all", type, setType, "Tümü", people.length)}
           {chip<TypeFilter>("business", type, setType, "İşletme", nBiz)}
-          {chip<TypeFilter>("individual", type, setType, "Bireysel", nInd)}
+          {chip<TypeFilter>("individual", type, setType, "Bireysel", people.length - nBiz)}
         </div>
         <div className="admin-chip-row">
           {chip<PlanFilter>("all", plan, setPlan, "Tüm planlar")}
           {chip<PlanFilter>("premium", plan, setPlan, "Premium", nPrem)}
-          {chip<PlanFilter>("free", plan, setPlan, "Free", rows.length - nPrem)}
+          {chip<PlanFilter>("free", plan, setPlan, "Free", people.length - nPrem)}
         </div>
         <label className="admin-search">
           <Search size={15} />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="İsme göre ara…" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="E-posta veya isimle ara…"
+          />
         </label>
       </div>
 
@@ -84,45 +97,75 @@ export default function MusterilerClient({ rows }: { rows: AdminProfile[] }) {
         <table className="admin-table">
           <thead>
             <tr>
+              <th>E-posta</th>
               <th>Ad</th>
-              <th>Tür</th>
+              <th>Profiller</th>
               <th>Abonelik</th>
-              <th>Para Birimi</th>
+              <th>Son giriş</th>
               <th>Kayıt</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={5} className="admin-empty-cell">Eşleşen profil yok.</td>
+                <td colSpan={6} className="admin-empty-cell">Eşleşen üye yok.</td>
               </tr>
             ) : (
-              filtered.slice(0, 300).map((r) => (
-                <tr key={r.id}>
-                  <td className="admin-td-name">{r.profile_name || r.name || "—"}</td>
+              filtered.slice(0, 300).map((p) => (
+                <tr
+                  key={p.id}
+                  className="admin-row-click"
+                  onClick={() => router.push(`/admin/musteriler/${p.id}`)}
+                >
+                  <td className="admin-td-name">
+                    {p.email}
+                    {isBanned(p) && (
+                      <span className="badge red" style={{ marginLeft: 8 }}>
+                        <Ban size={11} /> Askıda
+                      </span>
+                    )}
+                  </td>
+                  <td>{displayName(p)}</td>
                   <td>
-                    <span className={`badge ${r.profile_type === "business" ? "blue" : "gray"}`}>
-                      {r.profile_type === "business" ? "İşletme" : "Bireysel"}
-                    </span>
+                    {p.profiles.length === 0 ? (
+                      <span className="admin-td-dim">—</span>
+                    ) : (
+                      <span className="admin-badge-row">
+                        {p.profiles.map((pr) => (
+                          <span
+                            key={pr.id}
+                            className={`badge ${pr.profile_type === "business" ? "blue" : "gray"}`}
+                          >
+                            {pr.profile_type === "business" ? "İşletme" : "Bireysel"}
+                          </span>
+                        ))}
+                      </span>
+                    )}
                   </td>
                   <td>
-                    {r.is_premium ? (
-                      <span className="badge green">{r.subscription_tier || "Premium"}</span>
+                    {isPremium(p) ? (
+                      <span className="badge green">Premium</span>
                     ) : (
                       <span className="badge gray">Free</span>
                     )}
                   </td>
-                  <td>{r.currency || "TRY"}</td>
-                  <td className="admin-td-dim">{fmtDate(r.created_at)}</td>
+                  <td className="admin-td-dim">{fmtDate(p.last_sign_in_at)}</td>
+                  <td className="admin-td-dim">{fmtDate(p.created_at)}</td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
+
       {filtered.length > 300 && (
         <p className="admin-sub" style={{ marginTop: 10 }}>
           İlk 300 gösteriliyor ({filtered.length} eşleşme). Aramayı daraltabilirsin.
+        </p>
+      )}
+      {truncated && (
+        <p className="admin-sub" style={{ marginTop: 10 }}>
+          ⚠️ Kullanıcı listesi 10.000&apos;de kırpıldı — bu ekran sayfalama ister.
         </p>
       )}
     </div>

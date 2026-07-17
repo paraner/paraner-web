@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getStaffRole } from "../../lib/adminGuard";
 import AdminSidebar from "./AdminSidebar";
+import ToastHost from "../components/ToastHost";
+import ConfirmProvider from "../components/ConfirmProvider";
 
 export const metadata: Metadata = {
   title: "Paraner Yönetim",
@@ -16,6 +18,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="admin-shell">
+      <ToastHost />
+      <ConfirmProvider />
       <AdminSidebar role={role} />
       <div className="admin-main">
         <div className="admin-content">{children}</div>
