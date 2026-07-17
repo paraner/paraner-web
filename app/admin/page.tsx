@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { Users, Building2, User, Star, Clock, LifeBuoy, ChevronRight } from "lucide-react";
+import { Users, Building2, User, Star, Clock, LifeBuoy, ChevronRight, Activity, UserX, Hourglass, Layers } from "lucide-react";
 import { createAdminClient, hasAdminKey } from "../../lib/supabase/admin";
 import { getStaffRole } from "../../lib/adminGuard";
 import { TICKET_COLS, TICKET_STATUS_META, type Ticket } from "../../lib/supportShared";
-import { relativeLabel } from "../../lib/lifecycle";
+import { relativeLabel, TRIAL_ENDING_DAYS } from "../../lib/lifecycle";
+import { TRIAL_DAYS } from "../../lib/plans";
+import { getActiveCounts, getDeadProfileCount, getModuleAdoption } from "../../lib/adminMetrics";
 import AdminKeyNotice from "./AdminKeyNotice";
 
 export default async function AdminDashboard() {
@@ -18,13 +20,20 @@ export default async function AdminDashboard() {
      kolonu çekilip benzersizleştiriliyor (tek uuid kolonu; büyürse RPC gerekir → DB şeması = önce sor). */
   // Rol: agent Müşteriler'e giremez (requireAdminPage) → ona kart linki VERME, 404 yerdi.
   const role = await getStaffRole();
-  const [totalR, businessR, premiumR, recentR, ownersR, ticketsR, openR] = await Promise.all([
+  const isAdminRole = role === "admin";
+  const [totalR, businessR, premiumR, recentR, ownersR, ticketsR, openR, active, dead, adoption] =
+    await Promise.all([
     countOf(admin.from("profiles")),
     admin.from("profiles").select("*", { count: "exact", head: true }).eq("profile_type", "business"),
     admin.from("profiles").select("*", { count: "exact", head: true }).eq("is_premium", true),
     admin.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", since),
-    // auth_user_id → üye sayısı; ad → gelen talep satırında "kim yazmış"
-    admin.from("profiles").select("auth_user_id, profile_name, name").limit(10000),
+    /* auth_user_id → üye sayısı · ad → gelen talep satırında "kim yazmış"
+       · trial alanları → "denemesi bitiyor" sayacı (durum is_premium'dan DEĞİL, tarihten
+       hesaplanır — bkz. lib/lifecycle.ts: is_premium bayat olabiliyor). */
+    admin
+      .from("profiles")
+      .select("auth_user_id, profile_name, name, trial_plan, trial_start_date, is_premium")
+      .limit(10000),
     /* Gelen talepler: yalnız İŞ BEKLEYENLER (açık + yanıtlandı). Çözülmüş/kapanmış olanı
        göstermek panoyu doldurur, aksiyon gerektirmez. Kolonlar TICKET_COLS'tan (tek kaynak —
        elle yazınca olmayan kolon kaçıp sorgu sessizce 400 dönüyordu, bkz. /admin/destek). */
@@ -39,6 +48,11 @@ export default async function AdminDashboard() {
       .from("support_tickets")
       .select("*", { count: "exact", head: true })
       .in("status", ["open", "answered"]),
+    /* Aksiyon panosu metrikleri — RPC (admin-panel-rpc.sql), yoksa JS yedeği.
+       agent bunları GÖREMEZ: RPC'lerde yönetici guard'ı var, yedekleri de çağırmıyoruz. */
+    isAdminRole ? getActiveCounts() : Promise.resolve({ dau: 0, wau: 0, mau: 0 }),
+    isAdminRole ? getDeadProfileCount() : Promise.resolve(0),
+    isAdminRole ? getModuleAdoption() : Promise.resolve(null),
   ]);
 
   /* ⚠️ Hataları GÖSTER, yutma: `count ?? 0` sessizce 0'a düşüyordu → kolon/izin hatasında
@@ -61,6 +75,9 @@ export default async function AdminDashboard() {
     auth_user_id: string | null;
     profile_name: string | null;
     name: string | null;
+    trial_plan: string | null;
+    trial_start_date: string | null;
+    is_premium: boolean | null;
   }[];
   const members = new Set(owners.map((r) => r.auth_user_id).filter(Boolean)).size;
   const individual = Math.max(0, total - business);
@@ -77,8 +94,21 @@ export default async function AdminDashboard() {
   }
   const tickets = (ticketsR.data ?? []) as unknown as Ticket[];
   const openCount = openR.count ?? 0;
-  const isAdmin = role === "admin";
+  const isAdmin = isAdminRole;
 
+  /* Denemesi bitmek üzere olanlar — müşteri listesindeki "Denemesi bitiyor" segmentiyle
+     AYNI kural (lifecycle.ts): deneme başlamış sayılmak için trial_plan + trial_start_date
+     İKİSİ de dolu olmalı; kalan gün = TRIAL_DAYS - geçen gün. */
+  const endingSoon = owners.filter((p) => {
+    if (!p.trial_plan || !p.trial_start_date) return false;
+    const gecen = Math.floor((now - new Date(p.trial_start_date).getTime()) / 86400000);
+    const kalan = TRIAL_DAYS - gecen;
+    return kalan > 0 && kalan <= TRIAL_ENDING_DAYS;
+  }).length;
+
+  /* AKSİYON PANOSU (Mehmet kararı): "bugün ne yapmalıyım" ekranı.
+     Sıra bilinçli — aksiyon gerektirenler önde, envanter sayıları arkada.
+     Her kart tıklanınca ilgili FİLTRELİ listeye gider (sayıya bakıp aramak zorunda kalma). */
   const cards = [
     {
       label: "Bekleyen talep",
@@ -87,6 +117,30 @@ export default async function AdminDashboard() {
       icon: LifeBuoy,
       tone: "",
       href: "/admin/destek",
+    },
+    {
+      label: "Denemesi bitiyor",
+      value: endingSoon,
+      sub: `${TRIAL_ENDING_DAYS} gün içinde`,
+      icon: Hourglass,
+      tone: "",
+      href: isAdmin ? "/admin/musteriler?seg=ending" : undefined,
+    },
+    {
+      label: "Ölü kayıt",
+      value: dead,
+      sub: total ? `%${Math.round((dead / total) * 100)} · hiç işlem girmemiş` : "hiç işlem girmemiş",
+      icon: UserX,
+      tone: "",
+      href: isAdmin ? "/admin/musteriler" : undefined,
+    },
+    {
+      label: "Bugün aktif",
+      value: active.dau,
+      sub: `hafta ${active.wau} · ay ${active.mau}`,
+      icon: Activity,
+      tone: "",
+      href: isAdmin ? "/admin/canli" : undefined,
     },
     {
       label: "Toplam Üye",
@@ -100,6 +154,8 @@ export default async function AdminDashboard() {
     { label: "Bireysel profili", value: individual, sub: `%${pct(individual)}`, icon: User, tone: "ind", href: isAdmin ? "/admin/musteriler?tur=individual" : undefined },
     { label: "Premium profil", value: premium, sub: `%${pct(premium)} · Free ${free}`, icon: Star, tone: "prem", href: isAdmin ? "/admin/musteriler?seg=paid" : undefined },
   ];
+
+
 
   return (
     <div>
@@ -175,6 +231,44 @@ export default async function AdminDashboard() {
           </div>
         )}
       </div>
+
+      {/* --- Modül benimseme: hangi modülü kaç profil kullanıyor --- */}
+      {isAdmin && (
+        <div className="admin-panel" style={{ marginTop: 16 }}>
+          <div className="admin-panel-head">
+            <Layers size={16} /> Modül benimseme
+            <span className="admin-td-dim" style={{ fontWeight: 400, fontSize: 12, marginLeft: 6 }}>
+              kaç profil kullanıyor
+            </span>
+          </div>
+          {adoption == null ? (
+            <p className="live-empty">
+              Modül verisi için <b>admin-panel-rpc.sql</b> çalıştırılmalı.
+              <span>22 tabloya tek tek sorgu atmak yerine tek RPC ile alınıyor.</span>
+            </p>
+          ) : adoption.length === 0 ? (
+            <p className="live-empty">Hiçbir modül henüz kullanılmamış.</p>
+          ) : (
+            <div className="live-bars">
+              {adoption.map((m) => (
+                <div key={m.modul} className="live-bar-row adopt">
+                  <span className="live-bar-label">{m.modul}</span>
+                  <span className="live-bar-track">
+                    <span
+                      className="live-bar-fill"
+                      style={{
+                        width: `${Math.round((m.kullanici / Math.max(1, adoption[0].kullanici)) * 100)}%`,
+                      }}
+                    />
+                  </span>
+                  <span className="live-bar-n">{m.kullanici}</span>
+                  <span className="adopt-rows">{m.kayit.toLocaleString("tr-TR")} kayıt</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="admin-panel" style={{ marginTop: 16 }}>
         <div className="admin-panel-head">

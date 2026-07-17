@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, LifeBuoy, UsersRound, Radio } from "lucide-react";
+import { LayoutDashboard, Users, LifeBuoy, UsersRound, Radio, ScrollText } from "lucide-react";
 import LogoutButton from "../panel/LogoutButton";
 import type { StaffRole } from "../../lib/adminGuard";
 
@@ -13,6 +13,8 @@ const ITEMS: { href: string; label: string; icon: typeof Users; exact?: boolean;
   { href: "/admin/musteriler", label: "Müşteriler", icon: Users, adminOnly: true },
   { href: "/admin/destek", label: "Destek", icon: LifeBuoy },
   { href: "/admin/ekip", label: "Ekip", icon: UsersRound, adminOnly: true },
+  // Kim neyi değiştirdi — müşteri e-postaları görünür → yalnız yönetici
+  { href: "/admin/denetim", label: "Denetim Kaydı", icon: ScrollText, adminOnly: true },
 ];
 
 export default function AdminSidebar({ role }: { role: StaffRole }) {

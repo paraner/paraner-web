@@ -4174,3 +4174,31 @@ ul { list-style: none; }
   .admin-brand, .admin-nav-item span, .admin-role-chip, .admin-foot .nav-label { display: none; }
   .admin-content { padding: 20px 16px; }
 }
+
+/* --- Denetim kaydı (/admin/denetim) --- */
+.audit-list { display: flex; flex-direction: column; }
+.audit-row {
+  display: flex; align-items: flex-start; gap: 11px; padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.audit-row:last-child { border-bottom: 0; }
+.audit-row:hover { background: rgba(255,255,255,0.02); }
+.audit-ic {
+  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+  background: rgba(255,255,255,0.05); color: var(--text-dim);
+}
+.audit-ic.green { color: #4ade80; }
+.audit-ic.red { color: var(--danger); }
+.audit-ic.blue { color: #7fb0ff; }
+.audit-ic.amber { color: #fbbf24; }
+.audit-main { min-width: 0; }
+.audit-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.audit-target { color: var(--text-dim); font-weight: 400; }
+.audit-link { color: var(--text-dim); font-weight: 400; text-decoration: none; }
+.audit-link:hover { color: var(--text); text-decoration: underline; }
+.audit-meta { font-size: 11.5px; color: var(--text-dim); margin-top: 2px; }
+.audit-detail { display: block; opacity: 0.65; margin-top: 1px; }
+
+/* Modül benimseme satırı: bar + kullanıcı sayısı + toplam kayıt */
+.live-bar-row.adopt { grid-template-columns: 150px 1fr 40px 92px; }
+.adopt-rows { font-size: 11px; color: var(--text-dim); text-align: right; opacity: 0.75; }
