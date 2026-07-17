@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, LifeBuoy, UsersRound, Radio, ScrollText } from "lucide-react";
+import { LayoutDashboard, Users, LifeBuoy, UsersRound, Radio, ScrollText, Sparkles } from "lucide-react";
 import LogoutButton from "../panel/LogoutButton";
 import type { StaffRole } from "../../lib/adminGuard";
 
@@ -12,6 +12,8 @@ const ITEMS: { href: string; label: string; icon: typeof Users; exact?: boolean;
   { href: "/admin/canli", label: "Canlı Görünüm", icon: Radio, adminOnly: true },
   { href: "/admin/musteriler", label: "Müşteriler", icon: Users, adminOnly: true },
   { href: "/admin/destek", label: "Destek", icon: LifeBuoy },
+  // Hesap bazlı AI maliyeti — müşteri e-postaları görünür → yalnız yönetici
+  { href: "/admin/ai", label: "AI Kullanımı", icon: Sparkles, adminOnly: true },
   { href: "/admin/ekip", label: "Ekip", icon: UsersRound, adminOnly: true },
   // Kim neyi değiştirdi — müşteri e-postaları görünür → yalnız yönetici
   { href: "/admin/denetim", label: "Denetim Kaydı", icon: ScrollText, adminOnly: true },
