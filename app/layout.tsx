@@ -118,17 +118,19 @@ const jsonLd = {
         "Cari hesaplar ve veresiye",
         "Döviz & altın portföyü",
       ],
-      // AggregateOffer: tek "price: 0" Offer'ı Plus/İşletme Pro fiyatlarını Google'a hiç göstermiyordu
+      // AggregateOffer: tek "price: 0" Offer'ı ücretli planları Google'a hiç göstermiyordu.
+      // ⚠️ Fiyatlar mobil app/premium.tsx ile AYNI olmalı (tek doğru kaynak orası — 17.07.2026
+      // kararı). Burası Google'a yayınlanıyor: sapma = arama sonucunda yanlış fiyat.
       offers: {
         "@type": "AggregateOffer",
         priceCurrency: "TRY",
         lowPrice: "0",
-        highPrice: "349",
+        highPrice: "490",
         offerCount: 3,
         offers: [
           { "@type": "Offer", name: "Free", price: "0", priceCurrency: "TRY" },
-          { "@type": "Offer", name: "Plus", price: "129", priceCurrency: "TRY" },
-          { "@type": "Offer", name: "İşletme Pro", price: "349", priceCurrency: "TRY" },
+          { "@type": "Offer", name: "Pro", price: "149.90", priceCurrency: "TRY" },
+          { "@type": "Offer", name: "İşletme Pro", price: "490", priceCurrency: "TRY" },
         ],
       },
     },

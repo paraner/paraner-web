@@ -4,6 +4,13 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
 import { getStaffRole } from "./adminGuard";
+import {
+  FREE_TIER,
+  TIER_LABELS,
+  defaultPaidTier,
+  isValidTier,
+  type SubscriptionTier,
+} from "./plans";
 
 /* İç ekip aksiyonları (server action).
    ⚠️ GÜVENLİK: Server action'lar TARAYICIDAN çağrılabilen public endpoint'lerdir — app/admin/
@@ -66,26 +73,59 @@ export async function sendPasswordReset(userId: string, email: string): Promise<
   return { ok: true, message: `Şifre sıfırlama maili ${email} adresine gönderildi.` };
 }
 
-/** Profilin premium/plan durumunu değiştir. profiles kolonları — şema DEĞİŞMEZ. */
+/** Profilin planını değiştir. Mevcut kolonlar — şema DEĞİŞMEZ.
+    ⚠️ subscription_tier'a UYDURMA DEĞER YAZMA: DB'de CHECK yok, "premium" gibi bir string
+    sessizce kaydolur ama mobil onu tanımaz (etiketsiz görünür). Geçerli sözlük: lib/plans.ts.
+    Free'ye düşerken mobil `expireTrial` ile aynı davranış: is_premium=false + individual_free
+    (işletme profili de buna düşer — sistemde tek "free" tier'ı bu).
+    `trial_notified_day7` BİLEREK yazılmaz: mobil "denemen bitti" modalını göstersin. */
 export async function setProfilePlan(
   profileId: string,
   isPremium: boolean,
   targetEmail: string,
+  tier?: SubscriptionTier,
 ): Promise<ActionResult> {
   const actor = await requireAdmin();
   if (!actor) return { ok: false, message: "Yetkin yok." };
   const admin = createAdminClient();
   if (!admin) return { ok: false, message: "Sunucu anahtarı eksik." };
 
+  let nextTier: SubscriptionTier;
+  if (isPremium) {
+    if (tier && !isValidTier(tier)) return { ok: false, message: "Geçersiz plan." };
+    if (tier) nextTier = tier;
+    else {
+      // Tür bilinmeden makul plan seçilemez → profili oku.
+      const { data: prof } = await admin
+        .from("profiles")
+        .select("profile_type")
+        .eq("id", profileId)
+        .maybeSingle();
+      nextTier = defaultPaidTier((prof as { profile_type: string | null } | null)?.profile_type ?? null);
+    }
+  } else {
+    nextTier = FREE_TIER;
+  }
+
   const { error } = await admin
     .from("profiles")
-    .update({ is_premium: isPremium, subscription_tier: isPremium ? "premium" : null })
+    .update({ is_premium: isPremium, subscription_tier: nextTier })
     .eq("id", profileId);
   if (error) return { ok: false, message: `Güncellenemedi: ${error.message}` };
 
-  await logAction(actor, isPremium ? "plan_premium" : "plan_free", { email: targetEmail }, { profileId });
+  await logAction(
+    actor,
+    isPremium ? "plan_premium" : "plan_free",
+    { email: targetEmail },
+    { profileId, tier: nextTier },
+  );
   revalidatePath("/admin/musteriler");
-  return { ok: true, message: isPremium ? "Profil premium yapıldı." : "Profil free'ye düşürüldü." };
+  return {
+    ok: true,
+    message: isPremium
+      ? `Plan güncellendi: ${TIER_LABELS[nextTier]}.`
+      : "Profil ücretsiz plana düşürüldü.",
+  };
 }
 
 /** Hesabı askıya al / aç. Supabase'in yerleşik ban'i — veri silinmez, geri alınabilir. */

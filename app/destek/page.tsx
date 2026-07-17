@@ -24,7 +24,7 @@ const FAQ = [
   },
   {
     q: "Ücretsiz kullanabilir miyim?",
-    a: "Evet. Free planda sınırsız gelir-gider kaydı, hazır kategoriler ve bir birikim hedefi süresiz ücretsizdir. Plus ve İşletme Pro planları 7 gün ücretsiz denemeyle başlar.",
+    a: "Evet. Free planda sınırsız gelir-gider kaydı, hazır kategoriler ve bir birikim hedefi süresiz ücretsizdir. Plus ve İşletme Pro planları 14 gün ücretsiz denemeyle başlar.",
   },
   {
     q: "İşletme panelinde neler var?",

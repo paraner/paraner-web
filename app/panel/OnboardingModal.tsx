@@ -13,10 +13,41 @@ import { CURRENCIES } from "../../lib/currencies";
 type Plan = "free" | "pro" | "max";
 type StepKey = "currency" | "account" | "company" | "name" | "plan";
 
-const PLANS: { id: Plan; name: string; price: string; tag?: string; perks: string[] }[] = [
+type PlanDef = { id: Plan; name: string; price: string; tag?: string; perks: string[] };
+
+/* Planlar HESAP TÜRÜNE göre — tek liste kullanmak iki hata üretiyordu (17.07.2026):
+   1) İşletmeye de "Pro ₺149,90" deniyordu; mobilde İşletme Pro ₺490 (app/premium.tsx).
+   2) Bireysele "Max" sunuluyordu → `individual_max_monthly` yazılıyordu; mobilde böyle bir
+      tier YOK (stores/authStore.ts) → plan mobilde etiketsiz görünüyordu.
+   Fiyatlar mobil premium.tsx ile birebir (Mehmet kararı: mobil doğru kaynak).
+   Seçilen id → `${accountType}_${plan}_monthly` olarak yazılıyor; üretilen tüm değerler
+   lib/plans.ts'teki geçerli sözlükte olmalı. */
+const INDIVIDUAL_PLANS: PlanDef[] = [
   { id: "free", name: "Ücretsiz", price: "₺0", perks: ["Temel gelir-gider", "30 işlem/ay", "Günde 5 AI mesaj"] },
-  { id: "pro", name: "Pro", price: "₺149,90/ay", tag: "Popüler", perks: ["Sınırsız işlem", "Sınırsız Parla AI", "Döviz & altın takibi", "Detaylı raporlar"] },
-  { id: "max", name: "Max", price: "₺299,90/ay", perks: ["Pro'daki her şey", "Öncelikli destek", "Gelişmiş işletme araçları"] },
+  {
+    id: "pro",
+    name: "Pro",
+    price: "₺149,90/ay",
+    tag: "Popüler",
+    perks: ["Sınırsız işlem", "Sınırsız Parla AI", "Döviz & altın takibi", "Detaylı raporlar"],
+  },
+];
+
+const BUSINESS_PLANS: PlanDef[] = [
+  { id: "free", name: "Ücretsiz", price: "₺0", perks: ["Temel gelir-gider", "30 işlem/ay", "Günde 5 AI mesaj"] },
+  {
+    id: "pro",
+    name: "İşletme Pro",
+    price: "₺490/ay",
+    tag: "Popüler",
+    perks: ["KDV & stopaj takibi", "Fatura & teklif", "Kâr/zarar raporu", "Cari hesap yönetimi"],
+  },
+  {
+    id: "max",
+    name: "İşletme Max",
+    price: "₺890/ay",
+    perks: ["Pro'daki her şey", "Çalışan harcama yönetimi", "Çoklu kullanıcı", "Öncelikli 7/24 destek"],
+  },
 ];
 
 export default function OnboardingModal({
@@ -39,6 +70,14 @@ export default function OnboardingModal({
   const [plan, setPlan] = useState<Plan>("free");
 
   const isBusiness = accountType === "business";
+
+  /* Hesap türü değişince plan seçimini sıfırla. Yoksa: işletmede "Max" seçip bireysele
+     dönen kullanıcıda plan="max" state'te kalır → `individual_max_monthly` yazılırdı
+     (mobilde geçersiz tier). Bireysel listede Max hiç yok, seçim görünmez de kalırdı. */
+  function pickAccountType(t: "individual" | "business") {
+    setAccountType(t);
+    setPlan("free");
+  }
   const firstName = (initialName || "").trim().split(" ")[0];
 
   // Tipe göre adım dizisi (Bireysel'de ad soyad adımı; İşletme'de şirket adımında birlikte)
@@ -84,7 +123,8 @@ export default function OnboardingModal({
       };
       if (isBusiness) fields.company_name = companyName.trim();
       if (plan !== "free") {
-        // Ödeme yakında → şimdilik 7 gün deneme olarak işaretle
+        // Ödeme yakında → deneme olarak işaretle. Süre (14 gün) TEK YERDE: get_trial_status RPC
+        // + mobil lib/trial.ts TRIAL_DAYS. Burada yalnız başlangıç damgası atılır.
         fields.is_premium = true;
         fields.subscription_tier = `${accountType}_${plan}_monthly`;
         fields.trial_plan = `${accountType}_${plan}_monthly`;
@@ -144,12 +184,12 @@ export default function OnboardingModal({
             <h2>Paraner'i nasıl kullanacaksın?</h2>
             <p>İstediğin zaman ikinci bir hesap da ekleyebilirsin.</p>
             <div className="onb-cards">
-              <button className={`onb-pick ${accountType === "individual" ? "sel" : ""}`} onClick={() => setAccountType("individual")}>
+              <button className={`onb-pick ${accountType === "individual" ? "sel" : ""}`} onClick={() => pickAccountType("individual")}>
                 <span className="onb-pick-emoji">👤</span>
                 <b>Bireysel</b>
                 <small>Kişisel gelir-gider, birikim ve hedefler</small>
               </button>
-              <button className={`onb-pick ${accountType === "business" ? "sel" : ""}`} onClick={() => setAccountType("business")}>
+              <button className={`onb-pick ${accountType === "business" ? "sel" : ""}`} onClick={() => pickAccountType("business")}>
                 <span className="onb-pick-emoji">🏢</span>
                 <b>İşletme</b>
                 <small>Fatura, cari, KDV, çalışan ve nakit akışı</small>
@@ -209,7 +249,7 @@ export default function OnboardingModal({
             <h2>Bir plan seç</h2>
             <p>Ödeme yakında — şimdilik dilediğin planla başla, sonra istediğin zaman değiştir.</p>
             <div className="onb-plans">
-              {PLANS.map((p) => (
+              {(isBusiness ? BUSINESS_PLANS : INDIVIDUAL_PLANS).map((p) => (
                 <button key={p.id} className={`onb-plan ${plan === p.id ? "sel" : ""}`} onClick={() => setPlan(p.id)}>
                   {p.tag && <span className="onb-plan-tag">{p.tag}</span>}
                   <div className="onb-plan-head"><b>{p.name}</b><span>{p.price}</span></div>

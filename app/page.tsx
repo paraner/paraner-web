@@ -30,22 +30,27 @@ const PLANS = [
     features: ["Sınırsız gelir/gider", "20 hazır kategori", "1 birikim hedefi", "5 fiş tarama / ay"],
   },
   {
-    name: "Plus",
+    name: "Pro",
     tag: "Bütçesini kontrol altına almak isteyen bireyler için.",
-    amount: "₺129",
-    period: "/ay · 7 gün ücretsiz deneme",
+    amount: "₺149,90",
+    period: "/ay · 14 gün ücretsiz deneme",
     featured: true,
     features: ["Sınırsız hedef & bütçe", "AI chat asistanı", "Sınırsız fiş tarama", "Detaylı raporlar"],
   },
   {
     name: "İşletme Pro",
     tag: "Esnaf ve KOBİ'ler için tam finans yönetimi.",
-    amount: "₺349",
-    period: "/ay · 7 gün ücretsiz deneme",
+    amount: "₺490",
+    period: "/ay · 14 gün ücretsiz deneme",
     featured: false,
     features: ["Fatura & teklif", "Stok & ürün takibi", "Çalışan & maaş", "KDV & vergi raporları"],
   },
 ];
+/* ⚠️ Fiyat/isim TEK DOĞRU KAYNAK: mobil app/premium.tsx (17.07.2026 kararı).
+   Buradaki 3 yer birlikte tutulmalı: bu liste · app/layout.tsx AggregateOffer şeması
+   (Google'a yayınlanır) · app/panel/OnboardingModal.tsx (kullanıcı seçerken görür).
+   Önceki hâl: burada Plus ₺129 / İşletme Pro ₺349, mobilde ₺149,90 / ₺490 — müşteri
+   web'de başka mobilde başka fiyat görüyordu. */
 
 export default function Home() {
   return (
