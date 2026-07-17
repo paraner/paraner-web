@@ -4,6 +4,18 @@
 
 ## Şimdiki
 
+### 💳 ÜCRETSİZ DENEME 14 GÜN + FİYAT/PLAN HİZALAMASI ✅ TAMAMLANDI (2026-07-17)
+> Deneme 7→**14 gün** (Mehmet kararı). ⚠️ **Süreyi belirleyen yer kod DEĞİL, DB'deki `get_trial_status`
+> RPC'si** — mobil `checkTrialStatusServer` ile onu okuyor (`checkTrialStatus` yerel fonksiyonu hiç
+> kullanılmıyor). Bu yüzden App Store sürümü gerekmedi. Çalıştırıldı + canlı doğrulandı:
+> `paraner-app/supabase/trial-14-gun.sql` (guard korundu) · `trial-expire-cron.sql` · `supabase functions deploy ai-chat`.
+> Süre değişirse ÜÇÜ birlikte: RPC + `paraner-app/lib/trial.ts TRIAL_DAYS` + `ai-chat/index.ts TRIAL_DAYS` (+ `paraner-web/lib/plans.ts` gösterim).
+- [x] **Zombi premium çözüldü:** deneme bitişini SADECE mobil istemci yapıyordu (uygulamayı açmayan sonsuza kadar premium; `ai-chat` de `is_premium`'a bakıp sınırsız AI veriyordu = para sızıntısı). Artık günlük `expire-stale-trials` cron'u (03:00 UTC) düşürüyor. 3 zombi temizlendi.
+- [x] **Fiyatlar tek doğru kaynağa (mobil `app/premium.tsx`) hizalandı:** web ana sayfa ₺129/₺349 → **₺149,90 / ₺490**, `layout.tsx` AggregateOffer şeması (**Google'a yayınlanıyor**) 0/149.90/490. Onboarding hesap türüne göre; işletmede ücretsiz plan YOK (mobil paritesi), bireysel/işletme **Max kaldırıldı** (mobil Max'a deneme vermiyor + ödeme sistemi yok).
+- [ ] ⚠️ **ÖDEME ENTEGRASYONU GELİNCE (kritik):** (1) `trial-expire-cron.sql` ÖDEYEN müşteriyi de düşürür — satın alımda `trial_plan` temizlenmeli ya da cron'a "aboneliği yok" koşulu. (2) Max planları web'e mobil ile BİRLİKTE geri eklenir. (3) `lib/lifecycle.ts` "paid" ayrımı gerçek abonelikten okumalı.
+- [ ] **Eski test verisi:** aktif 3 deneme `business_max_monthly` planında — artık sunulmayan plan (düzeltme öncesi açılmış). Bozuk değil, temizlenebilir.
+- [ ] **Fiyat/plan sözlüğü tek kaynak notu:** `paraner-web/lib/plans.ts` mobil `stores/authStore.ts`'ten kopya — mobil tier listesi değişirse burası da güncellenmeli (DB'de CHECK constraint YOK, uydurma değer sessizce yazılır).
+
 ### 🛠️ ADMIN / İÇ EKİP PANELİ — kendi adresinde (admin.paraner.com), 1 adım bekliyor
 > Plan: `ADMIN-PANEL.md`. Mehmet: kurucu+çalışanlar için müşteri yönetim paneli (üyeleri tür/abonelik
 > analiz + destek). Aynı repo içinde `/admin` route (Next code-split → müşteri bundle'ını şişirmez).
@@ -16,7 +28,8 @@
 - [ ] **Mehmet: Vercel → Domains → `admin.paraner.com` ekle** (DNS). Yapılmadan adres açılmaz — kod hazır.
 - [x] **İç ekip giriş ekranı** (`3f01f6c`) — admin.paraner.com/giris: e-posta+şifre, kayıt/sosyal YOK.
 - [x] **Müşteri detay + aksiyonlar + ekip yönetimi** (`62a10ab`, canlı doğrulandı): kişi bazlı liste (e-posta ile arama), detay (profiller + işlem/fatura/hesap + son hareket), şifre sıfırlama maili · premium/free · askıya al (Supabase ban) · kalıcı sil, ekip davet/rol ver-al.
-- [ ] ⚠️ **Mehmet: `admin-audit-log.sql`'i Supabase SQL Editor'de çalıştır.** Yapılmadan aksiyonlar ÇALIŞIR ama iz bırakmaz (log hatası sunucu konsoluna yazılır, aksiyon düşmez).
+- [x] **`admin-audit-log.sql` çalıştırıldı** (2026-07-17) — yazma + gizlilik (anon 0 satır) canlı doğrulandı.
+- [x] **Müşteri listesi yenilendi** — durum `is_premium`'dan DEĞİL, `trial_start_date + 14` ile HESAPLANIYOR (`lib/lifecycle.ts`). Segmentler (zombi/bitiyor/denemede/yeni/ücretli/ücretsiz/kayıp/askıda, sayaçlı) + sıralama (kayıt·son giriş·deneme bitişi·e-posta) + URL'de saklama (`?seg=&sort=&tur=`).
 - [ ] **Canlı GÖZ teyidi:** admin.paraner.com → giriş → panel; müşteriye tıkla → detay; müşteri hesabıyla girince app.paraner.com/panel'e atılıyor mu?
 - [ ] **Şifre sıfırlama maili ön koşulu:** Supabase → Auth → URL Configuration → Redirect URLs'te `https://paraner.com/sifre-sifirla` YOKSA link reddedilir (DAILY_LOG'da zaten bekleyen madde). Aksiyonu ilk kullanmadan teyit et.
 - [ ] **Sonraki (kod):** audit log'u panelde GÖSTER (şu an yalnız yazılıyor) · müşterinin destek talepleri detay sayfasında · trial/abonelik analizi.
