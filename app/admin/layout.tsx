@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getStaffRole } from "../../lib/adminGuard";
 import AdminSidebar from "./AdminSidebar";
 import ToastHost from "../components/ToastHost";
 import ConfirmProvider from "../components/ConfirmProvider";
+import LivePill from "./LivePill";
+import LiveRefresh from "./LiveRefresh";
 
 export const metadata: Metadata = {
   title: "Paraner Yönetim",
@@ -20,8 +23,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="admin-shell">
       <ToastHost />
       <ConfirmProvider />
+      {/* Canlı sayaç + rozetleri taze tutar (görünürken 30sn; arka planda durur).
+          30sn yeterli: kalp atışı zaten 5 dk'da bir — daha sık tazelemek yeni veri getirmez. */}
+      <LiveRefresh everyMs={30_000} />
       <AdminSidebar role={role} />
       <div className="admin-main">
+        {/* Yalnız yönetici: /admin/canli müşteri e-postalarını listeliyor (agent göremez).
+            Suspense: sayaç sorgusu sayfanın boyanmasını BEKLETMESİN. */}
+        {role === "admin" && (
+          <Suspense fallback={null}>
+            <LivePill />
+          </Suspense>
+        )}
         <div className="admin-content">{children}</div>
       </div>
     </div>

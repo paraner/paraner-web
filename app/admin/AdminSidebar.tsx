@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, LifeBuoy, UsersRound } from "lucide-react";
+import { LayoutDashboard, Users, LifeBuoy, UsersRound, Radio } from "lucide-react";
 import LogoutButton from "../panel/LogoutButton";
 import type { StaffRole } from "../../lib/adminGuard";
 
 const ITEMS: { href: string; label: string; icon: typeof Users; exact?: boolean; adminOnly?: boolean }[] = [
   { href: "/admin", label: "Genel Bakış", icon: LayoutDashboard, exact: true },
+  // Müşteri e-postalarını listeliyor → yalnız yönetici (sayfa da requireAdminPage ile korunuyor)
+  { href: "/admin/canli", label: "Canlı Görünüm", icon: Radio, adminOnly: true },
   { href: "/admin/musteriler", label: "Müşteriler", icon: Users, adminOnly: true },
   { href: "/admin/destek", label: "Destek", icon: LifeBuoy },
   { href: "/admin/ekip", label: "Ekip", icon: UsersRound, adminOnly: true },
