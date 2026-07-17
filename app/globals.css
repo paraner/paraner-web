@@ -3912,6 +3912,20 @@ ul { list-style: none; }
 }
 @media (prefers-reduced-motion: reduce) { .admin-online i { animation: none; } }
 
+/* KPI kartı link olduğunda: metin rengi bozulmasın + tıklanabilir olduğu belli olsun */
+.admin-kpi.clickable { display: block; text-decoration: none; color: inherit; transition: border-color .15s, background .15s; }
+.admin-kpi.clickable:hover { border-color: rgba(255,255,255,0.18); background: var(--card-2); }
+/* Panel başlığındaki "Tümü →" bağlantısı */
+.admin-head-link {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 3px;
+  font-size: 12px; font-weight: 500; color: var(--text-dim); text-decoration: none;
+}
+.admin-head-link:hover { color: var(--text); }
+.admin-ticket-more {
+  display: block; padding: 10px 20px 16px; font-size: 12px; color: var(--text-dim); text-decoration: none;
+}
+.admin-ticket-more:hover { color: var(--text); }
+
 /* --- Kabuktaki canlı sayaç (sayfa başlığıyla aynı hizada, sağ üstte) --- */
 /* .admin-main'e göre absolute: h1 children'ın içinde olduğu için aynı satıra flex ile
    konulamıyor; top değeri .admin-content üst dolgusuyla eşleşiyor → h1 hizasına oturur. */
