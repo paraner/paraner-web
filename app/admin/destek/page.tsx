@@ -1,65 +1,83 @@
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { requireStaffPage } from "../../../lib/adminGuard";
 import { createClient } from "../../../lib/supabase/server";
-import { TICKET_COLS, TICKET_STATUS_META, type Ticket } from "../../../lib/supportShared";
+import { listPeople } from "../../../lib/adminUsers";
+import { TICKET_COLS, type Ticket } from "../../../lib/supportShared";
+import { personLifecycle, lifecycleLabel, LIFECYCLE_META, displayName } from "../../../lib/lifecycle";
+import DestekListClient, { type TicketRow } from "./DestekListClient";
 
-function fmt(s: string | null) {
-  if (!s) return "";
-  try {
-    return new Date(s).toLocaleString("tr-TR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
-  } catch {
-    return "";
-  }
-}
+export const metadata = { title: "Destek Talepleri", robots: { index: false, follow: false } };
 
-// Staff (agent/admin) RLS ile TÜM talepleri görür — service_role gerekmez.
-// Thread admin shell'i içinde: /admin/destek/[id] (ThreadClient paylaşılır).
+/* Destek gelen kutusu — agent'ın asıl çalışma ekranı.
+   ⚠️ Talep TEK BAŞINA yetmiyordu (Mehmet, 2026-07-18): "kim yazmış, ne zaman üye olmuş,
+   ödüyor mu, kaç profili var" bilgisi olmadan agent her talepte Müşteriler ekranına gidip
+   aramak zorundaydı. Talep satırı artık müşteri bağlamını da taşıyor.
+
+   Veri İKİ KAYNAKTAN geliyor, JS'te birleşiyor:
+   · Talepler → kullanıcı oturumu + RLS (staff hepsini görür, service_role gerekmez)
+   · Müşteri bağlamı → listPeople() (service_role; auth.users + profiles)
+   ⚠️ support_tickets.user_id = auth.users.id (KİŞİ), profil id DEĞİL. */
 export default async function AdminDestekPage() {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("support_tickets")
-    .select(TICKET_COLS)
-    .order("last_message_at", { ascending: false })
-    .limit(200);
+  await requireStaffPage(); // sayfa kendi guard'ını çağırır (denetim Y1) — layout'a güvenme
 
-  if (error) {
+  const supabase = await createClient();
+  const [ticketR, peopleR] = await Promise.all([
+    supabase
+      .from("support_tickets")
+      .select(TICKET_COLS)
+      .order("last_message_at", { ascending: false })
+      .limit(200),
+    listPeople(),
+  ]);
+
+  if (ticketR.error) {
     return (
       <div>
         <h1 className="admin-h1">Destek Talepleri</h1>
-        <p className="admin-sub">Talepler yüklenemedi: {error.message}</p>
+        <p className="admin-sub">Talepler yüklenemedi: {ticketR.error.message}</p>
       </div>
     );
   }
 
-  const tickets = (data as Ticket[]) ?? [];
-  const open = tickets.filter((t) => t.status === "open" || t.status === "answered").length;
+  const tickets = (ticketR.data as Ticket[]) ?? [];
+  const now = Date.now();
+  const byUser = new Map(peopleR.people.map((p) => [p.id, p]));
+
+  const rows: TicketRow[] = tickets.map((t) => {
+    const person = byUser.get(t.user_id);
+    if (!person) {
+      return {
+        ticket: t, email: null, ad: null, uyelik: null,
+        durum: null, durumBadge: null, profilSayisi: 0, sonAktiflik: null,
+      };
+    }
+    const l = personLifecycle(person, now);
+    return {
+      ticket: t,
+      email: person.email,
+      ad: displayName(person),
+      uyelik: person.created_at,
+      durum: lifecycleLabel(l),
+      durumBadge: LIFECYCLE_META[l.kind].badge,
+      profilSayisi: person.profiles.length,
+      sonAktiflik: person.last_seen_at ?? person.last_sign_in_at,
+    };
+  });
+
+  /* Müşteri bağlamı okunamazsa talepler YİNE gösterilir (destek işi durmasın) ama sebebi
+     ekranda yazar — sessizce "bilgi yok" göstermek denetimdeki Y6'nın aynısı olurdu. */
+  const uyari = peopleR.error
+    ? `Müşteri bilgileri okunamadı (${peopleR.error}) — talepler listeleniyor ama kimin yazdığı görünmüyor.`
+    : peopleR.truncated
+    ? "Müşteri listesi 10.000'de kırpıldı — bazı taleplerde müşteri bilgisi boş görünebilir."
+    : null;
 
   return (
-    <div>
-      <h1 className="admin-h1">Destek Talepleri</h1>
-      <p className="admin-sub">{tickets.length} talep · {open} açık/yanıt bekliyor.</p>
-
-      <div className="admin-panel" style={{ padding: 0 }}>
-        {tickets.length === 0 ? (
-          <p className="admin-empty-cell" style={{ padding: 24 }}>Henüz talep yok.</p>
-        ) : (
-          <div className="admin-ticket-list">
-            {tickets.map((t) => {
-              const meta = TICKET_STATUS_META[t.status] ?? TICKET_STATUS_META.open;
-              return (
-                <Link key={t.id} href={`/admin/destek/${t.id}`} className="admin-ticket-row">
-                  <div className="admin-ticket-main">
-                    <div className="admin-ticket-subject">{t.subject}</div>
-                    <div className="admin-ticket-meta">#{t.id.slice(0, 8)} · {fmt(t.last_message_at)}</div>
-                  </div>
-                  <span className={`badge ${meta.badge}`}>{meta.label}</span>
-                  <ChevronRight size={16} className="admin-ticket-chevron" />
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
+    <DestekListClient
+      rows={rows}
+      now={now}
+      uyari={uyari}
+      /* 200 sınırı SESSİZ kalmasın (CLAUDE.md: listeye limit koy + kırpmayı söyle). */
+      kirpildi={tickets.length >= 200}
+    />
   );
 }
