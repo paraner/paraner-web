@@ -18,11 +18,14 @@ import { sendInviteEmail, hasMailKey } from "./staffInvite";
    ⚠️ ADMIN HOST'U: iç ekip pazarlama sitesine (paraner.com) hiç uğramamalı — davet edilen
    kişi baştan çalışacağı adresi görsün. `/sifre-sifirla` proxy'de tüm host'larda PUBLIC
    (proxy.ts PUBLIC_PATHS) → admin.paraner.com'da da açılır, ayrı sayfa gerekmiyor.
+   ⚠️ ROTA `/sifre-olustur` — `/sifre-sifirla` DEĞİL: davet edilen kişi şifresini sıfırlamıyor,
+   İLK KEZ oluşturuyor (Mehmet, 2026-07-18). Ayrı rota hem doğru metni gösteriyor hem de
+   Supabase'e yazılacak adres anlamlı oluyor.
    ⚠️ ÖN KOŞUL: Supabase → Auth → URL Configuration → Redirect URLs listesinde
-   `https://admin.paraner.com/sifre-sifirla` OLMALI. Yoksa link reddedilir ve kişi giremez
+   `https://admin.paraner.com/sifre-olustur` OLMALI. Yoksa link reddedilir ve kişi giremez
    (paraner.com/sifre-sifirla ekli olması YETMEZ — tam URL eşleşmesi aranır).
-   MÜŞTERİ şifre sıfırlaması bundan AYRI ve paraner.com'da kalır (sendPasswordReset). */
-const INVITE_REDIRECT = "https://admin.paraner.com/sifre-sifirla";
+   MÜŞTERİ şifre sıfırlaması bundan AYRI ve paraner.com/sifre-sifirla'da kalır (sendPasswordReset). */
+const INVITE_REDIRECT = "https://admin.paraner.com/sifre-olustur";
 
 /** Gelen departman listesini SÖZLÜKTEN doğrula (uydurma değer DB CHECK'ine çarpmasın). */
 function temizDepartmanlar(list: string[] | undefined): Department[] {

@@ -126,7 +126,9 @@ export async function proxy(request: NextRequest) {
   }
 
   // Giriş/kayıt gibi herkese açık sayfalar korumadan muaf (yoksa /giris kendine döngü yapar)
-  const PUBLIC_PATHS = ["/giris", "/kayit", "/sifre-sifirla"];
+  // /sifre-olustur = iç ekip daveti (admin.paraner.com'da açılır) — korumadan muaf OLMALI,
+  // çünkü davet linkine tıklayan kişinin henüz oturumu yoktur (token URL'de gelir).
+  const PUBLIC_PATHS = ["/giris", "/kayit", "/sifre-sifirla", "/sifre-olustur"];
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     return response;
   }

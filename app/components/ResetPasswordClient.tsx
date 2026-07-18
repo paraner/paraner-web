@@ -9,7 +9,9 @@ import { createClient } from "../../lib/supabase/client";
 // panele yönlendirir. Mobil reset-password ile aynı sonuç (web'de paraner.com'da).
 type Phase = "verifying" | "form" | "done" | "invalid";
 
-export default function ResetPasswordClient() {
+/* mode="invite" → /sifre-olustur (iç ekip daveti: şifre İLK KEZ oluşturuluyor)
+   mode="reset"  → /sifre-sifirla (müşteri: "şifremi unuttum") */
+export default function ResetPasswordClient({ mode = "reset" }: { mode?: "invite" | "reset" }) {
   const [phase, setPhase] = useState<Phase>("verifying");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -22,7 +24,7 @@ export default function ResetPasswordClient() {
      Metinler ve şifre kurulduktan SONRAKİ hedef bu ikisinde farklı olmalı. Aynı metni
      göstermek daveti "sıfırlama" gibi okutuyordu; hedefi ayırmamak ise personeli
      MÜŞTERİ paneline (app.paraner.com) atıyordu — oradan admin paneline yol yok. */
-  const [davet, setDavet] = useState(false);
+  const [davet, setDavet] = useState(mode === "invite");
   const [eposta, setEposta] = useState<string | null>(null);
   const [personel, setPersonel] = useState(false);
 
@@ -51,7 +53,8 @@ export default function ResetPasswordClient() {
     const finish = async () => {
       if (done) return;
       done = true;
-      window.history.replaceState({}, "", "/sifre-sifirla"); // token URL'den temizlenir
+      // token URL'den temizlenir — bulunduğun rotada kal (davet /sifre-olustur'da)
+      window.history.replaceState({}, "", window.location.pathname);
       setPhase("form");
       /* Oturum kuruldu → kimin şifresini kurduğumuzu EKRANDA göster.
          Mehmet'in isteği: "maili otomatik dolsun" — kişi hangi hesaba şifre koyduğunu
