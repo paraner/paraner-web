@@ -32,16 +32,15 @@ const FAQ: { q: string; a: string }[] = [
   { q: "e-Fatura / e-Arşiv gönderebilir miyim?", a: "Şu anda fatura oluşturma, KDV takibi ve yazdırma/PDF destekleniyor. GİB e-Fatura/e-Arşiv entegrasyonu yol haritamızda; hazır olduğunda buradan duyuracağız." },
 ];
 
-function TicketRow({ t, showOwner }: { t: Ticket; showOwner?: boolean }) {
+/* showOwner kaldırıldı (2026-07-18): yalnız agent gelen kutusunda kullanılıyordu,
+   o blok müşteri panelinden çıkarıldı. Burada her satır zaten kullanıcının KENDİ talebi. */
+function TicketRow({ t }: { t: Ticket }) {
   const meta = TICKET_STATUS_META[t.status] ?? TICKET_STATUS_META.open;
   return (
     <Link href={`/panel/destek/${t.id}`} className="ticket-row">
       <div className="ticket-row-main">
         <div className="ticket-row-subject">{t.subject}</div>
-        <div className="ticket-row-meta">
-          {showOwner ? "Müşteri talebi · " : ""}
-          {formatDate(t.last_message_at)}
-        </div>
+        <div className="ticket-row-meta">{formatDate(t.last_message_at)}</div>
       </div>
       <span className={`badge ${meta.badge}`}>{meta.label}</span>
       <ChevronRight size={16} className="ticket-row-chevron" />
@@ -50,14 +49,10 @@ function TicketRow({ t, showOwner }: { t: Ticket; showOwner?: boolean }) {
 }
 
 export default function DestekClient({
-  isAgent,
   myTickets,
-  inbox,
 }: {
   userId: string;
-  isAgent: boolean;
   myTickets: Ticket[];
-  inbox: Ticket[];
 }) {
   const router = useRouter();
   const lock = useSubmitLock();
@@ -110,24 +105,8 @@ export default function DestekClient({
         </button>
       </div>
 
-      {/* Agent: gelen kutusu */}
-      {isAgent && (
-        <div className="support-faq-panel" style={{ marginBottom: 16 }}>
-          <div className="support-faq-head">
-            <div>
-              <h3>Gelen Talepler · Destek Ekibi</h3>
-              <p className="panel-sub" style={{ margin: 0 }}>Tüm kullanıcı talepleri (yalnız destek ekibi görür).</p>
-            </div>
-          </div>
-          {inbox.length === 0 ? (
-            <p className="panel-sub" style={{ padding: "12px 2px" }}>Henüz talep yok.</p>
-          ) : (
-            <div className="ticket-list">
-              {inbox.map((t) => <TicketRow key={t.id} t={t} showOwner />)}
-            </div>
-          )}
-        </div>
-      )}
+      {/* ⚠️ Agent "Gelen Talepler" kutusu 2026-07-18'de kaldırıldı — iç ekip işi müşteri
+          panelinde durmamalı; artık admin.paraner.com/admin/destek'te. Detay: page.tsx başı. */}
 
       {/* Taleplerim */}
       {myTickets.length > 0 && (
