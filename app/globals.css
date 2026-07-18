@@ -4084,6 +4084,48 @@ ul { list-style: none; }
 .admin-role-x:hover { opacity: 1; }
 .admin-role-x:disabled { cursor: default; opacity: 0.3; }
 
+/* --- Departman atama (ekip) --- */
+/* ⚠️ RENK KURALI (CLAUDE.md): seçili çip markaya bağlı OLMAZ → titanyum.
+   Teal/yeşil kullanma; marka rengi değişecek. Anlam renkleri (uyarı) ayrı. */
+.admin-field-label { font-size: 12px; color: var(--text-dim); margin-bottom: 7px; }
+.admin-dep-picker { display: flex; flex-wrap: wrap; gap: 7px; }
+.admin-dep-chip {
+  font: inherit; font-size: 12px; line-height: 1; cursor: pointer;
+  padding: 7px 11px; border-radius: 8px;
+  background: var(--card-2); color: var(--text-dim);
+  border: 1px solid var(--border);
+  transition: background .14s ease, color .14s ease, border-color .14s ease;
+}
+.admin-dep-chip:hover:not(:disabled) { color: var(--text); border-color: var(--text-dim); }
+.admin-dep-chip.on {
+  background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
+  color: #0a0b0d; border-color: #a9afb6; font-weight: 600;
+}
+.admin-dep-chip:disabled { cursor: default; opacity: 0.5; }
+
+.admin-dep-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.admin-dep-edit {
+  font: inherit; font-size: 12px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 4px;
+  background: none; border: 0; padding: 0; color: var(--text-dim);
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.admin-dep-edit:hover:not(:disabled) { color: var(--text); }
+.admin-dep-edit:disabled { cursor: default; opacity: 0.4; }
+
+/* Şifre kurma sayfasında "hangi hesap" satırı (davet + sıfırlama) */
+.reset-identity {
+  margin: 0 0 16px; padding: 9px 12px; border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
+  font-size: 13px; color: var(--text); text-align: center; word-break: break-all;
+}
+
+/* Departmansız destekçi uyarısı — ANLAM rengi (marka değil), bu yüzden kalır. */
+.admin-warn-inline {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; color: var(--warning); margin: 8px 0 0;
+}
+
 /* --- İç ekip giriş ekranı (admin.paraner.com/giris) --- */
 /* Admin shell diliyle aynı: koyu, nötr, marka rengi yok. Müşteri auth ekranıyla kasıtlı
    olarak akraba değil (orada 3B logo/sosyal giriş/rozetler var, burada hiçbiri yok). */

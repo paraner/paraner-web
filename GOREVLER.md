@@ -86,7 +86,16 @@
       Kapsam: yalnız İLK mesaj mail atar (takip yanıtları gürültü olmasın); istenirse `v_first` bloğu kalkar.
 - [ ] **Adım 6 — MOBİL:** `paraner-app/lib/support.ts` `createTicket` departman göndersin + seçim ekranı.
       Mobil Claude'a iletilecek (DEFAULT sayesinde acil değil).
-- [ ] **/admin/ekip'te departman atama UI'si** — personel alınınca şart (şu an SQL ile atanıyor).
+- [x] **/admin/ekip departman atama + davet akışı (2026-07-18)** — davette rol + departman seçilir;
+      `agent` için departman ZORUNLU (fail-closed RLS yüzünden departmansız kişi hiçbir talep göremez,
+      sessiz çıkmaz sokaktı). Listede departman rozeti + "Değiştir", departmansız destekçiye uyarı,
+      "Davet bekliyor" rozeti + "Daveti yenile". `grantRole` da aynı kuralı uyguluyor.
+      **Markalı davet maili** (`lib/staffInvite.ts`): `generateLink('invite')` + Resend.
+      Şifre kurma sayfası davet-farkında: metin değişiyor, **e-posta ekranda görünüyor**,
+      personel şifre kurunca **admin.paraner.com**'a gidiyor (eskiden app.paraner.com'a atıyordu — hataydı).
+- [ ] ⚠️ **`RESEND_API_KEY` Vercel'e eklenmeli** (Production + Preview) — yoksa davet maili
+      Supabase'in SADE şablonuyla gider (sistem çalışır, sadece markasız). Anahtar Supabase →
+      Edge Functions → Secrets'ta duruyor, oradan kopyalanır. Eklenince `/admin/ekip`'ten test daveti at.
 - [ ] **İleride:** talebe not/atama (`assignee_id` kolonu duruyor, kullanılmıyor) · ek dosya (`ticket-attachments` bucket).
 
 ### 🎫 DESTEK SİSTEMİ — Faz 0 ✅ TAMAMLANDI (2026-07-16, uçtan uca doğrulandı)
