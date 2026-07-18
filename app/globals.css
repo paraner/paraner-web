@@ -3786,13 +3786,16 @@ ul { list-style: none; }
   padding: 20px 14px; border-right: 1px solid var(--border);
   background: #0b0d10; position: sticky; top: 0; height: 100vh; height: 100dvh;
 }
+/* Marka: metin "PARANER Yönetim" yerine müşteri panelindeki GÖRSEL wordmark
+   (Mehmet, 2026-07-18) + altında oturum açık hesap. Eski "Yönetim" rozeti teal'di;
+   kaldırılması renk kuralına da uydu — panelde artık teal yok. */
 .admin-brand {
-  font-weight: 800; letter-spacing: 1px; font-size: 15px; color: var(--text);
-  padding: 4px 8px 16px; display: flex; align-items: baseline; gap: 8px;
+  padding: 4px 8px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
 }
-.admin-brand span {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
-  color: var(--teal); background: rgba(0,191,166,0.12); padding: 3px 7px; border-radius: 6px;
+.admin-brand img { height: 24px; width: auto; display: block; }
+.admin-brand-mail {
+  font-size: 11.5px; color: var(--text-dim); max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .admin-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
 .admin-nav-item {
@@ -4129,7 +4132,35 @@ ul { list-style: none; }
   background: var(--card-2); border: 1px solid var(--border); color: var(--text-dim);
   white-space: nowrap;
 }
-.admin-row-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.admin-row-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; align-items: center; }
+
+/* Satır aksiyonları — MÜŞTERİ PANELİNDEKİ .tx-row deseninin aynısı (Mehmet, 2026-07-18:
+   "app.paraner.com'daki gibi üzerine gelince sil/düzenle gelsin").
+   Hover yokken genişlik 0 → satır sade durur; hover'da açılır, buton hover'ında etiket belirir. */
+.admin-hover-actions { flex-wrap: nowrap; gap: 0; }
+.admin-hover-actions .anim-act {
+  width: 0; margin-left: 0; opacity: 0; border-width: 0; pointer-events: none;
+}
+.admin-table tbody tr:hover .admin-hover-actions .anim-act,
+.admin-hover-actions .anim-act:focus-visible {
+  width: 40px; height: 40px; margin-left: 8px; opacity: 1; border-width: 1px; pointer-events: auto;
+}
+.admin-table tbody tr:hover .admin-hover-actions .anim-act:hover,
+.admin-hover-actions .anim-act:focus-visible:hover { width: 96px; }
+.admin-hover-actions .anim-act.mail::before { content: "Yenile"; }
+.admin-hover-actions .anim-act.mail:hover {
+  background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.24);
+}
+/* ⚠️ RENK KURALI: paneldeki .anim-act.edit teal'e boyanıyor (eski kod). Admin'de marka
+   rengine bağlanmayalım → titanyum. Sil kırmızı KALIR (anlam rengi). */
+.admin-hover-actions .anim-act.edit:hover {
+  background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
+  border-color: #a9afb6; color: #0a0b0d;
+}
+
+/* Satır içi düzenlemede rol kartları daralsın (tabloya sığsın) */
+.admin-role-pick-sm { grid-template-columns: 1fr 1fr; gap: 6px; min-width: 230px; }
+.admin-role-pick-sm .admin-role-card { padding: 8px 10px; }
 
 /* --- Departman atama (ekip) --- */
 /* ⚠️ RENK KURALI (CLAUDE.md): seçili çip markaya bağlı OLMAZ → titanyum.

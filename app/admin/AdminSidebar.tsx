@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, Users, LifeBuoy, UsersRound, Radio, ScrollText, Sparkles } from "lucide-react";
 import LogoutButton from "../panel/LogoutButton";
@@ -26,7 +27,7 @@ const ITEMS: { href: string; label: string; icon: typeof Users; exact?: boolean;
   { href: "/admin/denetim", label: "Denetim Kaydı", icon: ScrollText, adminOnly: true },
 ];
 
-export default function AdminSidebar({ role }: { role: StaffRole }) {
+export default function AdminSidebar({ role, email }: { role: StaffRole; email: string | null }) {
   const pathname = usePathname();
   const router = useRouter();
   const items = ITEMS.filter((it) => !it.adminOnly || role === "admin");
@@ -61,8 +62,17 @@ export default function AdminSidebar({ role }: { role: StaffRole }) {
 
   return (
     <aside className="admin-sidebar">
+      {/* Metin wordmark yerine müşteri panelindeki GÖRSEL wordmark (Mehmet, 2026-07-18):
+          iki panelin markası aynı görünsün. Altında oturum açık hesap yazıyor. */}
       <div className="admin-brand">
-        PARANER<span>Yönetim</span>
+        <Image
+          src="/paraner-wordmark-titan.png"
+          alt="Paraner"
+          width={118}
+          height={24}
+          priority
+        />
+        {email && <span className="admin-brand-mail" title={email}>{email}</span>}
       </div>
       <nav className="admin-nav">
         {items.map((it) => {

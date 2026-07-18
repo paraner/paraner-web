@@ -455,6 +455,87 @@ export async function setStaffDepartments(
   };
 }
 
+/* Ekip satırındaki "Düzenle": rolü VE departmanları tek işlemde ayarlar.
+   Rol tekil hale getiriliyor — bir kişi hem Yönetici hem Destek olarak listelenince
+   "bu adam neyi görüyor?" sorusu karışıyordu (yönetici zaten her şeyi görür). */
+export async function updateStaff(
+  userId: string,
+  email: string,
+  role: "admin" | "agent",
+  departments?: string[],
+): Promise<ActionResult> {
+  const actor = await requireAdmin();
+  if (!actor) return { ok: false, message: "Yetkin yok." };
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, message: "Sunucu anahtarı eksik." };
+
+  /* ⚠️ KENDİNİ KİLİTLEME KORUMASI: kendi yöneticiliğini Destek'e düşürürsen bu sayfa
+     (requireAdminPage) sana kapanır ve geri alacak kimse olmayabilir. revokeRole'daki
+     aynı korumanın buradaki karşılığı. */
+  if (userId === actor.id && role !== "admin") {
+    return { ok: false, message: "Kendi yöneticiliğini kaldıramazsın (panele kilitlenirsin)." };
+  }
+
+  const deps = role === "agent" ? temizDepartmanlar(departments) : [];
+  if (role === "agent" && deps.length === 0) {
+    return {
+      ok: false,
+      message: "Destek personeli için en az bir departman seç — departmansız kişi hiçbir talep göremez.",
+    };
+  }
+
+  // Rolü tekilleştir: önce diğer rolü sil, sonra istenen rolü yaz.
+  const digeri = role === "admin" ? "agent" : "admin";
+  const { error: delErr } = await admin
+    .from("user_roles")
+    .delete()
+    .eq("user_id", userId)
+    .eq("role", digeri);
+  if (delErr) return { ok: false, message: `Rol güncellenemedi: ${delErr.message}` };
+
+  const { error: upErr } = await admin
+    .from("user_roles")
+    .upsert({ user_id: userId, role }, { onConflict: "user_id,role", ignoreDuplicates: true });
+  if (upErr) return { ok: false, message: `Rol verilemedi: ${upErr.message}` };
+
+  const depErr = await departmanlariYaz(admin, userId, deps);
+  if (depErr) return { ok: false, message: `Rol tamam ama departman atanamadı: ${depErr}` };
+
+  await logAction(actor, "staff_updated", { userId, email }, { role, departments: deps });
+  revalidatePath("/admin/ekip");
+  return {
+    ok: true,
+    message:
+      role === "admin"
+        ? `${email} → Yönetici (tüm yetkiler).`
+        : `${email} → Destek · ${deps.map(departmentLabel).join(", ")}.`,
+  };
+}
+
+/* Ekip satırındaki "Sil": kişiyi EKİPTEN çıkarır — HESABI SİLMEZ.
+   ⚠️ Ayrım önemli: rolleri ve departmanları kaldırılır, auth hesabı ve müşteri verisi
+   durur. Hesabı tamamen silmek Müşteriler ekranındaki "Kalıcı sil" işidir. */
+export async function removeFromTeam(userId: string, email: string): Promise<ActionResult> {
+  const actor = await requireAdmin();
+  if (!actor) return { ok: false, message: "Yetkin yok." };
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, message: "Sunucu anahtarı eksik." };
+
+  if (userId === actor.id) {
+    return { ok: false, message: "Kendini ekipten çıkaramazsın (panele kilitlenirsin)." };
+  }
+
+  const { error: depErr } = await admin.from("staff_departments").delete().eq("user_id", userId);
+  if (depErr) return { ok: false, message: `Departmanlar kaldırılamadı: ${depErr.message}` };
+
+  const { error } = await admin.from("user_roles").delete().eq("user_id", userId);
+  if (error) return { ok: false, message: `Ekipten çıkarılamadı: ${error.message}` };
+
+  await logAction(actor, "staff_removed", { userId, email });
+  revalidatePath("/admin/ekip");
+  return { ok: true, message: `${email} ekipten çıkarıldı. (Hesabı silinmedi.)` };
+}
+
 /** Daveti yeniden gönder (mail kaybolduysa / süresi dolduysa). */
 export async function resendInvite(email: string): Promise<ActionResult> {
   const actor = await requireAdmin();

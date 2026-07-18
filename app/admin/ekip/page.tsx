@@ -1,13 +1,14 @@
 import { createAdminClient, hasAdminKey } from "../../../lib/supabase/admin";
 import { listAuthUsers } from "../../../lib/adminUsers";
 import { requireAdminPage } from "../../../lib/adminGuard";
+import { createClient } from "../../../lib/supabase/server";
 import AdminKeyNotice from "../AdminKeyNotice";
 import EkipClient, { type StaffMember } from "./EkipClient";
 
 export const metadata = { title: "Ekip", robots: { index: false, follow: false } };
 
 export default async function AdminEkipPage() {
-  await requireAdminPage(); // ekip yönetimi + davet yalnız yöneticide
+  await requireAdminPage(); // ekip yönetimi + davet yalnız yöneticide (agent 404 alır)
   if (!hasAdminKey()) return <AdminKeyNotice />;
   const admin = createAdminClient()!;
 
@@ -56,5 +57,8 @@ export default async function AdminEkipPage() {
   }
 
   const staff = [...byUser.values()].sort((a, b) => a.email.localeCompare(b.email, "tr"));
-  return <EkipClient staff={staff} />;
+  /* Kendi satırında "Ekipten çıkar" gösterilmesin (kilitlenme). Sunucu da engelliyor;
+     düğmeyi hiç göstermemek daha anlaşılır. */
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  return <EkipClient staff={staff} selfEmail={user?.email ?? null} />;
 }
