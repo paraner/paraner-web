@@ -276,16 +276,6 @@ function AccountInfo({
   return (
     <div className="settings-block">
       <h3>Hesap Bilgileri</h3>
-      {/* Açıklama alt sekmeye göre değişir — Şirket bölümünün kendi açıklaması var,
-          ikisi birden basılırsa üst üste iki paragraf olurdu. */}
-      {(sub === "profil" || !isBusiness) && (
-        <p className="set-lead">
-          {isBusiness
-            ? "Kimlik ve iletişim bilgilerin; panelde ve belgelerinde görünen logon."
-            : "Kimlik ve iletişim bilgilerin."}
-        </p>
-      )}
-
       {isBusiness && (
         <div className="set-subtabs" role="tablist" aria-label="Hesap bilgileri bölümleri">
           {([
@@ -305,6 +295,18 @@ function AccountInfo({
           ))}
         </div>
       )}
+
+      {/* ⚠️ Açıklama TEK YERDEN basılır (2026-07-18, Mehmet fark etti): eskiden Profil'inki
+          burada değil sekmelerin ÜSTÜNDE, Şirket'inki ise CompanyForm'un İÇİNDE duruyordu →
+          sekme değişince metin yukarı/aşağı zıplıyordu. Metin seçili sekmeyi anlattığı için
+          doğru yer sekmelerin ALTI: açıkladığı içeriğin hemen üstünde. */}
+      <p className="set-lead">
+        {sub === "sirket" && isBusiness
+          ? "Unvan, vergi ve kayıt bilgileri faturalarında ve resmî belgelerinde görünür; ticari kayıtlarınla birebir aynı olmalı."
+          : isBusiness
+          ? "Kimlik ve iletişim bilgilerin; panelde ve belgelerinde görünen logon."
+          : "Kimlik ve iletişim bilgilerin."}
+      </p>
 
       {sub === "profil" || !isBusiness ? (
         <ProfileForm profile={profile} email={email} isBusiness={isBusiness} />
@@ -597,10 +599,6 @@ function CompanyForm({ profile }: { profile: Profile }) {
 
   return (
     <form onSubmit={save}>
-      <p className="set-lead">
-        Unvan, vergi ve kayıt bilgileri faturalarında ve resmî belgelerinde görünür; ticari kayıtlarınla birebir aynı olmalı.
-      </p>
-
       <div className="fg-group">Ticari kayıt</div>
       <div className="form-grid">
         <div className="fg">
