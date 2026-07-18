@@ -4137,32 +4137,46 @@ ul { list-style: none; }
 /* Satır aksiyonları — MÜŞTERİ PANELİNDEKİ .tx-row deseninin aynısı (Mehmet, 2026-07-18:
    "app.paraner.com'daki gibi üzerine gelince sil/düzenle gelsin").
    Hover yokken genişlik 0 → satır sade durur; hover'da açılır, buton hover'ında etiket belirir. */
-/* ⚠️ AKSİYON SÜTUNU SABİT GENİŞLİK OLMALI (Mehmet, 2026-07-19: "üzerine gelince
-   hepsi sola kayıyor"). Sebep tablo yapısı: bir satırın hücresi hover'da büyüyünce
-   SÜTUN genişliği değişiyor, sütun tüm satırlarda ortak olduğu için TÜM tablo kayıyor.
-   Genişliği en geniş hâle göre peşin ayırıyoruz → hover hiçbir şeyi oynatmıyor.
-   Hesap: 3 buton (yenile+düzenle+sil) = 40+40+96(hover'daki) + 2×8 boşluk = 192px. */
-.admin-actions-col { width: 200px; min-width: 200px; }
-.admin-hover-actions { flex-wrap: nowrap; gap: 0; justify-content: flex-end; }
-.admin-hover-actions .anim-act {
-  width: 0; margin-left: 0; opacity: 0; border-width: 0; pointer-events: none;
+/* --- Ekip listesi: İŞLEMLER satırı deseni (.tx-row) ---
+   Mehmet (2026-07-19): "app.paraner.com/panel/islemler'deki gibi tepkime versin".
+   ⚠️ Neden tablo DEĞİL: tabloda sütun genişliği tüm satırlarda ortaktır → bir satırın
+   aksiyonları açılınca BÜTÜN tablo kayıyordu. Esnek satırda sağdaki grup büyüyünce
+   yalnız o satırın tarihi sola kayar; diğer satırlar hiç etkilenmez.
+   .tx-row / .tx-actions / .anim-act zaten panelde tanımlı — aynı tepkimeyi miras alıyoruz. */
+.staff-list { display: flex; flex-direction: column; }
+.staff-row { padding: 12px 20px; }
+.staff-avatar {
+  width: 34px; height: 34px; flex: none; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--card-2); border: 1px solid var(--border);
+  font-size: 14px; font-weight: 700; color: var(--text-dim);
 }
-.admin-table tbody tr:hover .admin-hover-actions .anim-act,
-.admin-hover-actions .anim-act:focus-visible {
-  width: 40px; height: 40px; margin-left: 8px; opacity: 1; border-width: 1px; pointer-events: auto;
-}
-.admin-table tbody tr:hover .admin-hover-actions .anim-act:hover,
-.admin-hover-actions .anim-act:focus-visible:hover { width: 96px; }
-.admin-hover-actions .anim-act.mail::before { content: "Yenile"; }
-.admin-hover-actions .anim-act.mail:hover {
-  background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.24);
-}
+.staff-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.staff-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 3px; }
+.staff-date { color: var(--text-dim); font-weight: 500; }
+
+/* Düzenleme satırı: tam genişlik form, hover tepkimesi yok */
+.staff-row-edit { display: block; background: rgba(255, 255, 255, 0.02); }
+.staff-edit-body { max-width: 560px; }
+
 /* ⚠️ RENK KURALI: paneldeki .anim-act.edit teal'e boyanıyor (eski kod). Admin'de marka
    rengine bağlanmayalım → titanyum. Sil kırmızı KALIR (anlam rengi). */
-.admin-hover-actions .anim-act.edit:hover {
+.staff-row .anim-act.edit:hover {
   background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
   border-color: #a9afb6; color: #0a0b0d;
 }
+.staff-row .anim-act.mail::before { content: "Yenile"; }
+.staff-row .anim-act.mail:hover {
+  background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.24);
+}
+/* Hover/açılma davranışı .tx-row kuralından gelir; burada yalnız satır seçicisini eşliyoruz. */
+.staff-row .tx-actions .anim-act { width: 0; margin-left: 0; opacity: 0; border-width: 0; pointer-events: none; }
+.staff-row:hover .tx-actions .anim-act,
+.staff-row .tx-actions .anim-act:focus-visible {
+  width: 40px; height: 40px; margin-left: 8px; opacity: 1; border-width: 1px; pointer-events: auto;
+}
+.staff-row:hover .tx-actions .anim-act:hover,
+.staff-row .tx-actions .anim-act:focus-visible:hover { width: 96px; }
 
 /* Satır içi düzenlemede rol kartları daralsın (tabloya sığsın) */
 .admin-role-pick-sm { grid-template-columns: 1fr 1fr; gap: 6px; min-width: 230px; }

@@ -247,194 +247,186 @@ export default function EkipClient({
         {staff.length === 0 ? (
           <p className="admin-note" style={{ padding: "0 20px 20px" }}>Henüz kimse yok.</p>
         ) : (
-          <div className="admin-table-wrap" style={{ border: 0, borderRadius: 0, background: "none" }}>
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Kişi</th>
-                  <th>Rol</th>
-                  <th>Departmanlar</th>
-                  <th>Katıldı</th>
-                  <th aria-label="İşlemler" className="admin-actions-col" />
-                </tr>
-              </thead>
-              <tbody>
-                {staff.map((m) => {
-                  const yonetici = m.roles.includes("admin");
-                  const destekci = m.roles.includes("agent");
-                  // Yönetici zaten her şeyi görür → departmansızlık ONUN için sorun değil.
-                  const departmansiz = !yonetici && destekci && m.departments.length === 0;
-                  const duzenle = duzenlenen === m.id;
-                  const kendisi = m.email === selfEmail;
+          /* ⚠️ TABLO DEĞİL, .tx-row (İşlemler deseni) — Mehmet, 2026-07-19:
+             "app.paraner.com/panel/islemler'deki gibi tepkime versin".
+             Tabloda sütun genişliği TÜM satırlarda ortak olduğu için bir satırın
+             aksiyonları açılınca bütün tablo kayıyordu. Esnek satırda sağdaki grup
+             büyüyünce YALNIZ o satırın içeriği sola kayar — istenen tepkime bu. */
+          <div className="staff-list">
+            {staff.map((m) => {
+              const yonetici = m.roles.includes("admin");
+              const destekci = m.roles.includes("agent");
+              // Yönetici zaten her şeyi görür → departmansızlık ONUN için sorun değil.
+              const departmansiz = !yonetici && destekci && m.departments.length === 0;
+              const duzenle = duzenlenen === m.id;
+              const kendisi = m.email === selfEmail;
 
-                  return (
-                    <tr key={m.id}>
-                      <td>
-                        <div className="admin-staff-email">{m.email}</div>
+              if (duzenle) {
+                return (
+                  <div key={m.id} className="tx-row staff-row staff-row-edit">
+                    <div className="staff-edit-body">
+                      <div className="admin-staff-email">{m.email}</div>
+
+                      <div style={{ marginTop: 12 }}>
+                        <span className="admin-field-label">Rolü</span>
+                        <div className="admin-role-pick admin-role-pick-sm">
+                          {ROLES.map((rr) => {
+                            const Icon = rr.icon;
+                            return (
+                              <button
+                                key={rr.id}
+                                type="button"
+                                aria-pressed={taslakRol === rr.id}
+                                disabled={busy != null}
+                                className={`admin-role-card${taslakRol === rr.id ? " on" : ""}`}
+                                onClick={() => setTaslakRol(rr.id)}
+                              >
+                                <span className="admin-role-card-top">
+                                  <Icon size={13} /> {rr.label}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div style={{ marginTop: 12 }}>
+                        {taslakRol === "admin" ? (
+                          <p className="admin-note">
+                            Yönetici tüm departmanları görür — seçim gerekmez.
+                          </p>
+                        ) : (
+                          <>
+                            <span className="admin-field-label">Departmanlar</span>
+                            <DepartmanSecici
+                              secili={taslakDeps}
+                              onChange={setTaslakDeps}
+                              disabled={busy != null}
+                            />
+                            {taslakDeps.length === 0 && (
+                              <p className="admin-warn-inline">
+                                <AlertTriangle size={12} /> En az bir departman seç.
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          disabled={busy != null || (taslakRol === "agent" && taslakDeps.length === 0)}
+                          onClick={() =>
+                            run(`save-${m.id}`, () => updateStaff(m.id, m.email, taslakRol, taslakDeps))
+                          }
+                        >
+                          {busy === `save-${m.id}` ? "…" : "Kaydet"}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          disabled={busy != null}
+                          onClick={() => setDuzenlenen(null)}
+                        >
+                          Vazgeç
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div key={m.id} className="tx-row staff-row">
+                  <div className="tx-main">
+                    <span className="staff-avatar" aria-hidden="true">
+                      {m.email.charAt(0).toLocaleUpperCase("tr")}
+                    </span>
+                    <div className="tx-left">
+                      <span className="tx-title staff-title">
+                        {m.email}
                         {m.pending && (
-                          <span className="badge gray" style={{ marginTop: 5 }}>
+                          <span className="badge gray">
                             <Clock size={11} /> Davet bekliyor
                           </span>
                         )}
-                      </td>
-
-                      <td>
-                        {duzenle ? (
-                          <div className="admin-role-pick admin-role-pick-sm">
-                            {ROLES.map((rr) => {
-                              const Icon = rr.icon;
-                              return (
-                                <button
-                                  key={rr.id}
-                                  type="button"
-                                  aria-pressed={taslakRol === rr.id}
-                                  disabled={busy != null}
-                                  className={`admin-role-card${taslakRol === rr.id ? " on" : ""}`}
-                                  onClick={() => setTaslakRol(rr.id)}
-                                >
-                                  <span className="admin-role-card-top">
-                                    <Icon size={13} /> {rr.label}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <span className="admin-badge-row">
-                            {m.roles.map((r) => (
-                              <span key={r} className={`badge ${r === "admin" ? "green" : "blue"}`}>
-                                {r === "admin" ? <ShieldCheck size={11} /> : <LifeBuoy size={11} />}{" "}
-                                {ROLE_LABEL[r]}
-                              </span>
-                            ))}
-                          </span>
-                        )}
-                      </td>
-
-                      <td>
-                        {duzenle ? (
-                          taslakRol === "admin" ? (
-                            <span className="admin-note">
-                              Yönetici tüm departmanları görür — seçim gerekmez.
-                            </span>
-                          ) : (
-                            <>
-                              <DepartmanSecici
-                                secili={taslakDeps}
-                                onChange={setTaslakDeps}
-                                disabled={busy != null}
-                              />
-                              {taslakDeps.length === 0 && (
-                                <p className="admin-warn-inline">
-                                  <AlertTriangle size={12} /> En az bir departman seç.
-                                </p>
-                              )}
-                            </>
-                          )
-                        ) : yonetici ? (
-                          <span className="admin-note">Tümü (yönetici)</span>
-                        ) : !destekci ? (
-                          <span className="admin-note">—</span>
+                      </span>
+                      <span className="tx-meta staff-meta">
+                        <span className={`badge ${yonetici ? "green" : "blue"}`}>
+                          {yonetici ? <ShieldCheck size={11} /> : <LifeBuoy size={11} />}{" "}
+                          {yonetici ? ROLE_LABEL.admin : ROLE_LABEL.agent}
+                        </span>
+                        {yonetici ? (
+                          <span className="admin-note">Tüm departmanlar</span>
                         ) : departmansiz ? (
                           <span className="admin-warn-inline" style={{ margin: 0 }}>
-                            <AlertTriangle size={12} /> Atanmamış — hiçbir talep göremiyor
+                            <AlertTriangle size={12} /> Departman atanmamış — hiçbir talep göremiyor
                           </span>
                         ) : (
-                          <span className="admin-dep-tags">
-                            {m.departments.map((d) => (
-                              <span key={d} className="admin-dep-tag">
-                                {departmentLabel(d)}
-                              </span>
-                            ))}
-                          </span>
+                          m.departments.map((d) => (
+                            <span key={d} className="admin-dep-tag">
+                              {departmentLabel(d)}
+                            </span>
+                          ))
                         )}
-                      </td>
+                      </span>
+                    </div>
+                  </div>
 
-                      <td className="admin-note" style={{ whiteSpace: "nowrap" }}>
-                        {formatDate(m.since)}
-                      </td>
-
-                      <td className="admin-actions-col">
-                        {duzenle ? (
-                          <div className="admin-row-actions">
-                            <button
-                              type="button"
-                              className="btn btn-primary btn-sm"
-                              disabled={busy != null || (taslakRol === "agent" && taslakDeps.length === 0)}
-                              onClick={() =>
-                                run(`save-${m.id}`, () =>
-                                  updateStaff(m.id, m.email, taslakRol, taslakDeps),
-                                )
-                              }
-                            >
-                              {busy === `save-${m.id}` ? "…" : "Kaydet"}
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-sm"
-                              disabled={busy != null}
-                              onClick={() => setDuzenlenen(null)}
-                            >
-                              Vazgeç
-                            </button>
-                          </div>
-                        ) : (
-                          /* Panel satırlarıyla AYNI desen (.anim-act): hover'da açılır,
-                             buton hover'ında etiketi belirir. Kendi satırında Sil YOK —
-                             sunucu da engelliyor ama düğmeyi hiç göstermemek daha net. */
-                          <div className="admin-row-actions admin-hover-actions">
-                            {m.pending && (
-                              <button
-                                type="button"
-                                className="anim-act mail"
-                                aria-label="Daveti yenile"
-                                title="Şifre oluşturma mailini yeniden gönder"
-                                disabled={busy != null}
-                                onClick={() => run(`resend-${m.id}`, () => resendInvite(m.email))}
-                              >
-                                <MailCheck size={16} />
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              className="anim-act edit"
-                              aria-label={`${m.email} kaydını düzenle`}
-                              disabled={busy != null}
-                              onClick={() => {
-                                setTaslakRol(yonetici ? "admin" : "agent");
-                                setTaslakDeps(m.departments);
-                                setDuzenlenen(m.id);
-                              }}
-                            >
-                              <Pencil size={16} />
-                            </button>
-                            {!kendisi && (
-                              <button
-                                type="button"
-                                className="anim-act del"
-                                aria-label={`${m.email} kişisini ekipten çıkar`}
-                                disabled={busy != null}
-                                onClick={async () => {
-                                  const ok = await confirmDialog({
-                                    title: "Ekipten çıkar",
-                                    message: `${m.email} ekipten çıkarılacak: rolleri ve departmanları kaldırılır, yönetim paneline giremez. Hesabı SİLİNMEZ. Onaylıyor musun?`,
-                                    confirmLabel: "Ekipten çıkar",
-                                    danger: true,
-                                  });
-                                  if (ok) run(`rm-${m.id}`, () => removeFromTeam(m.id, m.email));
-                                }}
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  <div className="tx-right">
+                    <span className="tx-amount staff-date">{formatDate(m.since)}</span>
+                    <div className="tx-actions">
+                      {m.pending && (
+                        <button
+                          type="button"
+                          className="anim-act mail"
+                          aria-label="Daveti yenile"
+                          title="Şifre oluşturma mailini yeniden gönder"
+                          disabled={busy != null}
+                          onClick={() => run(`resend-${m.id}`, () => resendInvite(m.email))}
+                        >
+                          <MailCheck size={16} />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="anim-act edit"
+                        aria-label={`${m.email} kaydını düzenle`}
+                        disabled={busy != null}
+                        onClick={() => {
+                          setTaslakRol(yonetici ? "admin" : "agent");
+                          setTaslakDeps(m.departments);
+                          setDuzenlenen(m.id);
+                        }}
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      {/* Kendi satırında "Ekipten çıkar" YOK — kilitlenmeyi UI'da da engelle. */}
+                      {!kendisi && (
+                        <button
+                          type="button"
+                          className="anim-act del"
+                          aria-label={`${m.email} kişisini ekipten çıkar`}
+                          disabled={busy != null}
+                          onClick={async () => {
+                            const ok = await confirmDialog({
+                              title: "Ekipten çıkar",
+                              message: `${m.email} ekipten çıkarılacak: rolleri ve departmanları kaldırılır, yönetim paneline giremez. Hesabı SİLİNMEZ. Onaylıyor musun?`,
+                              confirmLabel: "Ekipten çıkar",
+                              danger: true,
+                            });
+                            if (ok) run(`rm-${m.id}`, () => removeFromTeam(m.id, m.email));
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
