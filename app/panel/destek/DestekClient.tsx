@@ -10,7 +10,7 @@ import SaveButton from "../../../components/SaveButton";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { showToast } from "../../components/toast";
 import { formatDate } from "../../../lib/format";
-import { createTicket, TICKET_STATUS_META, type Ticket } from "../../../lib/support";
+import { createTicket, TICKET_STATUS_META, DEPARTMENTS, type Ticket, type Department } from "../../../lib/support";
 
 const WHATSAPP = "905322379909";
 const WHATSAPP_LABEL = "+90 532 237 99 09";
@@ -59,6 +59,9 @@ export default function DestekClient({
   const [query, setQuery] = useState("");
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const [ticketOpen, setTicketOpen] = useState(false);
+  /* Departman ZORUNLU ama önceden seçili DEĞİL: varsayılan bırakılırsa herkes onu gönderir
+     ve yönlendirme anlamsızlaşır. null → kullanıcı bilinçli seçmek zorunda. */
+  const [dep, setDep] = useState<Department | null>(null);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
@@ -68,13 +71,13 @@ export default function DestekClient({
     ({ f }) => !q || (f.q + " " + f.a).toLocaleLowerCase("tr").includes(q)
   );
 
-  const canSend = title.trim().length > 0 && message.trim().length > 0;
+  const canSend = dep != null && title.trim().length > 0 && message.trim().length > 0;
 
   async function submitTicket(e: React.FormEvent) {
     e.preventDefault();
     if (!canSend || !lock.acquire()) return;
     setSaving(true);
-    const id = await createTicket(title, message);
+    const id = await createTicket(title, message, dep!);
     setSaving(false);
     lock.release();
     if (!id) {
@@ -82,6 +85,7 @@ export default function DestekClient({
       return;
     }
     setTicketOpen(false);
+    setDep(null);
     setTitle("");
     setMessage("");
     router.push(`/panel/destek/${id}`);
@@ -182,6 +186,27 @@ export default function DestekClient({
             <p className="set-lead" style={{ marginTop: 0 }}>
               Talebini oluştur; yanıtlandığında bildirim ve e-posta ile haber veririz, buradan sohbet gibi devam edersin.
             </p>
+
+            {/* ⚠️ Departman seçimi = TALEBİN KİME GİDECEĞİ. Açılır liste yerine KART:
+                her kartın altındaki tek cümle "buraya ne yazılır" diyor → yanlış departman
+                seçimi azalır, talep doğru ekibe düşer. Öncelik SORULMUYOR (bilinçli). */}
+            <Field label="Konu hangi ekibi ilgilendiriyor?">
+              <div className="dep-pick">
+                {DEPARTMENTS.map((d) => (
+                  <button
+                    key={d.id}
+                    type="button"
+                    className={`dep-card${dep === d.id ? " on" : ""}`}
+                    onClick={() => setDep(d.id)}
+                    aria-pressed={dep === d.id}
+                  >
+                    <span className="dep-card-title">{d.label}</span>
+                    <span className="dep-card-hint">{d.ipucu}</span>
+                  </button>
+                ))}
+              </div>
+            </Field>
+
             <Field label="Başlık">
               <input className="set-input" style={{ width: "100%" }} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Talep başlığı" />
             </Field>

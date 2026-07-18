@@ -12,20 +12,33 @@ import { createClient } from "./supabase/client";
 export {
   TICKET_COLS,
   TICKET_STATUS_META,
+  DEPARTMENTS,
+  DEPARTMENT_META,
+  departmentLabel,
   type TicketStatus,
   type Ticket,
   type TicketMessage,
+  type Department,
 } from "./supportShared";
-import { type TicketStatus, type TicketMessage } from "./supportShared";
+import { DEPARTMENTS, type TicketStatus, type TicketMessage, type Department } from "./supportShared";
 
 // Yeni talep = ticket + ilk kullanıcı mesajı. Thread'e gitmek için ticket id döner.
-export async function createTicket(subject: string, body: string): Promise<string | null> {
+/* Talep aç. `department` 2026-07-18'de eklendi (destek-departman.sql):
+   hangi ekibe düşeceğini müşteri seçiyor, trigger o ekibe + admin'lere bildirim atıyor.
+   `priority` müşteriye SORULMUYOR — departmanın varsayılanından türetiliyor
+   (herkes "yüksek" seçerse alan bilgi taşımaz olur; agent panelden değiştirir). */
+export async function createTicket(
+  subject: string,
+  body: string,
+  department: Department = "teknik",
+): Promise<string | null> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
+  const oncelik = DEPARTMENTS.find((d) => d.id === department)?.oncelik ?? "normal";
   const { data: ticket, error } = await supabase
     .from("support_tickets")
-    .insert({ user_id: user.id, subject: subject.trim() })
+    .insert({ user_id: user.id, subject: subject.trim(), department, priority: oncelik })
     .select("id")
     .single();
   if (error || !ticket) return null;

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Search, User, CalendarPlus, Layers, Clock } from "lucide-react";
-import { TICKET_STATUS_META, type Ticket, type TicketStatus } from "../../../lib/supportShared";
+import { TICKET_STATUS_META, DEPARTMENT_META, DEPARTMENTS, type Ticket, type TicketStatus, type Department } from "../../../lib/supportShared";
 import { relativeLabel } from "../../../lib/lifecycle";
 
 /** Talep + o talebi yazan müşterinin bağlamı (sunucuda birleştirilir). */
@@ -62,6 +62,9 @@ export default function DestekListClient({
   kirpildi: boolean;
 }) {
   const [seg, setSeg] = useState<(typeof SEGMENTS)[number]["id"]>("bekleyen");
+  /* Departman filtresi: "tüm ekipler" varsayılan. Admin hepsini görür; agent'a RLS zaten
+     yalnız kendi departmanını verecek (daraltma ayrı adımda) → bu filtre onun için de anlamlı. */
+  const [dep, setDep] = useState<Department | "hepsi">("hepsi");
   const [q, setQ] = useState("");
 
   const sayac = useMemo(() => {
@@ -76,6 +79,7 @@ export default function DestekListClient({
   const gorunen = useMemo(() => {
     const ara = q.trim().toLocaleLowerCase("tr");
     return rows.filter((r) => {
+      if (dep !== "hepsi" && r.ticket.department !== dep) return false;
       if (seg === "bekleyen") {
         if (r.ticket.status !== "open" && r.ticket.status !== "answered") return false;
       } else if (seg !== "hepsi" && r.ticket.status !== seg) return false;
@@ -86,7 +90,7 @@ export default function DestekListClient({
         .filter(Boolean)
         .some((x) => (x as string).toLocaleLowerCase("tr").includes(ara));
     });
-  }, [rows, seg, q]);
+  }, [rows, seg, q, dep]);
 
   return (
     <div>
@@ -120,6 +124,18 @@ export default function DestekListClient({
             );
           })}
         </div>
+
+        <select
+          className="admin-select"
+          value={dep}
+          onChange={(e) => setDep(e.target.value as Department | "hepsi")}
+          aria-label="Departmana göre filtrele"
+        >
+          <option value="hepsi">Tüm ekipler</option>
+          {DEPARTMENTS.map((d) => (
+            <option key={d.id} value={d.id}>{d.label}</option>
+          ))}
+        </select>
 
         <div className="admin-search">
           <Search size={15} />
@@ -185,6 +201,10 @@ export default function DestekListClient({
                     </div>
                   </div>
 
+                  {/* Hangi ekibe düştüğü satırda görünsün — kuyruk karışmasın. */}
+                  <span className={`badge ${DEPARTMENT_META[r.ticket.department]?.badge ?? "gray"}`}>
+                    {DEPARTMENT_META[r.ticket.department]?.label ?? "Teknik"}
+                  </span>
                   <span className={`badge ${meta.badge}`}>{meta.label}</span>
                   <ChevronRight size={16} className="admin-ticket-chevron" />
                 </Link>
