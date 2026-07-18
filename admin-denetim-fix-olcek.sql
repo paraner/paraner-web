@@ -46,18 +46,18 @@ REVOKE ALL ON FUNCTION public.admin_dead_profile_count() FROM public, anon;
 GRANT EXECUTE ON FUNCTION public.admin_dead_profile_count() TO authenticated;
 
 
--- ── O3) admin_module_adoption: tam count(*) → TAHMİN ───────────────────────
+-- ── O3) admin_module_adoption: count(*) → HİBRİT (küçükte gerçek, büyükte tahmin) ──
 -- Eski hâli 22 tabloda `count(DISTINCT sahip)` + `count(*)` çalıştırıyordu.
 -- Postgres'te count(*) indeksle kısayola İNMEZ → milyonlarca transactions
 -- satırında seq scan ×22. Supabase'de `authenticated` rolünün statement_timeout'u
 -- varsayılan 8 SANİYE (SECURITY DEFINER bunu değiştirmez) → RPC yavaşlamakla
 -- kalmaz, HATA VERMEYE başlar ve panel bölümü tamamen kaybolur.
 --
--- KARAR: `kayit_sayisi` artık pg_class.reltuples TAHMİNİ (planlayıcının
--- istatistiği; ANALYZE/autovacuum ile güncellenir, ±%
--- birkaç sapabilir). Bu ekran "hangi modül kullanılıyor" trendi için —
--- muhasebe değil, tahmin YETERLİ. `kullanici_sayisi` gerçek kalıyor:
--- benimseme kararı ondan okunuyor ve DISTINCT indeksten çok daha ucuz.
+-- KARAR (18.07 akşamı düzeltildi): `kayit_sayisi` HİBRİT — 50.000 satırın altında
+-- GERÇEK count(*) (milisaniye sürer), üstünde pg_class.reltuples tahmini (timeout'tan
+-- kaçmak için). İlk sürüm yalnız tahmin kullanıyordu ve YANLIŞTI: ANALYZE görmemiş
+-- tabloda reltuples 0/-1 döndüğü için panel "3 profil kullanıyor · 0 kayıt" diyordu.
+-- `kullanici_sayisi` her zaman gerçek: benimseme kararı ondan okunuyor.
 --
 -- ⚠️ Kolon adları/tipleri AYNI kalıyor → web tarafında değişiklik gerekmez.
 -- ⚠️ D3 (aynı denetim) de kapatıldı: kolon seçimi ALFABETİKTİ (ORDER BY
@@ -120,11 +120,20 @@ BEGIN
     -- Kullanıcı sayısı: GERÇEK (benimseme kararı buradan okunuyor).
     EXECUTE format('SELECT count(DISTINCT %I) FROM public.%I', v_col, r.tablo) INTO v_users;
 
-    -- Kayıt sayısı: TAHMİN (O3 — tam count(*) 8sn timeout'a giriyordu).
-    -- reltuples negatifse (hiç ANALYZE görmemiş yeni tablo) 0'a çek.
-    SELECT GREATEST(c.reltuples, 0)::bigint INTO v_rows
+    /* Kayıt sayısı — HİBRİT (2026-07-18 düzeltmesi).
+       ⚠️ İLK SÜRÜM HATALIYDI: yalnız reltuples kullanıyordu. reltuples PLANLAYICI TAHMİNİ;
+       tablo hiç ANALYZE/autovacuum görmemişse -1 veya 0 döner → panelde "İşlemler · 3 profil
+       kullanıyor · 0 kayıt" gibi saçma satırlar çıktı (Mehmet ekran görüntüsüyle yakaladı).
+       Doğrusu: küçük tabloda GERÇEK say (ucuz), yalnız BÜYÜK tabloda tahmine düş (timeout'tan
+       kaçmak için). Eşik 50.000: altında count(*) milisaniyeler sürer. */
+    SELECT c.reltuples::bigint INTO v_rows
     FROM pg_class c
     WHERE c.oid = ('public.' || quote_ident(r.tablo))::regclass;
+
+    IF v_rows IS NULL OR v_rows < 50000 THEN
+      -- Küçük/bilinmeyen tablo → gerçek sayım (doğruluk timeout riskinden önemli).
+      EXECUTE format('SELECT count(*) FROM public.%I', r.tablo) INTO v_rows;
+    END IF;
 
     modul := r.modul;
     tablo := r.tablo;

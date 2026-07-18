@@ -5,7 +5,7 @@ import { getStaffRole } from "../../lib/adminGuard";
 import AdminSidebar from "./AdminSidebar";
 import ToastHost from "../components/ToastHost";
 import ConfirmProvider from "../components/ConfirmProvider";
-import LivePill from "./LivePill";
+import AdminTopActions from "./AdminTopActions";
 import LiveRefresh from "./LiveRefresh";
 
 export const metadata: Metadata = {
@@ -28,13 +28,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <LiveRefresh everyMs={30_000} />
       <AdminSidebar role={role} />
       <div className="admin-main">
-        {/* Yalnız yönetici: /admin/canli müşteri e-postalarını listeliyor (agent göremez).
-            Suspense: sayaç sorgusu sayfanın boyanmasını BEKLETMESİN. */}
-        {role === "admin" && (
-          <Suspense fallback={null}>
-            <LivePill />
-          </Suspense>
-        )}
+        {/* Sağ üst küme: bekleyen talep ikonu (admin+agent) + canlı sayaç (yalnız admin —
+            /admin/canli müşteri e-postalarını listeliyor). Rol ayrımı bileşenin içinde.
+            Suspense: sayaç sorguları sayfanın boyanmasını BEKLETMESİN. */}
+        <Suspense fallback={null}>
+          <AdminTopActions role={role} />
+        </Suspense>
         <div className="admin-content">{children}</div>
       </div>
     </div>
