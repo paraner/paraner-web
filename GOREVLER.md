@@ -21,7 +21,7 @@
 > (service_role sızmıyor, tüm server action'lar guard'lı, enjeksiyon/IDOR/XSS yok). Kusurlar:
 > **DURUM (2026-07-18):** K1·K2·K3 + Y1-Y6 + O12 **KODLANDI** (tsc + build temiz).
 > ✅ **3 SQL de çalıştırıldı (2026-07-18).** K3·K1·K2·Y3·O8 canlı DOĞRULANDI (5/5 ✅).
-> O1·O3·O4 (`admin-denetim-fix-olcek.sql`) çalıştırıldı → doğrulama tekrarı bekliyor.
+> O1·O3·O4 da çalıştırıldı → DOĞRULAMA 8/8 ✅ (2026-07-18, ekran görüntüsüyle teyit).
 > 🔁 **Durum kontrolü:** `admin-denetim-DOGRULAMA.sql` — sadece OKUR, 8 satır ✅/❌ + eksikse dosya adı.
 > ⛔️ `paraner-app/supabase/ai-usage-rpc-fix.sql` **GEÇERSİZ** — tekrar çalıştırılırsa K2'yi sessizce geri alır.
 - [x] 🔴 **K1 — AI maliyet geçmişi HER PAZAR siliniyor:** silme cron'u Pazar 00:00, rollup her gün 02:00 (yani SONRA) + `ON CONFLICT DO UPDATE SET x=EXCLUDED.x` körlemesine eziyor → kısmi ay tam özeti eziyor. Fix: `GREATEST(...)`. ⚠️ SQL'deki "rollup daha erken" yorumu YANLIŞ.

@@ -67,7 +67,32 @@ segmenti henüz yok, **yanlış vaat vermektense tıklanamaz** bırakıldı, seg
 test edilse ikisi de "çalışıyor" görünürdü, ilk 90 günlük silme sınırı bir ayın ortasına düştüğünde
 patlarlardı. Bu tür şeyler beklenerek değil, sahte kısmi ay kurularak test edilir (SQL'de yazılı).
 
-Kalan: 12 orta + ~18 cila bulgu raporda, GOREVLER'de açık.
+**2. tur (aynı gün) — 10 orta bulgu:** O1 `user_devices.last_seen` indeksi · O3 `admin_module_adoption`
+tam `count(*)` → `pg_class.reltuples` tahmini (Supabase'de `authenticated` rolünün `statement_timeout`'u
+**8sn** — büyüyünce RPC yavaşlamaz, HATA VERİR) · O4 ölü-kayıt SAYISI için ayrı ucuz RPC (liste RPC'si
+duruyor) · O5 panonun 10.000 kırpması artık uyarı veriyor · O7 "Kayıp" segmenti sinyali olmayan YENİ
+üyeyi de sayıyordu (aynı kişi hem Yeni hem Kayıp) · O8 FK CASCADE · O9 audit `target_user_id` · O10
+silme başarısızsa telafi kaydı · O11 admin'de `loading.tsx` yoktu · D3 kolon seçimi alfabetikti.
+
+**⚠️ KENDİ HATAM — Mehmet yakaladı, ders kalıcı:** ölçek SQL'ini yazarken `admin_module_adoption`'ın
+22 tablosunu **ezberden yazdım** (var olmayan `budgets`/`salaries` gibi adlar uydurdum, gerçek
+`employee_expenses`/`debts`/`chat_messages` gibi olanları düşürdüm). Uyarı üzerine kendi SQL'lerimi
+kaynağa karşı denetleyince **iki tane daha** çıktı: (1) O8'de FK adını TAHMİN etmiştim — kısıt kaynakta
+isimsiz tanımlı, yanlış adda `DROP CONSTRAINT IF EXISTS` **sessizce hiçbir şey yapar** ve "düzeldi"
+sanırdık → ad artık `pg_constraint`'ten bulunuyor; (2) "sargable yapınca indeks kullanılır" iddiam
+fazlaydı — `idx_daily_ai_usage_user_date` öncü kolonu `user_id`, sadece tarih filtreleyen sorguya tam
+hizmet etmiyor → yorum dürüstleştirildi. İkisi de tam olarak o gün AVLADIĞIM hata sınıfı (sessiz
+başarısızlık + doğrulanmamış iddia). **Mekanizma:** mevcut bir tanımı yeniden üretirken elle yazma,
+`sed`/`grep` ile kaynaktan çek ve `diff` ile kanıtla; otomatik üretilen adları (FK/indeks) tahmin etme,
+catalog'dan bul. → hafıza: [[liste-tanim-kopyalarken-uydurma]].
+
+**Doğrulama akışı kuruldu:** `admin-denetim-DOGRULAMA.sql` — sadece OKUYAN, 8 satırlık ✅/❌ tablosu
+(eksikse hangi dosya çalıştırılacak yazıyor). "Success dedi" ≠ "durum doğru"; artık ölçülüyor.
+**Sonuç: 8/8 ✅** (Mehmet ekran görüntüsüyle teyit etti). Ayrıca `ai-usage-rpc-fix.sql` GEÇERSİZ
+işaretlendi — içindeki `admin_ai_usage` hâlâ K2 hatalı, sonradan çalıştırılsa K2'yi sessizce geri alırdı.
+
+Her iki repo da push edildi (kod canlıya çıktı). Kalan: O6 (pano kartı PROFİL, segment KİŞİ sayıyor —
+Mehmet'in birim kararı) + ~18 cila bulgu raporda, GOREVLER'de açık.
 
 ## 2026-07-18 — `/admin/ai` patladı: `sum(bigint)` → numeric tuzağı
 
