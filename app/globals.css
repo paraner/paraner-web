@@ -368,11 +368,17 @@ ul { list-style: none; }
 .btn:active { transform: scale(0.98); }
 /* Primary (Devam Et vb.) — teal gradient + yumuşak teal glow gölge + üstte parlak iç çizgi
    (cam derinliği). Hover'da hafif yukarı kalkar + glow güçlenir, basınca oturur. */
+/* ⚠️ TİTANYUM (2026-07-18) — eskiden teal gradient'ti. Marka rengi değişecek ([[marka-rengi-degisecek]]),
+   o yüzden birincil aksiyon butonu markaya bağlı OLMAMALI. Pazarlama sayfaları zaten bu titanyumu
+   scope'lu override ile kullanıyordu (aşağıda) — artık taban da aynı, yani panel/admin/auth hepsi
+   AddButton + SaveButton ile tek dil. Renk kararı gelince yalnız burası değişir.
+   Gelir/gider, başarı, tehlike gibi ANLAM taşıyan renkler markaya bağlı değildir → onlara dokunulmadı. */
 .btn-primary {
   position: relative; overflow: hidden;
-  background: linear-gradient(135deg, var(--teal), #00d4b8); color: #000;
-  box-shadow: 0 6px 18px rgba(0, 191, 166, 0.35), 0 2px 6px rgba(0, 191, 166, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
+  color: #0a0b0d;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.18);
 }
 /* Hover'da butonun üstünden BİR KEZ geçen ışıltı (marka logosundaki shine ile uyumlu) */
 .btn-primary::before {
@@ -382,14 +388,14 @@ ul { list-style: none; }
 }
 .btn-primary:hover { opacity: 1; transform: translateY(-2px); }
 .btn-primary:hover {
-  box-shadow: 0 12px 30px rgba(0, 191, 166, 0.5), 0 5px 12px rgba(0, 191, 166, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow: 0 11px 28px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.22);
 }
 .btn-primary:hover::before { animation: btnShine 0.9s ease; }
 @keyframes btnShine { from { transform: translateX(-130%); } to { transform: translateX(130%); } }
 .btn-primary:active {
   transform: translateY(0) scale(0.99);
-  box-shadow: 0 3px 10px rgba(0, 191, 166, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 .btn-primary:disabled { box-shadow: none; transform: none; }
 @media (prefers-reduced-motion: reduce) { .btn-primary:hover::before { animation: none; } }
@@ -880,7 +886,7 @@ ul { list-style: none; }
 }
 .auth-row { display: flex; justify-content: flex-end; margin: -4px 0 18px; }
 .auth-row a,
-.auth-row button { color: var(--teal); font-size: 13px; font-weight: 600; background: none; border: none; cursor: pointer; padding: 0; }
+.auth-row button { color: var(--text); font-size: 13px; font-weight: 600; background: none; border: none; cursor: pointer; padding: 0; }
 .auth-row button:disabled { opacity: 0.55; cursor: not-allowed; }
 .auth-divider { display: flex; align-items: center; gap: 14px; margin: 22px 0; color: var(--text-faint); font-size: 12px; }
 .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
@@ -2512,7 +2518,7 @@ ul { list-style: none; }
 .avatar-chip {
   flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
   display: grid; place-items: center; font-size: 14px; font-weight: 700; color: #04140f;
-  background: linear-gradient(135deg, var(--teal), #00d4b8);
+  background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
 }
 /* Metin içi teal bağlantı */
 .link-teal { color: var(--teal); font-weight: 600; }
@@ -3013,12 +3019,12 @@ ul { list-style: none; }
 
 .wallet-hint-btn {
   display: block; width: 100%; text-align: left;
-  background: rgba(0,191,166,0.08); border: 1px solid rgba(0,191,166,0.25);
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
   color: var(--text-dim); font-size: 12px; padding: 8px 12px;
   border-radius: 10px; margin: -6px 0 16px; cursor: pointer;
 }
-.wallet-hint-btn:hover { background: rgba(0,191,166,0.14); }
-.wallet-hint-btn strong { color: var(--teal); }
+.wallet-hint-btn:hover { background: rgba(255,255,255,0.11); }
+.wallet-hint-btn strong { color: var(--text); }
 .wallet-modal-info { font-size: 13px; color: var(--text-dim); margin-bottom: 14px; }
 .wallet-modal-info strong { color: var(--text); }
 
@@ -3234,10 +3240,10 @@ ul { list-style: none; }
 .dp-foot { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
 .dp-today-btn {
   flex: 1; padding: 9px; border-radius: 9px; cursor: pointer;
-  background: rgba(0,191,166,0.1); border: 1px solid rgba(0,191,166,0.35);
-  color: var(--teal); font-size: 13px; font-weight: 600;
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.18);
+  color: var(--text); font-size: 13px; font-weight: 600;
 }
-.dp-today-btn:hover { background: rgba(0,191,166,0.16); }
+.dp-today-btn:hover { background: rgba(255,255,255,0.12); }
 .dp-today-btn:disabled { opacity: 0.4; cursor: default; }
 .dp-clear-btn {
   padding: 9px 14px; border-radius: 9px; cursor: pointer;
@@ -3332,7 +3338,7 @@ ul { list-style: none; }
   background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-dim);
 }
 .cur-chip:hover { background: rgba(255,255,255,0.08); }
-.cur-chip.on { border-color: var(--teal); background: rgba(0,191,166,0.12); color: var(--teal); }
+.cur-chip.on { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.12); color: var(--text); }
 .cur-flag { font-size: 14px; }
 
 /* İşlem modalı — kaydırılabilir hesap kartları (gerçek kart görselleri) */
@@ -3846,12 +3852,14 @@ ul { list-style: none; }
 .admin-nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
 .admin-nav-item.active {
   background: rgba(255,255,255,0.08); color: #fff;
-  box-shadow: inset 2px 0 0 0 var(--teal);
+  /* Müşteri panelindeki .panel-nav-item.active ile AYNI titanyum şerit (2026-07-18):
+     iki panel tek dil + marka rengine bağımlı değil. */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), inset 2px 0 0 0 #c9ced5;
 }
 .admin-foot { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; border-top: 1px solid var(--border); }
 .admin-role-chip {
-  font-size: 11px; font-weight: 700; color: var(--teal); background: rgba(0,191,166,0.1);
-  border: 1px solid rgba(0,191,166,0.2); border-radius: 8px; padding: 5px 10px; text-align: center;
+  font-size: 11px; font-weight: 700; color: var(--text); background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14); border-radius: 8px; padding: 5px 10px; text-align: center;
 }
 /* Müşteri paneliyle BİREBİR aynı kabuk (.panel-main / .panel-content) — orası her ekrana
    sorunsuz oturuyor, admin kendi çözümünü uydurmasın. */
@@ -4138,7 +4146,7 @@ ul { list-style: none; }
 .admin-chip:hover { color: var(--text); }
 .admin-chip.active { background: var(--card-2); color: var(--text); }
 .admin-chip-count { font-size: 11px; background: rgba(255,255,255,0.1); color: var(--text-dim); padding: 1px 7px; border-radius: 999px; }
-.admin-chip.active .admin-chip-count { background: rgba(0,191,166,0.18); color: var(--teal); }
+.admin-chip.active .admin-chip-count { background: rgba(255,255,255,0.16); color: var(--text); }
 .admin-search {
   display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; margin-left: auto;
   border: 1px solid var(--border); border-radius: 11px; background: var(--card-2); color: var(--text-dim);

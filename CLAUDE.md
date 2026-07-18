@@ -49,7 +49,20 @@ lib/
   categories.ts              — mobil ile birebir kategori kataloğu + findCategory
 ```
 
-**Kurallar:** Aktif profil = `profiles.is_active`; veri sorguları `user_id = aktif profil id` ile filtreli (RLS `user_profile_ids()`). Yeni modül = mevcut desen (server page + client component), `lib/format` + `lib/categories` kullan. Dil TR. Tek primary renk #00BFA6, koyu tema.
+**Kurallar:** Aktif profil = `profiles.is_active`; veri sorguları `user_id = aktif profil id` ile filtreli (RLS `user_profile_ids()`). Yeni modül = mevcut desen (server page + client component), `lib/format` + `lib/categories` kullan. Dil TR. Koyu tema.
+
+### 🎨 RENK KURALI — teal'e YATIRIM YAPMA (2026-07-18)
+**Marka rengi DEĞİŞECEK** (Mehmet: "yeşil olmayacak zaten"). Bu yüzden:
+- **Aksiyon/UI öğeleri (buton, seçili sekme, aktif menü, çip, avatar) markaya bağlı OLMAZ** →
+  titanyum kullan: `linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%)`, metin `#0a0b0d`.
+  Referans: `.btn-primary` · `.add-btn` (AddButton) · `.sb` (SaveButton) · `.panel-nav-item.active`.
+- **ANLAM taşıyan renkler markaya bağlı değildir, kalır:** gelir/pozitif yeşili (`on-income`,
+  net akış, stok var), `--danger` kırmızısı, `--warning`. Bunları nötrleme.
+- ⚠️ **"Renk tek değişkenden değişir" YANLIŞ:** `var(--teal)` dışında elle yazılmış
+  ~47 `rgba(0,191,166,…)` + 5 `#00BFA6` + 2 `#00d4b8` var. Yeni kod bunlardan üretme.
+
+Eski hâli "tek primary renk #00BFA6" diyordu; bu kural o talimatla çelişip yeni ekranların
+sürekli yeşil çıkmasına sebep oluyordu (Mehmet 18.07'de yakaladı).
 
 ### ⚠️ Yeni panel modülü eklerken ZORUNLU (panel hızı — 2026-07-14)
 1. **Her mutasyondan sonra `router.refresh()`** (insert/update/delete/upsert/rpc; yalnız BAŞARI yolunda, handler sonunda bir kez).
