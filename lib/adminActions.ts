@@ -14,8 +14,15 @@ import {
 import { DEPARTMENTS, departmentLabel, type Department } from "./supportShared";
 import { sendInviteEmail, hasMailKey } from "./staffInvite";
 
-/** Davet/rol linkinin gideceği sayfa — şifre kurulumu buradan yapılır. */
-const INVITE_REDIRECT = "https://paraner.com/sifre-sifirla";
+/* Personel davet/kurtarma linkinin gideceği sayfa — şifre kurulumu buradan yapılır.
+   ⚠️ ADMIN HOST'U: iç ekip pazarlama sitesine (paraner.com) hiç uğramamalı — davet edilen
+   kişi baştan çalışacağı adresi görsün. `/sifre-sifirla` proxy'de tüm host'larda PUBLIC
+   (proxy.ts PUBLIC_PATHS) → admin.paraner.com'da da açılır, ayrı sayfa gerekmiyor.
+   ⚠️ ÖN KOŞUL: Supabase → Auth → URL Configuration → Redirect URLs listesinde
+   `https://admin.paraner.com/sifre-sifirla` OLMALI. Yoksa link reddedilir ve kişi giremez
+   (paraner.com/sifre-sifirla ekli olması YETMEZ — tam URL eşleşmesi aranır).
+   MÜŞTERİ şifre sıfırlaması bundan AYRI ve paraner.com'da kalır (sendPasswordReset). */
+const INVITE_REDIRECT = "https://admin.paraner.com/sifre-sifirla";
 
 /** Gelen departman listesini SÖZLÜKTEN doğrula (uydurma değer DB CHECK'ine çarpmasın). */
 function temizDepartmanlar(list: string[] | undefined): Department[] {

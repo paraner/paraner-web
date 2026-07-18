@@ -91,7 +91,8 @@ export default function AdminLogin() {
           {loading ? "Giriş yapılıyor…" : "Giriş Yap"}
         </button>
 
-        <a className="adm-login-link" href="https://paraner.com/sifre-sifirla">
+        {/* İç ekip admin host'unda kalsın — pazarlama sitesine atmıyoruz. */}
+        <a className="adm-login-link" href="/sifre-sifirla">
           Şifremi unuttum
         </a>
       </form>
