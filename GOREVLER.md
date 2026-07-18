@@ -31,7 +31,7 @@
 - [x] 🟡 **Orta bulgular (2. tur):** O1 indeks · O3 count(*)→reltuples (8sn timeout) · O4 ölü-kayıt sayacı ayrı RPC · O5 10.000 kırpma uyarısı · O7 "Kayıp" segmenti · O8 FK CASCADE · O9 audit target_user_id · O10 silme-başarısız telafi kaydı · O11 loading.tsx · D3 kolon seçimi. **Kalan:** O2 (K2 ile çözüldü) · O6 kart-segment birim çelişkisi (pano PROFİL, segment KİŞİ sayıyor + "Premium profil" kartı seg=paid ile uyuşmuyor) — birim etiketi veya kişi-bazlı hesap kararı gerek
 - [ ] 🟢 ~18 cila (loading.tsx yok, PageHead deseni kullanılmıyor, terminoloji Müşteri/Üye/Kullanıcı karışık, klavye erişimi, boş durum 3 ayrı sınıf…) — raporda
 
-### 🛠️ ADMIN / İÇ EKİP PANELİ — kendi adresinde (admin.paraner.com), 1 adım bekliyor
+### 🛠️ ADMIN / İÇ EKİP PANELİ — canlı (admin.paraner.com)
 > Plan: `ADMIN-PANEL.md`. Mehmet: kurucu+çalışanlar için müşteri yönetim paneli (üyeleri tür/abonelik
 > analiz + destek). Aynı repo içinde `/admin` route (Next code-split → müşteri bundle'ını şişirmez).
 > Kuruldu: rol guard (`lib/adminGuard`), service_role client (`lib/supabase/admin`, server-only),
@@ -40,12 +40,12 @@
 - [x] **service_role key** — `.env.local` + Vercel Production ✓ (anahtar canlı doğrulandı: auth admin API 200). ⚠️ Preview'e EKLENMEDİ (Vercel ortam dropdown'ı Production sayfasından kilitli; gerekirse Environments → Preview → ayrıca ekle).
 - [x] **admin@paraner.com admin yapıldı** (2026-07-17, service_role ile `user_roles`'e insert; `agent` satırı da duruyor, kod admin>agent okuyor).
 - [x] **`admin.paraner.com` host bağlama (kod)** — 2026-07-17 `b21300c`: proxy `isAdmin`/`isPrivate`, kök→`/admin`, giriş admin host'unda, `/kayit` kapalı, `admin.*/panel`→`app.*`; AuthForm.goPanel + LogoutButton admin-farkında.
-- [ ] **Mehmet: Vercel → Domains → `admin.paraner.com` ekle** (DNS). Yapılmadan adres açılmaz — kod hazır.
+- [x] **`admin.paraner.com` DNS/Vercel Domains** — eklendi, adres açılıyor (2026-07-18 teyit).
 - [x] **İç ekip giriş ekranı** (`3f01f6c`) — admin.paraner.com/giris: e-posta+şifre, kayıt/sosyal YOK.
 - [x] **Müşteri detay + aksiyonlar + ekip yönetimi** (`62a10ab`, canlı doğrulandı): kişi bazlı liste (e-posta ile arama), detay (profiller + işlem/fatura/hesap + son hareket), şifre sıfırlama maili · premium/free · askıya al (Supabase ban) · kalıcı sil, ekip davet/rol ver-al.
 - [x] **`admin-audit-log.sql` çalıştırıldı** (2026-07-17) — yazma + gizlilik (anon 0 satır) canlı doğrulandı.
 - [x] **Müşteri listesi yenilendi** — durum `is_premium`'dan DEĞİL, `trial_start_date + 14` ile HESAPLANIYOR (`lib/lifecycle.ts`). Segmentler (zombi/bitiyor/denemede/yeni/ücretli/ücretsiz/kayıp/askıda, sayaçlı) + sıralama (kayıt·son giriş·deneme bitişi·e-posta) + URL'de saklama (`?seg=&sort=&tur=`).
-- [ ] **Canlı GÖZ teyidi:** admin.paraner.com → giriş → panel; müşteriye tıkla → detay; müşteri hesabıyla girince app.paraner.com/panel'e atılıyor mu?
+- [x] **Canlı GÖZ teyidi** — admin.paraner.com giriş + panel + buton dili + sağ üst bekleyen-talep rozeti onaylandı (2026-07-18).
 - [ ] **Şifre sıfırlama maili ön koşulu:** Supabase → Auth → URL Configuration → Redirect URLs'te `https://paraner.com/sifre-sifirla` YOKSA link reddedilir (DAILY_LOG'da zaten bekleyen madde). Aksiyonu ilk kullanmadan teyit et.
 - [ ] **Sonraki (kod):** audit log'u panelde GÖSTER (şu an yalnız yazılıyor) · müşterinin destek talepleri detay sayfasında · trial/abonelik analizi.
 - [ ] **Karar:** `app.paraner.com/admin` hâlâ açık (rol-korumalı, açık değil). DNS canlıya alınınca admin host'una redirect edilsin mi (tek adres) — Mehmet.
@@ -91,29 +91,6 @@
 - [ ] **Faz 2 (opsiyonel):** kullanıcı yeni mesajında agent'a bildirim · agent atama/öncelik/filtre · ek dosya yükleme (ticket-attachments bucket) · çanda "tümünü okundu".
 - [ ] ⚠️ **Google Workspace ödeme** — `merhaba@paraner.com` aboneliği 3 Ağu 2026'ya kadar yenilenmeli, yoksa TÜM sistem mailleri durur.
 
-### 🔴 CANLI GÖZ TEYİDİ BEKLİYOR
-> İŞE BAŞLARKEN İLK BUNU SOR. Kod tarafı + headless doğrulandı; gerçek cihaz/göz onayı yok.
-
-**2026-07-15 turu (bu oturum)**
-- [ ] **Ayarlar → Hesap Bilgileri** (Profil + Şirket bilgileri alt sekmeleri; logo yükleme) gözünde düzgün mü?
-- [ ] **Fatura Yazdır/PDF** — bir faturayı yazdır, A4 çıktı (logo+VKN+kalem+toplam) düzgün mü?
-- [ ] **Veri & Yedekleme** — CSV dışa/içe aktarma çalışıyor mu?
-- [ ] **Köşe yarıçapı + bildirim çanı + Destek sayfası** genel görünüm.
-
-**2026-07-14 turu**
-- [ ] **Mobil/tablet panel hızı** — telefondan panele gir, menüde gez: iskelet çıkıyor mu? (Masaüstü canlıda ölçüldü: 14-26 ms, iskelet yok. Dokunmatikte hover olmadığı için ayrı teyit gerekir; 6 çekirdek rota peşin ısıtılıyor, alt menüdekiler dokunuşta.)
-- [ ] **Yeni slogan** — hero/footer/CTA/`/bireysel` başlığında yazım + satır kırılması gözle düzgün mü?
-- [ ] **Şifre Belirle akışı (mobil↔web)** — web'den şifre belirlenen hesap MOBİLDE de e-posta+şifre ile giriyor mu? Mobil Profil → Güvenlik'te etiket "Şifre Değiştir"e döndü mü (ortak `has_password` bayrağı)?
-- [ ] **Ayarlar yeni yerleşim** — 4 sekme (Genel/İşletme/Bildirimler/Hesap & Güvenlik) senin gözünde de düzgün mü?
-
-**2026-07-13 turundan kalan**
-- [ ] **`/destek`** — SSS akordeonları açılıyor mu, WhatsApp kartı doğru numaraya gidiyor mu (`+90 532 237 99 09`)?
-- [ ] **Mega-menü (masaüstü)** — İşletme/Bireysel üstüne gel: panel ORTADA sabit duruyor mu, geçişte kapanmadan içerik KAYARAK mı değişiyor?
-- [ ] **Mobil menü** — drill-down (içeri giriş) akışı + kaydırma çubuğu artık yazılara değmiyor mu?
-- [ ] **Tipografi** — Playfair başlıklar (`/`, `/isletme`, `/bireysel`, `/destek`, `/gizlilik`) düzgün mü? Türkçe ğ/ş/İ harfleri doğru fontta mı?
-- [ ] **Google'da yeni title** — birkaç gün sürer. Search Console → URL Denetimi → "Dizine eklenmeyi iste" (`/`, `/destek`, `/isletme`, `/bireysel`).
-- [x] **Genel Bakış / hesap kartları** — Mehmet onayladı ("kartlarım tarafında güzel gözüküyor").
-
 ### 🐞 2026-07-14'te ortaya çıkan, HENÜZ YAPILMADI
 - [ ] **Yanlış şifreyle girişte kullanıcı hata görmüyor** — canlı denemede giriş reddedildi ama ekranda kalıcı bir uyarı yok (toast birkaç saniyede kayboluyor). `/giris` şifre akışında inline hata gösterilmeli.
 - [ ] **Apple "e-postamı gizle" (`@privaterelay.appleid.com`) + şifreyle giriş** — bu kullanıcılar giriş formuna hangi adresi yazacak? Web + mobil ortak soru; akış netleşmeli.
@@ -123,8 +100,9 @@
 - [ ] **Vercel Hobby soğuk başlangıç** — prefetch maskeliyor ama ilk istek hâlâ soğuk. Pro + Fluid Compute değerlendirilebilir (ücret kararı Mehmet'te).
 
 ### Devam eden
-- [ ] **Genel mobil tarama:** ana sayfa + auth ekranlarında telefonda taşma/bozulma var mı, tek tek bak. (Auth + rozetler 06-29'da elden geçti; ana sayfa/diğer bölümler kaldı.)
-  - 07-02: Headless tarama (320/360/390/560/768px, ana sayfa + /giris + /kayit): tek gerçek sorun 320px'te hero 11px yatay taşma (rozet satırı min-content 342px) → `.hero-text{width:100%}` fix (≤900 medya bloğu). Ayrıca iOS Safari mask-drop beyaz kaması (beam input) maskesiz tekniğe geçirilerek çözüldü — detay `DAILY_LOG.md` 07-02. İkisi de deploy edildi; **Mehmet'in telefonda göz teyidi bekliyor** (hero taşması + beam input görünümü).
+- [ ] **Buton yenileme Adım 3** — nötr `btn-ghost` ikincil butonlar (duzenli-fatura "İlerlet", stok/veresiye "Hareket", duzenli-odemeler "Onayla", gelir-gider-raporu "CSV İndir") gözden geçirilecek. (Adım 1 AddButton + Adım 2 SaveButton bitti, 07-18'de canlı onaylandı.) Kalan teal `.btn-primary`'ler marka rengi netleşince toplu ele alınır.
+- [ ] **Google'da yeni title** — Search Console → URL Denetimi → "Dizine eklenmeyi iste" (`/`, `/destek`, `/isletme`, `/bireysel`). *(Mehmet'in kişisel Google hesabındaki mülk.)*
+- [ ] **Genel mobil tarama:** ana sayfa + auth ekranlarında telefonda taşma/bozulma var mı, tek tek bak. (Auth + rozetler 06-29'da elden geçti; ana sayfa/diğer bölümler kaldı. 07-02 headless taramada bulunan 320px hero taşması + iOS beam-input beyaz kaması düzeltildi ve onaylandı.)
 
 ## Rakip denetiminden çıkan (2026-07-13, `RAKIP-defteran.md`)
 
@@ -201,7 +179,7 @@
 - [ ] **Panel server-side auth guard:** şu an yok (proxy host-bazlı + RLS koruyor). Preview/IP host'larında boş shell render olur (veri sızmaz). İstenirse layout'a getUser guard (perf: +1 sorgu).
 
 ### Denetimden çıkan — 2026-07-02 (baştan sona güvenlik+parite denetimi, 18 kalem düzeltildi → DAILY_LOG)
-- [x] Güvenlik header'ları, CSV formül enjeksiyonu, çift-submit kilidi (22 handler), bütçe currency, profil-değiştirme kilitlenmesi, collection_in bakiye, düzenli fatura çift-üretim, fatura paritesi (numara/transactions/kalem/durum/due_date), KDV dönem sınırı, para birimi 6→30, findCategory sistem etiketleri, aktif profil is_primary fallback. **Canlı göz teyidi bekliyor** (fatura oluştur→mobilde görünüm; düzenli fatura "Şimdi Oluştur"; profil değiştir).
+- [x] Güvenlik header'ları, CSV formül enjeksiyonu, çift-submit kilidi (22 handler), bütçe currency, profil-değiştirme kilitlenmesi, collection_in bakiye, düzenli fatura çift-üretim, fatura paritesi (numara/transactions/kalem/durum/due_date), KDV dönem sınırı, para birimi 6→30, findCategory sistem etiketleri, aktif profil is_primary fallback.
 - [ ] **Mobil tarafı (koordine gerek):** mobil KDV raporu tüm para birimlerini topluyor (web düzeltildi → mobil de currency filtrelemeli); ai-chat client-kontrollü systemPrompt server'da sabitlensin; mobil token AsyncStorage şifresiz → expo-secure-store (GUVENLIK.md #16); aktif profil tam paritesi cihaz-yerel AsyncStorage yerine ortak DB alanı ister.
 
 ### 📱 Mobil Claude'a iletilecek
