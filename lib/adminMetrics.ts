@@ -50,10 +50,22 @@ export async function getDeadProfileCount(): Promise<number> {
   if (!admin) return 0;
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("admin_dead_profiles");
-  if (!error && Array.isArray(data)) return data.length;
+  /* SAYIYI DB'de say (denetim 2026-07-18 / O4): eskiden admin_dead_profiles() TÜM ölü
+     profilleri döndürüp burada `data.length` sayılıyordu — LIMIT'siz. Sayı için MB'larca
+     satırı ağdan geçirmek 100k kayıtta timeout demekti. Liste RPC'si duruyor (ileride
+     "ölü kayıt listesi" ekranı için), sayaç artık ayrı ve ucuz RPC'den okuyor. */
+  const { data, error } = await supabase.rpc("admin_dead_profile_count");
+  if (!error && typeof data === "number") return data;
 
-  // Yedek: transactions'ın PROFİL id'lerini çek, profiles'tan farkını al.
+  // Eski RPC'ye düş (admin-denetim-fix-olcek.sql henüz çalıştırılmadıysa).
+  const legacy = await supabase.rpc("admin_dead_profiles");
+  if (!legacy.error && Array.isArray(legacy.data)) return legacy.data.length;
+
+  /* Son yedek: transactions'ın PROFİL id'lerini çek, profiles'tan farkını al.
+     ⚠️ Bu yedek YANILTABİLİR (aynı denetim / O8-yedek notu): .limit(100000) aşılırsa
+     distinct küme eksik çıkar → "ölü kayıt" ŞİŞER. Silinmiş profile ait işlem satırı
+     varsa da sonuç düşer. O yüzden RPC'ler tercih ediliyor; bu yalnız SQL hiç
+     çalıştırılmamışsa devreye giren kaba tahmindir. */
   const [{ data: tx }, { count: profileCount }] = await Promise.all([
     admin.from("transactions").select("user_id").limit(100000),
     admin.from("profiles").select("*", { count: "exact", head: true }),

@@ -20,13 +20,13 @@
 > 4 paralel ajan (güvenlik·doğruluk·SQL·UX), her kritik bulgu elle doğrulandı. Mimari sağlam
 > (service_role sızmıyor, tüm server action'lar guard'lı, enjeksiyon/IDOR/XSS yok). Kusurlar:
 > **DURUM (2026-07-18):** K1·K2·K3 + Y1-Y6 + O12 **KODLANDI** (tsc + build temiz).
-> 🔴 **Mehmet: 2 SQL çalıştırılacak** → (1) `paraner-web/admin-denetim-fix-K3.sql`
-> (2) `paraner-app/supabase/ai-maliyet-fix-K1-K2.sql` (Y3 REVOKE'u da içinde). Kod deploy'u SQL'den bağımsız güvenli.
+> 🔴 **Mehmet: 3 SQL çalıştırılacak** → (1) `paraner-web/admin-denetim-fix-K3.sql`
+> (2) `paraner-app/supabase/ai-maliyet-fix-K1-K2.sql` (Y3 REVOKE + O8 FK) (3) `paraner-web/admin-denetim-fix-olcek.sql` (O1·O3·O4·D3). Kod deploy'u SQL'den bağımsız güvenli.
 - [x] 🔴 **K1 — AI maliyet geçmişi HER PAZAR siliniyor:** silme cron'u Pazar 00:00, rollup her gün 02:00 (yani SONRA) + `ON CONFLICT DO UPDATE SET x=EXCLUDED.x` körlemesine eziyor → kısmi ay tam özeti eziyor. Fix: `GREATEST(...)`. ⚠️ SQL'deki "rollup daha erken" yorumu YANLIŞ.
 - [x] 🔴 **K2 — `/admin/ai` geçmiş ayları eksik gösteriyor:** `NOT EXISTS` çift-sayma koruması K1 durumunda TAM olanı atıp EKSİK olanı seçiyor. Fix: varlığa göre değil AYA göre ayır (canlı ay=günlük, geçmiş=aylık).
 - [x] 🔴 **K3 — müşteri `sender_type='agent'` mesaj yazabiliyor:** destek personeli taklidi + bilet `answered` olup agent kuyruğundan DÜŞÜYOR + Resend e-postası tetikleniyor. Fix: `messages_insert` WITH CHECK'e rol koşulu.
 - [x] 🟠 **Y1** `/admin/page.tsx` service_role okuyor ama sayfa guard'ı YOK (diğer 5 sayfada var, Next 16 layout-guard'ı önermiyor) · **Y2** premium/free tek tıkla, onay yok + `trial_*` null'lanıyor (geri alınamaz) · **Y3** `ai_usage_rollup()` PUBLIC EXECUTE (REVOKE yok) · **Y4** destek sorgusu patlarsa pano "hepsi yanıtlandı" der · **Y5** `inviteStaff` rol hatasını yutup "davet edildi" der · **Y6** `/admin/canli` tüm hataları yutup "kimse yok" der
-- [ ] 🟡 12 orta bulgu (indeks yok, sargable değil, 8sn timeout riski, 10.000 kırpma, kart/segment çelişkisi, "Kayıp" segmenti, FK CASCADE maliyet geçmişini siliyor, denetim kaydı hedefi istemciden…) — raporda
+- [x] 🟡 **Orta bulgular (2. tur):** O1 indeks · O3 count(*)→reltuples (8sn timeout) · O4 ölü-kayıt sayacı ayrı RPC · O5 10.000 kırpma uyarısı · O7 "Kayıp" segmenti · O8 FK CASCADE · O9 audit target_user_id · O10 silme-başarısız telafi kaydı · O11 loading.tsx · D3 kolon seçimi. **Kalan:** O2 (K2 ile çözüldü) · O6 kart-segment birim çelişkisi (pano PROFİL, segment KİŞİ sayıyor + "Premium profil" kartı seg=paid ile uyuşmuyor) — birim etiketi veya kişi-bazlı hesap kararı gerek
 - [ ] 🟢 ~18 cila (loading.tsx yok, PageHead deseni kullanılmıyor, terminoloji Müşteri/Üye/Kullanıcı karışık, klavye erişimi, boş durum 3 ayrı sınıf…) — raporda
 
 ### 🛠️ ADMIN / İÇ EKİP PANELİ — kendi adresinde (admin.paraner.com), 1 adım bekliyor

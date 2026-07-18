@@ -126,10 +126,22 @@ export async function setProfilePlan(
     .eq("id", profileId);
   if (error) return { ok: false, message: `Güncellenemedi: ${error.message}` };
 
+  /* ⚠️ target_user_id de YAZILMALI (denetim 2026-07-18 / O9): eskiden yalnız istemciden gelen
+     e-posta yazılıyordu → admin_audit_log.target_user_id NULL kalıyor, admin-audit-log.sql'deki
+     target_idx bu aksiyonlarda işe yaramıyor ve kişi e-postasını değiştirince iz KAYBOLUYORDU.
+     Profil → auth_user_id sunucuda çözülüyor (istemcinin dediğine güvenmiyoruz). */
+  const { data: owner } = await admin
+    .from("profiles")
+    .select("auth_user_id")
+    .eq("id", profileId)
+    .maybeSingle();
   await logAction(
     actor,
     isPremium ? "plan_premium" : "plan_free",
-    { email: targetEmail },
+    {
+      userId: (owner as { auth_user_id: string | null } | null)?.auth_user_id ?? undefined,
+      email: targetEmail,
+    },
     { profileId, tier: nextTier },
   );
   revalidatePath("/admin/musteriler");
@@ -179,7 +191,14 @@ export async function deleteUserAccount(userId: string, email: string): Promise<
   await logAction(actor, "user_deleted", { userId, email });
 
   const { error } = await admin.auth.admin.deleteUser(userId);
-  if (error) return { ok: false, message: `Silinemedi: ${error.message}` };
+  /* ⚠️ TELAFİ KAYDI (denetim 2026-07-18 / O10): log silmeden ÖNCE yazılıyor (yukarıdaki sebep
+     doğru), ama silme düşerse denetim ekranında kırmızı "Hesap KALICI silindi" satırı KALIYORDU
+     — üstelik user_deleted satırlarına detay linki verilmediği için kayıt "silinmiş" sanılıyordu.
+     Satırı geri alamayız (tablo append-only, bilinçli) → başarısızlığı AYRI kayıtla belgele. */
+  if (error) {
+    await logAction(actor, "user_delete_failed", { userId, email }, { reason: error.message });
+    return { ok: false, message: `Silinemedi: ${error.message}` };
+  }
 
   revalidatePath("/admin/musteriler");
   return { ok: true, message: `${email} kalıcı olarak silindi.` };

@@ -126,8 +126,13 @@ export default function MusterilerClient({
           return d != null && d <= NEW_WITHIN_DAYS;
         }
         case "lost": {
-          const d = relativeDays(lastActivity(p), now);
-          return d == null || d >= LOST_AFTER_DAYS;
+          /* ⚠️ `d == null` "30+ gündür yok" DEĞİL, "hiç sinyal kaydı yok" demek (denetim
+             2026-07-18 / O7): davet edilip henüz girmemiş ya da cihaz kaydı oluşmamış BUGÜNKÜ
+             üye de öyle → aynı kişi hem "Yeni" hem "Kayıp" sayılıyordu ve "Kayıp" listesi geri
+             kazanım için kullanılamıyordu. Sinyal yoksa KAYIT tarihine düş: gerçekten 30 gündür
+             ortada olmayan biri kayıp, dün kaydolan değil. */
+          const d = relativeDays(lastActivity(p) ?? p.created_at, now);
+          return d != null && d >= LOST_AFTER_DAYS;
         }
       }
     };

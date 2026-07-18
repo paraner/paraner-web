@@ -35,9 +35,15 @@ export default async function AdminDashboard() {
     /* auth_user_id → üye sayısı · ad → gelen talep satırında "kim yazmış"
        · trial alanları → "denemesi bitiyor" sayacı (durum is_premium'dan DEĞİL, tarihten
        hesaplanır — bkz. lib/lifecycle.ts: is_premium bayat olabiliyor). */
+    /* ⚠️ count:"exact" ŞART (denetim 2026-07-18 / O5): bu sorgu 10.000'de kırpılıyor ve
+       "Toplam Üye" + "Denemesi bitiyor" + talep satırındaki isimler hep BU kümeden çıkıyor.
+       Sayaç olmadan kırpma sessizdi → 10.000 profili aşınca sayılar donar, kimse anlamaz.
+       (Müşteriler ekranı `truncated` bayrağıyla bunu zaten gösteriyordu, panoda karşılığı yoktu.) */
     admin
       .from("profiles")
-      .select("auth_user_id, profile_name, name, trial_plan, trial_start_date, is_premium")
+      .select("auth_user_id, profile_name, name, trial_plan, trial_start_date, is_premium", {
+        count: "exact",
+      })
       .limit(10000),
     /* Gelen talepler: yalnız İŞ BEKLEYENLER (açık + yanıtlandı). Çözülmüş/kapanmış olanı
        göstermek panoyu doldurur, aksiyon gerektirmez. Kolonlar TICKET_COLS'tan (tek kaynak —
@@ -89,6 +95,8 @@ export default async function AdminDashboard() {
     is_premium: boolean | null;
   }[];
   const members = new Set(owners.map((r) => r.auth_user_id).filter(Boolean)).size;
+  /* Kırpıldıysa SÖYLE (O5): sayılar artık "en az" anlamına geliyor, kesin değil. */
+  const ownersTruncated = (ownersR.count ?? owners.length) > owners.length;
   const individual = Math.max(0, total - business);
   const free = Math.max(0, total - premium);
   const pct = (n: number) => (total ? Math.round((n / total) * 100) : 0);
@@ -186,6 +194,13 @@ export default async function AdminDashboard() {
       <p className="admin-sub">
         Tüm üyeler ve abonelik dağılımı. Bir üye birden fazla profil açabilir — dağılımlar profil bazlıdır.
       </p>
+      {ownersTruncated && (
+        <p className="admin-sub" style={{ color: "var(--danger)", marginTop: -4 }}>
+          ⚠️ Profil listesi 10.000&apos;de kırpıldı ({(ownersR.count ?? 0).toLocaleString("tr-TR")}{" "}
+          profil var). &quot;Toplam Üye&quot; ve &quot;Denemesi bitiyor&quot; artık EKSİK sayıyor —
+          bu sayaçlar RPC&apos;ye taşınmalı.
+        </p>
+      )}
 
       <div className="admin-kpi-grid">
         {cards.map((c) => {

@@ -24,6 +24,9 @@ const ACTION_META: Record<string, { label: string; icon: typeof Mail; tone: stri
   user_banned: { label: "Hesap askıya alındı", icon: Ban, tone: "red" },
   user_unbanned: { label: "Askı kaldırıldı", icon: Ban, tone: "green" },
   user_deleted: { label: "Hesap KALICI silindi", icon: Trash2, tone: "red" },
+  /* Silme denendi ama DÜŞTÜ (O10). Üstteki "silindi" satırı yanlış kalmasın diye bu telafi
+     kaydı hemen ardından yazılır — yani ikisi arka arkaya görünürse hesap DURUYOR demektir. */
+  user_delete_failed: { label: "Silme BAŞARISIZ (hesap duruyor)", icon: Trash2, tone: "gray" },
   role_granted: { label: "Rol verildi", icon: ShieldCheck, tone: "green" },
   role_revoked: { label: "Rol kaldırıldı", icon: ShieldCheck, tone: "amber" },
   staff_invited: { label: "Personel davet edildi", icon: UserPlus, tone: "blue" },
