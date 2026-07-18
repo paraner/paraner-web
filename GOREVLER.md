@@ -69,10 +69,21 @@
 - [x] **Adım 1-3 TAMAM + canlı doğrulandı:** `destek-departman.sql` çalıştırıldı (department kolonu
       `DEFAULT 'teknik'` → **mobil eski sürüm kırılmadı**; `staff_departments`; `staff_sees_department()`;
       yeni talep → ekip+admin bildirimi). Müşteri formunda kart seçimi, admin'de rozet + filtre.
-- [ ] 🔴 **Adım 4 — RLS DARALTMASI (personel almadan ÖNCE):** agent yalnız kendi departmanını görsün.
-      `tickets_select`/`messages_select` → `staff_sees_department(department)`. **EN RİSKLİ ADIM**:
-      yanlış politika ya talep gizler ya sızdırır → ayrı ayrı test. Bugün tek staff admin, kimse etkilenmiyor.
-- [ ] **Adım 5 — e-posta yönlendirme:** `support-reply-notify` alıcıyı departmana göre seçsin (`functions deploy`).
+- [ ] 🔴 **Adım 4 — RLS DARALTMASI — KOD HAZIR, ÇALIŞTIRILMADI:** `destek-departman-rls.sql`.
+      4 politika (`tickets_select`/`tickets_update`/`messages_select`/`messages_insert`) →
+      `is_support_agent() AND staff_sees_department(...)`. K3 (sender_type↔rol) korundu,
+      `tickets_update`'e WITH CHECK eklendi (agent talebi başka departmana taşıyamasın).
+      ⚠️ **FAIL-CLOSED:** departman ataması olmayan agent HİÇ talep göremez → yeni personelde atama ŞART.
+      ⚠️ Test C admin rolünü geçici kaldırıyor → geri alma satırlarını atlama.
+- [ ] **Adım 5 — EKİBE E-POSTA — KOD HAZIR, DEPLOY+SQL BEKLİYOR:** `destek-departman-bildirim.sql`
+      + yeni edge `support-new-ticket-notify`. **SIRA: önce `supabase functions deploy
+      support-new-ticket-notify --no-verify-jwt`, SONRA SQL.**
+      ⚠️ Eski not ("`support-reply-notify` alıcıyı departmana göre seçsin") **YANLIŞTI** — o fonksiyon
+      agent yanıtını MÜŞTERİYE yollar, alıcısı hep talep sahibi; seçilecek alıcı yok. Gerçek eksik:
+      yeni talepte ekibe yalnız çan gidiyordu, e-posta gitmiyordu.
+      ⚠️ Tetikleyici `support_tickets` DEĞİL `ticket_messages` (ilk müşteri mesajı) — createTicket
+      önce ticket'ı sonra mesajı yazıyor, ticket INSERT'inde gövde henüz yok.
+      Kapsam: yalnız İLK mesaj mail atar (takip yanıtları gürültü olmasın); istenirse `v_first` bloğu kalkar.
 - [ ] **Adım 6 — MOBİL:** `paraner-app/lib/support.ts` `createTicket` departman göndersin + seçim ekranı.
       Mobil Claude'a iletilecek (DEFAULT sayesinde acil değil).
 - [ ] **/admin/ekip'te departman atama UI'si** — personel alınınca şart (şu an SQL ile atanıyor).
