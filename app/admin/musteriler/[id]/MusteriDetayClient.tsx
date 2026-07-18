@@ -133,9 +133,24 @@ export default function MusteriDetayClient({
                       type="button"
                       className="btn btn-ghost btn-sm"
                       disabled={busy != null || pending}
-                      onClick={() =>
-                        run(`plan-${p.id}`, () => setProfilePlan(p.id, !p.is_premium, person.email))
-                      }
+                      /* ⚠️ ONAY ŞART (denetim 2026-07-18 / Y2): "tekrar bas" geri alma DEĞİL —
+                         setProfilePlan aynı işlemde trial_plan + trial_start_date'i null'lar,
+                         yani yanlışlıkla basılınca müşterinin KALAN DENEME SÜRESİ geri gelmez.
+                         Aynı ekrandaki askıya al/kalıcı sil zaten confirmDialog kullanıyordu. */
+                      onClick={async () => {
+                        const ok = await confirmDialog({
+                          title: p.is_premium ? "Free'ye düşür" : "Premium yap",
+                          message: p.is_premium
+                            ? `"${p.profile_name || p.name || "Bu"}" profili Free'ye düşecek. Varsa kalan deneme süresi de silinir ve geri alınamaz. Onaylıyor musun?`
+                            : `"${p.profile_name || p.name || "Bu"}" profili Premium olacak. Varsa süren denemesi sonlanır (deneme bilgisi silinir). Onaylıyor musun?`,
+                          confirmLabel: p.is_premium ? "Free'ye düşür" : "Premium yap",
+                          danger: Boolean(p.is_premium),
+                        });
+                        if (ok)
+                          run(`plan-${p.id}`, () =>
+                            setProfilePlan(p.id, !p.is_premium, person.email)
+                          );
+                      }}
                     >
                       <Star size={14} />
                       {busy === `plan-${p.id}`

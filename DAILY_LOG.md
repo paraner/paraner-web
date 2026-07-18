@@ -16,6 +16,71 @@
 
 ---
 
+## 2026-07-18 — /admin panel denetimi (4 ajan) + 3 kritik + 6 yüksek düzeltme
+
+`/admin/ai` hatası kapandıktan sonra Mehmet panelin genel denetimini istedi. 4 paralel ajan
+(güvenlik · doğruluk · SQL/RPC · UX), **her kritik bulgu elle doğrulandı**. Tam rapor:
+`DENETIM-ADMIN-2026-07-18.md`. Mimari sağlam çıktı (service_role tarayıcıya sızmıyor —
+`server-only` her yerde; 7 server action'ın 7'si de guard'lı; enjeksiyon/IDOR/XSS yok;
+denetim kaydı client'tan silinemiyor; bugünkü tip tuzağının başka RPC'de kopyası yok).
+
+**🔴 K1 — AI maliyet geçmişi HER PAZAR sessizce siliniyordu (veri kaybı).** Silme cron'u Pazar
+00:00 (`date < CURRENT_DATE - 90 days`), rollup cron'u her gün 02:00 — yani silmeden **SONRA** —
+ve `ON CONFLICT DO UPDATE SET x = EXCLUDED.x` ile körlemesine eziyordu. 90 gün sınırı hep ayın
+ORTASINA düştüğü için rollup, budanmış kısmi ayı toplayıp tam aylık özetin üzerine yazıyordu.
+⚠️ `ai-token-maliyet.sql:122`'deki "rollup daha erken çalışır" yorumu YANLIŞMIŞ.
+**Fix:** `GREATEST(mevcut, yeni)` → maliyet defteri monoton artar, kısmi toplam tamı ezemez (+`coalesce`).
+
+**🔴 K2 — `/admin/ai` geçmiş ayları eksik gösteriyordu.** Çift-sayma koruması (`NOT EXISTS`:
+"o ay günlük satır varsa aylığı alma") K1 durumunda TAM kaydı atıp EKSİK olanı seçiyordu; ay
+tamamen 90 günü aşınca sayı yukarı zıplıyordu (geçmiş rapor geriye dönük değişiyor).
+**Fix:** varlık bazlı ayrım yerine iki kaynağı kullanıcı bazında toplayıp `FULL OUTER JOIN` +
+`GREATEST` → canlı ayda günlük, geçmiş ayda aylık kazanır, çift sayma imkânsız. Ayrıca ay filtresi
+**sargable** yapıldı (`date_trunc(...)=p_ay` indeksi kullanamıyordu → tam tablo taraması).
+
+**🔴 K3 — müşteri `sender_type='agent'` mesaj yazabiliyordu (güvenlik).** `messages_insert`
+politikası yalnız `sender_id = auth.uid()`'e bakıyordu. Asıl zarar kozmetik değil: `trg_touch_ticket`
+bileti `answered` yapıyor → **bilet agent kuyruğundaki açık listeden düşüyor** (gerçek destek
+talebi görünmez oluyor) + `trg_notify_agent_reply` Resend e-postası tetikliyor.
+**Fix:** WITH CHECK'e rol koşulu (`agent` yazmak için `is_support_agent()`, `user` için bilet sahibi).
+Agent paneli de kendi oturumuyla yazdığı için (service_role değil — `lib/support.ts` doğrulandı) akış bozulmuyor.
+
+**🟠 Y1** `/admin` panosunun **kendi sayfa guard'ı yoktu** — service_role ile 10.000 profil +
+destek başlıkları okuyup yalnız layout guard'ına dayanıyordu. Next 16 kendi auth rehberinde bunu
+önermiyor (layout istemci-taraflı gezinmede yeniden çalışmaz; `staleTimes.dynamic:30` +30sn uzatır).
+→ yeni `requireStaffPage()` (rolü hem döndürür hem kapıyı tutar). **Y2** premium/free tek tıkla,
+onay yoktu — "tekrar bas" geri alma DEĞİL: aksiyon `trial_plan`+`trial_start_date`'i null'lıyor,
+kalan deneme süresi geri gelmiyor → `confirmDialog` eklendi. **Y3** `ai_usage_rollup()` guard'sız +
+REVOKE'suz → PUBLIC EXECUTE'taydı (müşteri çağırıp tam tablo agregasyonu tetikleyebilirdi);
+`assert_admin()` KULLANILAMAZ (cron'da `auth.uid()` NULL → cron kırılır) → REVOKE. **Y4** destek
+sorgusu hata listesinde değildi → 400'de pano "Bekleyen talep 0 · hepsi yanıtlandı" diyordu
+(panelin birinci işi). **Y5** `inviteStaff` rol upsert'ünün hatasını yutup "davet edildi" diyordu →
+kişi Ekip listesinde görünmüyor, girince `/panel`'e atılıyordu. **Y6** `/admin/canli` 5 sorgunun
+hiçbirinin `.error`'ına bakmıyordu → RLS bozulsa "kimse uygulamada değil" diyordu.
+
+**🟡 O12** agent panoda uydurma sıfır görüyordu ("Bugün aktif 0 · Ölü kayıt 0") — metrikler onun
+için hiç çağrılmıyor, ama kartlar diziden çıkarılmıyordu (`href: undefined` yetmiyor) → kaldırıldı.
+"Ölü kayıt" kartı filtresiz listeye gidiyordu (kartın tek amacı o kaydı bulmaktı) → `?seg=dead`
+segmenti henüz yok, **yanlış vaat vermektense tıklanamaz** bırakıldı, segment GOREVLER'e yazıldı.
+
+⚠️ **Ders:** K1 ve K2 bugün patlayan `sum(bigint)` hatasıyla **aynı sınıftan** — bugünkü veriyle
+test edilse ikisi de "çalışıyor" görünürdü, ilk 90 günlük silme sınırı bir ayın ortasına düştüğünde
+patlarlardı. Bu tür şeyler beklenerek değil, sahte kısmi ay kurularak test edilir (SQL'de yazılı).
+
+Kalan: 12 orta + ~18 cila bulgu raporda, GOREVLER'de açık.
+
+## 2026-07-18 — `/admin/ai` patladı: `sum(bigint)` → numeric tuzağı
+
+Mehmet ekran görüntüsü gönderdi: `admin.paraner.com/admin/ai` → *"Veri okunamadı: structure of query does not match function result type"*.
+
+**Kök neden:** `admin_ai_usage` `RETURNS TABLE (… prompt_tokens bigint, completion_tokens bigint)` tanımlı, ama gövdede `sum(b.prompt_tokens)` var. Postgres'te **`sum(bigint)` → `numeric`** (yalnız `sum(integer)` → bigint). `daily_ai_usage.message_count` integer, `ai_usage_monthly.message_count` bigint → UNION ALL tipi bigint'e yükseltiyor → dört `sum` da numeric dönüyor → tip uyuşmazlığı.
+
+⚠️ **Neden 17.07'de "doğrulandı" göründü:** Postgres bu kontrolü **satır dönerken** yapar. O gün `daily_ai_usage` boştu (90 günlük temizlik cron'u silmişti) → 0 satır → hata yok. İlk gerçek AI mesajı gelince patladı. **İyi haber:** hata token kaydının ÇALIŞTIĞININ kanıtı — edge function `usageMetadata`'yı yazıyor.
+
+**Fix:** `paraner-app/supabase/ai-usage-rpc-fix.sql` — dört `sum`'a `COALESCE(...)::bigint`. Şema/imza/yetki değişmiyor (`CREATE OR REPLACE`), mobil etkilenmez. Diğer admin RPC'leri (`admin_active_counts`, `admin_module_adoption`) `count()` kullanıyor → o zaten bigint, temiz.
+
+**Ders:** `RETURNS TABLE`'lı bir RPC'yi BOŞ tabloyla "doğrulamak" doğrulama değildir — tip uyuşmazlığı ancak veriyle ortaya çıkar.
+
 ## 2026-07-17 — /admin iç ekip paneli · AI TOKEN + MALİYET takibi (hesap bazlı)
 
 Admin paneli (`/admin`, `admin-panel-rpc.sql` + `admin-audit-log.sql`) üstüne AI maliyet ölçümü eklendi. **Amaç:** "Hangi hesap ne kadar AI maliyeti harcadı?" — cevabı yoktu; Gemini her yanıtta `usageMetadata` (token) döndürüyordu ama `ai-chat` edge function'ı metni alıp gerisini ATIYORDU → token hiç kaydedilmemişti.

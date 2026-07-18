@@ -41,6 +41,10 @@ export type LiveSnapshot = {
   feed: FeedEvent[];
   /** Gösterilen kişi sayısı sınırlandıysa kaç kişi gizlendi (sessiz kırpma YOK). */
   hiddenPeople: number;
+  /** ⚠️ Sorgu hatası (denetim 2026-07-18 / Y6): eskiden 5 sorgunun hiçbirinin .error'ına
+      bakılmıyordu, hepsi `?? []` ile boşa düşüyordu → RLS/kolon bozulunca ekran "Şu anda
+      kimse uygulamada değil" diyordu ve ekip sistemin SESSİZ olduğunu sanıyordu. */
+  error?: string;
 };
 
 type DeviceRow = {
@@ -94,6 +98,10 @@ export async function getLiveSnapshot(): Promise<LiveSnapshot> {
     admin.from("invoices").select("id, user_id, title, amount, currency, created_at").gte("created_at", sinceDay).order("created_at", { ascending: false }).limit(30),
     admin.from("support_tickets").select("id, user_id, subject, created_at").gte("created_at", sinceDay).order("created_at", { ascending: false }).limit(30),
   ]);
+
+  /* Hata varsa GÖSTER, yutma. devices/profiles kritik (sayaç + isimler oradan);
+     feed sorguları (tx/inv/ticket) düşerse akış eksilir — o da söylenmeli. */
+  const liveErr = [devicesR, profilesR, txR, invR, ticketR].find((r) => r.error)?.error;
 
   const devices = (devicesR.data ?? []) as DeviceRow[];
   const profiles = (profilesR.data ?? []) as {
@@ -205,5 +213,6 @@ export async function getLiveSnapshot(): Promise<LiveSnapshot> {
     platforms,
     feed,
     hiddenPeople: Math.max(0, onlineIds.length - people.length),
+    error: liveErr?.message,
   };
 }

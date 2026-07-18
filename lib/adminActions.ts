@@ -256,13 +256,37 @@ export async function inviteStaff(email: string, role: "admin" | "agent"): Promi
   if (error) return { ok: false, message: `Davet gönderilemedi: ${error.message}` };
 
   const newUserId = data?.user?.id;
-  if (newUserId) {
-    await admin
-      .from("user_roles")
-      .upsert({ user_id: newUserId, role }, { onConflict: "user_id,role", ignoreDuplicates: true });
-  }
+  /* ⚠️ Rol yazımının HATASI KONTROL EDİLMELİ (denetim 2026-07-18 / Y5): eskiden dönüş atılıyordu
+     → upsert düşse bile "davet edildi" deniyordu. Sonuç: mail gitmiş, denetim kaydına düşmüş,
+     ama kişi Ekip listesinde GÖRÜNMÜYOR (o liste user_roles'tan besleniyor) ve şifresini kurup
+     girince /panel'e atılıyor. Yönetici sebebini göremiyordu. */
+  const roleErr = newUserId
+    ? (
+        await admin
+          .from("user_roles")
+          .upsert(
+            { user_id: newUserId, role },
+            { onConflict: "user_id,role", ignoreDuplicates: true }
+          )
+      ).error
+    : null;
 
-  await logAction(actor, "staff_invited", { userId: newUserId, email: target }, { role });
+  await logAction(
+    actor,
+    "staff_invited",
+    { userId: newUserId, email: target },
+    { role, roleGranted: !roleErr }
+  );
   revalidatePath("/admin/ekip");
+  if (!newUserId)
+    return {
+      ok: false,
+      message: `${target} için davet gönderildi ama kullanıcı kimliği alınamadı — rol verilemedi. Ekip listesinden "Rol ver" ile tamamla.`,
+    };
+  if (roleErr)
+    return {
+      ok: false,
+      message: `Davet gitti ama rol verilemedi: ${roleErr.message} — kişi giriş yapamaz. Ekip listesinden "Rol ver" ile tekrar dene.`,
+    };
   return { ok: true, message: `${target} davet edildi — kurulum maili gönderildi.` };
 }

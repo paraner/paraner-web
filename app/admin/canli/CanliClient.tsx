@@ -83,6 +83,15 @@ export default function CanliClient({ snap, now }: { snap: LiveSnapshot; now: nu
         Sayfa 30 saniyede bir kendini tazeler.
       </p>
 
+      {/* ⚠️ Sessiz "kimse yok" YOK (denetim 2026-07-18 / Y6): sorgu düşerse sayaçlar 0 gelir ve
+          ekran sistemin sessiz olduğunu sanmaya davet eder. Sebebi açıkça yaz. */}
+      {snap.error && (
+        <p className="admin-sub" style={{ color: "var(--danger)", marginTop: -4 }}>
+          ⚠️ Canlı veri eksik olabilir — sorgu hatası: {snap.error} (aşağıdaki sayılar 0 ise sebebi
+          bu olabilir, gerçekten kimse olmaması değil.)
+        </p>
+      )}
+
       {/* Kartlar NÖTR — hepsi aynı görünür. Canlılık sinyali yalnız etiketteki nabız noktası. */}
       <div className="admin-kpi-grid">
         {kpis.map((k) => (

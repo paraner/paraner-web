@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Users, Building2, User, Star, Clock, LifeBuoy, ChevronRight, Activity, UserX, Hourglass, Layers } from "lucide-react";
 import { createAdminClient, hasAdminKey } from "../../lib/supabase/admin";
-import { getStaffRole } from "../../lib/adminGuard";
+import { requireStaffPage } from "../../lib/adminGuard";
 import { TICKET_COLS, TICKET_STATUS_META, type Ticket } from "../../lib/supportShared";
 import { relativeLabel, TRIAL_ENDING_DAYS } from "../../lib/lifecycle";
 import { TRIAL_DAYS } from "../../lib/plans";
@@ -9,6 +9,12 @@ import { getActiveCounts, getDeadProfileCount, getModuleAdoption } from "../../l
 import AdminKeyNotice from "./AdminKeyNotice";
 
 export default async function AdminDashboard() {
+  /* ⚠️ SAYFA guard'ı — layout'takine GÜVENME (denetim 2026-07-18 / Y1): Next 16'da layout
+     istemci-taraflı gezinmede yeniden çalışmaz. Bu sayfa service_role ile profiles (10.000
+     satır) + destek talebi başlıklarını okuyor → guard'ı sayfanın İLK satırında olmalı.
+     requireAdminPage() DEĞİL: agent de panoyu görebiliyor (kartları rolle kısıtlıyoruz). */
+  const role = await requireStaffPage();
+  const isAdminRole = role === "admin";
   if (!hasAdminKey()) return <AdminKeyNotice />;
   const admin = createAdminClient()!;
 
@@ -19,8 +25,7 @@ export default async function AdminDashboard() {
      bazlı; "Toplam Üye" gerçek kişi sayısı olmalı. PostgREST'te distinct count yok → auth_user_id
      kolonu çekilip benzersizleştiriliyor (tek uuid kolonu; büyürse RPC gerekir → DB şeması = önce sor). */
   // Rol: agent Müşteriler'e giremez (requireAdminPage) → ona kart linki VERME, 404 yerdi.
-  const role = await getStaffRole();
-  const isAdminRole = role === "admin";
+  // (role/isAdminRole yukarıda, guard ile birlikte alınıyor.)
   const [totalR, businessR, premiumR, recentR, ownersR, ticketsR, openR, active, dead, adoption] =
     await Promise.all([
     countOf(admin.from("profiles")),
@@ -56,8 +61,12 @@ export default async function AdminDashboard() {
   ]);
 
   /* ⚠️ Hataları GÖSTER, yutma: `count ?? 0` sessizce 0'a düşüyordu → kolon/izin hatasında
-     panelin ilk ekranı "Toplam Üye 0 · %0" der ve kimse sebebini bilmez. */
-  const err = [totalR, businessR, premiumR, recentR, ownersR].find((r) => r.error)?.error;
+     panelin ilk ekranı "Toplam Üye 0 · %0" der ve kimse sebebini bilmez.
+     ⚠️ ticketsR/openR de LİSTEDE olmalı (denetim 2026-07-18 / Y4): destek sorgusu 400 dönerse
+     tickets=[] + openCount=0 → kart "Bekleyen talep 0 · hepsi yanıtlandı" der ve müşteri
+     talepleri sessizce yanıtsız kalır. Panelin BİRİNCİ işi bu. */
+  const err = [totalR, businessR, premiumR, recentR, ownersR, ticketsR, openR].find((r) => r.error)
+    ?.error;
   if (err) {
     return (
       <div>
@@ -126,22 +135,36 @@ export default async function AdminDashboard() {
       tone: "",
       href: isAdmin ? "/admin/musteriler?seg=ending" : undefined,
     },
-    {
-      label: "Ölü kayıt",
-      value: dead,
-      sub: total ? `%${Math.round((dead / total) * 100)} · hiç işlem girmemiş` : "hiç işlem girmemiş",
-      icon: UserX,
-      tone: "",
-      href: isAdmin ? "/admin/musteriler" : undefined,
-    },
-    {
-      label: "Bugün aktif",
-      value: active.dau,
-      sub: `hafta ${active.wau} · ay ${active.mau}`,
-      icon: Activity,
-      tone: "",
-      href: isAdmin ? "/admin/canli" : undefined,
-    },
+    /* ⚠️ Bu iki kart YALNIZ yöneticiye (denetim 2026-07-18 / O12): agent için metrikler hiç
+       çağrılmıyor (RPC'lerde yönetici guard'ı var) → değerler 0 geliyordu. href'i undefined
+       bırakmak YETMEZ, kart yine görünüp "Bugün aktif 0 · Ölü kayıt 0" YANLIŞ BİLGİ veriyordu.
+       Diziye hiç eklenmiyorlar. */
+    ...(isAdmin
+      ? [
+          {
+            label: "Ölü kayıt",
+            value: dead,
+            sub: total
+              ? `%${Math.round((dead / total) * 100)} · hiç işlem girmemiş`
+              : "hiç işlem girmemiş",
+            icon: UserX,
+            tone: "",
+            /* Bilinçli olarak TIKLANAMAZ: eskiden filtresiz /admin/musteriler'e gidiyordu →
+               "Ölü kayıt 47" görüp tıklayan kişi 3.000 kişilik listeye düşüp o 47'yi bulamıyordu.
+               Gerçek çözüm `?seg=dead` segmenti (admin_dead_profiles id'lerini listeye taşımak
+               gerekir) → GOREVLER'de. O gelene kadar yanlış vaat vermiyoruz. */
+            href: undefined,
+          },
+          {
+            label: "Bugün aktif",
+            value: active.dau,
+            sub: `hafta ${active.wau} · ay ${active.mau}`,
+            icon: Activity,
+            tone: "",
+            href: "/admin/canli",
+          },
+        ]
+      : []),
     {
       label: "Toplam Üye",
       value: members,

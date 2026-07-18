@@ -16,6 +16,19 @@
 - [ ] **Eski test verisi:** aktif 3 deneme `business_max_monthly` planında — artık sunulmayan plan (düzeltme öncesi açılmış). Bozuk değil, temizlenebilir.
 - [ ] **Fiyat/plan sözlüğü tek kaynak notu:** `paraner-web/lib/plans.ts` mobil `stores/authStore.ts`'ten kopya — mobil tier listesi değişirse burası da güncellenmeli (DB'de CHECK constraint YOK, uydurma değer sessizce yazılır).
 
+### 🔍 ADMIN PANEL DENETİMİ (2026-07-18) — tam liste: `DENETIM-ADMIN-2026-07-18.md`
+> 4 paralel ajan (güvenlik·doğruluk·SQL·UX), her kritik bulgu elle doğrulandı. Mimari sağlam
+> (service_role sızmıyor, tüm server action'lar guard'lı, enjeksiyon/IDOR/XSS yok). Kusurlar:
+> **DURUM (2026-07-18):** K1·K2·K3 + Y1-Y6 + O12 **KODLANDI** (tsc + build temiz).
+> 🔴 **Mehmet: 2 SQL çalıştırılacak** → (1) `paraner-web/admin-denetim-fix-K3.sql`
+> (2) `paraner-app/supabase/ai-maliyet-fix-K1-K2.sql` (Y3 REVOKE'u da içinde). Kod deploy'u SQL'den bağımsız güvenli.
+- [x] 🔴 **K1 — AI maliyet geçmişi HER PAZAR siliniyor:** silme cron'u Pazar 00:00, rollup her gün 02:00 (yani SONRA) + `ON CONFLICT DO UPDATE SET x=EXCLUDED.x` körlemesine eziyor → kısmi ay tam özeti eziyor. Fix: `GREATEST(...)`. ⚠️ SQL'deki "rollup daha erken" yorumu YANLIŞ.
+- [x] 🔴 **K2 — `/admin/ai` geçmiş ayları eksik gösteriyor:** `NOT EXISTS` çift-sayma koruması K1 durumunda TAM olanı atıp EKSİK olanı seçiyor. Fix: varlığa göre değil AYA göre ayır (canlı ay=günlük, geçmiş=aylık).
+- [x] 🔴 **K3 — müşteri `sender_type='agent'` mesaj yazabiliyor:** destek personeli taklidi + bilet `answered` olup agent kuyruğundan DÜŞÜYOR + Resend e-postası tetikleniyor. Fix: `messages_insert` WITH CHECK'e rol koşulu.
+- [x] 🟠 **Y1** `/admin/page.tsx` service_role okuyor ama sayfa guard'ı YOK (diğer 5 sayfada var, Next 16 layout-guard'ı önermiyor) · **Y2** premium/free tek tıkla, onay yok + `trial_*` null'lanıyor (geri alınamaz) · **Y3** `ai_usage_rollup()` PUBLIC EXECUTE (REVOKE yok) · **Y4** destek sorgusu patlarsa pano "hepsi yanıtlandı" der · **Y5** `inviteStaff` rol hatasını yutup "davet edildi" der · **Y6** `/admin/canli` tüm hataları yutup "kimse yok" der
+- [ ] 🟡 12 orta bulgu (indeks yok, sargable değil, 8sn timeout riski, 10.000 kırpma, kart/segment çelişkisi, "Kayıp" segmenti, FK CASCADE maliyet geçmişini siliyor, denetim kaydı hedefi istemciden…) — raporda
+- [ ] 🟢 ~18 cila (loading.tsx yok, PageHead deseni kullanılmıyor, terminoloji Müşteri/Üye/Kullanıcı karışık, klavye erişimi, boş durum 3 ayrı sınıf…) — raporda
+
 ### 🛠️ ADMIN / İÇ EKİP PANELİ — kendi adresinde (admin.paraner.com), 1 adım bekliyor
 > Plan: `ADMIN-PANEL.md`. Mehmet: kurucu+çalışanlar için müşteri yönetim paneli (üyeleri tür/abonelik
 > analiz + destek). Aynı repo içinde `/admin` route (Next code-split → müşteri bundle'ını şişirmez).
@@ -44,7 +57,9 @@
 - [x] **Edge** `supabase functions deploy ai-chat` (`oqhonmmbcqrkcaoijgnb`) — `readUsage()` ile token okunup RPC'ye geçiliyor.
 - [x] **Web** `/admin/ai` paneli (ay seçici + hesap bazlı token/maliyet tablosu) + `lib/aiPricing.ts`.
 - [ ] ⚠️ **GERİYE DÖNÜK VERİ YOK:** token bu deploy'dan sonra başlar; `daily_ai_usage` şu an boş → panel yeni kullanımla dolar.
-- [ ] **Canlı teyit (bekliyor):** test hesabıyla gerçek AI mesajı → `daily_ai_usage`'da token > 0 + `/admin/ai`'da satır görünmesi.
+- [x] **Canlı teyit:** token kaydı ÇALIŞIYOR (veri geldi) — ama panel `admin_ai_usage` hatasıyla patladı ↓
+- [x] **`paraner-app/supabase/ai-usage-rpc-fix.sql` çalıştırıldı (2026-07-18) — panel dolu, canlı doğrulandı.** Hata: "structure of query does not match function result type". Sebep: `RETURNS TABLE ... bigint` ama sorguda `sum(bigint)` → **numeric** dönüyor. 17.07'de fark edilmedi çünkü tablo BOŞTU (Postgres tipi satır dönerken denetler → 0 satırda hata yok). Fix: dört `sum`'a `::bigint`. Şema/imza değişmiyor, mobil etkilenmez.
+- [ ] **Ders (yeni RPC'lerde):** `RETURNS TABLE`'lı RPC'yi boş tabloyla doğrulama — VERİ ile çalıştır. `sum(integer)`→bigint ama `sum(bigint)`→numeric.
 
 ### 🎫 DESTEK SİSTEMİ — Faz 0 ✅ TAMAMLANDI (2026-07-16, uçtan uca doğrulandı)
 > Detay: `DESTEK-SISTEMI.md` + `DESTEK-SEMA-MOBIL.md` + `destek-faz0.sql`. Web+mobil (ortak Supabase,

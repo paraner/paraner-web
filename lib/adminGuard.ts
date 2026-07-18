@@ -30,3 +30,15 @@ export async function getStaffRole(): Promise<StaffRole | null> {
 export async function requireAdminPage(): Promise<void> {
   if ((await getStaffRole()) !== "admin") notFound();
 }
+
+/* Staff (admin VEYA agent) SAYFA guard'ı — hem rolü döndürür hem kapıyı tutar.
+   ⚠️ Neden layout guard'ı yetmez (denetim 2026-07-18 / Y1): Next 16'da layout
+   istemci-taraflı gezinmede YENİDEN ÇALIŞMAZ (Partial Rendering) — Next'in kendi
+   auth rehberi bu deseni açıkça önermiyor. Rolü geri alınan kişi kabukta gezmeye
+   devam eder (staleTimes.dynamic:30 bunu +30sn uzatır). service_role ile veri açan
+   HER sayfa kendi guard'ını çağırmalı; layout guard'ı yalnız UX (erken yönlendirme). */
+export async function requireStaffPage(): Promise<StaffRole> {
+  const role = await getStaffRole();
+  if (!role) notFound();
+  return role;
+}
