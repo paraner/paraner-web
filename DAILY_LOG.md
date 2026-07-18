@@ -16,6 +16,68 @@
 
 ---
 
+## 2026-07-18 (öğleden sonra) — buton dili · admin paneli · destek departman yönlendirme
+
+**Butonlar titanyuma geçti + KÖK NEDEN düzeltildi.** Mehmet "butonlar neden hâlâ yeşil, biz bunun
+için metin oluşturmuştuk" dedi. Gerçek sebep: o kural **yalnız Claude'un hafızasındaydı**, `CLAUDE.md`
+ise TERSİNİ söylüyordu ("Tek primary renk #00BFA6") → yeni ekranlar sürekli yeşil çıkıyordu.
+Kural `CLAUDE.md` → "🎨 RENK KURALI" başlığına yazıldı. **Ders: proje kuralı repoda yaşamalı.**
+Titanyuma çevrilenler: `.btn-primary` tabanı · `.admin-nav-item.active` · rol çipi · `.cur-chip.on` ·
+`.avatar-chip` · `.wallet-hint-btn` · `.dp-today-btn` · `.auth-row button`. **SaveButton** iki turda
+oturdu: önce yalnız paleti çevirdim (Mehmet: "sadece rengini değiştirmişsin"), sonra `.sb` bloğunun
+tamamı `.btn-primary` diline çevrildi (harf shimmer animasyonu kaldırıldı). Hover'da yukarı kalkma
+kaldırıldı, ışıltı süpürmesi kaldı. ⚠️ Anlam renkleri (gelir yeşili, `--danger`, `--warning`) DURUYOR.
+
+**Admin paneli iyileştirmeleri.** Sağ üst küme yeniden kuruldu: **bekleyen talep ikonu + sayı rozeti**
+(çan mantığı — panele girer girmez iş var mı görünüyor), köşe yarıçapı 999px→12px. Rozet turuncu,
+yeşil değil (yeşil "iyi" demek). Sorgu patlarsa `!` + kırmızı (Y4 dersi).
+**Destek gelen kutusu** agent'ın çalışma ekranına dönüştü: e-posta + ad + yaşam döngüsü rozeti +
+üyelik tarihi + profil sayısı + son aktiflik; durum filtresi (varsayılan "Yanıt bekleyen") + arama.
+**Müşteri panelinden agent gelen kutusu KALDIRILDI** — destek sistemi kurulurken (16.07) admin paneli
+yoktu, artık çift ekrandı; iç ekip aracı müşteri ürününün içinde durmamalı.
+
+**⚠️ ADMIN YAVAŞLIĞI — kök neden.** Mehmet "admin neden yavaş" dedi. 14.07'de panel için çözülen
+prefetch mekanizması admin'e **hiç uygulanmamıştı** (AdminSidebar düz `<Link>`). `next.config`'teki
+`dynamicOnHover` + `staleTimes` AÇIK ama **ikisi de Link tarafında opt-in ister** — bayrak tek başına
+hiçbir şey yapmaz. Admin menüsüne `router.prefetch(kind:"full")` + `unstable_dynamicOnHover` eklendi.
+**Kural `CLAUDE.md`'de genişletildi:** artık "Yeni SAYFA/MODÜL" başlığı altında `app/panel/**` VE
+`app/admin/**` kapsıyor + yeni kabuk açan kişiye "buraya da uygula" talimatı var.
+⚠️ Ayrıca fark edildi: **CLAUDE.md'de admin paneli HİÇ GEÇMİYORDU** — yeni bir Claude varlığından
+haberdar olmazdı; kuralın uygulanmamasının asıl sebebi buydu. Domain listesine + dizin ağacına eklendi.
+
+**★ DESTEK DEPARTMAN YÖNLENDİRME (Adım 1-3) ★** — plan: `DESTEK-DEPARTMAN-PLAN.md`.
+Mehmet: "müşteri talep açarken departman seçsin; satış talebini muhasebe görmesin, admin her şeyi
+görsün." Kod yazmadan önce etki haritası çıkarıldı (CLAUDE.md kuralı), Mehmet 3 kararı verdi:
+**4 departman** (Teknik/Satış/Faturalandırma/Öneri) · **öncelik müşteriye SORULMAZ** (herkes "yüksek"
+seçer → alan bilgi taşımaz olur; departmandan türetiliyor) · şema izni.
+- **DB** (`destek-departman.sql`, çalıştırıldı + canlı doğrulandı): `support_tickets.department`
+  (CHECK + **`DEFAULT 'teknik'` → MOBİL ESKİ SÜRÜM KIRILMADI**, App Store beklenmedi) ·
+  `staff_departments` tablosu (user_roles'a kolon DEĞİL: oranın PK'sı `(user_id, role)`) ·
+  `staff_sees_department()` (admin her zaman true) · **yeni talep → o ekip + tüm admin'lere bildirim**
+  (bugüne kadar TERS YÖN YOKTU — yeni talepte kimseye haber gitmiyordu). Bildirim `link`'i
+  `/admin/destek/<id>` — `NotificationBell`'de link `data.ticket_id`'den ÖNCELİKLİ, boş bırakılsa
+  personel müşteri sayfasına atılırdı.
+- **Web:** `DEPARTMENTS` tek kaynak (`lib/supportShared.ts`) · müşteri formunda **kart seçimi**
+  (açılır liste değil — her kartta "buraya ne yazılır" cümlesi, yanlış ekibe düşen talebi azaltır;
+  varsayılan seçili DEĞİL) · admin'de departman rozeti + filtre.
+- ⚠️ **RLS DARALTMASI BİLİNÇLİ OLARAK YAPILMADI** (Adım 4): agent hâlâ tüm talepleri görüyor, ayrım
+  şu an yalnız görsel. En riskli adım — yanlış politika ya talep gizler ya sızdırır. **Personel
+  alınmadan ÖNCE** yapılacak; bugün tek staff admin olduğu için kimse etkilenmiyor.
+
+**⚠️ KENDİ HATALARIM (Mehmet yakaladı, ikisi de ders):**
+1. **Uydurma:** ölçek SQL'inde `admin_module_adoption`'ın 22 tablosunu ezberden yazdım (olmayan
+   adlar uydurdum). Uyarı üzerine kendi SQL'lerimi kaynağa karşı denetleyince 2 tane daha çıktı:
+   FK adını TAHMİN etmiştim (`DROP CONSTRAINT IF EXISTS` yanlış adda SESSİZCE hiçbir şey yapar) ve
+   indeks kolon sırasına bakmadan "sargable olunca kullanılır" demiştim. → hafıza:
+   [[liste-tanim-kopyalarken-uydurma]]. **Mekanizma:** mevcut tanımı ezberden yazma, `sed`/`grep` ile
+   kaynaktan çek + `diff` ile kanıtla; otomatik adları catalog'dan bul.
+2. **Regresyon:** O3'te `count(*)`'ı tamamen `reltuples` tahminine çevirmiştim → `ANALYZE` görmemiş
+   tabloda 0 döndüğü için panel "3 profil kullanıyor · 0 kayıt" diyordu. Hibrit'e çevrildi
+   (<50.000 gerçek sayım, üstünde tahmin).
+
+**Doğrulama akışı kuruldu:** `admin-denetim-DOGRULAMA.sql` — sadece OKUYAN 8 satırlık ✅/❌ tablosu.
+"Success dedi" ≠ "durum doğru". Sonuç **8/8 ✅**.
+
 ## 2026-07-18 — /admin panel denetimi (4 ajan) + 3 kritik + 6 yüksek düzeltme
 
 `/admin/ai` hatası kapandıktan sonra Mehmet panelin genel denetimini istedi. 4 paralel ajan
