@@ -63,6 +63,21 @@
 - [x] **`paraner-app/supabase/ai-usage-rpc-fix.sql` çalıştırıldı (2026-07-18) — panel dolu, canlı doğrulandı.** Hata: "structure of query does not match function result type". Sebep: `RETURNS TABLE ... bigint` ama sorguda `sum(bigint)` → **numeric** dönüyor. 17.07'de fark edilmedi çünkü tablo BOŞTU (Postgres tipi satır dönerken denetler → 0 satırda hata yok). Fix: dört `sum`'a `::bigint`. Şema/imza değişmiyor, mobil etkilenmez.
 - [ ] **Ders (yeni RPC'lerde):** `RETURNS TABLE`'lı RPC'yi boş tabloyla doğrulama — VERİ ile çalıştır. `sum(integer)`→bigint ama `sum(bigint)`→numeric.
 
+### 🎫 DESTEK DEPARTMAN YÖNLENDİRME (2026-07-18) — plan: `DESTEK-DEPARTMAN-PLAN.md`
+> Mehmet kararı: **4 departman** (Teknik/Satış/Faturalandırma/Öneri) · öncelik müşteriye SORULMAZ
+> (herkes "yüksek" seçer → alan bilgi taşımaz; departmandan türetiliyor, agent değiştirir).
+- [x] **Adım 1-3 TAMAM + canlı doğrulandı:** `destek-departman.sql` çalıştırıldı (department kolonu
+      `DEFAULT 'teknik'` → **mobil eski sürüm kırılmadı**; `staff_departments`; `staff_sees_department()`;
+      yeni talep → ekip+admin bildirimi). Müşteri formunda kart seçimi, admin'de rozet + filtre.
+- [ ] 🔴 **Adım 4 — RLS DARALTMASI (personel almadan ÖNCE):** agent yalnız kendi departmanını görsün.
+      `tickets_select`/`messages_select` → `staff_sees_department(department)`. **EN RİSKLİ ADIM**:
+      yanlış politika ya talep gizler ya sızdırır → ayrı ayrı test. Bugün tek staff admin, kimse etkilenmiyor.
+- [ ] **Adım 5 — e-posta yönlendirme:** `support-reply-notify` alıcıyı departmana göre seçsin (`functions deploy`).
+- [ ] **Adım 6 — MOBİL:** `paraner-app/lib/support.ts` `createTicket` departman göndersin + seçim ekranı.
+      Mobil Claude'a iletilecek (DEFAULT sayesinde acil değil).
+- [ ] **/admin/ekip'te departman atama UI'si** — personel alınınca şart (şu an SQL ile atanıyor).
+- [ ] **İleride:** talebe not/atama (`assignee_id` kolonu duruyor, kullanılmıyor) · ek dosya (`ticket-attachments` bucket).
+
 ### 🎫 DESTEK SİSTEMİ — Faz 0 ✅ TAMAMLANDI (2026-07-16, uçtan uca doğrulandı)
 > Detay: `DESTEK-SISTEMI.md` + `DESTEK-SEMA-MOBIL.md` + `destek-faz0.sql`. Web+mobil (ortak Supabase,
 > iki Claude mutabakatı). **Uçtan uca ÇALIŞIYOR:** agent yanıtı → çan bildirimi (realtime web+mobil) +
