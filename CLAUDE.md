@@ -24,9 +24,14 @@ Bir yeri değiştirip diğerini atlamak = kullanıcının gördüğü tutarsızl
 
 # Proje Yapısı
 
-İki domain, tek Next.js projesi (Vercel):
+**ÜÇ domain**, tek Next.js projesi (Vercel). Yönlendirme `proxy.ts` ile (host'a göre):
 - **paraner.com** → pazarlama (`app/page.tsx`, public, SEO).
-- **app.paraner.com** → panel (`app/panel/`, noindex). Yönlendirme `proxy.ts` ile (host'a göre).
+- **app.paraner.com** → müşteri paneli (`app/panel/`, noindex).
+- **admin.paraner.com** → İÇ EKİP paneli (`app/admin/`, noindex, rol-korumalı). Kurucu+çalışanlar
+  için müşteri yönetimi/destek. `user_roles` tablosu: `admin` (tam yetki) > `agent` (yalnız destek).
+  ⚠️ **service_role ile veri okur (RLS BYPASS)** → `lib/supabase/admin.ts` + `lib/admin*.ts`
+  hepsi `import "server-only"` ile başlar, ASLA client component'e sızmamalı.
+  Detay: `ADMIN-PANEL.md` · son denetim: `DENETIM-ADMIN-2026-07-18.md`.
 
 **Backend:** Mobil uygulamayla AYNI Supabase (proje `oqhonmmbcqrkcaoijgnb`). `@supabase/ssr`, cookie domain `.paraner.com` (çapraz-subdomain oturum). Env: `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`. **DB şemasına dokunma** — mobil aynı şemayı kullanır; kolon/tablo gerekiyorsa önce sor.
 
@@ -42,6 +47,10 @@ app/
     page.tsx                 — Genel Bakış (bu ay KPI + son işlemler)
     islemler/ hesaplar/ cariler/ faturalar/ ayarlar/ cuzdanim/
                              — her modül: page.tsx (server, veri çeker) + XClient.tsx (client, ekle/sil)
+  admin/                     — admin.paraner.com (İÇ EKİP — yukarı bak)
+    layout.tsx               — kabuk (AdminSidebar + AdminTopActions; layout guard YALNIZ UX)
+    AdminSidebar.tsx         — ⚠️ yeni rota eklenince PREFETCH listesine de ekle (aşağıdaki kural 4)
+    page.tsx                 — Genel Bakış (aksiyon panosu) · musteriler/ destek/ canli/ ai/ ekip/ denetim/
 proxy.ts                     — host bazlı yönlendirme + oturum tazeleme
 lib/
   supabase/ client.ts server.ts cookieDomain.ts
@@ -64,10 +73,29 @@ lib/
 Eski hâli "tek primary renk #00BFA6" diyordu; bu kural o talimatla çelişip yeni ekranların
 sürekli yeşil çıkmasına sebep oluyordu (Mehmet 18.07'de yakaladı).
 
-### ⚠️ Yeni panel modülü eklerken ZORUNLU (panel hızı — 2026-07-14)
+### ⚠️ Yeni SAYFA/MODÜL eklerken ZORUNLU (panel + admin hızı — 2026-07-14, 07-18'de genişletildi)
+> Bu liste **`app/panel/**` VE `app/admin/**` için geçerli** (ve ileride eklenecek her kabuk için).
+> ⚠️ 07-18 dersi: kural yalnız "panel" diye yazılmıştı → admin paneli sonradan kurulunca kimse
+> uygulamadı, admin sayfa geçişleri aylarca yavaş kaldı (Mehmet yakaladı). Yeni bir kabuk
+> eklersen bu maddeleri ORAYA DA uygula ve buraya adını yaz.
 1. **Her mutasyondan sonra `router.refresh()`** (insert/update/delete/upsert/rpc; yalnız BAŞARI yolunda, handler sonunda bir kez).
    Sebep: `next.config.ts`'te istemci önbelleği AÇIK (`staleTimes.dynamic: 30`). Sunucu verisi Client'a `initialX` prop'u olarak geçip `useState`'e tohumlandığı için, refresh çağrılmazsa kullanıcı sayfadan çıkıp 30sn içinde dönünce **BAYAT veri** görür ("eklediğim kayıt kayboldu", "bakiye güncellenmedi"). Next 16'da tek `refresh()` TÜM segment önbelleğini düşürür → çapraz sayfa etkisi de çözülür.
 2. **Server page'de sorgular `Promise.all` ile PARALEL.** Ardışık `await` = fazladan ağ turu. (Profil id'ye gerçekten bağımlı olan sorgu zorunlu istisnadır.)
-3. **Listelere `.limit()`** koy; `select("*")` yok, kolon listesi yaz.
+3. **Listelere `.limit()`** koy; `select("*")` yok, kolon listesi yaz. Kırpma olduysa EKRANDA söyle
+   (sessiz kesme "hepsi bu kadar" diye okunur).
+4. **🔴 Yeni rota eklediysen SOL MENÜ PREFETCH'İNE DE EKLE.** İki opt-in birlikte şart:
+   - `router.prefetch(href, { kind: "full" as never })` — sayfa açılır açılmaz peşin ısıtma
+     (`app/panel/Sidebar.tsx` `CORE_PREFETCH` · `app/admin/AdminSidebar.tsx` tüm ITEMS)
+   - Link'te `prefetch` + `unstable_dynamicOnHover` (`NavLink` sarmalayıcısı)
+
+   **Neden ikisi de:** `next.config.ts`'teki `experimental.dynamicOnHover` bayrağı TEK BAŞINA
+   HİÇBİR ŞEY YAPMAZ — Link tarafında opt-in ister. Next 16'da `<Link>` dinamik rotalarda yalnız
+   `loading` sınırına kadar prefetch eder, **SAYFA VERİSİNİ GETİRMEZ** → tıklamada veri turu
+   sıfırdan başlar. Ölçüm (prod, 2026-07-14): ısıtılmamış rota **1554 ms + iskelet**, ısıtılmış
+   **14-26 ms**. `prefetch={true}` VIEWPORT'a bağlıdır (kapalı akordeondaki link hiç ısınmaz) ve
+   dokunmatikte hover yoktur → peşin `router.prefetch` şart.
+   ⚠️ **Prefetch DEV'de kapalıdır** → etkiyi yalnız prod build'de ölçebilirsin.
+5. **Sayfa kendi auth guard'ını çağırsın** (`requireAdminPage()` / `requireStaffPage()`),
+   layout guard'ına GÜVENME: Next 16'da layout istemci-taraflı gezinmede yeniden çalışmaz.
 
 > İş akışı (işe başla / işi bitir) + bekleyenler: `GOREVLER.md`, `DAILY_LOG.md`.
