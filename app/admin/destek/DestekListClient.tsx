@@ -20,10 +20,21 @@ export type TicketRow = {
   sonAktiflik: string | null;
 };
 
+/* ⚠️ timeZone SABİT olmalı (2026-07-18). İki ayrı sorunu birden çözüyor:
+   1) DOĞRULUK: sunucu (Vercel) UTC'de çalışıyor → saat dilimi yazılmazsa SSR çıktısı
+      Türkiye saatinden 3 saat geride oluyordu. Agent "son mesaj 11:35" görüyordu, oysa 14:35.
+   2) HYDRATION: sunucu UTC, tarayıcı Europe/Istanbul ile biçimlendirince metinler
+      uyuşmuyordu → React #418 (sayfa çöküyor gibi görünmese de bileşen istemcide
+      yeniden çiziliyordu). /admin/destek + /admin/musteriler'de ölçüldü.
+   Ürün TR odaklı ve ekip Türkiye'de → sabit "Europe/Istanbul" doğru davranış. */
+const TZ = "Europe/Istanbul";
+
 function fmtTarih(s: string | null) {
   if (!s) return "—";
   try {
-    return new Date(s).toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
+    return new Date(s).toLocaleDateString("tr-TR", {
+      day: "2-digit", month: "short", year: "numeric", timeZone: TZ,
+    });
   } catch {
     return "—";
   }
@@ -32,7 +43,7 @@ function fmtSaat(s: string | null) {
   if (!s) return "";
   try {
     return new Date(s).toLocaleString("tr-TR", {
-      day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+      day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: TZ,
     });
   } catch {
     return "";

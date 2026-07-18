@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
-import { formatCurrency } from "../../../lib/format";
+import { formatCurrency, TZ } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
 import {
   ASSET_TYPES,
@@ -384,7 +384,7 @@ export default function CuzdanimClient({
             >
               <RefreshCw size={14} />
               <span className="refresh-time" suppressHydrationWarning>
-                {new Date(market.timestamp).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                {new Date(market.timestamp).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: TZ })}
               </span>
             </button>
             <AddButton onClick={openAdd}>Varlık Ekle</AddButton>

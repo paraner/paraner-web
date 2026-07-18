@@ -1,7 +1,7 @@
 import { createClient } from "../../lib/supabase/server";
 import { getActiveProfile } from "../../lib/supabase/profile";
 import OnboardingModal from "./OnboardingModal";
-import { formatCurrency, formatDate } from "../../lib/format";
+import { formatCurrency, formatDate, TZ } from "../../lib/format";
 import { ymd } from "../../lib/date";
 import { findCategory } from "../../lib/categories";
 import { CategoryIcon } from "../../lib/categoryIcons";
@@ -47,7 +47,7 @@ function deltaInfo(cur: number, prev: number, goodWhenUp: boolean) {
 function timeStr(iso: string | null): string {
   if (!iso) return "";
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "" : d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+  return Number.isNaN(d.getTime()) ? "" : d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
 }
 
 export default async function GenelBakisPage() {

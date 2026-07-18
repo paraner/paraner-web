@@ -50,10 +50,17 @@ const SORTS: { id: Sort; label: string }[] = [
   { id: "email", label: "E-posta · A → Z" },
 ];
 
+/* ⚠️ timeZone SABİT — sunucu (Vercel) UTC'de, tarayıcı Europe/Istanbul'da biçimlendirince
+   hem yanlış gün gösterilebiliyor hem de SSR ↔ hydrate metni uyuşmuyordu (React #418).
+   Detay: app/admin/destek/DestekListClient.tsx üstündeki not. */
+const TZ = "Europe/Istanbul";
+
 function fmtDate(s: string | null) {
   if (!s) return "—";
   try {
-    return new Date(s).toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
+    return new Date(s).toLocaleDateString("tr-TR", {
+      day: "2-digit", month: "short", year: "numeric", timeZone: TZ,
+    });
   } catch {
     return "—";
   }

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Search, ShieldCheck, Mail, Star, Ban, Trash2, UserPlus, KeyRound } from "lucide-react";
 import { relativeLabel } from "../../../lib/lifecycle";
+import { TZ } from "../../../lib/format";
 
 export type AuditRow = {
   id: string;
@@ -40,7 +41,7 @@ const fmt = (iso: string) => {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    });
+      timeZone: TZ });
   } catch {
     return iso;
   }

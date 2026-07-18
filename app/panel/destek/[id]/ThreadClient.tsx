@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Send, Check } from "lucide-react";
 import { showToast } from "../../../components/toast";
 import { useSubmitLock } from "../../../../lib/useSubmitLock";
+import { TZ } from "../../../../lib/format";
 import {
   sendMessage,
   resolveTicket,
@@ -19,7 +20,7 @@ function timeLabel(iso: string) {
   try {
     return new Date(iso).toLocaleString("tr-TR", {
       day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
-    });
+      timeZone: TZ });
   } catch {
     return "";
   }

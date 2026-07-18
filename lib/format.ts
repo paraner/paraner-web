@@ -27,3 +27,46 @@ export function formatDate(date: string): string {
   if (!y || !m || !d) return date;
   return `${d}.${m}.${y}`;
 }
+
+/* ── ZAMAN DAMGASI BİÇİMLENDİRME (2026-07-18) ──────────────────────────────
+   ⚠️ SAAT DİLİMİ HER ZAMAN SABİT YAZILMALI. Yazılmazsa çalışan ortamın yereli
+   kullanılır ve İKİ ayrı sorun çıkar:
+     1) DOĞRULUK — sunucu (Vercel) UTC'de çalışıyor. `toLocaleString("tr-TR")`
+        sunucuda 11:35, tarayıcıda 14:35 üretiyordu; SSR HTML'i UTC saatti, yani
+        kullanıcıya 3 saat GERİ zaman gösteriliyordu (destek yazışması, denetim
+        kaydı, işlem saati).
+     2) HYDRATION — sunucu ile istemcinin metni uyuşmuyor → React #418; bileşen
+        istemcide sessizce yeniden çiziliyor. /admin/destek + /admin/musteriler'de
+        ölçülüp doğrulandı.
+   Ürün TR odaklı, ekip ve müşteriler Türkiye'de → sabit Europe/Istanbul doğru davranış.
+   Kullanıcının kendi saat dilimini göstermek istersek ayrı karar (o zaman tarih
+   yalnız istemcide, `suppressHydrationWarning` ile üretilmeli). */
+export const TZ = "Europe/Istanbul";
+
+/** "18 Tem 2026" — liste/kart tarihleri. */
+export function formatDayMonth(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("tr-TR", {
+    day: "2-digit", month: "short", year: "numeric", timeZone: TZ,
+  });
+}
+
+/** "18 Tem 14:35" — son mesaj/hareket zamanı. */
+export function formatDateTime(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString("tr-TR", {
+    day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: TZ,
+  });
+}
+
+/** "14:35" — yalnız saat. */
+export function formatTime(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
+}

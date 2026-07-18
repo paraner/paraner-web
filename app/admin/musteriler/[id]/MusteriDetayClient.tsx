@@ -16,6 +16,7 @@ import {
 import type { AdminPerson } from "../../../../lib/adminUsers";
 import { profileLifecycle, lifecycleLabel, LIFECYCLE_META, relativeLabel } from "../../../../lib/lifecycle";
 import { tierLabel } from "../../../../lib/plans";
+import { TZ } from "../../../../lib/format";
 
 export type ProfileUsage = {
   profileId: string;
@@ -28,7 +29,7 @@ export type ProfileUsage = {
 function fmtDate(s: string | null) {
   if (!s) return "—";
   try {
-    return new Date(s).toLocaleString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
+    return new Date(s).toLocaleString("tr-TR", { day: "2-digit", month: "short", year: "numeric", timeZone: TZ });
   } catch {
     return "—";
   }

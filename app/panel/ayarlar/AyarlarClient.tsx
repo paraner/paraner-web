@@ -7,7 +7,7 @@ import LogoutButton from "../LogoutButton";
 import { confirmDialog } from "../../components/confirm";
 import { showToast } from "../../components/toast";
 import { toCsv, downloadCsv, parseCsv } from "../../../lib/csv";
-import { parseAmount } from "../../../lib/format";
+import { parseAmount, TZ } from "../../../lib/format";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import SaveButton from "../../../components/SaveButton";
@@ -1062,7 +1062,7 @@ function DevicesSection({ devices }: { devices: DeviceRow[] }) {
     try {
       return new Date(s).toLocaleString("tr-TR", {
         day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
-      });
+      timeZone: TZ });
     } catch {
       return "";
     }

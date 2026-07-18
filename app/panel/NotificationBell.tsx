@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Bell, ChevronRight } from "lucide-react";
 import { BellIcon } from "../../components/icons";
 import { createClient } from "../../lib/supabase/client";
+import { TZ } from "../../lib/format";
 
 /* Üst bar bildirim çanı — gerçek `notifications` tablosu (Faz 0 destek sistemi).
    Fetch + Realtime INSERT (agent yanıtı → DB trigger → notifications → buraya anlık düşer).
@@ -28,7 +29,7 @@ function timeAgo(iso: string): string {
     if (diff < 60) return "az önce";
     if (diff < 3600) return `${Math.floor(diff / 60)} dk önce`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} sa önce`;
-    return new Date(iso).toLocaleDateString("tr-TR", { day: "2-digit", month: "short" });
+    return new Date(iso).toLocaleDateString("tr-TR", { day: "2-digit", month: "short", timeZone: TZ });
   } catch {
     return "";
   }

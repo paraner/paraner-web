@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
-import { formatCurrency, formatDate } from "../../../lib/format";
+import { formatCurrency, formatDate, TZ } from "../../../lib/format";
 import { todayStr, ymd } from "../../../lib/date";
 import {
   uploadReceipt,
@@ -115,7 +115,7 @@ function timeStr(iso: string | null): string {
   if (!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
 }
 
 // Eski tek-url + yeni dizi alanlarını birleştir
