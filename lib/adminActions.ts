@@ -370,14 +370,12 @@ export async function inviteStaff(
       ? await sendInviteEmail(target, role, deps.map(departmentLabel), link, actor.email)
       : "davet bağlantısı üretilemedi";
     if (mailErr) {
-      // Telafi: kişi oluştu ama markalı mail gitmedi → en azından şifre kurma maili gitsin.
-      const { error: resetErr } = await admin.auth.resetPasswordForEmail(target, {
-        redirectTo: INVITE_REDIRECT,
-      });
-      mailNotu = resetErr
-        ? ` ⚠️ MAİL GİTMEDİ (${mailErr}) — kişiye ulaşıp "Daveti yenile" ile tekrar gönder.`
-        : ` ⚠️ Markalı mail gönderilemedi (${mailErr}) → yerine şifre belirleme maili gönderildi.`;
-      console.error("[inviteStaff] markalı mail hatası:", mailErr);
+      /* ⚠️ ESKİDEN BURADA resetPasswordForEmail ÇAĞRILIYORDU — KALDIRILDI (2026-07-18).
+         O, MÜŞTERİ şablonlu "Şifreni sıfırla" mailini paraner.com linkiyle gönderiyordu:
+         personele yanlış metin + yanlış alan adı. "Hiç mail gitmemesi" bundan İYİDİR,
+         çünkü kişi listede "Davet bekliyor" olarak duruyor ve "Daveti yenile" bir tık. */
+      mailNotu = ` ⚠️ MAİL GİTMEDİ (${mailErr}) — satırdaki "Daveti yenile" ile tekrar gönder.`;
+      console.error("[inviteStaff] davet maili hatası:", mailErr);
     }
   } else {
     const { data, error } = await admin.auth.admin.inviteUserByEmail(target, {
@@ -488,14 +486,11 @@ export async function resendInvite(email: string): Promise<ActionResult> {
   const mailErr = link
     ? await sendInviteEmail(target, rol as "admin" | "agent", depLabels, link, actor.email)
     : "bağlantı üretilemedi";
+  /* Yedek yol YOK (bilinçli): müşteri şablonlu "Şifreni sıfırla" maili personele gitmemeli.
+     Gönderemiyorsak açıkça söyleriz; kişi listede "Davet bekliyor" olarak durmaya devam eder. */
   if (mailErr) {
-    // Markalı yol yoksa Supabase'in kendi şifre-sıfırlama maili yine iş görür.
-    const { error: resetErr } = await admin.auth.resetPasswordForEmail(target, {
-      redirectTo: INVITE_REDIRECT,
-    });
-    if (resetErr) return { ok: false, message: `Mail gönderilemedi: ${mailErr}` };
-    await logAction(actor, "staff_invite_resent", { email: target }, { fallback: true });
-    return { ok: true, message: `${target} → kurulum maili yeniden gönderildi (sade şablon).` };
+    console.error("[resendInvite] davet maili hatası:", mailErr);
+    return { ok: false, message: `Mail gönderilemedi: ${mailErr}` };
   }
 
   await logAction(actor, "staff_invite_resent", { email: target }, { role: rol });
