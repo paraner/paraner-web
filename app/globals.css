@@ -4137,7 +4137,13 @@ ul { list-style: none; }
 /* Satır aksiyonları — MÜŞTERİ PANELİNDEKİ .tx-row deseninin aynısı (Mehmet, 2026-07-18:
    "app.paraner.com'daki gibi üzerine gelince sil/düzenle gelsin").
    Hover yokken genişlik 0 → satır sade durur; hover'da açılır, buton hover'ında etiket belirir. */
-.admin-hover-actions { flex-wrap: nowrap; gap: 0; }
+/* ⚠️ AKSİYON SÜTUNU SABİT GENİŞLİK OLMALI (Mehmet, 2026-07-19: "üzerine gelince
+   hepsi sola kayıyor"). Sebep tablo yapısı: bir satırın hücresi hover'da büyüyünce
+   SÜTUN genişliği değişiyor, sütun tüm satırlarda ortak olduğu için TÜM tablo kayıyor.
+   Genişliği en geniş hâle göre peşin ayırıyoruz → hover hiçbir şeyi oynatmıyor.
+   Hesap: 3 buton (yenile+düzenle+sil) = 40+40+96(hover'daki) + 2×8 boşluk = 192px. */
+.admin-actions-col { width: 200px; min-width: 200px; }
+.admin-hover-actions { flex-wrap: nowrap; gap: 0; justify-content: flex-end; }
 .admin-hover-actions .anim-act {
   width: 0; margin-left: 0; opacity: 0; border-width: 0; pointer-events: none;
 }

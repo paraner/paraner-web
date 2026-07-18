@@ -255,7 +255,7 @@ export default function EkipClient({
                   <th>Rol</th>
                   <th>Departmanlar</th>
                   <th>Katıldı</th>
-                  <th aria-label="İşlemler" />
+                  <th aria-label="İşlemler" className="admin-actions-col" />
                 </tr>
               </thead>
               <tbody>
@@ -354,7 +354,7 @@ export default function EkipClient({
                         {formatDate(m.since)}
                       </td>
 
-                      <td>
+                      <td className="admin-actions-col">
                         {duzenle ? (
                           <div className="admin-row-actions">
                             <button
