@@ -2023,104 +2023,52 @@ ul { list-style: none; }
 /* Modal birincil "Kaydet / Güncelle" butonu (uiverse Gugu-Ndlovu dark-glossy → TİTANYUM).
    Paylaşımlı SaveButton bileşeni. Kıvılcım ikonu + harf shimmer + titanyum parıltı.
    Mavi highlight (referans hue 210) → nötr titanyuma çevrildi ([[marka-rengi-degisecek]]). */
+/* ── SaveButton (.sb) — "Destek Talebi Oluştur" (.btn-primary) ile AYNI görünüm ──
+   2026-07-18 (Mehmet): önce yalnız rengi titanyuma çevirmiştim ama buton hâlâ kendi
+   parlak/harf-shimmer tasarımındaydı. İstenen: birincil butonla BİREBİR aynı dil.
+   Fark yalnız yerleşimde: modal içinde tam genişlik + biraz daha yüksek.
+   ⚠️ Harf harf <span> yapısı bileşende KALIYOR (API bozulmasın) ama artık düz metin
+   gibi davranıyor — animasyon yok, tek renk. */
 .sb {
-  --sb-radius: 14px;
-  --sb-pad: 4px;
-  --sb-t: 0.4s;
-  /* ⚠️ TİTANYUM (2026-07-18, Mehmet isteği): eskiden koyu parlak (#101216) idi — panelde
-     AddButton/btn-primary gümüşken Kaydet koyu kalıyordu, iki ayrı buton dili oluyordu.
-     Artık tek dil. Efekt katmanları (::before/::after, harf parıltısı) açık zemine göre
-     yeniden ayarlandı: beyaz parıltı açık zeminde görünmez, o yüzden KOYU parıltıya çevrildi. */
-  --sb-bg: #c4c8ce;
-  --sb-accent: #6b7178;                 /* açık zeminde kontrast veren koyu highlight */
-  --sb-accent-soft: rgba(107, 113, 120, 0.5);
-
-  position: relative; z-index: 0;
-  width: 100%;
-  user-select: none;
+  position: relative; overflow: hidden;
   display: flex; align-items: center; justify-content: center; gap: 0.55rem;
+  width: 100%;
   padding: 13px 20px;
   font-family: inherit; font-size: 14px; font-weight: 600; letter-spacing: 0.01em;
-  background: linear-gradient(180deg, #eef0f2 0%, var(--sb-bg) 55%, #a9afb6 100%);
-  border: solid 1px rgba(0, 0, 0, 0.18);
-  border-radius: var(--sb-radius);
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.85),
+  border: none; border-radius: 12px;
+  cursor: pointer; user-select: none;
+  background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
+  color: #0a0b0d;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.85),
     inset 0 -1px 1px rgba(0, 0, 0, 0.18);
-  transition: box-shadow var(--sb-t), border var(--sb-t), background-color var(--sb-t), opacity var(--sb-t);
+  transition: box-shadow 0.25s ease, opacity 0.25s ease;
 }
+/* Hover'da üstünden BİR KEZ geçen ışıltı — btn-primary ile aynı (yukarı kalkma YOK). */
 .sb::before {
-  content: ""; position: absolute; pointer-events: none;
-  top: calc(0px - var(--sb-pad)); left: calc(0px - var(--sb-pad));
-  width: calc(100% + var(--sb-pad) * 2); height: calc(100% + var(--sb-pad) * 2);
-  border-radius: calc(var(--sb-radius) + var(--sb-pad));
-  background-image: linear-gradient(0deg, #0004, #000a);
-  z-index: -1;
-  transition: box-shadow var(--sb-t), filter var(--sb-t);
-  box-shadow: 1px 1px 1px #fff2, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001;
-}
-.sb::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
-  border-radius: inherit;
-  background-image: linear-gradient(0deg, #fff, var(--sb-accent), var(--sb-accent-soft), 8%, transparent);
-  opacity: 0;
-  transition: opacity var(--sb-t), filter var(--sb-t);
+  background: linear-gradient(100deg, transparent 32%, rgba(255, 255, 255, 0.45) 50%, transparent 68%);
+  transform: translateX(-130%);
+}
+.sb:hover:not(:disabled) {
+  box-shadow: 0 11px 28px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.22);
+}
+.sb:hover:not(:disabled)::before { animation: btnShine 0.9s ease; }
+.sb:active:not(:disabled) {
+  transform: scale(0.99);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 .sb:disabled:not(.is-busy) { cursor: not-allowed; opacity: 0.5; }
 
 .sb-txt { position: relative; display: inline-flex; }
-.sb-letter {
-  position: relative; display: inline-block;
-  color: rgba(10, 11, 13, 0.55);
-  animation: sb-letter 2s ease-in-out infinite;
-  transition: color var(--sb-t), text-shadow var(--sb-t);
-}
-@keyframes sb-letter { 50% { text-shadow: 0 0 3px rgba(255,255,255,0.9); color: #0a0b0d; } }
+.sb-letter { position: relative; display: inline-block; color: inherit; }
 
-/* Hover — çok hafif alt parıltı (kısık) */
-.sb:hover:not(:disabled) { border-color: var(--sb-accent-soft); }
-.sb:hover:not(:disabled)::before {
-  box-shadow: 0 -5px 7px -7px #fff3 inset, 0 -14px 14px -10px rgba(212, 217, 223, 0.14) inset,
-    1px 1px 1px #fff2, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001;
-}
-.sb:hover:not(:disabled)::after { opacity: 0.28; mask-image: linear-gradient(0deg, #fff, transparent); }
-
-/* Aktif (basılı) */
-.sb:active:not(:disabled) {
-  border-color: rgba(0, 0, 0, 0.28);
-  background: linear-gradient(180deg, #dfe2e5 0%, #b3b8bf 55%, #9aa0a7 100%);
-}
-.sb:active:not(:disabled)::before {
-  box-shadow: 0 -8px 12px -6px #fffa inset, 0 -16px 16px -8px rgba(212, 217, 223, 0.8) inset,
-    1px 1px 1px #fff4, 2px 2px 2px #fff2, -1px -1px 1px #0002, -2px -2px 2px #0001;
-}
-.sb:active:not(:disabled)::after { opacity: 1; filter: brightness(180%); mask-image: linear-gradient(0deg, #fff, transparent); }
-.sb:active:not(:disabled) .sb-letter { color: #0a0b0d; text-shadow: 0 0 1px rgba(255, 255, 255, 0.9); animation: none; }
-
-/* Kaydediliyor (busy) — sürekli parıltı + ikon hızlı flicker + harfler tam beyaz */
+/* Kaydediliyor: ışıltı sürekli aksın — "çalışıyor" geri bildirimi kalsın. */
 .sb.is-busy { cursor: progress; }
-.sb.is-busy::after { opacity: 0.28; mask-image: linear-gradient(0deg, #fff, transparent); }
-.sb.is-busy .sb-letter { color: #0a0b0d; }
-
-/* Harf shimmer gecikmeleri (soldan sağa dalga) */
-.sb-letter:nth-child(1) { animation-delay: 0s; }
-.sb-letter:nth-child(2) { animation-delay: 0.08s; }
-.sb-letter:nth-child(3) { animation-delay: 0.16s; }
-.sb-letter:nth-child(4) { animation-delay: 0.24s; }
-.sb-letter:nth-child(5) { animation-delay: 0.32s; }
-.sb-letter:nth-child(6) { animation-delay: 0.4s; }
-.sb-letter:nth-child(7) { animation-delay: 0.48s; }
-.sb-letter:nth-child(8) { animation-delay: 0.56s; }
-.sb-letter:nth-child(9) { animation-delay: 0.64s; }
-.sb-letter:nth-child(10) { animation-delay: 0.72s; }
-.sb-letter:nth-child(11) { animation-delay: 0.8s; }
-.sb-letter:nth-child(12) { animation-delay: 0.88s; }
-.sb-letter:nth-child(13) { animation-delay: 0.96s; }
-.sb-letter:nth-child(14) { animation-delay: 1.04s; }
-.sb-letter:nth-child(15) { animation-delay: 1.12s; }
+.sb.is-busy::before { animation: btnShine 1.1s ease infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .sb-letter { animation: none !important; }
+  .sb::before, .sb.is-busy::before { animation: none !important; }
 }
 
 /* Kompakt yenileme butonu (cüzdanım) — AddButton ile aynı titanyum + yükseklik, ama dar.
