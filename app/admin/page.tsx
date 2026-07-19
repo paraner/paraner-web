@@ -5,7 +5,12 @@ import { requireStaffPage } from "../../lib/adminGuard";
 import { TICKET_COLS, TICKET_STATUS_META, type Ticket } from "../../lib/supportShared";
 import { relativeLabel, TRIAL_ENDING_DAYS } from "../../lib/lifecycle";
 import { TRIAL_DAYS } from "../../lib/plans";
-import { panoMetrikleri } from "../../lib/adminMetrics";
+import {
+  panoMetrikleri,
+  getActiveCounts,
+  getDeadProfileCount,
+  getModuleAdoption,
+} from "../../lib/adminMetrics";
 import AdminKeyNotice from "./AdminKeyNotice";
 
 export default async function AdminDashboard() {
@@ -30,9 +35,12 @@ export default async function AdminDashboard() {
      Kazanç çift yönlü: sayfa anında açılır VE DB'ye giden sorgu sayısı ~30 kat azalır (panel
      açık kaldıkça her yenilemede baştan çalışmıyor) — disk IO uyarısının da bir parçası buydu.
      ⚠️ DESTEK sorguları ÖNBELLEĞE ALINMADI: "bekleyen talep" panelin birinci işi, taze kalmalı. */
-  const [{ totalR, businessR, premiumR, recentR, ownersR, active, dead, adoption }, ticketsR, openR] =
+  const [{ totalR, businessR, premiumR, recentR, ownersR }, ticketsR, openR, active, dead, adoption] =
     await Promise.all([
-      panoMetrikleri(isAdminRole),
+      /* ⚠️ Yalnız service_role sorguları önbellekli. Aşağıdaki üç metrik ÇEREZ tabanlı
+         istemci kullanıyor (RPC guard'ı auth.uid() istiyor) → önbelleğe ALINAMAZ,
+         alınırsa sayfa komple patlar (2026-07-19'da yaşandı). */
+      panoMetrikleri(),
     admin
       .from("support_tickets")
       .select(TICKET_COLS)
@@ -44,6 +52,9 @@ export default async function AdminDashboard() {
         .from("support_tickets")
         .select("*", { count: "exact", head: true })
         .in("status", ["open", "answered"]),
+      isAdminRole ? getActiveCounts() : Promise.resolve({ dau: 0, wau: 0, mau: 0 }),
+      isAdminRole ? getDeadProfileCount() : Promise.resolve(0),
+      isAdminRole ? getModuleAdoption() : Promise.resolve(null),
     ]);
 
   /* ⚠️ Hataları GÖSTER, yutma: `count ?? 0` sessizce 0'a düşüyordu → kolon/izin hatasında

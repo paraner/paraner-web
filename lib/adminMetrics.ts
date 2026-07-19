@@ -95,30 +95,30 @@ export async function getModuleAdoption(): Promise<ModuleAdoption[] | null> {
    Bu sayılar service_role ile okunan GLOBAL metrikler — kişiye özel DEĞİL, dolayısıyla
    önbelleklemek güvenli (oturum/rol bilgisi önbelleğe girmiyor; `admin` parametresi yalnız
    yöneticiye özel RPC'leri atlamak için).
-   ⚠️ Önbellek içinde cookie/header OKUNMAZ (Next kuralı) — buradaki her şey service_role.
+   🔴 2026-07-19 HATA + DÜZELTME: ilk sürüm getActiveCounts/getDeadProfileCount/
+   getModuleAdoption'ı da buraya almıştı ve /admin KOMPLE PATLADI. Sebep: o üç fonksiyon
+   ÇEREZ tabanlı istemci kullanıyor (RPC'lerin `assert_admin` guard'ı için `auth.uid()`
+   gerekiyor) — `unstable_cache` içinde cookie okumak YASAK.
+   Kural: önbelleğe YALNIZCA service_role (oturumdan bağımsız) sorgular girer.
    ⚠️ Destek sorguları BİLEREK dışarıda: "bekleyen talep" panelin birinci işi, taze kalmalı. */
 export const panoMetrikleri = unstable_cache(
-  async (isAdmin: boolean) => {
+  async () => {
     const admin = createAdminClient();
     if (!admin) throw new Error("Sunucu anahtarı eksik");
     const since = new Date(Date.now() - 7 * 86400000).toISOString();
 
-    const [totalR, businessR, premiumR, recentR, ownersR, active, dead, adoption] =
-      await Promise.all([
-        admin.from("profiles").select("*", { count: "exact", head: true }),
-        admin.from("profiles").select("*", { count: "exact", head: true }).eq("profile_type", "business"),
-        admin.from("profiles").select("*", { count: "exact", head: true }).eq("is_premium", true),
-        admin.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", since),
-        admin
-          .from("profiles")
-          .select("auth_user_id, profile_name, name, trial_plan, trial_start_date, is_premium", {
-            count: "exact",
-          })
-          .limit(10000),
-        isAdmin ? getActiveCounts() : Promise.resolve({ dau: 0, wau: 0, mau: 0 }),
-        isAdmin ? getDeadProfileCount() : Promise.resolve(0),
-        isAdmin ? getModuleAdoption() : Promise.resolve(null),
-      ]);
+    const [totalR, businessR, premiumR, recentR, ownersR] = await Promise.all([
+      admin.from("profiles").select("*", { count: "exact", head: true }),
+      admin.from("profiles").select("*", { count: "exact", head: true }).eq("profile_type", "business"),
+      admin.from("profiles").select("*", { count: "exact", head: true }).eq("is_premium", true),
+      admin.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", since),
+      admin
+        .from("profiles")
+        .select("auth_user_id, profile_name, name, trial_plan, trial_start_date, is_premium", {
+          count: "exact",
+        })
+        .limit(10000),
+    ]);
 
     /* Supabase yanıt nesneleri (PostgrestResponse) doğrudan önbelleğe konamaz — sadeleştir.
        Hata METNİ korunuyor: çağıran tarafta "yutma, göster" kuralı bozulmasın. */
@@ -132,9 +132,6 @@ export const panoMetrikleri = unstable_cache(
       premiumR: sade(premiumR),
       recentR: sade(recentR),
       ownersR: { ...sade(ownersR), data: ownersR.data ?? [] },
-      active,
-      dead,
-      adoption,
     };
   },
   ["admin-pano-metrikleri"],
