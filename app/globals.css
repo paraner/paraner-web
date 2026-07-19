@@ -4096,10 +4096,54 @@ ul { list-style: none; }
 }
 @media (max-width: 860px) { .admin-invite-grid { grid-template-columns: 1fr; } }
 .admin-invite-field { min-width: 0; }
+/* Sağ sütun: rol + departman alt alta, ikisi de açılır liste */
+.admin-invite-right { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+/* Alt şerit: açıklama SOLDA, butonlar SAĞDA (Mehmet, 2026-07-19) */
 .admin-invite-actions {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
   margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border);
 }
+.admin-invite-help { flex: 1; min-width: 240px; }
+.admin-invite-btns { display: flex; gap: 10px; margin-left: auto; }
+
+/* --- Açılır liste (rol + departman) ---
+   ⚠️ Yerleşik <select> KULLANMIYORUZ: açılma yönü tarayıcı kontrolünde (alanın ÜSTÜNÜ
+   kapatarak açılıyordu) ve koyu temayla uyumsuzdu. Bu liste HER ZAMAN alta açılır. */
+.adm-dd { position: relative; min-width: 0; }
+.adm-dd-btn {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font: inherit; font-size: 14px; text-align: left; cursor: pointer;
+  padding: 11px 13px; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border); color: var(--text);
+  transition: border-color .15s, background .15s;
+}
+.adm-dd-btn:hover:not(:disabled) { border-color: var(--text-dim); }
+.adm-dd-btn.on { border-color: var(--border-strong); background: rgba(255, 255, 255, 0.06); }
+.adm-dd-btn:disabled { cursor: default; opacity: 0.55; }
+.adm-dd-ozet { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-dd-ok { flex: none; color: var(--text-dim); transition: transform .18s; }
+.adm-dd-btn.on .adm-dd-ok { transform: rotate(180deg); }
+
+.adm-dd-panel {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 60;
+  display: flex; flex-direction: column; padding: 6px;
+  background: var(--surface-modal); border: 1px solid var(--border-strong);
+  border-radius: 12px; box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+  max-height: 320px; overflow-y: auto;
+  animation: ddIn .14s ease;
+}
+@keyframes ddIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.adm-dd-item {
+  display: flex; align-items: flex-start; gap: 9px; width: 100%;
+  font: inherit; text-align: left; cursor: pointer;
+  padding: 9px 10px; border-radius: 9px; border: 0; background: none; color: var(--text-dim);
+  transition: background .12s, color .12s;
+}
+.adm-dd-item:hover { background: rgba(255, 255, 255, 0.06); color: var(--text); }
+.adm-dd-item.on { color: var(--text); }
+.adm-dd-tik { width: 14px; flex: none; display: flex; justify-content: center; padding-top: 2px; }
+.adm-dd-item-label { display: block; font-size: 13.5px; font-weight: 600; }
+.adm-dd-item-ipucu { display: block; font-size: 11.5px; line-height: 1.45; color: var(--text-dim); margin-top: 2px; }
 .admin-note { font-size: 12px; line-height: 1.6; color: var(--text-dim); }
 .admin-req {
   font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   UserPlus,
@@ -13,6 +13,7 @@ import {
   Clock,
   Check,
   X,
+  ChevronDown,
 } from "lucide-react";
 import { showToast } from "../../components/toast";
 import { confirmDialog } from "../../components/confirm";
@@ -57,6 +58,91 @@ const ROLES = [
     desc: "Müşteri yönetimi, abonelikler, ekip ve tüm destek — seninle aynı yetki.",
   },
 ];
+
+/* Açılır liste — yerleşik <select> DEĞİL (Mehmet, 2026-07-19: "alt tarafa açılsın").
+   ⚠️ Yerleşik `<select>`in açılma YÖNÜ tarayıcı kontrolündedir; alanın üstünü kapatarak
+   açılabiliyordu ve tema uygulanamıyordu. Kendi listemiz her zaman ALTA açılır ve panelin
+   diliyle aynı görünür.
+   `coklu` ile hem tek seçim (rol) hem çok seçim (departman) aynı bileşenden çıkıyor. */
+function Acilir({
+  label,
+  ozet,
+  secenekler,
+  secili,
+  onSec,
+  coklu = false,
+  disabled,
+}: {
+  label: string;
+  ozet: string;
+  secenekler: { id: string; label: string; ipucu?: string }[];
+  secili: string[];
+  onSec: (id: string) => void;
+  coklu?: boolean;
+  disabled?: boolean;
+}) {
+  const [acik, setAcik] = useState(false);
+  const kutu = useRef<HTMLDivElement>(null);
+
+  // Dışarı tıklama + Esc ile kapan (açık kalıp altındaki alanları örtmesin).
+  useEffect(() => {
+    if (!acik) return;
+    const disari = (e: MouseEvent) => {
+      if (kutu.current && !kutu.current.contains(e.target as Node)) setAcik(false);
+    };
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setAcik(false);
+    document.addEventListener("mousedown", disari);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", disari);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [acik]);
+
+  return (
+    <div className="adm-dd" ref={kutu}>
+      <span className="admin-field-label">{label}</span>
+      <button
+        type="button"
+        className={`adm-dd-btn${acik ? " on" : ""}`}
+        disabled={disabled}
+        aria-expanded={acik}
+        aria-haspopup="listbox"
+        onClick={() => setAcik((a) => !a)}
+      >
+        <span className="adm-dd-ozet">{ozet}</span>
+        <ChevronDown size={16} className="adm-dd-ok" />
+      </button>
+
+      {acik && (
+        <div className="adm-dd-panel" role="listbox">
+          {secenekler.map((s) => {
+            const on = secili.includes(s.id);
+            return (
+              <button
+                key={s.id}
+                type="button"
+                role="option"
+                aria-selected={on}
+                className={`adm-dd-item${on ? " on" : ""}`}
+                onClick={() => {
+                  onSec(s.id);
+                  if (!coklu) setAcik(false); // tek seçimde seçince kapan
+                }}
+              >
+                <span className="adm-dd-tik">{on && <Check size={13} strokeWidth={3} />}</span>
+                <span style={{ minWidth: 0 }}>
+                  <span className="adm-dd-item-label">{s.label}</span>
+                  {s.ipucu && <span className="adm-dd-item-ipucu">{s.ipucu}</span>}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* Departman seçici — davet formunda ve satır düzenlemede AYNI bileşen.
    Tek kaynak DEPARTMENTS (lib/supportShared) — burada liste ELLE yazılmaz. */
@@ -167,72 +253,56 @@ export default function EkipClient({
             />
           </div>
 
-          {/* Rol: iki kart yerine AÇILIR LİSTE (Mehmet, 2026-07-19) — kartlar e-posta
-              alanıyla aynı hizada durmuyordu, üst blok dağınık görünüyordu. Seçilen rolün
-              ne yapabildiği listenin ALTINDA yazıyor → bilgi kaybolmuyor, hizalama düzeliyor. */}
-          <div className="admin-invite-field">
-            <label className="admin-field-label" htmlFor="ekip-rol">
-              Rolü
-            </label>
-            <select
-              id="ekip-rol"
-              className="adm-login-input"
-              style={{ margin: 0, width: "100%" }}
-              value={role}
+          {/* SAĞ SÜTUN: rol + departman, ikisi de aynı açılır liste dili (Mehmet 2026-07-19) */}
+          <div className="admin-invite-right">
+            <Acilir
+              label="Rolü"
+              ozet={ROLES.find((r) => r.id === role)?.label ?? "Seç"}
+              secenekler={ROLES.map((r) => ({ id: r.id, label: r.label, ipucu: r.desc }))}
+              secili={[role]}
+              onSec={(id) => setRole(id as "admin" | "agent")}
               disabled={busy != null}
-              onChange={(e) => setRole(e.target.value as "admin" | "agent")}
-            >
-              {ROLES.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
-            <p className="admin-note" style={{ marginTop: 7 }}>
-              {ROLES.find((r) => r.id === role)?.desc}
-            </p>
+            />
+
+            {/* Departman yalnız Destek rolünde sorulur — yönetici zaten hepsini görür. */}
+            {role === "agent" ? (
+              <Acilir
+                label="Departmanlar"
+                ozet={
+                  deps.length === 0
+                    ? "Departman seç"
+                    : deps.length === DEPARTMENTS.length
+                      ? "Tüm departmanlar"
+                      : deps.map(departmentLabel).join(", ")
+                }
+                secenekler={DEPARTMENTS.map((d) => ({ id: d.id, label: d.label, ipucu: d.ipucu }))}
+                secili={deps}
+                coklu
+                onSec={(id) =>
+                  setDeps((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]))
+                }
+                disabled={busy != null}
+              />
+            ) : (
+              <div>
+                <span className="admin-field-label">Departmanlar</span>
+                <p className="admin-note" style={{ marginTop: 2 }}>
+                  Yönetici tüm departmanları görür — seçim gerekmez.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Departman yalnız Destek rolünde sorulur — yönetici zaten hepsini görür. */}
-        {role === "agent" ? (
-          <div className="admin-invite-field" style={{ marginTop: 16 }}>
-            <span className="admin-field-label">
-              Hangi departmanlara baksın? <span className="admin-req">gerekli</span>
-            </span>
-            <DepartmanSecici secili={deps} onChange={setDeps} disabled={busy != null} />
-            {depGerekli && (
-              <p className="admin-warn-inline">
-                <AlertTriangle size={12} /> En az bir departman seç — departmansız kişi hiçbir talep göremez.
-              </p>
-            )}
-          </div>
-        ) : (
-          <p className="admin-note" style={{ marginTop: 16 }}>
-            Yönetici tüm departmanları ve müşteri yönetimini görür — departman seçimi gerekmez.
+        {depGerekli && (
+          <p className="admin-warn-inline">
+            <AlertTriangle size={12} /> En az bir departman seç — departmansız kişi hiçbir talep göremez.
           </p>
         )}
 
+        {/* Altta: açıklama SOLDA, butonlar SAĞDA (Mehmet 2026-07-19) */}
         <div className="admin-invite-actions">
-          <button
-            type="button"
-            className="btn btn-primary btn-sm"
-            disabled={!email.trim() || busy != null || depGerekli}
-            onClick={() => run("invite", () => inviteStaff(email, role, deps), true)}
-          >
-            {busy === "invite" ? "Gönderiliyor…" : "Davet et"}
-          </button>
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            disabled={!email.trim() || busy != null || depGerekli}
-            onClick={() => run("grant", () => grantRole(email, role, deps), true)}
-          >
-            {busy === "grant" ? "…" : "Rol ver"}
-          </button>
-          {/* ⚠️ Metni tek <p> içinde <br/> ile bölme: JSX satır başı/sonu boşluklarını
-              kırpıyor ve "Rol ver— Paraner" gibi bitişik çıkıyordu. Her satır ayrı düğüm. */}
-          <div className="admin-note" style={{ flex: 1, minWidth: 240 }}>
+          <div className="admin-note admin-invite-help">
             <div>
               <b>Davet et:</b>{" "}
               <span>hiç hesabı yoksa — şifre oluşturma maili gider.</span>
@@ -241,6 +311,24 @@ export default function EkipClient({
               <b>Rol ver:</b>{" "}
               <span>Paraner&apos;e zaten kayıtlıysa — mail gitmez, rol hemen tanımlanır.</span>
             </div>
+          </div>
+          <div className="admin-invite-btns">
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              disabled={!email.trim() || busy != null || depGerekli}
+              onClick={() => run("grant", () => grantRole(email, role, deps), true)}
+            >
+              {busy === "grant" ? "…" : "Rol ver"}
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              disabled={!email.trim() || busy != null || depGerekli}
+              onClick={() => run("invite", () => inviteStaff(email, role, deps), true)}
+            >
+              {busy === "invite" ? "Gönderiliyor…" : "Davet et"}
+            </button>
           </div>
         </div>
       </div>
