@@ -130,11 +130,14 @@
       göndermeyi unutunca 403 alıp "politika fazla dar" diye yanlış alarm verecektim.
       ⚠️ **Kalan (RLS DEĞİL, kod guard'ı):** agent `/admin/musteriler` görmemeli — `requireAdminPage`
       kodda doğru duruyor ama sorguyla test edilemez, TARAYICI teyidi bekliyor.
-- [ ] **2) KARAR BEKLİYOR — test cihazı kayıtları:** `admin@paraner.com`'da 17 `user_devices`
-      satırı var, 16'sı 19.07 testlerinden (her testte yeni tarayıcı profili açılmıştı).
-      Silinsin mi? Silinirse Mehmet'in kendi tarayıcısı da gider → bir kez "yeni cihaz" maili
-      alır, sonra liste temiz olur. *(Sebep düzeltildi: artık kalıcı profil + oturum tazeleme
-      kullanılıyor, yeni çöp kayıt oluşmuyor.)*
+- [x] **2) ✅ TEST CİHAZI KAYITLARI TEMİZLENDİ (2026-07-19)** — 17 → **2**. Silinen 15 kayıt:
+      hepsi 19.07 03:23–05:07 arasında açılmış, neredeyse tümü **tek seferlik** (ilk=son görülme)
+      → headless test artığı. Mehmet "yeni cihaz" maili ALMADI (kendi tarayıcısı korundu).
+      **Kalan 2:** (a) 14.07'de açılıp 19.07'ye kadar kullanılan Bodrum kaydı = Mehmet'in güncel
+      tarayıcısı · (b) 14.07–17.07 arası kullanılan **Yalıkavak** kaydı — tek seferlik DEĞİL,
+      gerçek bir tarayıcı gibi duruyor, o yüzden DOKUNULMADI. **Mehmet'e sorulacak:** bu senin
+      başka bir cihazın/tarayıcın mı, yoksa o da mı gitsin?
+      *(Sebep düzeltildi: artık kalıcı profil + oturum tazeleme kullanılıyor, yeni çöp kayıt yok.)*
 - [ ] **3) Adım 6 — MOBİL departman seçimi** (Mehmet: web bitince). Mobilden açılan her talep
       hâlâ sessizce `teknik`'e düşüyor → satış talebi teknik kuyruğunda bekler.
 - [ ] 🔴 **Departman ayrımı canlı test edilmedi** (yukarıda Adım 4). Agent hesabı kalmadı
