@@ -117,6 +117,35 @@ select jobid, schedule, jobname, active from cron.job order by jobid;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
+-- 2026-07-19 ÖLÇÜMÜNÜN SONUCU (bir dahakine sıfırdan araştırma)
+--
+-- ÇAĞRI SAYISI sıralaması:
+--   1. `wal->>...`  635.577  → Supabase Realtime'ın WAL taraması
+--   2. `set_config search_path`  100.223  → bağlantı kurulumu (PostgREST/GoTrue)
+--   3. users/sessions/identities/mfa_factors  ~21.600'er → GoTrue, her getUser 4 sorgu
+--
+-- ⚠️ EN ÖNEMLİ NÜANS: 1 numara (Realtime) DİSK OKUMA listesinde HİÇ YOK.
+--    Yani "Disk IO Budget" uyarısının sebebi Realtime DEĞİL. Diski okuyanlar:
+--      · `base_types` / `pks_fks` özyinelemeli sorguları (594 + 383 + 33 blok)
+--        → ŞEMA INTROSPECTION: Supabase Studio sekmesi AÇIK kaldıkça ve PostgREST
+--          şema önbelleğini tazeledikçe çalışır. En büyük kaldıraç: Studio'yu kapat.
+--      · `DELETE FROM users` (396 blok) → hesap silme (seyrek, normal)
+--
+-- REALTIME YAYINI: notifications · ticket_messages · user_devices — ÜÇÜ DE KULLANILIYOR
+--   (çan, destek sohbeti, askıya alınanı anında atma). Hiçbiri çıkarılamaz.
+--   Kalp atışı zaten 5 dk'da bir ve sekme gizliyken duruyor → yazma yükü düşük.
+--
+-- YAPILAN DÜZELTMELER (2026-07-19):
+--   · getSessionUser + getStaffRoleResult React cache()'li → admin sayfası başına
+--     4 getUser (≈16 auth sorgusu) yerine 1.
+--   · LiveRefresh sayfaya duyarlı → liste ekranlarında otomatik yenileme yok.
+--
+-- KALAN: Realtime'ın WAL taraması Supabase'in kendi işleyişi; realtime kapatılmadan
+--   yok edilemez, kapatmak da 3 özelliği kırar. Bütçe periyodik yenileniyor;
+--   sürekli sıkıntı olursa karar Mehmet'te (compute yükseltme).
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- ═══════════════════════════════════════════════════════════════════════════
 -- NASIL OKUNUR
 -- · 1. listede `calls` binlerdeyse ve sorgu support_tickets/user_devices/profiles
 --   ise → suçlu panelin periyodik yenilemesiydi. 2026-07-19'da sayfaya duyarlı
