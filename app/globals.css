@@ -1771,6 +1771,9 @@ ul { list-style: none; }
 .notif-row-chevron { color: var(--text-dim); flex-shrink: 0; margin-top: 8px; }
 
 .panel-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+/* ⚠️ Yüksekliği (16+38+16+1 = 71px) İKİ yer daha kullanıyor: .tx-drawer üst konumu ve
+   yükleniyor göstergesinin optik ortalaması → tek kaynak olsun diye değişken. */
+:root { --panel-topbar-h: 71px; }
 .panel-topbar {
   display: flex; align-items: center; justify-content: flex-end; gap: 16px;
   padding: 16px 28px; border-bottom: 1px solid var(--border);
@@ -4460,16 +4463,38 @@ ul { list-style: none; }
   animation: admSpin 0.8s linear infinite;
 }
 /* Sayfa ortasındaki yükleniyor göstergesi — sol menü DAHİL DEĞİL (Mehmet, 2026-07-19).
-   ⚠️ YÜKSEKLİK HESABI: önce `min-height: 55vh` yazmıştım → kutu ekranın yalnız üst yarısını
-   kapladığı için gösterge 192px YUKARIDA kalıyordu (ölçüldü: 900px ekranda merkez 258,
-   olması gereken 450). Doğrusu görünür içerik alanının TAMAMI:
-   100dvh eksi içerik kutusunun dikey iç boşluğu (28px üst + 28px alt = 56px).
-   `.admin-content` ve `.panel-content` ikisi de `padding: 28px 32px` → tek kural yetiyor.
-   dvh (svh/lvh değil): mobil tarayıcı çubuğu açılıp kapanınca gösterge zıplamasın. */
+
+   ⚠️ YÜKSEKLİK: iki kez yanlış yaptım, üçüncüde sabit sayıdan tamamen vazgeçtim.
+     1) `min-height: 55vh` → kutu ekranın üst yarısını kaplıyordu, gösterge 192px YUKARIDA.
+     2) `calc(100dvh - 56px)` → admin'de doğruydu (2px) ama PANELDE 69px AŞAĞIDA kaldı:
+        panelin 71px'lik üst barını (.panel-topbar) hesaba katmıyordu, kutu ekranın
+        altından 43px taşıyordu. Admin'de öyle bir bar olmadığı için fark edilmemişti.
+     3) Doğrusu: sabit sayı YOK — kutu KALAN yüksekliği doldursun. `.admin-main` ve
+        `.panel-main` zaten dikey flex; içerik kutusunu da flex yapıp göstergeye flex:1
+        veriyoruz. Üst bar yüksekliği değişse de, yeni bir kabuk eklense de kendiliğinden
+        doğru kalır.
+   `:has(> .page-loading)`: bu esnetme YALNIZCA yükleniyor ekranındayken uygulanır,
+   normal sayfaların yerleşimine dokunmaz. */
+.admin-content:has(> .page-loading),
+.panel-content:has(> .page-loading) {
+  display: flex; flex-direction: column; flex: 1; min-height: 0;
+}
 .page-loading {
-  min-height: calc(100dvh - 56px);
+  flex: 1; min-height: 0;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 14px;
+}
+/* ⚠️ Panelde İÇERİK alanının ortası, EKRANIN ortası değildir: içerik 71px'lik üst barın
+   altından başlar → gösterge 35px aşağıda kalıyordu (Mehmet ekran görüntüsünden yakaladı).
+   Üst bar görsel olarak neredeyse boş (yalnız çan) olduğu için göz "sayfanın ortası" diye
+   EKRANIN ortasını bekliyor. Barın yarısı kadar yukarı çekiyoruz.
+   Admin'de böyle bir bar YOK (üst küme absolute) → orada bu kural uygulanmaz, zaten doğru. */
+/* ⚠️ Kutu `flex:1` olduğu için yalnız margin-top vermek YETMEZ: kutu uzuyor ve merkez
+   istenenin yarısı kadar kayıyor (ölçüm: 34px → 16px, hedef 0). Alttan da eşit boşluk
+   bırakınca kutu UZAMADAN yukarı kayıyor ve merkez tam oturuyor. */
+.panel-content > .page-loading {
+  margin-top: calc(var(--panel-topbar-h) / -2);
+  margin-bottom: calc(var(--panel-topbar-h) / 2);
 }
 .page-loading-ring {
   width: 30px; height: 30px; border-radius: 50%;
