@@ -69,13 +69,20 @@
 - [x] **Adım 1-3 TAMAM + canlı doğrulandı:** `sql/destek/destek-departman.sql` çalıştırıldı (department kolonu
       `DEFAULT 'teknik'` → **mobil eski sürüm kırılmadı**; `staff_departments`; `staff_sees_department()`;
       yeni talep → ekip+admin bildirimi). Müşteri formunda kart seçimi, admin'de rozet + filtre.
-- [ ] 🔴 **Adım 4 — RLS DARALTMASI — KOD HAZIR, ÇALIŞTIRILMADI:** `sql/destek/destek-departman-rls.sql`.
+- [x] **Adım 4 — RLS DARALTMASI ÇALIŞTIRILDI** (2026-07-19, `destek-departman-DOGRULAMA.sql` 13/13 ✅).
+      ⚠️ **AMA DEPARTMAN AYRIMI HİÇ TEST EDİLMEDİ** — "agent yalnız kendi departmanını görüyor mu"
+      sorusu açık. Test için agent-rolünde bir hesap gerek; `mgzrco@gmail.com` ekipten çıkarıldı,
+      şu an tek personel admin (o her şeyi görür, ayrımı göstermez). İlk gerçek personelden ÖNCE
+      `sql/destek/destek-departman-TEST.sql` ile doğrula.
+      *(eski not: KOD HAZIR, ÇALIŞTIRILMADI)* `sql/destek/destek-departman-rls.sql`.
       4 politika (`tickets_select`/`tickets_update`/`messages_select`/`messages_insert`) →
       `is_support_agent() AND staff_sees_department(...)`. K3 (sender_type↔rol) korundu,
       `tickets_update`'e WITH CHECK eklendi (agent talebi başka departmana taşıyamasın).
       ⚠️ **FAIL-CLOSED:** departman ataması olmayan agent HİÇ talep göremez → yeni personelde atama ŞART.
       ⚠️ Test C admin rolünü geçici kaldırıyor → geri alma satırlarını atlama.
-- [ ] **Adım 5 — EKİBE E-POSTA — KOD HAZIR, DEPLOY+SQL BEKLİYOR:** `sql/destek/destek-departman-bildirim.sql`
+- [x] **Adım 5 — EKİBE E-POSTA TAMAM** (2026-07-19): `support-new-ticket-notify` deploy edildi,
+      SQL çalıştırıldı, markalı mail canlı gönderilerek doğrulandı (`{"sent":true}`).
+      *(eski not: KOD HAZIR, DEPLOY+SQL BEKLİYOR)* `sql/destek/destek-departman-bildirim.sql`
       + yeni edge `support-new-ticket-notify`. **SIRA: önce `supabase functions deploy
       support-new-ticket-notify --no-verify-jwt`, SONRA SQL.**
       ⚠️ Eski not ("`support-reply-notify` alıcıyı departmana göre seçsin") **YANLIŞTI** — o fonksiyon
@@ -93,9 +100,8 @@
       **Markalı davet maili** (`lib/staffInvite.ts`): `generateLink('invite')` + Resend.
       Şifre kurma sayfası davet-farkında: metin değişiyor, **e-posta ekranda görünüyor**,
       personel şifre kurunca **admin.paraner.com**'a gidiyor (eskiden app.paraner.com'a atıyordu — hataydı).
-- [ ] ⚠️ **`RESEND_API_KEY` Vercel'e eklenmeli** (Production + Preview) — yoksa davet maili
-      Supabase'in SADE şablonuyla gider (sistem çalışır, sadece markasız). Anahtar Supabase →
-      Edge Functions → Secrets'ta duruyor, oradan kopyalanır. Eklenince `/admin/ekip`'ten test daveti at.
+- [x] ~~`RESEND_API_KEY` Vercel'e eklenmeli~~ — **GEREKMEDİ**: davet maili edge function'a taşındı
+      (`staff-invite-notify`), anahtar zaten orada. Vercel'e yeni env eklenmedi.
 - [ ] **İleride:** talebe not/atama (`assignee_id` kolonu duruyor, kullanılmıyor) · ek dosya (`ticket-attachments` bucket).
 
 ### 🎫 DESTEK SİSTEMİ — Faz 0 ✅ TAMAMLANDI (2026-07-16, uçtan uca doğrulandı)
@@ -110,6 +116,19 @@
 - [ ] **Faz 1:** mobil push — mobilde `withNoPushEntitlement` yüzünden remote push KAPALI, **ücretli Apple hesabı + APNs** ister (Mehmet kararı).
 - [ ] **Faz 2 (opsiyonel):** kullanıcı yeni mesajında agent'a bildirim · agent atama/öncelik/filtre · ek dosya yükleme (ticket-attachments bucket) · çanda "tümünü okundu".
 - [ ] ⚠️ **Google Workspace ödeme** — `merhaba@paraner.com` aboneliği 3 Ağu 2026'ya kadar yenilenmeli, yoksa TÜM sistem mailleri durur.
+
+### ⚡ 2026-07-19 OTURUMUNDAN KALANLAR
+- [ ] 🔴 **Departman ayrımı canlı test edilmedi** (yukarıda Adım 4). Agent hesabı kalmadı
+      (`mgzrco` ekipten çıkarıldı). İlk personel alınmadan ÖNCE `sql/destek/destek-departman-TEST.sql`.
+- [ ] **Supabase Studio sekmesini açık bırakma** — ölçüldü: "Disk IO Budget" uyarısının en büyük
+      kaynağı şema introspection sorguları (594+383 blok), Studio açık kaldıkça çalışıyorlar.
+      Realtime çağrı sayısında 1. ama disk okumada HİÇ YOK (`sql/admin/admin-yuk-teshis.sql`).
+- [ ] **ESLint yapılandırması yok** — `npm run lint` çalışmıyor, kod denetimi tsc + build'e kalmış.
+      Kullanılmayan değişken / eksik hook bağımlılığı / erişilebilirlik yakalanmıyor.
+- [ ] **Genel Bakış `transactions` limitsiz** (aşağıda da var) — panelin en yavaş sayfası (614 ms).
+- [ ] **Sayfa-özel iskeletler**: araştırma sonrası KARAR = şimdilik YAPMA. Bekleme nadir ve kısa
+      (sıcakken 200-400 ms); iskeletin kazancı uzun/sık beklemede. Bir sayfa düzenli 1 sn'yi
+      geçerse o zaman o sayfaya özel iskelet yazılır. (NN/G + LogRocket kaynakları DAILY_LOG'da.)
 
 ### 🐞 2026-07-14'te ortaya çıkan, HENÜZ YAPILMADI
 - [ ] **Yanlış şifreyle girişte kullanıcı hata görmüyor** — canlı denemede giriş reddedildi ama ekranda kalıcı bir uyarı yok (toast birkaç saniyede kayboluyor). `/giris` şifre akışında inline hata gösterilmeli.

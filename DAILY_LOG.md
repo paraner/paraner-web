@@ -16,6 +16,75 @@
 
 ---
 
+## 2026-07-19 — destek departman bitti · ekip daveti · disk IO teşhisi · yükleniyor UX
+
+**Destek departman yönlendirme TAMAMLANDI (Adım 4-5).** RLS daraltıldı (`destek-departman-rls.sql`,
+doğrulama 13/13 ✅): agent yalnız kendi departmanını görür, **fail-closed** — departmansız agent
+HİÇBİR talep göremez. `tickets_update`'e WITH CHECK eklendi (agent talebi başka departmana taşıyıp
+kendi görüş alanından çıkaramasın), `messages_insert`'e departman koşulu (göremediği talebe yazamasın),
+K3 korundu. Adım 5: yeni talepte ekibe **e-posta** (`support-new-ticket-notify`) — canlı gönderilerek
+doğrulandı. ⚠️ **Tetikleyici `support_tickets` DEĞİL ilk müşteri mesajı**: createTicket önce ticket'ı
+sonra mesajı yazıyor, ticket anında gövde henüz yok → mail içeriksiz giderdi.
+⚠️ **GOREVLER'deki Adım 5 tanımı YANLIŞTI** (`support-reply-notify` alıcıyı departmana göre seçsin):
+o fonksiyon agent yanıtını MÜŞTERİYE yollar, seçilecek alıcı yok. Gerçek eksik ters yöndü.
+🔴 **AÇIK: departman ayrımı hiç canlı test edilmedi** — agent hesabı kalmadı, ilk personelden önce şart.
+
+**Ekip daveti uçtan uca kuruldu.** Boşluk: `inviteStaff` rol yazıyor ama departman yazmıyordu →
+fail-closed RLS yüzünden davet edilen destekçi HİÇBİR talep göremiyordu, üstelik **sessizce**.
+Artık davette departman ZORUNLU (grantRole'de de), listede değiştirilebiliyor, departmansız
+destekçiye uyarı çıkıyor. Markalı davet maili (`staff-invite-notify` edge) + `/sifre-olustur`
+rotası (kişi şifre SIFIRLAMIYOR, İLK KEZ oluşturuyor) + davet-farkında ekran (e-posta görünür,
+personel şifre kurunca **admin.paraner.com**'a gider — eskiden app.paraner.com'a atıyordu = hata).
+⚠️ **Ders:** edge function'da yetkiyi anahtar KARŞILAŞTIRARAK doğrulamak kırılgan — iki sistemdeki
+değer aynı olmak zorunda değil (canlıda 401 verdi). Yeteneğe göre doğrulama: gelen anahtarla
+yalnız service_role'ün yapabileceği bir çağrı denenir.
+
+**🔴 GEÇİCİ DB HATASI YÖNETİCİYİ PANELDEN ATIYORDU.** `adminGuard` rol sorgusunun `error`'unu hiç
+okumuyordu; PostgREST "schema cache" hatasında `data` null gelince kod bunu "rolü yok" sanıp
+`/panel`'e yönlendiriyordu. Artık "rol yok" ile "sorgu patladı" ayrı; şema hatası geçici olduğu için
+bir kez yeniden deniyor; hata sürerse yönlendirme yok, `app/admin/error.tsx` "tekrar dene" diyor.
+
+**Saat dilimi — görüntü hatası değil, VERİ hatası.** `toLocaleString("tr-TR")` çağrılarında timeZone
+yoktu; sunucu (Vercel) UTC'de çalıştığı için SSR çıktısı **3 saat geriydi** (destek yazışmasında
+"son mesaj 11:35" oysa 14:35). Hydration hatası (#418) bunun yan etkisiydi. `lib/format.ts`'e tek
+kaynak (`TZ` + biçimlendiriciler), 9 dosya ona bağlandı.
+
+**Müşteri VERİSİNİ düzeltme.** Tüm müşteri aksiyonları hesap seviyesindeydi; yanlış girilmiş veriyi
+düzeltmenin yolu yoktu. Eklendi: profil adı/hesap türü/para birimi + giriş e-postası değiştirme.
+Sözlükler kaynaktan doğrulandı (profile_type VERİDEN: individual/business; para birimi
+`lib/currencies.ts`) — DB'de CHECK yok, uydurma değer sessizce kaydolurdu.
+
+**⚡ "Disk IO Budget" uyarısı — ölçüldü, iki hipotezim de çürüdü.**
+1. "Panelin periyodik yenilemesi" sandım → ölçüm: 1. sırada Realtime WAL taraması (635.577 çağrı).
+2. Ama asıl nüans: **Realtime disk OKUMA listesinde HİÇ YOK.** Diski yoran şema introspection
+   sorguları (594+383 blok) → **Supabase Studio sekmesi açık kaldıkça**. En büyük kaldıraç bu.
+Realtime yayınındaki 3 tablonun üçü de kullanılıyor (çan/destek sohbeti/askıya alınanı atma) —
+çıkarılabilecek tablo yok. Yapılan gerçek kazançlar: `getSessionUser`+`getStaffRoleResult` React
+`cache()` ile **sayfa başına 4 getUser (≈16 auth sorgusu) → 1**; LiveRefresh sayfaya duyarlı
+(canlı 30sn · pano 2dk · liste ekranlarında YOK). Teşhis: `sql/admin/admin-yuk-teshis.sql`.
+
+**`/admin` 3,6 sn → 205 ms.** Ölçüm yanlış teşhisi düzeltti: soğuk başlangıç DEĞİL (statik sayfa
+sıcakken 59 ms), sayfanın kendi 8 sorgusu — her biri 300-850 ms, 9 SATIRLIK tablolarda (DB throttle).
+Pano metrikleri `unstable_cache` ile 120 sn önbellekli.
+🔴 **Ama önce BOZDUM:** oturum gerektiren üç metriği de önbelleğe almıştım, `unstable_cache` içinde
+cookie okumak yasak → sayfa komple patladı. **Asıl hatam ölçümdeydi**: 205 ms görüp "hızlandı" dedim,
+oysa sayfa HIZLI HATA veriyordu (hata ekranı da 200 döner). Artık testler süreyi VE içeriğin
+gerçekten çizildiğini birlikte kontrol ediyor.
+
+**Yükleniyor göstergesi.** Araştırma (NN/G, LogRocket): iskelet içerik sayfaları için daha iyi,
+spinner kısa işlemler için. **Ama bizim ölçümümüz kararı değiştirdi**: sayfalar sıcakken 200-400 ms,
+bekleme nadir → 5 sayfaya özel iskelet yazmak görünmeyen şeye emek. Karar: ortada tek gösterge,
+sayfa özel iskeletler bir sayfa düzenli 1 sn'yi geçerse. Menüdeki spinner denendi, Mehmet istemedi.
+⚠️ **Ortalama üç kez yanlış yapıldı** (55vh → 192px yukarı; calc(100dvh-56px) → panelde 69px aşağı,
+çünkü 71px'lik üst bar hesaba katılmamıştı; flex:1 kutuyu uzattığı için margin-top tek başına
+yarım kayma). Doğrusu: sabit sayı YOK, kutu kalan yüksekliği doldurur + panelde üst barın yarısı
+kadar telafi (üst/alt eşit margin). 4 ekran boyutunda -2px doğrulandı.
+
+**Proje kökü temizlendi:** 20 dosya `docs/` ve `sql/` altına taşındı (`sql/README.md`: hangi dosya ne
+yapar, sırası, hangisi diğerini ezer). Hiçbir şey SİLİNMEDİ — hepsi referanslı, SQL'ler migration kaydı.
+
+---
+
 ## 2026-07-18 (öğleden sonra) — buton dili · admin paneli · destek departman yönlendirme
 
 **Butonlar titanyuma geçti + KÖK NEDEN düzeltildi.** Mehmet "butonlar neden hâlâ yeşil, biz bunun
