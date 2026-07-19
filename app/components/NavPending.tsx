@@ -63,15 +63,24 @@ export default function NavPending() {
       setKutu(null);
       return;
     }
-    /* Sol menünün sağ kenarı + (varsa) üst barın altı ÖLÇÜLEREK bulunuyor; sabit sayı YOK.
-       Sebep: panel menüsü daraltılabiliyor ve sürüklenerek yeniden boyutlanıyor, admin'de
-       üst bar yok. Sabit değer yazmak 19.07'deki "gösterge 69px aşağıda" hatasının aynısı olurdu. */
-    const yan = document.querySelector(".admin-sidebar, .panel-sidebar");
+    /* Konum ÖLÇÜLEREK bulunuyor, sabit sayı YOK: panel menüsü daraltılabiliyor, sürüklenerek
+       yeniden boyutlanıyor, admin'de üst bar yok. Sabit değer yazmak 19.07'deki "gösterge
+       69px aşağıda" hatasının aynısı olurdu.
+
+       ⚠️ ÖLÇÜLEN ŞEY İÇERİK SÜTUNU (`.panel-main`/`.admin-main`), sol menü DEĞİL — ilk yazdığım
+       "menünün sağ kenarı" MOBİLDE ÇÖKÜYORDU: `@media (max-width: 760px)` (globals.css:1911)
+       `.panel-shell`i sütuna çeviriyor ve `.panel-sidebar`ı TAM GENİŞLİK yapıyor → `right` =
+       ekran genişliği → kutu `left:390px, right:0` yani SIFIR GENİŞLİK olup telefonda hiç
+       görünmüyordu. İçerik sütunu iki yerleşimde de doğru: masaüstünde menünün sağında,
+       mobilde yığılmış menünün altında. */
+    const sutun = document.querySelector(".admin-main, .panel-main");
     const bar = document.querySelector(".panel-topbar");
     const kabuk = document.querySelector(".admin-shell, .panel-shell");
+    const sr = sutun?.getBoundingClientRect();
     setKutu({
-      left: yan ? yan.getBoundingClientRect().right : 0,
-      top: bar ? bar.getBoundingClientRect().bottom : 0,
+      left: sr ? sr.left : 0,
+      // Üst bar sütunun İÇİNDE → altından başla. Bar yoksa (admin) sütunun kendi üstü.
+      top: bar ? bar.getBoundingClientRect().bottom : sr ? sr.top : 0,
       /* ⚠️ HALKA loading.tsx'inkiyle AYNI YERDE durmalı, yoksa ikisi arka arkaya çıkınca
          (kabuk prefetch'li ama veri değilse) halka gözle görülür biçimde ZIPLIYOR.
          loading.tsx panelde `margin-top: calc(var(--panel-topbar-h) / -2)` ile optik olarak
