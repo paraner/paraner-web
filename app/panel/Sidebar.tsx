@@ -288,6 +288,9 @@ export default function Sidebar({
           <NavLink
             href={item.href}
             className={`nav-subitem${isActive(item.href) ? " active" : ""}`}
+            /* Daraltılmışken etiket gizlendiği için adı balonda göster (üst öğelerle aynı desen).
+               Açıkken title verilmez → gereksiz balon çıkmasın. */
+            title={collapsed ? item.label : undefined}
             unstable_dynamicOnHover
           >
             <span className="nav-subicon">{item.icon}</span>
@@ -656,6 +659,8 @@ export default function Sidebar({
           {isBusiness && favItems.length > 0 && (
             <div className="nav-group nav-fav-group">
               <div className="nav-group-label">FAVORİLER</div>
+              {/* Daraltılmışken bu bölüm GİZLENMİYOR (2026-07-19): ikonlar rayda kalıyor —
+                  daraltılmış menü zaten "hızlı erişim" modu, favorinin en çok işe yaradığı yer orası. */}
               {favItems.map(({ key, item }) => renderSubRow(item, key))}
             </div>
           )}

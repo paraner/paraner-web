@@ -1681,7 +1681,20 @@ ul { list-style: none; }
 
 /* Favoriler grubu — girintisiz hızlı erişim listesi */
 .nav-fav-group .nav-subitem { padding-left: 10px; }
-.panel-sidebar.collapsed .nav-fav-group { display: none; }
+/* ⚠️ ESKİDEN `display:none` İDİ — daraltılınca favoriler tamamen kayboluyordu (Mehmet, 2026-07-19).
+   Oysa daraltılmış menü tam olarak "hızlı erişim rayı"; favorinin en çok işe yaradığı yer orası.
+   Şimdi ikon olarak duruyorlar: etiket gizli, ikon ortalı, ad hover'da balonda (title).
+   Hover'la AÇILAN MENÜ yapılmadı — bilinçli: dokunmatikte hover yok, el titremesinde menü
+   kaçıyor, WCAG önemli içerik için tıklama öneriyor. Tek tık > iki adım. */
+.panel-sidebar.collapsed .nav-fav-group .nav-subitem-row { justify-content: center; }
+.panel-sidebar.collapsed .nav-fav-group .nav-subitem { justify-content: center; padding: 10px; gap: 0; }
+/* Yıldız (favoriden çıkar) düğmesi dar rayda sığmıyor → yalnız açıkken görünür.
+   Favoriden çıkarmak nadir bir iş; menüyü açıp yapılır. */
+.panel-sidebar.collapsed .nav-fav-group .nav-fav-btn { display: none; }
+/* Favorileri alttaki bölüm ikonlarından ayıran ince çizgi — hangi ikonun ne olduğu karışmasın */
+.panel-sidebar.collapsed .nav-fav-group {
+  padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid var(--border);
+}
 
 /* Daraltılmışken bölüm başlıkları sadece ikon, chevron gizli */
 .panel-sidebar.collapsed .nav-section-head { justify-content: center; padding: 8px; }
