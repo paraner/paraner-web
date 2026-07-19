@@ -118,6 +118,17 @@
 - [ ] ⚠️ **Google Workspace ödeme** — `merhaba@paraner.com` aboneliği 3 Ağu 2026'ya kadar yenilenmeli, yoksa TÜM sistem mailleri durur.
 
 ### ⚡ 2026-07-19 OTURUMUNDAN KALANLAR
+> **Yeni sohbete başlarken önce buraya bak.** Sıra önerisi: 1 → 2 → 3.
+- [ ] **1) 🔴 Departman ayrımı canlı test** — en kritik açık iş, kod hazır ama doğrulanmadı.
+      `sql/destek/destek-departman-TEST.sql`. Agent rolünde hesap gerekiyor (mgzrco ekipten
+      çıkarıldı, şu an tek personel admin → ayrım görünmez). **İlk gerçek personelden ÖNCE.**
+- [ ] **2) KARAR BEKLİYOR — test cihazı kayıtları:** `admin@paraner.com`'da 17 `user_devices`
+      satırı var, 16'sı 19.07 testlerinden (her testte yeni tarayıcı profili açılmıştı).
+      Silinsin mi? Silinirse Mehmet'in kendi tarayıcısı da gider → bir kez "yeni cihaz" maili
+      alır, sonra liste temiz olur. *(Sebep düzeltildi: artık kalıcı profil + oturum tazeleme
+      kullanılıyor, yeni çöp kayıt oluşmuyor.)*
+- [ ] **3) Adım 6 — MOBİL departman seçimi** (Mehmet: web bitince). Mobilden açılan her talep
+      hâlâ sessizce `teknik`'e düşüyor → satış talebi teknik kuyruğunda bekler.
 - [ ] 🔴 **Departman ayrımı canlı test edilmedi** (yukarıda Adım 4). Agent hesabı kalmadı
       (`mgzrco` ekipten çıkarıldı). İlk personel alınmadan ÖNCE `sql/destek/destek-departman-TEST.sql`.
 - [ ] **Supabase Studio sekmesini açık bırakma** — ölçüldü: "Disk IO Budget" uyarısının en büyük
@@ -126,6 +137,9 @@
 - [ ] **ESLint yapılandırması yok** — `npm run lint` çalışmıyor, kod denetimi tsc + build'e kalmış.
       Kullanılmayan değişken / eksik hook bağımlılığı / erişilebilirlik yakalanmıyor.
 - [ ] **Genel Bakış `transactions` limitsiz** (aşağıda da var) — panelin en yavaş sayfası (614 ms).
+- [ ] **Favoriler eşiği:** favori sayısı 8-10'u geçerse daraltılmış ray uzar → o zaman
+      "Favoriler" düğmesi + **TIKLAMAYLA** açılan liste değerlendirilir (hover DEĞİL; sebep
+      DAILY_LOG 19.07). Şu an ikon olarak rayda duruyorlar, sorun yok.
 - [ ] **Sayfa-özel iskeletler**: araştırma sonrası KARAR = şimdilik YAPMA. Bekleme nadir ve kısa
       (sıcakken 200-400 ms); iskeletin kazancı uzun/sık beklemede. Bir sayfa düzenli 1 sn'yi
       geçerse o zaman o sayfaya özel iskelet yazılır. (NN/G + LogRocket kaynakları DAILY_LOG'da.)

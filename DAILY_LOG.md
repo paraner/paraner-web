@@ -80,6 +80,25 @@ sayfa özel iskeletler bir sayfa düzenli 1 sn'yi geçerse. Menüdeki spinner de
 yarım kayma). Doğrusu: sabit sayı YOK, kutu kalan yüksekliği doldurur + panelde üst barın yarısı
 kadar telafi (üst/alt eşit margin). 4 ekran boyutunda -2px doğrulandı.
 
+**Sol panel + menü cilası (gün sonu).** ① Kapalı sol panel her yenilemede AÇILIP kapanıyordu
+(ölçüm: 315ms'de 248px → 566ms'de 74px). Sebep: tercih localStorage'daydı, sunucu onu göremediği
+için hep "açık" render ediyordu. **Çereze taşındı** → ilk HTML doğru genişlikte, zıplama yok
+(+ mevcut kullanıcılar tercihini kaybetmesin diye tek seferlik taşıma).
+② Daraltılınca **favoriler tamamen kayboluyordu** (`display:none`); artık rayda ikon olarak
+duruyorlar (ad balonda, tek tık). Mehmet'in "alta taşı + hover'la açılan liste" önerisi
+araştırma sonrası UYGULANMADI: hover dokunmatikte yok + WCAG tıklama öneriyor + alt bölge
+az-kullanılan bölgedir + favori = tek tıkla erişim (W3C WAI, Level Access, Pencil&Paper).
+③ Aktif menü öğesindeki **sol titanyum şerit** üç yerden de kaldırıldı (panel menü, panel alt
+öğeler, admin menü) — çerçeve yeterli.
+
+**🔴 TEST OTURUMU — yeni cihaz maili yağmuru.** Her test betiği sıfırdan tarayıcı açıp
+password-grant yapıyordu → her seferinde yeni oturum + yeni cihaz → `admin@paraner.com`'a
+sürekli "yeni cihazdan giriş" maili (bir günde 16 cihaz kaydı). ⚠️ Hafızada zaten "kalıcı
+userDataDir kullan" notu vardı, uyulmadı. Kurulan yapı: kalıcı Chrome profili
+(`~/Library/Caches/paraner-test-chrome`) + `refresh_token` ile tazeleme; gerçek giriş yalnız
+profil yoksa. Ölçümle doğrulandı: 1. koşuda giriş, 2. ve 3. koşuda `last_sign_in` DEĞİŞMEDİ.
+İş bitince `oturum.mjs cikis` → Supabase oturumu kapatılır + profil silinir (bu oturumda yapıldı).
+
 **Proje kökü temizlendi:** 20 dosya `docs/` ve `sql/` altına taşındı (`sql/README.md`: hangi dosya ne
 yapar, sırası, hangisi diğerini ezer). Hiçbir şey SİLİNMEDİ — hepsi referanslı, SQL'ler migration kaydı.
 
