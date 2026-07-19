@@ -4,7 +4,7 @@ import { createClient } from "./supabase/server";
 
 /* Genel Bakış (aksiyon panosu) metrikleri.
 
-   RPC'ler: admin-panel-rpc.sql (Mehmet çalıştırır). SQL çalıştırılmadıysa panel BOZULMASIN
+   RPC'ler: sql/admin/admin-panel-rpc.sql (Mehmet çalıştırır). SQL çalıştırılmadıysa panel BOZULMASIN
    diye ucuz olanların JS yedeği var; modül benimsemenin yedeği YOK (22 ayrı sorgu gerekir)
    → o panel "SQL çalıştırılmadı" der. Yedekler mevcut ölçekte doğru sonuç verir ama
    binlerce kayıtta RPC şart (tüm user_id kolonunu çekiyorlar).
@@ -57,7 +57,7 @@ export async function getDeadProfileCount(): Promise<number> {
   const { data, error } = await supabase.rpc("admin_dead_profile_count");
   if (!error && typeof data === "number") return data;
 
-  // Eski RPC'ye düş (admin-denetim-fix-olcek.sql henüz çalıştırılmadıysa).
+  // Eski RPC'ye düş (sql/admin/admin-denetim-fix-olcek.sql henüz çalıştırılmadıysa).
   const legacy = await supabase.rpc("admin_dead_profiles");
   if (!legacy.error && Array.isArray(legacy.data)) return legacy.data.length;
 

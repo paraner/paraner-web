@@ -45,12 +45,12 @@ hiçbir şey yapmaz. Admin menüsüne `router.prefetch(kind:"full")` + `unstable
 ⚠️ Ayrıca fark edildi: **CLAUDE.md'de admin paneli HİÇ GEÇMİYORDU** — yeni bir Claude varlığından
 haberdar olmazdı; kuralın uygulanmamasının asıl sebebi buydu. Domain listesine + dizin ağacına eklendi.
 
-**★ DESTEK DEPARTMAN YÖNLENDİRME (Adım 1-3) ★** — plan: `DESTEK-DEPARTMAN-PLAN.md`.
+**★ DESTEK DEPARTMAN YÖNLENDİRME (Adım 1-3) ★** — plan: `docs/DESTEK-DEPARTMAN-PLAN.md`.
 Mehmet: "müşteri talep açarken departman seçsin; satış talebini muhasebe görmesin, admin her şeyi
 görsün." Kod yazmadan önce etki haritası çıkarıldı (CLAUDE.md kuralı), Mehmet 3 kararı verdi:
 **4 departman** (Teknik/Satış/Faturalandırma/Öneri) · **öncelik müşteriye SORULMAZ** (herkes "yüksek"
 seçer → alan bilgi taşımaz olur; departmandan türetiliyor) · şema izni.
-- **DB** (`destek-departman.sql`, çalıştırıldı + canlı doğrulandı): `support_tickets.department`
+- **DB** (`sql/destek/destek-departman.sql`, çalıştırıldı + canlı doğrulandı): `support_tickets.department`
   (CHECK + **`DEFAULT 'teknik'` → MOBİL ESKİ SÜRÜM KIRILMADI**, App Store beklenmedi) ·
   `staff_departments` tablosu (user_roles'a kolon DEĞİL: oranın PK'sı `(user_id, role)`) ·
   `staff_sees_department()` (admin her zaman true) · **yeni talep → o ekip + tüm admin'lere bildirim**
@@ -75,14 +75,14 @@ seçer → alan bilgi taşımaz olur; departmandan türetiliyor) · şema izni.
    tabloda 0 döndüğü için panel "3 profil kullanıyor · 0 kayıt" diyordu. Hibrit'e çevrildi
    (<50.000 gerçek sayım, üstünde tahmin).
 
-**Doğrulama akışı kuruldu:** `admin-denetim-DOGRULAMA.sql` — sadece OKUYAN 8 satırlık ✅/❌ tablosu.
+**Doğrulama akışı kuruldu:** `sql/admin/admin-denetim-DOGRULAMA.sql` — sadece OKUYAN 8 satırlık ✅/❌ tablosu.
 "Success dedi" ≠ "durum doğru". Sonuç **8/8 ✅**.
 
 ## 2026-07-18 — /admin panel denetimi (4 ajan) + 3 kritik + 6 yüksek düzeltme
 
 `/admin/ai` hatası kapandıktan sonra Mehmet panelin genel denetimini istedi. 4 paralel ajan
 (güvenlik · doğruluk · SQL/RPC · UX), **her kritik bulgu elle doğrulandı**. Tam rapor:
-`DENETIM-ADMIN-2026-07-18.md`. Mimari sağlam çıktı (service_role tarayıcıya sızmıyor —
+`docs/DENETIM-ADMIN-2026-07-18.md`. Mimari sağlam çıktı (service_role tarayıcıya sızmıyor —
 `server-only` her yerde; 7 server action'ın 7'si de guard'lı; enjeksiyon/IDOR/XSS yok;
 denetim kaydı client'tan silinemiyor; bugünkü tip tuzağının başka RPC'de kopyası yok).
 
@@ -148,7 +148,7 @@ başarısızlık + doğrulanmamış iddia). **Mekanizma:** mevcut bir tanımı y
 `sed`/`grep` ile kaynaktan çek ve `diff` ile kanıtla; otomatik üretilen adları (FK/indeks) tahmin etme,
 catalog'dan bul. → hafıza: [[liste-tanim-kopyalarken-uydurma]].
 
-**Doğrulama akışı kuruldu:** `admin-denetim-DOGRULAMA.sql` — sadece OKUYAN, 8 satırlık ✅/❌ tablosu
+**Doğrulama akışı kuruldu:** `sql/admin/admin-denetim-DOGRULAMA.sql` — sadece OKUYAN, 8 satırlık ✅/❌ tablosu
 (eksikse hangi dosya çalıştırılacak yazıyor). "Success dedi" ≠ "durum doğru"; artık ölçülüyor.
 **Sonuç: 8/8 ✅** (Mehmet ekran görüntüsüyle teyit etti). Ayrıca `ai-usage-rpc-fix.sql` GEÇERSİZ
 işaretlendi — içindeki `admin_ai_usage` hâlâ K2 hatalı, sonradan çalıştırılsa K2'yi sessizce geri alırdı.
@@ -170,7 +170,7 @@ Mehmet ekran görüntüsü gönderdi: `admin.paraner.com/admin/ai` → *"Veri ok
 
 ## 2026-07-17 — /admin iç ekip paneli · AI TOKEN + MALİYET takibi (hesap bazlı)
 
-Admin paneli (`/admin`, `admin-panel-rpc.sql` + `admin-audit-log.sql`) üstüne AI maliyet ölçümü eklendi. **Amaç:** "Hangi hesap ne kadar AI maliyeti harcadı?" — cevabı yoktu; Gemini her yanıtta `usageMetadata` (token) döndürüyordu ama `ai-chat` edge function'ı metni alıp gerisini ATIYORDU → token hiç kaydedilmemişti.
+Admin paneli (`/admin`, `sql/admin/admin-panel-rpc.sql` + `sql/admin/admin-audit-log.sql`) üstüne AI maliyet ölçümü eklendi. **Amaç:** "Hangi hesap ne kadar AI maliyeti harcadı?" — cevabı yoktu; Gemini her yanıtta `usageMetadata` (token) döndürüyordu ama `ai-chat` edge function'ı metni alıp gerisini ATIYORDU → token hiç kaydedilmemişti.
 
 **⚠️ İki repo + DB + edge — sıra kritikti** (yanlış sıra kota sayacını bozup kullanıcılara sınırsız AI verebilirdi). Uygulanan sıra:
 1. **DB** (`paraner-web/admin-panel-rpc.sql` → sonra `paraner-app/supabase/ai-token-maliyet.sql`) — çalıştırıldı + **service_role ile canlı doğrulandı** (kolonlar, tablo, RPC'ler, geriye uyum hepsi ✅).
@@ -204,8 +204,8 @@ Uzun oturum, çoğu Defteran (rakip) paritesi. Sırayla:
 
 **Sol menü:** Ayarlar + **Destek** + **Çıkış Yap** (rakip paritesi). `/panel/destek` sayfası: rakip deseni (üst kart + Talep Oluştur + hazır soru-yanıt + WhatsApp/e-posta).
 
-**★ DESTEK SİSTEMİ — Faz 0 (web + mobil, ORTAK Supabase) ★** — detay `DESTEK-SISTEMI.md` + `DESTEK-SEMA-MOBIL.md`. Mehmet gerçek ticket+chat sistemi istedi (talep → taleplerim → agent yanıtı → e-posta + çan + push). 2 araştırma (sektör mimarisi + altyapı denetimi) → "conversational ticketing". **Mobil Claude ile mutabakat sağlandı** (Mehmet kopyala-yapıştır ile iki Claude'u konuşturdu). Kuruldu:
-- **Şema (`destek-faz0.sql`, Supabase'de çalıştırıldı):** `support_tickets`, `ticket_messages`, `notifications`, `user_roles` + RLS (kullanıcı kendi / agent hepsi, `is_support_agent()`) + realtime publication + `notify_on_agent_reply` trigger (agent mesajı → `notifications` INSERT, `data.ticket_id` HER ZAMAN) + DELETE policy. Sahiplik `auth.users.id` (KİŞİ — "her yerde profile.id" kuralının bilinçli istisnası, iki taraf onayladı).
+**★ DESTEK SİSTEMİ — Faz 0 (web + mobil, ORTAK Supabase) ★** — detay `docs/DESTEK-SISTEMI.md` + `docs/DESTEK-SEMA-MOBIL.md`. Mehmet gerçek ticket+chat sistemi istedi (talep → taleplerim → agent yanıtı → e-posta + çan + push). 2 araştırma (sektör mimarisi + altyapı denetimi) → "conversational ticketing". **Mobil Claude ile mutabakat sağlandı** (Mehmet kopyala-yapıştır ile iki Claude'u konuşturdu). Kuruldu:
+- **Şema (`sql/destek/destek-faz0.sql`, Supabase'de çalıştırıldı):** `support_tickets`, `ticket_messages`, `notifications`, `user_roles` + RLS (kullanıcı kendi / agent hepsi, `is_support_agent()`) + realtime publication + `notify_on_agent_reply` trigger (agent mesajı → `notifications` INSERT, `data.ticket_id` HER ZAMAN) + DELETE policy. Sahiplik `auth.users.id` (KİŞİ — "her yerde profile.id" kuralının bilinçli istisnası, iki taraf onayladı).
 - **Web:** `lib/support.ts` (createTicket/sendMessage/resolveTicket/subscribeMessages realtime), Destek DB'li (Talep Oluştur + Taleplerim + agent "Gelen Talepler"), chat thread `/panel/destek/[id]` (balonlar + realtime + Çözüldü), NotificationBell → gerçek `notifications` (fetch + realtime INSERT + okundu + tıkla-route).
 - **Mobil (mobil repo):** aynı tablolar, hibrit çan (local+remote), thread, `support-reply-notify` edge function (Resend, `merhaba@paraner.com`, `RESEND_API_KEY`, `x-support-secret`) — notifications INSERT'i YAPMAZ (trigger yapıyor), sadece e-posta. Deploy edildi ✅.
 - **Test:** web'de talep→thread→mesaj→Taleplerim + agent gelen kutusu (admin@paraner.com agent yapıldı) headless doğrulandı. e-posta hariç çekirdek çalışıyor.
@@ -237,7 +237,7 @@ Mehmet "Defteran'da tıklayınca anında açılıyor, bizde bekletiyor" dedi. İ
 
 18 commit. Mehmet "rakibi incele" ile başladı, oradan çıkan eksikler sırayla kapatıldı. Referans olarak **resend.com** ölçülerek taklit edildi (tahminle değil: headless ile DOM/CSS/geçiş ölçümü).
 
-**Rakip analizi — `RAKIP-defteran.md`** (4 paralel ajan, 180 URL). Ürün olarak biz öndeyiz (34 modül; bütçe/KDV/vergi takvimi/veresiye/Cüzdanım onlarda YOK), pazarlama makinesi olarak onlar çok önde (bizde 2 URL'lik sitemap, onlarda 180: akademi 32 ders, sözlük 21, 9 hesaplayıcı, `llms.txt`+AI crawler daveti). Fiyat ₺750/ay tek paket. **Her iddia elle doğrulandı** — ajanların 2 SEO yanlışı (canonical/keywords "yok" demişlerdi, VARDI) düzeltildi. Bizde gerçekten eksik: e-Fatura/GİB, **fatura kalem editörü** (e-Fatura + teklif→fatura + stok düşümü üçü buna kilitli), Excel import, mutabakatta paylaşım linki, PDF rapor, puantaj. Onlarda da yok: banka entegrasyonu, OCR, offline.
+**Rakip analizi — `docs/RAKIP-defteran.md`** (4 paralel ajan, 180 URL). Ürün olarak biz öndeyiz (34 modül; bütçe/KDV/vergi takvimi/veresiye/Cüzdanım onlarda YOK), pazarlama makinesi olarak onlar çok önde (bizde 2 URL'lik sitemap, onlarda 180: akademi 32 ders, sözlük 21, 9 hesaplayıcı, `llms.txt`+AI crawler daveti). Fiyat ₺750/ay tek paket. **Her iddia elle doğrulandı** — ajanların 2 SEO yanlışı (canonical/keywords "yok" demişlerdi, VARDI) düzeltildi. Bizde gerçekten eksik: e-Fatura/GİB, **fatura kalem editörü** (e-Fatura + teklif→fatura + stok düşümü üçü buna kilitli), Excel import, mutabakatta paylaşım linki, PDF rapor, puantaj. Onlarda da yok: banka entegrasyonu, OCR, offline.
 
 **Yeni sayfalar + nav:**
 - **`/destek`** — 9 SSS (JS'siz `<details>`) + **FAQPage schema** (ilk rich-snippet fırsatımız), WhatsApp `+90 532 237 99 09` (mobil `help.tsx` ile aynı numara) + destek@paraner.com. e-Fatura sorusuna DÜRÜST yanıt ("yol haritamızda").

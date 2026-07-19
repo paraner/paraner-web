@@ -2,7 +2,7 @@
 
 4 paralel ajan (güvenlik · doğruluk · SQL/RPC · UX) + her kritik bulgu elle doğrulandı.
 Kapsam: `app/admin/**`, `lib/admin*.ts`, `lib/lifecycle.ts`, `lib/aiPricing.ts`, `proxy.ts`,
-`admin-panel-rpc.sql`, `admin-audit-log.sql`, `destek-faz0.sql`,
+`sql/admin/admin-panel-rpc.sql`, `sql/admin/admin-audit-log.sql`, `sql/destek/destek-faz0.sql`,
 `paraner-app/supabase/ai-token-maliyet.sql` + `ai-usage-rpc-fix.sql` + `daily-ai-usage-cron.sql`.
 
 > **Genel durum:** mimari sağlam. service_role tarayıcıya sızmıyor (`server-only` her yerde),
@@ -37,7 +37,7 @@ Ay tamamen 90 günü aşınca sayı birden yukarı zıplar → geçmiş maliyet 
 İki kol karşılıklı dışlayıcı olur, `NOT EXISTS` taraması da kalkar. (P2'yi de çözer.)
 
 ### K3. Normal müşteri `sender_type='agent'` mesaj yazabiliyor — destek personeli taklidi
-`destek-faz0.sql:92-99` (güvenlik + SQL ajanları bağımsız buldu)
+`sql/destek/destek-faz0.sql:92-99` (güvenlik + SQL ajanları bağımsız buldu)
 
 `messages_insert` WITH CHECK'i yalnız `sender_id = auth.uid()` bakıyor, `sender_type`'ı **hiç kontrol etmiyor**.
 Kullanıcı kendi biletine `sender_type:'agent'` yazarsa:
@@ -95,7 +95,7 @@ RLS/kolon bozulursa Canlı Görünüm "Şu anda kimse uygulamada değil" der, ek
 
 ## 🟡 ORTA
 
-- **O1. `user_devices.last_seen` indeksi YOK** (`admin-panel-rpc.sql:61,82-85`) — iki RPC de tam tablo taraması. Bugün ucuz, 100k'da Canlı Görünüm her açılışta tarar. → `create index concurrently idx_user_devices_last_seen on user_devices (last_seen desc);`
+- **O1. `user_devices.last_seen` indeksi YOK** (`sql/admin/admin-panel-rpc.sql:61,82-85`) — iki RPC de tam tablo taraması. Bugün ucuz, 100k'da Canlı Görünüm her açılışta tarar. → `create index concurrently idx_user_devices_last_seen on user_devices (last_seen desc);`
 - **O2. `admin_ai_usage` ay filtresi sargable değil** — `date_trunc(...)= p_ay` indeksi kullanamıyor. K2 yaması bunu da çözer.
 - **O3. `admin_module_adoption` 22 tabloda tam `count(*)`** (`:171`) — Supabase'de `authenticated` `statement_timeout` **8sn**; milyonlarca satırda RPC yavaşlamaz, **hata vermeye başlar**. → `pg_class.reltuples` tahmini veya gece yenilenen materialized view.
 - **O4. `admin_dead_profiles` + `admin_online_users` SQL'de LIMIT yok** — kırpma JS tarafında, yani tüm satırlar ağdan geçiyor. CLAUDE.md "listelere `.limit()`" kuralına aykırı.
@@ -122,10 +122,10 @@ RLS/kolon bozulursa Canlı Görünüm "Şu anda kimse uygulamada değil" der, ek
 - Boş durum için 3 ayrı sınıf; `.danger-zone` yanlış CSS sözleşmesiyle kullanılıyor (`.dz-title/.dz-desc/.dz-btn` bekliyor).
 - Ekip formunda `<label>`/`aria-label` yok; giriş ekranının `adm-login-input` sınıfı form alanı olarak kullanılıyor.
 - Admin'de `error.tsx`/`not-found.tsx` yok → `notFound()` admin kabuğunun DIŞINDA, sidebar'sız açılıyor.
-- Düz yönetici modeli: admin'ler birbirinin rolünü kaldırabiliyor, "son admin" koruması yok (`ADMIN-PANEL.md:27`'deki super-admin katmanı uygulanmamış).
+- Düz yönetici modeli: admin'ler birbirinin rolünü kaldırabiliyor, "son admin" koruması yok (`docs/ADMIN-PANEL.md:27`'deki super-admin katmanı uygulanmamış).
 - `/admin` üç host'tan da servis ediliyor (`paraner.com/admin`, `app.paraner.com/admin`) — açık değil (layout guard'ı çalışıyor) ama saldırı yüzeyi 3 katı.
 - Bilet sahibi kendi biletinin `priority`/`status`'ünü değiştirebiliyor (kolon grant'i yok) — **olası**, agent panelinin hangi anahtarla yazdığı doğrulanmadan dokunma.
-- `kullanici_sayisi` aslında PROFİL sayısı (`admin-panel-rpc.sql:171`).
+- `kullanici_sayisi` aslında PROFİL sayısı (`sql/admin/admin-panel-rpc.sql:171`).
 - `admin_module_adoption` kolon seçimi alfabetik (`ORDER BY column_name`) → `profile_id` < `user_id`. Bugün 22 tablonun hiçbirinde ikisi birden yok, yani doğru ama **tesadüfen**; bir migration `profile_id` eklerse sayılar sessizce değişir.
 - `daily_ai_usage.message_count/vision_count` NOT NULL değil (`schema.sql:83-84`) → tek NULL satır rollup'ın tamamını düşürebilir (**olası**; K1 yamasındaki `coalesce` kapatıyor).
 
@@ -136,7 +136,7 @@ RLS/kolon bozulursa Canlı Görünüm "Şu anda kimse uygulamada değil" der, ek
 - **service_role sızıntısı yok** — `lib/supabase/admin.ts` + tüm `lib/admin*.ts` `import "server-only"` ile başlıyor, anahtar `NEXT_PUBLIC_` değil, hiçbir client component bunları import etmiyor (`import type` derlemede siliniyor), `.env*` gitignore'da.
 - **Tüm server action'lar guard'lı** — projede tek `"use server"` dosyası var, 7 export'un 7'si de ilk satırda `requireAdmin()`. `app/api/` altında route yok.
 - **admin vs agent ayrımı aksiyonlarda doğru** — `role !== "admin"` → agent hiçbir yönetim aksiyonunu çalıştıramaz.
-- **`admin-panel-rpc.sql` temiz** — 4 fonksiyonun 4'ü de `assert_admin()` + `SECURITY DEFINER` + `SET search_path` + `REVOKE FROM public, anon`. Dinamik SQL `format('%I')` ile quote'lu, kullanıcı girdisi yok.
+- **`sql/admin/admin-panel-rpc.sql` temiz** — 4 fonksiyonun 4'ü de `assert_admin()` + `SECURITY DEFINER` + `SET search_path` + `REVOKE FROM public, anon`. Dinamik SQL `format('%I')` ile quote'lu, kullanıcı girdisi yok.
 - **Tip tuzağı (bugünkü hata) başka RPC'de YOK** — 5 `RETURNS TABLE` kolon kolon doğrulandı (`::text` cast'leri, `count()`→bigint hepsi yerinde).
 - **Ayrıcalık yükseltme yolu yok** — `user_roles`'ta INSERT/UPDATE/DELETE politikası yok + RLS açık → müşteri kendine admin yazamaz.
 - **Denetim kaydı tablosu sağlam** — yalnız service_role yazar, admin bile client'tan silemez; `target_user_id` FK değil (silinen kullanıcının izi kalıyor).

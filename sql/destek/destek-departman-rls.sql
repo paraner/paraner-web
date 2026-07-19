@@ -1,6 +1,6 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 -- DESTEK DEPARTMAN YÖNLENDİRME — ADIM 4 (RLS DARALTMASI)  ·  2026-07-18
--- Plan: DESTEK-DEPARTMAN-PLAN.md §5 adım 4  ·  Ön koşul: destek-departman.sql ÇALIŞMIŞ olmalı
+-- Plan: docs/DESTEK-DEPARTMAN-PLAN.md §5 adım 4  ·  Ön koşul: sql/destek/destek-departman.sql ÇALIŞMIŞ olmalı
 --
 -- NE DEĞİŞİYOR: bugüne kadar `is_support_agent()` true olan HERKES (agent+admin) TÜM
 -- talepleri görüyordu. Artık personel yalnız KENDİ departmanının taleplerini görür.
@@ -19,7 +19,7 @@
 --    panelde GERÇEKTEN etkili olur. Müşteri bağlamı (listPeople) service_role'dedir,
 --    o ayrı eksen, talep gizliliğini etkilemez.
 --
--- ⚠️ K3 KORUNUYOR: messages_insert'teki sender_type/rol eşleşmesi (admin-denetim-fix-K3.sql)
+-- ⚠️ K3 KORUNUYOR: messages_insert'teki sender_type/rol eşleşmesi (sql/admin/admin-denetim-fix-K3.sql)
 --    AYNEN duruyor, üstüne departman koşulu EKLENİYOR. Bu dosya K3'ü geri ALMAZ.
 -- ═══════════════════════════════════════════════════════════════════════════
 

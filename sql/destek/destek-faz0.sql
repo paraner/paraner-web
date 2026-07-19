@@ -1,6 +1,6 @@
 -- ══════════════════════════════════════════════════════════════════════════
 -- Destek Sistemi — Faz 0 şeması (web + mobil ORTAK Supabase: oqhonmmbcqrkcaoijgnb)
--- Mobil Claude ile mutabık (DESTEK-SEMA-MOBIL.md). Push YOK (Faz 1).
+-- Mobil Claude ile mutabık (docs/DESTEK-SEMA-MOBIL.md). Push YOK (Faz 1).
 -- ÇALIŞTIRMA: Supabase Dashboard → SQL Editor → yapıştır → Run.
 -- Tek seferlik + idempotent (if not exists). Güvenle tekrar çalıştırılabilir.
 -- ══════════════════════════════════════════════════════════════════════════

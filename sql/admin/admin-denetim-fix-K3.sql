@@ -1,8 +1,8 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 -- K3 FIX (2026-07-18) — destek personeli TAKLİDİ engellendi
--- Denetim: DENETIM-ADMIN-2026-07-18.md
+-- Denetim: docs/DENETIM-ADMIN-2026-07-18.md
 --
--- SORUN: destek-faz0.sql'deki messages_insert politikası yalnız
+-- SORUN: sql/destek/destek-faz0.sql'deki messages_insert politikası yalnız
 --   `sender_id = auth.uid()` + bilet erişimi kontrol ediyordu; `sender_type`'a
 --   HİÇ bakmıyordu. Normal müşteri kendi biletine sender_type='agent' yazabiliyordu:
 --     1) Arayüzde Paraner destek yanıtı gibi görünür (sahte ekran görüntüsü),

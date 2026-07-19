@@ -23,7 +23,7 @@ export {
 import { DEPARTMENTS, type TicketStatus, type TicketMessage, type Department } from "./supportShared";
 
 // Yeni talep = ticket + ilk kullanıcı mesajı. Thread'e gitmek için ticket id döner.
-/* Talep aç. `department` 2026-07-18'de eklendi (destek-departman.sql):
+/* Talep aç. `department` 2026-07-18'de eklendi (sql/destek/destek-departman.sql):
    hangi ekibe düşeceğini müşteri seçiyor, trigger o ekibe + admin'lere bildirim atıyor.
    `priority` müşteriye SORULMUYOR — departmanın varsayılanından türetiliyor
    (herkes "yüksek" seçerse alan bilgi taşımaz olur; agent panelden değiştirir). */

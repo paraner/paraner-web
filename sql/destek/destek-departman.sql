@@ -1,6 +1,6 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 -- DESTEK DEPARTMAN YÖNLENDİRME — ADIM 1 (DB)  ·  2026-07-18
--- Plan + gerekçeler: DESTEK-DEPARTMAN-PLAN.md
+-- Plan + gerekçeler: docs/DESTEK-DEPARTMAN-PLAN.md
 --
 -- Mehmet'in kararları: 4 departman · öncelik alanı müşteriye SORULMAYACAK · şema izni verildi.
 --
@@ -65,7 +65,7 @@ CREATE POLICY staff_dep_select ON public.staff_departments
 --   · admin  → HER ZAMAN evet (Mehmet'in şartı: admin her şeyi görür)
 --   · agent  → yalnız staff_departments'ta kaydı olan departmanlar
 -- SECURITY DEFINER + STABLE: RLS içinden çağrılacak, özyineleme olmasın
--- (is_support_agent() ile aynı desen — destek-faz0.sql:59).
+-- (is_support_agent() ile aynı desen — sql/destek/destek-faz0.sql:59).
 CREATE OR REPLACE FUNCTION public.staff_sees_department(p_department text)
 RETURNS boolean
 LANGUAGE sql

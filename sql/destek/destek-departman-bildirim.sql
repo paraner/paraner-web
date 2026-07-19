@@ -1,9 +1,9 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 -- DESTEK DEPARTMAN YÖNLENDİRME — ADIM 5 (EKİBE E-POSTA)  ·  2026-07-18
--- Plan: DESTEK-DEPARTMAN-PLAN.md §5 adım 5
+-- Plan: docs/DESTEK-DEPARTMAN-PLAN.md §5 adım 5
 --
 -- NE EKSİKTİ: yeni talep gelince ekibe SADECE uygulama-içi çan bildirimi gidiyordu
--- (destek-departman.sql · notify_staff_new_ticket). Panele bakmayan personel talebi
+-- (sql/destek/destek-departman.sql · notify_staff_new_ticket). Panele bakmayan personel talebi
 -- görmüyordu. Bu dosya e-postayı ekler: müşteri → ekip yönü artık kapalı.
 --
 -- ⚠️ GOREVLER.md'deki "support-reply-notify alıcıyı departmana göre seçsin" notu YANLIŞTI:
@@ -16,8 +16,8 @@
 --    Çan bildirimi ticket INSERT'inde kalıyor (o yalnız `subject` kullanıyor, sorun değil).
 --
 -- ÖN KOŞULLAR:
---   1) destek-departman.sql çalışmış olmalı (staff_departments + department kolonu)
---   2) Vault'ta `support_webhook_secret` VAR (destek-faz0.sql'de kurulmuştu — aynısı kullanılıyor)
+--   1) sql/destek/destek-departman.sql çalışmış olmalı (staff_departments + department kolonu)
+--   2) Vault'ta `support_webhook_secret` VAR (sql/destek/destek-faz0.sql'de kurulmuştu — aynısı kullanılıyor)
 --   3) EDGE DEPLOY:  supabase functions deploy support-new-ticket-notify --no-verify-jwt
 --      ⚠️ SIRA: önce deploy, SONRA bu SQL. Ters sırada ilk talepte 404'e POST edilir
 --         (zararsız — exception yutuluyor, talep yine açılır — ama o mail kaybolur).

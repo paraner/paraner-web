@@ -9,7 +9,7 @@ export const metadata = { title: "Denetim Kaydı", robots: { index: false, follo
    ⚠️ Bu tabloya BAŞINDAN BERİ yazıyorduk ama okuyacak ekran yoktu → 17.07'de bir hesap
    silindiğinde "kim sildi" sorusunu cevaplayamadık. Ekran bunu kapatıyor.
    Tablo RLS'li ve INSERT/UPDATE/DELETE politikası YOK → yalnız service_role yazar,
-   kimse (admin dahil) client üzerinden izini silemez (admin-audit-log.sql). */
+   kimse (admin dahil) client üzerinden izini silemez (sql/admin/admin-audit-log.sql). */
 export default async function DenetimPage() {
   await requireAdminPage(); // müşteri e-postaları görünüyor → agent göremez
   if (!hasAdminKey()) return <AdminKeyNotice />;
@@ -28,7 +28,7 @@ export default async function DenetimPage() {
         <h1 className="admin-h1">Denetim Kaydı</h1>
         <p className="admin-sub">
           Kayıtlar okunamadı: {error.message}
-          {error.message.includes("admin_audit_log") && " — admin-audit-log.sql çalıştırıldı mı?"}
+          {error.message.includes("admin_audit_log") && " — sql/admin/admin-audit-log.sql çalıştırıldı mı?"}
         </p>
       </div>
     );

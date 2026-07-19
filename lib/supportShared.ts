@@ -7,7 +7,7 @@
 export type TicketStatus = "open" | "answered" | "resolved" | "closed";
 
 /* ── DEPARTMANLAR — TEK KAYNAK ──────────────────────────────────────────────
-   ⚠️ Değer listesi DB'deki CHECK ile BİREBİR aynı olmalı (destek-departman.sql:32 ve
+   ⚠️ Değer listesi DB'deki CHECK ile BİREBİR aynı olmalı (sql/destek/destek-departman.sql:32 ve
    staff_departments). Buraya yeni departman eklemek YETMEZ: önce DB CHECK'i genişlet,
    yoksa insert sessizce değil GÜRÜLTÜLÜ patlar (iyi haber: sessiz bozulma yok).
    ⚠️ Mobil de talep açıyor (paraner-app/lib/support.ts) — orada da aynı liste olmalı.
@@ -68,7 +68,7 @@ export type Ticket = {
   status: TicketStatus;
   priority: string;
   category: string | null;
-  /** Hangi ekibe düşecek — destek-departman.sql. Eski kayıtlarda DEFAULT 'teknik'. */
+  /** Hangi ekibe düşecek — sql/destek/destek-departman.sql. Eski kayıtlarda DEFAULT 'teknik'. */
   department: Department;
   assignee_id: string | null;
   created_at: string;

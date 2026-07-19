@@ -190,7 +190,7 @@ export default function AyarlarClient({
           )}
 
           {/* Ekip erişimi "kim bu hesaba girebilir" sorusudur → İşletme/Fatura değil,
-              Hesap Bilgileri'nin altına ait. Planı: COKLU-HESAP.md */}
+              Hesap Bilgileri'nin altına ait. Planı: docs/COKLU-HESAP.md */}
           {isBusiness && <RolesSoon />}
         </>
       )}

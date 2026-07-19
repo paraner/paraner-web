@@ -31,7 +31,7 @@ Bir yeri değiştirip diğerini atlamak = kullanıcının gördüğü tutarsızl
   için müşteri yönetimi/destek. `user_roles` tablosu: `admin` (tam yetki) > `agent` (yalnız destek).
   ⚠️ **service_role ile veri okur (RLS BYPASS)** → `lib/supabase/admin.ts` + `lib/admin*.ts`
   hepsi `import "server-only"` ile başlar, ASLA client component'e sızmamalı.
-  Detay: `ADMIN-PANEL.md` · son denetim: `DENETIM-ADMIN-2026-07-18.md`.
+  Detay: `docs/ADMIN-PANEL.md` · son denetim: `docs/DENETIM-ADMIN-2026-07-18.md`.
 
 **Backend:** Mobil uygulamayla AYNI Supabase (proje `oqhonmmbcqrkcaoijgnb`). `@supabase/ssr`, cookie domain `.paraner.com` (çapraz-subdomain oturum). Env: `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`. **DB şemasına dokunma** — mobil aynı şemayı kullanır; kolon/tablo gerekiyorsa önce sor.
 
@@ -54,9 +54,14 @@ app/
 proxy.ts                     — host bazlı yönlendirme + oturum tazeleme
 lib/
   supabase/ client.ts server.ts cookieDomain.ts
-  format.ts                  — ₺1.234,56 + GG.AA.YYYY
+  format.ts                  — ₺1.234,56 + GG.AA.YYYY + TZ (saat dilimi SABİT: Europe/Istanbul)
   categories.ts              — mobil ile birebir kategori kataloğu + findCategory
+components/                  — panel geneli ortak bileşenler (AddButton, SaveButton, ui/*)
+sql/                         — ÇALIŞTIRILMIŞ migration kaydı (admin/ + destek/) · sırası: sql/README.md
+docs/                        — plan/denetim/şema notları + email-templates/ (kod DEĞİL)
 ```
+> Kökte yalnız günlük kullanılanlar durur: `CLAUDE.md` · `GOREVLER.md` · `DAILY_LOG.md` · `README.md`.
+> Yeni bir plan/denetim yazısı → `docs/`, yeni bir SQL → `sql/<alan>/` (+ `sql/README.md` tablosuna satır).
 
 **Kurallar:** Aktif profil = `profiles.is_active`; veri sorguları `user_id = aktif profil id` ile filtreli (RLS `user_profile_ids()`). Yeni modül = mevcut desen (server page + client component), `lib/format` + `lib/categories` kullan. Dil TR. Koyu tema.
 

@@ -59,7 +59,7 @@ export default async function AdminDashboard() {
       .from("support_tickets")
       .select("*", { count: "exact", head: true })
       .in("status", ["open", "answered"]),
-    /* Aksiyon panosu metrikleri — RPC (admin-panel-rpc.sql), yoksa JS yedeği.
+    /* Aksiyon panosu metrikleri — RPC (sql/admin/admin-panel-rpc.sql), yoksa JS yedeği.
        agent bunları GÖREMEZ: RPC'lerde yönetici guard'ı var, yedekleri de çağırmıyoruz. */
     isAdminRole ? getActiveCounts() : Promise.resolve({ dau: 0, wau: 0, mau: 0 }),
     isAdminRole ? getDeadProfileCount() : Promise.resolve(0),
@@ -281,7 +281,7 @@ export default async function AdminDashboard() {
           </div>
           {adoption == null ? (
             <p className="live-empty">
-              Modül verisi için <b>admin-panel-rpc.sql</b> çalıştırılmalı.
+              Modül verisi için <b>sql/admin/admin-panel-rpc.sql</b> çalıştırılmalı.
               <span>22 tabloya tek tek sorgu atmak yerine tek RPC ile alınıyor.</span>
             </p>
           ) : adoption.length === 0 ? (

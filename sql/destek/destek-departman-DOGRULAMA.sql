@@ -7,30 +7,30 @@
 
 SELECT * FROM (
 
-  -- ── ADIM 1 (destek-departman.sql) ────────────────────────────────────────
+  -- ── ADIM 1 (sql/destek/destek-departman.sql) ────────────────────────────────────────
   SELECT 1 AS sira, 'A1 · department kolonu' AS kontrol,
     CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns
                       WHERE table_schema='public' AND table_name='support_tickets'
                         AND column_name='department')
-      THEN '✅' ELSE '❌ destek-departman.sql' END AS durum
+      THEN '✅' ELSE '❌ sql/destek/destek-departman.sql' END AS durum
 
   UNION ALL
   SELECT 2, 'A1 · staff_departments tablosu',
     CASE WHEN to_regclass('public.staff_departments') IS NOT NULL
-      THEN '✅' ELSE '❌ destek-departman.sql' END
+      THEN '✅' ELSE '❌ sql/destek/destek-departman.sql' END
 
   UNION ALL
   SELECT 3, 'A1 · staff_sees_department()',
     CASE WHEN EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
                       WHERE n.nspname='public' AND p.proname='staff_sees_department')
-      THEN '✅' ELSE '❌ destek-departman.sql' END
+      THEN '✅' ELSE '❌ sql/destek/destek-departman.sql' END
 
   UNION ALL
   SELECT 4, 'A1 · yeni talep → çan bildirimi trigger',
     CASE WHEN EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_notify_staff_new_ticket' AND NOT tgisinternal)
-      THEN '✅' ELSE '❌ destek-departman.sql' END
+      THEN '✅' ELSE '❌ sql/destek/destek-departman.sql' END
 
-  -- ── ADIM 4 (destek-departman-rls.sql) — asıl merak edilen ────────────────
+  -- ── ADIM 4 (sql/destek/destek-departman-rls.sql) — asıl merak edilen ────────────────
   -- Politikanın SADECE var olması yetmez (eskisi de aynı adı taşıyordu);
   -- tanımının içinde staff_sees_department GEÇİYOR mu, ona bakıyoruz.
   UNION ALL
@@ -38,14 +38,14 @@ SELECT * FROM (
     CASE WHEN EXISTS (SELECT 1 FROM pg_policies
                       WHERE schemaname='public' AND tablename='support_tickets'
                         AND policyname='tickets_select' AND qual LIKE '%staff_sees_department%')
-      THEN '✅' ELSE '❌ destek-departman-rls.sql' END
+      THEN '✅' ELSE '❌ sql/destek/destek-departman-rls.sql' END
 
   UNION ALL
   SELECT 6, 'A4 · tickets_update departman-farkında',
     CASE WHEN EXISTS (SELECT 1 FROM pg_policies
                       WHERE schemaname='public' AND tablename='support_tickets'
                         AND policyname='tickets_update' AND qual LIKE '%staff_sees_department%')
-      THEN '✅' ELSE '❌ destek-departman-rls.sql' END
+      THEN '✅' ELSE '❌ sql/destek/destek-departman-rls.sql' END
 
   UNION ALL
   -- WITH CHECK olmadan agent talebi BAŞKA departmana taşıyabilir → ayrıca kontrol.
@@ -53,14 +53,14 @@ SELECT * FROM (
     CASE WHEN EXISTS (SELECT 1 FROM pg_policies
                       WHERE schemaname='public' AND tablename='support_tickets'
                         AND policyname='tickets_update' AND with_check LIKE '%staff_sees_department%')
-      THEN '✅' ELSE '❌ destek-departman-rls.sql' END
+      THEN '✅' ELSE '❌ sql/destek/destek-departman-rls.sql' END
 
   UNION ALL
   SELECT 8, 'A4 · messages_select departman-farkında',
     CASE WHEN EXISTS (SELECT 1 FROM pg_policies
                       WHERE schemaname='public' AND tablename='ticket_messages'
                         AND policyname='messages_select' AND qual LIKE '%staff_sees_department%')
-      THEN '✅' ELSE '❌ destek-departman-rls.sql' END
+      THEN '✅' ELSE '❌ sql/destek/destek-departman-rls.sql' END
 
   UNION ALL
   -- K3 KORUNUYOR MU: sender_type kontrolü hâlâ yerinde olmalı (müşteri agent taklidi edememeli).
@@ -68,20 +68,20 @@ SELECT * FROM (
     CASE WHEN EXISTS (SELECT 1 FROM pg_policies
                       WHERE schemaname='public' AND tablename='ticket_messages'
                         AND policyname='messages_insert' AND with_check LIKE '%sender_type%')
-      THEN '✅' ELSE '❌ admin-denetim-fix-K3.sql GERİ ALINMIŞ — ACİL' END
+      THEN '✅' ELSE '❌ sql/admin/admin-denetim-fix-K3.sql GERİ ALINMIŞ — ACİL' END
 
   UNION ALL
   SELECT 10, 'A4 · messages_insert departman-farkında',
     CASE WHEN EXISTS (SELECT 1 FROM pg_policies
                       WHERE schemaname='public' AND tablename='ticket_messages'
                         AND policyname='messages_insert' AND with_check LIKE '%staff_sees_department%')
-      THEN '✅' ELSE '❌ destek-departman-rls.sql' END
+      THEN '✅' ELSE '❌ sql/destek/destek-departman-rls.sql' END
 
-  -- ── ADIM 5 (destek-departman-bildirim.sql + edge deploy) ─────────────────
+  -- ── ADIM 5 (sql/destek/destek-departman-bildirim.sql + edge deploy) ─────────────────
   UNION ALL
   SELECT 11, 'A5 · ekibe e-posta trigger',
     CASE WHEN EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_notify_staff_ticket_email' AND NOT tgisinternal)
-      THEN '✅' ELSE '❌ destek-departman-bildirim.sql' END
+      THEN '✅' ELSE '❌ sql/destek/destek-departman-bildirim.sql' END
 
   UNION ALL
   -- Trigger secret'ı Vault'tan okuyor; yoksa mail SESSİZCE gitmez (exception yutuluyor).

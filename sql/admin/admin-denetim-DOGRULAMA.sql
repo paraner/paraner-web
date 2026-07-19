@@ -8,7 +8,7 @@
 
 WITH kontroller AS (
 
-  -- ── K3 · admin-denetim-fix-K3.sql ────────────────────────────────────────
+  -- ── K3 · sql/admin/admin-denetim-fix-K3.sql ────────────────────────────────────────
   -- Politika gövdesinde sender_type kontrolü var mı? (yoksa müşteri agent taklidi yapabilir)
   SELECT 1 AS sira,
     'K3 · destek personeli taklidi kapalı mı' AS kontrol,
@@ -17,7 +17,7 @@ WITH kontroller AS (
       WHERE schemaname = 'public' AND tablename = 'ticket_messages'
         AND policyname = 'messages_insert'
         AND with_check LIKE '%sender_type%'
-    ) THEN '✅ tamam' ELSE '❌ EKSİK → admin-denetim-fix-K3.sql' END AS durum
+    ) THEN '✅ tamam' ELSE '❌ EKSİK → sql/admin/admin-denetim-fix-K3.sql' END AS durum
 
   -- ── K1 · ai-maliyet-fix-K1-K2.sql ────────────────────────────────────────
   -- Rollup GREATEST kullanıyor mu? (kullanmıyorsa her Pazar maliyet geçmişi siliniyor)
@@ -60,14 +60,14 @@ WITH kontroller AS (
       WHERE ns.nspname = 'public' AND rel.relname = 'ai_usage_monthly' AND con.contype = 'f'
     ) THEN '✅ tamam' ELSE '❌ EKSİK → ai-maliyet-fix-K1-K2.sql GÜNCEL sürümü (O8 sonradan eklendi)' END
 
-  -- ── O1 · admin-denetim-fix-olcek.sql ─────────────────────────────────────
+  -- ── O1 · sql/admin/admin-denetim-fix-olcek.sql ─────────────────────────────────────
   UNION ALL SELECT 6,
     'O1 · user_devices.last_seen indeksi',
     CASE WHEN EXISTS (
       SELECT 1 FROM pg_indexes
       WHERE schemaname = 'public' AND tablename = 'user_devices'
         AND indexname = 'idx_user_devices_last_seen'
-    ) THEN '✅ tamam' ELSE '❌ EKSİK → admin-denetim-fix-olcek.sql' END
+    ) THEN '✅ tamam' ELSE '❌ EKSİK → sql/admin/admin-denetim-fix-olcek.sql' END
 
   -- ── O4 · aynı dosya ──────────────────────────────────────────────────────
   UNION ALL SELECT 7,
@@ -75,7 +75,7 @@ WITH kontroller AS (
     CASE WHEN EXISTS (
       SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
       WHERE n.nspname = 'public' AND p.proname = 'admin_dead_profile_count'
-    ) THEN '✅ tamam' ELSE '❌ EKSİK → admin-denetim-fix-olcek.sql' END
+    ) THEN '✅ tamam' ELSE '❌ EKSİK → sql/admin/admin-denetim-fix-olcek.sql' END
 
   -- ── O3 · aynı dosya ──────────────────────────────────────────────────────
   -- Modül benimseme artık tam count(*) yerine reltuples tahmini kullanmalı (8sn timeout)
@@ -85,6 +85,6 @@ WITH kontroller AS (
       SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
       WHERE n.nspname = 'public' AND p.proname = 'admin_module_adoption'
         AND pg_get_functiondef(p.oid) LIKE '%reltuples%'
-    ) THEN '✅ tamam' ELSE '❌ EKSİK → admin-denetim-fix-olcek.sql' END
+    ) THEN '✅ tamam' ELSE '❌ EKSİK → sql/admin/admin-denetim-fix-olcek.sql' END
 )
 SELECT kontrol, durum FROM kontroller ORDER BY sira;

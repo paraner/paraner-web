@@ -1,6 +1,6 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 -- ÖLÇEK DÜZELTMELERİ (2026-07-18) — O1 · O3 · O4
--- Denetim: DENETIM-ADMIN-2026-07-18.md
+-- Denetim: docs/DENETIM-ADMIN-2026-07-18.md
 --
 -- Üçü de BUGÜN sorun çıkarmıyor (veri az). Büyüdükçe ısırırlar; ikisi panelin
 -- HATA VERMESİNE yol açar (timeout), o yüzden şimdiden kapatılıyor.
@@ -80,7 +80,7 @@ BEGIN
   PERFORM public.assert_admin();
 
   FOR r IN
-    -- ⚠️ Liste admin-panel-rpc.sql'deki ile BİREBİR AYNI olmalı (tek kaynak orası).
+    -- ⚠️ Liste sql/admin/admin-panel-rpc.sql'deki ile BİREBİR AYNI olmalı (tek kaynak orası).
     SELECT * FROM (VALUES
       ('İşlemler',            'transactions'),
       ('Faturalar',           'invoices'),

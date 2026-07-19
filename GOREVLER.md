@@ -16,13 +16,13 @@
 - [ ] **Eski test verisi:** aktif 3 deneme `business_max_monthly` planında — artık sunulmayan plan (düzeltme öncesi açılmış). Bozuk değil, temizlenebilir.
 - [ ] **Fiyat/plan sözlüğü tek kaynak notu:** `paraner-web/lib/plans.ts` mobil `stores/authStore.ts`'ten kopya — mobil tier listesi değişirse burası da güncellenmeli (DB'de CHECK constraint YOK, uydurma değer sessizce yazılır).
 
-### 🔍 ADMIN PANEL DENETİMİ (2026-07-18) — tam liste: `DENETIM-ADMIN-2026-07-18.md`
+### 🔍 ADMIN PANEL DENETİMİ (2026-07-18) — tam liste: `docs/DENETIM-ADMIN-2026-07-18.md`
 > 4 paralel ajan (güvenlik·doğruluk·SQL·UX), her kritik bulgu elle doğrulandı. Mimari sağlam
 > (service_role sızmıyor, tüm server action'lar guard'lı, enjeksiyon/IDOR/XSS yok). Kusurlar:
 > **DURUM (2026-07-18):** K1·K2·K3 + Y1-Y6 + O12 **KODLANDI** (tsc + build temiz).
 > ✅ **3 SQL de çalıştırıldı (2026-07-18).** K3·K1·K2·Y3·O8 canlı DOĞRULANDI (5/5 ✅).
 > O1·O3·O4 da çalıştırıldı → DOĞRULAMA 8/8 ✅ (2026-07-18, ekran görüntüsüyle teyit).
-> 🔁 **Durum kontrolü:** `admin-denetim-DOGRULAMA.sql` — sadece OKUR, 8 satır ✅/❌ + eksikse dosya adı.
+> 🔁 **Durum kontrolü:** `sql/admin/admin-denetim-DOGRULAMA.sql` — sadece OKUR, 8 satır ✅/❌ + eksikse dosya adı.
 > ⛔️ `paraner-app/supabase/ai-usage-rpc-fix.sql` **GEÇERSİZ** — tekrar çalıştırılırsa K2'yi sessizce geri alır.
 - [x] 🔴 **K1 — AI maliyet geçmişi HER PAZAR siliniyor:** silme cron'u Pazar 00:00, rollup her gün 02:00 (yani SONRA) + `ON CONFLICT DO UPDATE SET x=EXCLUDED.x` körlemesine eziyor → kısmi ay tam özeti eziyor. Fix: `GREATEST(...)`. ⚠️ SQL'deki "rollup daha erken" yorumu YANLIŞ.
 - [x] 🔴 **K2 — `/admin/ai` geçmiş ayları eksik gösteriyor:** `NOT EXISTS` çift-sayma koruması K1 durumunda TAM olanı atıp EKSİK olanı seçiyor. Fix: varlığa göre değil AYA göre ayır (canlı ay=günlük, geçmiş=aylık).
@@ -32,7 +32,7 @@
 - [ ] 🟢 ~18 cila (loading.tsx yok, PageHead deseni kullanılmıyor, terminoloji Müşteri/Üye/Kullanıcı karışık, klavye erişimi, boş durum 3 ayrı sınıf…) — raporda
 
 ### 🛠️ ADMIN / İÇ EKİP PANELİ — canlı (admin.paraner.com)
-> Plan: `ADMIN-PANEL.md`. Mehmet: kurucu+çalışanlar için müşteri yönetim paneli (üyeleri tür/abonelik
+> Plan: `docs/ADMIN-PANEL.md`. Mehmet: kurucu+çalışanlar için müşteri yönetim paneli (üyeleri tür/abonelik
 > analiz + destek). Aynı repo içinde `/admin` route (Next code-split → müşteri bundle'ını şişirmez).
 > Kuruldu: rol guard (`lib/adminGuard`), service_role client (`lib/supabase/admin`, server-only),
 > layout+sidebar (Müşteriler/Ekip admin-only), Dashboard (metrik), Müşteriler (liste+filtre), Destek
@@ -43,7 +43,7 @@
 - [x] **`admin.paraner.com` DNS/Vercel Domains** — eklendi, adres açılıyor (2026-07-18 teyit).
 - [x] **İç ekip giriş ekranı** (`3f01f6c`) — admin.paraner.com/giris: e-posta+şifre, kayıt/sosyal YOK.
 - [x] **Müşteri detay + aksiyonlar + ekip yönetimi** (`62a10ab`, canlı doğrulandı): kişi bazlı liste (e-posta ile arama), detay (profiller + işlem/fatura/hesap + son hareket), şifre sıfırlama maili · premium/free · askıya al (Supabase ban) · kalıcı sil, ekip davet/rol ver-al.
-- [x] **`admin-audit-log.sql` çalıştırıldı** (2026-07-17) — yazma + gizlilik (anon 0 satır) canlı doğrulandı.
+- [x] **`sql/admin/admin-audit-log.sql` çalıştırıldı** (2026-07-17) — yazma + gizlilik (anon 0 satır) canlı doğrulandı.
 - [x] **Müşteri listesi yenilendi** — durum `is_premium`'dan DEĞİL, `trial_start_date + 14` ile HESAPLANIYOR (`lib/lifecycle.ts`). Segmentler (zombi/bitiyor/denemede/yeni/ücretli/ücretsiz/kayıp/askıda, sayaçlı) + sıralama (kayıt·son giriş·deneme bitişi·e-posta) + URL'de saklama (`?seg=&sort=&tur=`).
 - [x] **Canlı GÖZ teyidi** — admin.paraner.com giriş + panel + buton dili + sağ üst bekleyen-talep rozeti onaylandı (2026-07-18).
 - [ ] **Şifre sıfırlama maili ön koşulu:** Supabase → Auth → URL Configuration → Redirect URLs'te `https://paraner.com/sifre-sifirla` YOKSA link reddedilir (DAILY_LOG'da zaten bekleyen madde). Aksiyonu ilk kullanmadan teyit et.
@@ -54,7 +54,7 @@
 ### 🤖 AI TOKEN + MALİYET TAKİBİ (/admin/ai) ✅ TAMAMLANDI (2026-07-17)
 > "Hangi hesap ne kadar AI harcadı?" — Gemini `usageMetadata` (token) döndürüyordu ama `ai-chat`
 > atıyordu. Fiyat kodda sabit (`lib/aiPricing.ts`) — **Google fiyat API'si yok**, değişirse orası elle.
-> ⚠️ İKİ REPO + DB + EDGE, SIRA KRİTİK: web `admin-panel-rpc.sql` → mobil `ai-token-maliyet.sql` → EN SON `functions deploy ai-chat`.
+> ⚠️ İKİ REPO + DB + EDGE, SIRA KRİTİK: web `sql/admin/admin-panel-rpc.sql` → mobil `ai-token-maliyet.sql` → EN SON `functions deploy ai-chat`.
 - [x] **DB** (`paraner-app/supabase/ai-token-maliyet.sql`) çalıştırıldı + **service_role ile canlı doğrulandı**: `daily_ai_usage`'a `prompt_tokens`+`completion_tokens` (DEFAULT 0, kota mantığı korunur) · `increment_ai_usage` 3→5 param (eski çağrılar hâlâ çalışır) · `ai_usage_monthly` özet tablosu · `ai_usage_rollup()` + 02:00 UTC cron · `admin_ai_usage(p_ay)` panel RPC'si (`assert_admin` guard, canlı ay + geçmiş UNION, çift sayma korumalı).
 - [x] **Edge** `supabase functions deploy ai-chat` (`oqhonmmbcqrkcaoijgnb`) — `readUsage()` ile token okunup RPC'ye geçiliyor.
 - [x] **Web** `/admin/ai` paneli (ay seçici + hesap bazlı token/maliyet tablosu) + `lib/aiPricing.ts`.
@@ -63,19 +63,19 @@
 - [x] **`paraner-app/supabase/ai-usage-rpc-fix.sql` çalıştırıldı (2026-07-18) — panel dolu, canlı doğrulandı.** Hata: "structure of query does not match function result type". Sebep: `RETURNS TABLE ... bigint` ama sorguda `sum(bigint)` → **numeric** dönüyor. 17.07'de fark edilmedi çünkü tablo BOŞTU (Postgres tipi satır dönerken denetler → 0 satırda hata yok). Fix: dört `sum`'a `::bigint`. Şema/imza değişmiyor, mobil etkilenmez.
 - [ ] **Ders (yeni RPC'lerde):** `RETURNS TABLE`'lı RPC'yi boş tabloyla doğrulama — VERİ ile çalıştır. `sum(integer)`→bigint ama `sum(bigint)`→numeric.
 
-### 🎫 DESTEK DEPARTMAN YÖNLENDİRME (2026-07-18) — plan: `DESTEK-DEPARTMAN-PLAN.md`
+### 🎫 DESTEK DEPARTMAN YÖNLENDİRME (2026-07-18) — plan: `docs/DESTEK-DEPARTMAN-PLAN.md`
 > Mehmet kararı: **4 departman** (Teknik/Satış/Faturalandırma/Öneri) · öncelik müşteriye SORULMAZ
 > (herkes "yüksek" seçer → alan bilgi taşımaz; departmandan türetiliyor, agent değiştirir).
-- [x] **Adım 1-3 TAMAM + canlı doğrulandı:** `destek-departman.sql` çalıştırıldı (department kolonu
+- [x] **Adım 1-3 TAMAM + canlı doğrulandı:** `sql/destek/destek-departman.sql` çalıştırıldı (department kolonu
       `DEFAULT 'teknik'` → **mobil eski sürüm kırılmadı**; `staff_departments`; `staff_sees_department()`;
       yeni talep → ekip+admin bildirimi). Müşteri formunda kart seçimi, admin'de rozet + filtre.
-- [ ] 🔴 **Adım 4 — RLS DARALTMASI — KOD HAZIR, ÇALIŞTIRILMADI:** `destek-departman-rls.sql`.
+- [ ] 🔴 **Adım 4 — RLS DARALTMASI — KOD HAZIR, ÇALIŞTIRILMADI:** `sql/destek/destek-departman-rls.sql`.
       4 politika (`tickets_select`/`tickets_update`/`messages_select`/`messages_insert`) →
       `is_support_agent() AND staff_sees_department(...)`. K3 (sender_type↔rol) korundu,
       `tickets_update`'e WITH CHECK eklendi (agent talebi başka departmana taşıyamasın).
       ⚠️ **FAIL-CLOSED:** departman ataması olmayan agent HİÇ talep göremez → yeni personelde atama ŞART.
       ⚠️ Test C admin rolünü geçici kaldırıyor → geri alma satırlarını atlama.
-- [ ] **Adım 5 — EKİBE E-POSTA — KOD HAZIR, DEPLOY+SQL BEKLİYOR:** `destek-departman-bildirim.sql`
+- [ ] **Adım 5 — EKİBE E-POSTA — KOD HAZIR, DEPLOY+SQL BEKLİYOR:** `sql/destek/destek-departman-bildirim.sql`
       + yeni edge `support-new-ticket-notify`. **SIRA: önce `supabase functions deploy
       support-new-ticket-notify --no-verify-jwt`, SONRA SQL.**
       ⚠️ Eski not ("`support-reply-notify` alıcıyı departmana göre seçsin") **YANLIŞTI** — o fonksiyon
@@ -99,7 +99,7 @@
 - [ ] **İleride:** talebe not/atama (`assignee_id` kolonu duruyor, kullanılmıyor) · ek dosya (`ticket-attachments` bucket).
 
 ### 🎫 DESTEK SİSTEMİ — Faz 0 ✅ TAMAMLANDI (2026-07-16, uçtan uca doğrulandı)
-> Detay: `DESTEK-SISTEMI.md` + `DESTEK-SEMA-MOBIL.md` + `destek-faz0.sql`. Web+mobil (ortak Supabase,
+> Detay: `docs/DESTEK-SISTEMI.md` + `docs/DESTEK-SEMA-MOBIL.md` + `sql/destek/destek-faz0.sql`. Web+mobil (ortak Supabase,
 > iki Claude mutabakatı). **Uçtan uca ÇALIŞIYOR:** agent yanıtı → çan bildirimi (realtime web+mobil) +
 > e-posta (Resend, `merhaba@paraner.com`). Mehmet canlı doğruladı (web çanı yandı + mail geldi).
 > ⚠️ E-posta Database Webhook UI ile DEĞİL (o "supabase_functions does not exist" verdi) → webhook'suz:
@@ -124,7 +124,7 @@
 - [ ] **Google'da yeni title** — Search Console → URL Denetimi → "Dizine eklenmeyi iste" (`/`, `/destek`, `/isletme`, `/bireysel`). *(Mehmet'in kişisel Google hesabındaki mülk.)*
 - [ ] **Genel mobil tarama:** ana sayfa + auth ekranlarında telefonda taşma/bozulma var mı, tek tek bak. (Auth + rozetler 06-29'da elden geçti; ana sayfa/diğer bölümler kaldı. 07-02 headless taramada bulunan 320px hero taşması + iOS beam-input beyaz kaması düzeltildi ve onaylandı.)
 
-## Rakip denetiminden çıkan (2026-07-13, `RAKIP-defteran.md`)
+## Rakip denetiminden çıkan (2026-07-13, `docs/RAKIP-defteran.md`)
 
 ### Web / pazarlama (sıradaki faz)
 - [ ] **Panel tasarım turu — Genel Bakış PİLOT'u onaylandıysa diğer 33 modüle yay.** Sıra: İşlemler → Hesaplar → Faturalar (en yoğun sayfalar).

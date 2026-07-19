@@ -34,7 +34,7 @@ function temizDepartmanlar(list: string[] | undefined): Department[] {
 }
 
 /* Personelin departmanlarını TOPLUCA ayarla (sil + yaz).
-   ⚠️ staff_departments'ta INSERT/UPDATE politikası YOK (destek-departman.sql:57) —
+   ⚠️ staff_departments'ta INSERT/UPDATE politikası YOK (sql/destek/destek-departman.sql:57) —
    yazma yalnız service_role ile, yani buradan. Bu bilinçliydi: departman ataması
    yetki kararıdır, personelin kendi kendine yapabileceği bir şey değil. */
 async function departmanlariYaz(
@@ -166,7 +166,7 @@ export async function setProfilePlan(
   if (error) return { ok: false, message: `Güncellenemedi: ${error.message}` };
 
   /* ⚠️ target_user_id de YAZILMALI (denetim 2026-07-18 / O9): eskiden yalnız istemciden gelen
-     e-posta yazılıyordu → admin_audit_log.target_user_id NULL kalıyor, admin-audit-log.sql'deki
+     e-posta yazılıyordu → admin_audit_log.target_user_id NULL kalıyor, sql/admin/admin-audit-log.sql'deki
      target_idx bu aksiyonlarda işe yaramıyor ve kişi e-postasını değiştirince iz KAYBOLUYORDU.
      Profil → auth_user_id sunucuda çözülüyor (istemcinin dediğine güvenmiyoruz). */
   const { data: owner } = await admin
@@ -327,7 +327,7 @@ export async function inviteStaff(
   const target = email.trim().toLowerCase();
   /* Yönetici zaten HER departmanı görür (staff_sees_department admin'e her zaman true) →
      ona departman yazmak anlamsız veri olurdu. Destekçide ise ZORUNLU: departmansız agent
-     RLS gereği HİÇBİR talep göremez (destek-departman-rls.sql fail-closed) — davetten
+     RLS gereği HİÇBİR talep göremez (sql/destek/destek-departman-rls.sql fail-closed) — davetten
      sonra fark edilmesi zor, sessiz bir çıkmaz sokak olurdu. Burada baştan engelliyoruz. */
   const deps = role === "agent" ? temizDepartmanlar(departments) : [];
   if (role === "agent" && deps.length === 0) {
