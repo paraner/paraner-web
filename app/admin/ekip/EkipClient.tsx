@@ -167,29 +167,30 @@ export default function EkipClient({
             />
           </div>
 
+          {/* Rol: iki kart yerine AÇILIR LİSTE (Mehmet, 2026-07-19) — kartlar e-posta
+              alanıyla aynı hizada durmuyordu, üst blok dağınık görünüyordu. Seçilen rolün
+              ne yapabildiği listenin ALTINDA yazıyor → bilgi kaybolmuyor, hizalama düzeliyor. */}
           <div className="admin-invite-field">
-            <span className="admin-field-label">Rolü</span>
-            <div className="admin-role-pick">
-              {ROLES.map((r) => {
-                const Icon = r.icon;
-                const on = role === r.id;
-                return (
-                  <button
-                    key={r.id}
-                    type="button"
-                    aria-pressed={on}
-                    disabled={busy != null}
-                    className={`admin-role-card${on ? " on" : ""}`}
-                    onClick={() => setRole(r.id)}
-                  >
-                    <span className="admin-role-card-top">
-                      <Icon size={14} /> {r.label}
-                    </span>
-                    <span className="admin-role-card-desc">{r.desc}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <label className="admin-field-label" htmlFor="ekip-rol">
+              Rolü
+            </label>
+            <select
+              id="ekip-rol"
+              className="adm-login-input"
+              style={{ margin: 0, width: "100%" }}
+              value={role}
+              disabled={busy != null}
+              onChange={(e) => setRole(e.target.value as "admin" | "agent")}
+            >
+              {ROLES.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+            <p className="admin-note" style={{ marginTop: 7 }}>
+              {ROLES.find((r) => r.id === role)?.desc}
+            </p>
           </div>
         </div>
 

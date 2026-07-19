@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { getStaffRole } from "../../lib/adminGuard";
+import { getStaffRoleResult } from "../../lib/adminGuard";
 import { createClient } from "../../lib/supabase/server";
 import AdminSidebar from "./AdminSidebar";
 import ToastHost from "../components/ToastHost";
@@ -17,7 +17,27 @@ export const metadata: Metadata = {
 // İç ekip paneli. Rol guard LAYOUT'ta: staff (agent/admin) değilse müşteri paneline atılır.
 // (Müşteri panelinin aksine burada sunucu-tarafı guard ZORUNLU — service_role veri açıyor.)
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const role = await getStaffRole();
+  const { role, error: rolHatasi } = await getStaffRoleResult();
+  /* ⚠️ HATAYI YÖNLENDİRMEYLE KARIŞTIRMA (2026-07-19 olayı): rol sorgusu patladığında
+     eskiden `role` null geliyordu ve buradaki redirect yöneticiyi müşteri paneline
+     atıyordu. Geçici DB hatası = "yetkin yok" DEĞİLDİR. Artık durumu söylüyoruz;
+     kullanıcı yenileyince devam eder, oturumu kaybetmez. */
+  if (rolHatasi) {
+    return (
+      <div className="admin-shell">
+        <div className="admin-main">
+          <div className="admin-content">
+            <h1 className="admin-h1">Bağlantı sorunu</h1>
+            <p className="admin-sub">
+              Yetkin doğrulanamadı (veritabanı geçici olarak yanıt vermedi). Oturumun
+              açık — sayfayı yenilemen yeterli.
+            </p>
+            <p className="admin-note">Teknik ayrıntı: {rolHatasi}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (!role) redirect("/panel");
 
   /* Kenar çubuğunda "hangi hesapla bakıyorum" yazsın (Mehmet, 2026-07-18).
