@@ -91,8 +91,15 @@
       ⚠️ Tetikleyici `support_tickets` DEĞİL `ticket_messages` (ilk müşteri mesajı) — createTicket
       önce ticket'ı sonra mesajı yazıyor, ticket INSERT'inde gövde henüz yok.
       Kapsam: yalnız İLK mesaj mail atar (takip yanıtları gürültü olmasın); istenirse `v_first` bloğu kalkar.
-- [ ] **Adım 6 — MOBİL:** `paraner-app/lib/support.ts` `createTicket` departman göndersin + seçim ekranı.
-      Mobil Claude'a iletilecek (DEFAULT sayesinde acil değil).
+- [x] **Adım 6 — MOBİL TAMAM (2026-07-19, `paraner-app` `7685aa5`)** — `createTicket` artık departman
+      + türetilmiş öncelik yazıyor, yeni talep ekranında web'le birebir 4 departman kartı (başlık+ipucu).
+      İmza `(subject, category, body)` → **`(subject, body, department='teknik')`** (web ile aynı sıra).
+      Eski 6 kategori çipi KALDIRILDI: yazdığı `category` hiçbir yerde okunmuyordu ve "web feedback
+      ekranıyla hizalı" yorumu yanlıştı (o ekran yok). `category` ölü alan olarak tipte kaldı.
+      **Canlı doğrulandı:** 4 departmanın dördü de müşteri JWT'siyle RLS'ten geçti, öncelikler doğru
+      (teknik=normal · satis/faturalama=high · oneri=low). Test kayıtları+hesabı silindi.
+      ⚠️ **KOD HAZIR, KULLANICIDA DEĞİL:** App Store sürümü çıkana kadar sahadaki mobil sürümler
+      hâlâ departmansız talep açar → DB DEFAULT `'teknik'` devrede (kırılma yok, yanlış kuyruk var).
 - [x] **/admin/ekip departman atama + davet akışı (2026-07-18)** — davette rol + departman seçilir;
       `agent` için departman ZORUNLU (fail-closed RLS yüzünden departmansız kişi hiçbir talep göremez,
       sessiz çıkmaz sokaktı). Listede departman rozeti + "Değiştir", departmansız destekçiye uyarı,
@@ -138,8 +145,8 @@
       gerçek bir tarayıcı gibi duruyor, o yüzden DOKUNULMADI. **Mehmet'e sorulacak:** bu senin
       başka bir cihazın/tarayıcın mı, yoksa o da mı gitsin?
       *(Sebep düzeltildi: artık kalıcı profil + oturum tazeleme kullanılıyor, yeni çöp kayıt yok.)*
-- [ ] **3) Adım 6 — MOBİL departman seçimi** (Mehmet: web bitince). Mobilden açılan her talep
-      hâlâ sessizce `teknik`'e düşüyor → satış talebi teknik kuyruğunda bekler.
+- [x] **3) ✅ MOBİL departman seçimi TAMAM** (2026-07-19) — detay yukarıda "Adım 6".
+      ⚠️ Etkisi App Store sürümüyle sahaya çıkar.
 - [ ] 🔴 **Departman ayrımı canlı test edilmedi** (yukarıda Adım 4). Agent hesabı kalmadı
       (`mgzrco` ekipten çıkarıldı). İlk personel alınmadan ÖNCE `sql/destek/destek-departman-TEST.sql`.
 - [x] **Menü tıklamasında "hiç tepki yok" ÇÖZÜLDÜ (2026-07-19, `df28837`)** — sebep sunucu değildi:
