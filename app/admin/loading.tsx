@@ -7,6 +7,12 @@
 export default function AdminLoading() {
   return (
     <div aria-busy="true" aria-label="Yükleniyor">
+      {/* Gri iskelet tek başına "yükleniyor" demiyordu (Mehmet, 2026-07-19) — soğuk
+          başlangıçta saniyelerce beklenince "takıldı mı?" hissi veriyor. Açık yazı + halka. */}
+      <div className="admin-loading-flag">
+        <span className="admin-nav-spin" />
+        Yükleniyor…
+      </div>
       <div className="skel skel-title" />
       <div className="skel skel-sub" />
 

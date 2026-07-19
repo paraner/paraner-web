@@ -4450,3 +4450,21 @@ ul { list-style: none; }
 }
 /* "Bilgileri düzenle" istatistik satırının sonunda, ayrık dursun */
 .admin-profile-stats .admin-dep-edit { margin-left: auto; }
+
+/* Yükleniyor göstergeleri (2026-07-19) — soğuk başlangıçta sunucu yanıtı saniyeler
+   sürebiliyor (ölçüm: /admin soğukta 4579 ms, sıcakta 393 ms). O sırada ekranda ESKİ
+   sayfa durduğu için kullanıcı "tıklamadım mı?" diye ikinci kez tıklıyordu. */
+@keyframes admSpin { to { transform: rotate(360deg); } }
+.admin-nav-spin {
+  margin-left: auto; flex: none; color: var(--text-dim);
+  animation: admSpin 0.8s linear infinite;
+}
+/* İskeletin üstünde açık "Yükleniyor…" — gri çubuklar tek başına yeterince konuşmuyordu */
+.admin-loading-flag {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text-dim); margin-bottom: 14px;
+}
+.admin-loading-flag .admin-nav-spin {
+  width: 14px; height: 14px; margin-left: 0; border-radius: 50%;
+  border: 2px solid var(--border); border-top-color: var(--text-dim);
+}

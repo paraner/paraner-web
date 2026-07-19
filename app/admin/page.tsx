@@ -5,7 +5,7 @@ import { requireStaffPage } from "../../lib/adminGuard";
 import { TICKET_COLS, TICKET_STATUS_META, type Ticket } from "../../lib/supportShared";
 import { relativeLabel, TRIAL_ENDING_DAYS } from "../../lib/lifecycle";
 import { TRIAL_DAYS } from "../../lib/plans";
-import { getActiveCounts, getDeadProfileCount, getModuleAdoption } from "../../lib/adminMetrics";
+import { panoMetrikleri } from "../../lib/adminMetrics";
 import AdminKeyNotice from "./AdminKeyNotice";
 
 export default async function AdminDashboard() {
@@ -18,36 +18,21 @@ export default async function AdminDashboard() {
   if (!hasAdminKey()) return <AdminKeyNotice />;
   const admin = createAdminClient()!;
 
-  const since = new Date(Date.now() - 7 * 86400000).toISOString();
-  const countOf = (q: ReturnType<typeof admin.from>) => q.select("*", { count: "exact", head: true });
-
   /* Üye (kişi) ≠ profil: bir kişi hem bireysel hem işletme profili açabilir. Kart/yüzdeler PROFİL
      bazlı; "Toplam Üye" gerçek kişi sayısı olmalı. PostgREST'te distinct count yok → auth_user_id
      kolonu çekilip benzersizleştiriliyor (tek uuid kolonu; büyürse RPC gerekir → DB şeması = önce sor). */
   // Rol: agent Müşteriler'e giremez (requireAdminPage) → ona kart linki VERME, 404 yerdi.
   // (role/isAdminRole yukarıda, guard ile birlikte alınıyor.)
-  const [totalR, businessR, premiumR, recentR, ownersR, ticketsR, openR, active, dead, adoption] =
+  /* ⚠️ AĞIR METRİKLER ÖNBELLEKLİ (2026-07-19) — ölçüm: /admin sıcakken bile 3,6 sn sürüyordu,
+     diğer admin sayfaları 350-400 ms. Sebep bu sayfanın 8 sorgusu; tek tek 300-850 ms (9 satırlık
+     tablolarda!) çünkü Free plan disk IO bütçesi tükenince throughput 5 MB/s'e düşüyor.
+     Bu sayılar KİŞİYE ÖZEL DEĞİL (service_role, global metrik) → 2 dakika önbelleklemek güvenli.
+     Kazanç çift yönlü: sayfa anında açılır VE DB'ye giden sorgu sayısı ~30 kat azalır (panel
+     açık kaldıkça her yenilemede baştan çalışmıyor) — disk IO uyarısının da bir parçası buydu.
+     ⚠️ DESTEK sorguları ÖNBELLEĞE ALINMADI: "bekleyen talep" panelin birinci işi, taze kalmalı. */
+  const [{ totalR, businessR, premiumR, recentR, ownersR, active, dead, adoption }, ticketsR, openR] =
     await Promise.all([
-    countOf(admin.from("profiles")),
-    admin.from("profiles").select("*", { count: "exact", head: true }).eq("profile_type", "business"),
-    admin.from("profiles").select("*", { count: "exact", head: true }).eq("is_premium", true),
-    admin.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", since),
-    /* auth_user_id → üye sayısı · ad → gelen talep satırında "kim yazmış"
-       · trial alanları → "denemesi bitiyor" sayacı (durum is_premium'dan DEĞİL, tarihten
-       hesaplanır — bkz. lib/lifecycle.ts: is_premium bayat olabiliyor). */
-    /* ⚠️ count:"exact" ŞART (denetim 2026-07-18 / O5): bu sorgu 10.000'de kırpılıyor ve
-       "Toplam Üye" + "Denemesi bitiyor" + talep satırındaki isimler hep BU kümeden çıkıyor.
-       Sayaç olmadan kırpma sessizdi → 10.000 profili aşınca sayılar donar, kimse anlamaz.
-       (Müşteriler ekranı `truncated` bayrağıyla bunu zaten gösteriyordu, panoda karşılığı yoktu.) */
-    admin
-      .from("profiles")
-      .select("auth_user_id, profile_name, name, trial_plan, trial_start_date, is_premium", {
-        count: "exact",
-      })
-      .limit(10000),
-    /* Gelen talepler: yalnız İŞ BEKLEYENLER (açık + yanıtlandı). Çözülmüş/kapanmış olanı
-       göstermek panoyu doldurur, aksiyon gerektirmez. Kolonlar TICKET_COLS'tan (tek kaynak —
-       elle yazınca olmayan kolon kaçıp sorgu sessizce 400 dönüyordu, bkz. /admin/destek). */
+      panoMetrikleri(isAdminRole),
     admin
       .from("support_tickets")
       .select(TICKET_COLS)
@@ -55,16 +40,11 @@ export default async function AdminDashboard() {
       .order("last_message_at", { ascending: false })
       .limit(6),
     // Sayaç AYRI: yukarıdaki sorgu 6 ile sınırlı → tickets.length sayılsaydı 7 talepte "6" derdi.
-    admin
-      .from("support_tickets")
-      .select("*", { count: "exact", head: true })
-      .in("status", ["open", "answered"]),
-    /* Aksiyon panosu metrikleri — RPC (sql/admin/admin-panel-rpc.sql), yoksa JS yedeği.
-       agent bunları GÖREMEZ: RPC'lerde yönetici guard'ı var, yedekleri de çağırmıyoruz. */
-    isAdminRole ? getActiveCounts() : Promise.resolve({ dau: 0, wau: 0, mau: 0 }),
-    isAdminRole ? getDeadProfileCount() : Promise.resolve(0),
-    isAdminRole ? getModuleAdoption() : Promise.resolve(null),
-  ]);
+      admin
+        .from("support_tickets")
+        .select("*", { count: "exact", head: true })
+        .in("status", ["open", "answered"]),
+    ]);
 
   /* ⚠️ Hataları GÖSTER, yutma: `count ?? 0` sessizce 0'a düşüyordu → kolon/izin hatasında
      panelin ilk ekranı "Toplam Üye 0 · %0" der ve kimse sebebini bilmez.
