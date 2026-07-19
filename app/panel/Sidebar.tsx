@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
@@ -23,6 +23,7 @@ import {
   User,
   Building2,
   LifeBuoy,
+  LoaderCircle,
 } from "lucide-react";
 import { BUSINESS_SECTIONS, type BusinessMenuItem } from "./businessMenu";
 import LogoutButton from "./LogoutButton";
@@ -30,6 +31,16 @@ import LogoutButton from "./LogoutButton";
 // `unstable_dynamicOnHover` App Router Link'inde VAR (next/dist/client/app-dir/link.d.ts:125)
 // ama `next/link` girişinin tip tanımına henüz yansımamış → prop'u tipe tanıtan ince sarmalayıcı.
 // Davranış: fare linkin üstüne gelince prefetch TAM YÜKE (veri dahil) yükselir.
+/* Tıklanan menü öğesinde dönen halka — admin panelindekiyle aynı (2026-07-19).
+   Neden: rota ısıtılmamışsa (alt menüdeki 30+ link hover'da ısınıyor) tıklamayla ekran
+   arasında bekleme oluyor ve o sırada ESKİ sayfa duruyor → kullanıcı tekrar tıklıyor.
+   ⚠️ `useLinkStatus` yalnızca bir <Link>'in ALTINDA çalışır → ayrı bileşen olmak zorunda. */
+function NavYukleniyor() {
+  const { pending } = useLinkStatus();
+  if (!pending) return null;
+  return <LoaderCircle size={14} className="admin-nav-spin" aria-label="Yükleniyor" />;
+}
+
 const NavLink = Link as unknown as React.ComponentType<
   React.ComponentProps<typeof Link> & { unstable_dynamicOnHover?: boolean }
 >;
@@ -627,6 +638,7 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
                 >
                   {item.icon}
                   <span className="nav-label">{item.label}</span>
+                  <NavYukleniyor />
                 </NavLink>
               ))}
             </div>

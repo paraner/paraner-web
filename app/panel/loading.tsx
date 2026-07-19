@@ -4,6 +4,12 @@
 export default function PanelLoading() {
   return (
     <div aria-busy="true" aria-label="Yükleniyor">
+      {/* Görünür "Yükleniyor…" (2026-07-19): eskiden yalnız aria-label vardı, yani ekran
+          okuyucu duyuyordu ama GÖZLE sadece gri çubuklar görünüyordu → "takıldı mı?" hissi. */}
+      <div className="admin-loading-flag">
+        <span className="admin-nav-spin" />
+        Yükleniyor…
+      </div>
       <div className="skel skel-title" />
       <div className="skel skel-sub" />
 
