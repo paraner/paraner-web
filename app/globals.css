@@ -4439,3 +4439,14 @@ ul { list-style: none; }
 /* Modül benimseme satırı: bar + kullanıcı sayısı + toplam kayıt */
 .live-bar-row.adopt { grid-template-columns: 150px 1fr 40px 92px; }
 .adopt-rows { font-size: 11px; color: var(--text-dim); text-align: right; opacity: 0.75; }
+
+/* Müşteri detayı: profil bilgisi düzenleme + e-posta değiştirme (2026-07-19) */
+.admin-profile-edit {
+  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
+}
+.admin-mail-edit {
+  margin-bottom: 14px; padding: 14px; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border);
+}
+/* "Bilgileri düzenle" istatistik satırının sonunda, ayrık dursun */
+.admin-profile-stats .admin-dep-edit { margin-left: auto; }

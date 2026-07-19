@@ -3,11 +3,13 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Mail, Ban, Trash2, Star, ShieldOff } from "lucide-react";
+import { ArrowLeft, Mail, Ban, Trash2, Star, ShieldOff , Pencil, AlertTriangle, AtSign} from "lucide-react";
 import { showToast } from "../../../components/toast";
 import { confirmDialog } from "../../../components/confirm";
 import {
   sendPasswordReset,
+  updateProfileInfo,
+  changeUserEmail,
   setProfilePlan,
   setUserBanned,
   deleteUserAccount,
@@ -17,6 +19,7 @@ import type { AdminPerson } from "../../../../lib/adminUsers";
 import { profileLifecycle, lifecycleLabel, LIFECYCLE_META, relativeLabel } from "../../../../lib/lifecycle";
 import { tierLabel } from "../../../../lib/plans";
 import { TZ } from "../../../../lib/format";
+import { CURRENCIES } from "../../../../lib/currencies";
 
 export type ProfileUsage = {
   profileId: string;
@@ -49,6 +52,13 @@ export default function MusteriDetayClient({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
+  /* Profil bilgisi düzenleme (2026-07-19) + e-posta değiştirme taslakları */
+  const [duzenlenen, setDuzenlenen] = useState<string | null>(null);
+  const [tAd, setTAd] = useState("");
+  const [tTur, setTTur] = useState("individual");
+  const [tPb, setTPb] = useState("TRY");
+  const [mailAcik, setMailAcik] = useState(false);
+  const [yeniMail, setYeniMail] = useState("");
   const banned = Boolean(person.banned_until && new Date(person.banned_until).getTime() > now);
 
   // Tüm aksiyonlar tek kapıdan: kilit + sonuç toast'ı + sunucu verisini tazele.
@@ -161,13 +171,116 @@ export default function MusteriDetayClient({
                         : "Premium yap"}
                     </button>
                   </div>
-                  <div className="admin-profile-stats">
-                    <span>{u?.transactions ?? 0} işlem</span>
-                    <span>{u?.invoices ?? 0} fatura</span>
-                    <span>{u?.accounts ?? 0} hesap</span>
-                    <span>Son hareket: {u?.lastActivity ? fmtDate(u.lastActivity) : "—"}</span>
-                    <span>Para birimi: {p.currency || "TRY"}</span>
-                  </div>
+                  {/* Profil VERİSİNİ düzeltme (2026-07-19) — destek "adım yanlış / türü yanlış
+                      seçmişim / para birimim yanlış" dediğinde panelden çıkmadan düzeltebilsin. */}
+                  {duzenlenen === p.id ? (
+                    <div className="admin-profile-edit">
+                      <div className="admin-invite-grid" style={{ gap: 12 }}>
+                        <div className="admin-invite-field">
+                          <label className="admin-field-label" htmlFor={`ad-${p.id}`}>
+                            Profil adı
+                          </label>
+                          <input
+                            id={`ad-${p.id}`}
+                            className="adm-login-input"
+                            style={{ margin: 0, width: "100%" }}
+                            value={tAd}
+                            onChange={(e) => setTAd(e.target.value)}
+                          />
+                        </div>
+                        <div className="admin-invite-field">
+                          <label className="admin-field-label" htmlFor={`tur-${p.id}`}>
+                            Hesap türü
+                          </label>
+                          <select
+                            id={`tur-${p.id}`}
+                            className="adm-login-input"
+                            style={{ margin: 0, width: "100%" }}
+                            value={tTur}
+                            onChange={(e) => setTTur(e.target.value)}
+                          >
+                            <option value="individual">Bireysel</option>
+                            <option value="business">İşletme</option>
+                          </select>
+                        </div>
+                        <div className="admin-invite-field">
+                          <label className="admin-field-label" htmlFor={`pb-${p.id}`}>
+                            Para birimi
+                          </label>
+                          <select
+                            id={`pb-${p.id}`}
+                            className="adm-login-input"
+                            style={{ margin: 0, width: "100%" }}
+                            value={tPb}
+                            onChange={(e) => setTPb(e.target.value)}
+                          >
+                            {CURRENCIES.map((c) => (
+                              <option key={c.code} value={c.code}>
+                                {c.flag} {c.code} — {c.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {tTur !== (p.profile_type ?? "individual") && (
+                        <p className="admin-warn-inline">
+                          <AlertTriangle size={12} /> Hesap türü değişiyor — mobilde de menü ve
+                          özellikler buna göre değişir.
+                        </p>
+                      )}
+                      {tPb !== (p.currency || "TRY") && (
+                        <p className="admin-warn-inline">
+                          <AlertTriangle size={12} /> Para birimi değişiyor — geçmiş kayıtlar kendi
+                          para birimini korur, yalnız yeni kayıtlar {tPb} olur.
+                        </p>
+                      )}
+
+                      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          disabled={busy != null || !tAd.trim()}
+                          onClick={() =>
+                            run(`edit-${p.id}`, () =>
+                              updateProfileInfo(p.id, person.email, tAd, tTur, tPb),
+                            )
+                          }
+                        >
+                          {busy === `edit-${p.id}` ? "…" : "Kaydet"}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          disabled={busy != null}
+                          onClick={() => setDuzenlenen(null)}
+                        >
+                          Vazgeç
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="admin-profile-stats">
+                      <span>{u?.transactions ?? 0} işlem</span>
+                      <span>{u?.invoices ?? 0} fatura</span>
+                      <span>{u?.accounts ?? 0} hesap</span>
+                      <span>Son hareket: {u?.lastActivity ? fmtDate(u.lastActivity) : "—"}</span>
+                      <span>Para birimi: {p.currency || "TRY"}</span>
+                      <button
+                        type="button"
+                        className="admin-dep-edit"
+                        disabled={busy != null || pending}
+                        onClick={() => {
+                          setTAd(p.profile_name || p.name || "");
+                          setTTur(p.profile_type ?? "individual");
+                          setTPb(p.currency || "TRY");
+                          setDuzenlenen(p.id);
+                        }}
+                      >
+                        <Pencil size={12} /> Bilgileri düzenle
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -178,6 +291,55 @@ export default function MusteriDetayClient({
       {/* --- Aksiyonlar --- */}
       <div className="admin-panel" style={{ marginTop: 16 }}>
         <div className="admin-panel-head">Hesap işlemleri</div>
+        {mailAcik && (
+          <div className="admin-mail-edit">
+            <label className="admin-field-label" htmlFor="yeni-mail">
+              Yeni e-posta adresi
+            </label>
+            <div className="admin-invite-row" style={{ marginTop: 6 }}>
+              <input
+                id="yeni-mail"
+                className="adm-login-input"
+                style={{ margin: 0, flex: 1, minWidth: 220 }}
+                type="email"
+                placeholder={person.email}
+                value={yeniMail}
+                onChange={(e) => setYeniMail(e.target.value)}
+              />
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                disabled={busy != null || !yeniMail.trim()}
+                onClick={async () => {
+                  const ok = await confirmDialog({
+                    title: "E-postayı değiştir",
+                    message: `Giriş adresi ${person.email} → ${yeniMail.trim().toLowerCase()} olacak. Müşteri artık ESKİ adresiyle giriş yapamaz. Onaylıyor musun?`,
+                    confirmLabel: "Değiştir",
+                    danger: true,
+                  });
+                  if (ok) {
+                    await run("mail", () => changeUserEmail(person.id, person.email, yeniMail));
+                    setMailAcik(false);
+                  }
+                }}
+              >
+                {busy === "mail" ? "…" : "Değiştir"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                disabled={busy != null}
+                onClick={() => setMailAcik(false)}
+              >
+                Vazgeç
+              </button>
+            </div>
+            <p className="admin-warn-inline">
+              <AlertTriangle size={12} /> Müşteriye haber ver — yeni adresle giriş yapacak, eski
+              adres çalışmayacak.
+            </p>
+          </div>
+        )}
         <div className="admin-action-row">
           <button
             type="button"
@@ -189,6 +351,20 @@ export default function MusteriDetayClient({
           >
             <Mail size={14} />
             {busy === "reset" ? "Gönderiliyor…" : "Şifre sıfırlama maili gönder"}
+          </button>
+
+          {/* Giriş e-postasını değiştir — "yanlış mail ile kayıt oldum" en sık gelen
+              destek taleplerinden. Değişince kişi ESKİ adresle giremez → onay isteniyor. */}
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            disabled={busy != null || pending}
+            onClick={() => {
+              setYeniMail("");
+              setMailAcik((a) => !a);
+            }}
+          >
+            <AtSign size={14} /> E-postasını değiştir
           </button>
 
           <button

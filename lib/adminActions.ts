@@ -12,6 +12,7 @@ import {
   type SubscriptionTier,
 } from "./plans";
 import { DEPARTMENTS, departmentLabel, type Department } from "./supportShared";
+import { CURRENCIES } from "./currencies";
 import { sendInviteEmail, hasMailKey } from "./staffInvite";
 
 /* Personel davet/kurtarma linkinin gideceği sayfa — şifre kurulumu buradan yapılır.
@@ -110,6 +111,96 @@ export async function sendPasswordReset(userId: string, email: string): Promise<
 
   await logAction(actor, "password_reset_sent", { userId, email });
   return { ok: true, message: `Şifre sıfırlama maili ${email} adresine gönderildi.` };
+}
+
+/* --- Müşteri VERİSİNİ düzeltme (2026-07-19) ---
+   Mehmet: "müşteri hesabında bir sorun yaşadığında hemen girip hesabını bulup güncelleme
+   yapması gerekiyor." Buraya kadar tüm müşteri aksiyonları HESAP seviyesindeydi (şifre maili,
+   premium/free, askıya al, sil) — yanlış girilmiş veriyi düzeltmenin yolu yoktu.
+   ⚠️ ŞEMAYA DOKUNULMUYOR: yalnızca mevcut satırlar güncelleniyor (CLAUDE.md kuralı).
+   ⚠️ DB mobil ile ORTAK → burada yapılan düzeltme mobilde de anında görünür. */
+
+/** `profiles.profile_type` sözlüğü — veriden doğrulandı (2026-07-19: individual / business). */
+const PROFILE_TYPES = ["individual", "business"] as const;
+export type ProfileType = (typeof PROFILE_TYPES)[number];
+
+export async function updateProfileInfo(
+  profileId: string,
+  targetEmail: string,
+  profileName: string,
+  profileType: string,
+  currency: string,
+): Promise<ActionResult> {
+  const actor = await requireAdmin();
+  if (!actor) return { ok: false, message: "Yetkin yok." };
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, message: "Sunucu anahtarı eksik." };
+
+  const ad = profileName.trim();
+  if (!ad) return { ok: false, message: "Profil adı boş olamaz." };
+
+  /* Sözlük DIŞI değer yazma: DB'de bu kolonlarda CHECK yok → uydurma değer SESSİZCE
+     kaydolur, mobil onu tanımaz ve profil "türsüz/para birimsiz" görünür. */
+  if (!PROFILE_TYPES.includes(profileType as ProfileType)) {
+    return { ok: false, message: "Geçersiz profil türü." };
+  }
+  if (!CURRENCIES.some((c) => c.code === currency)) {
+    return { ok: false, message: "Geçersiz para birimi." };
+  }
+
+  /* ⚠️ `profile_name` ve `name` AYRI kolonlar ve ikisi de kullanımda (liste `profile_name`,
+     bazı ekranlar `name` okuyor) → ikisini birlikte yaz, yoksa ekranlar çelişir. */
+  const { error } = await admin
+    .from("profiles")
+    .update({ profile_name: ad, name: ad, profile_type: profileType, currency })
+    .eq("id", profileId);
+  if (error) return { ok: false, message: `Güncellenemedi: ${error.message}` };
+
+  await logAction(
+    actor,
+    "profile_updated",
+    { email: targetEmail },
+    { profileId, profileName: ad, profileType, currency },
+  );
+  revalidatePath("/admin/musteriler");
+  return { ok: true, message: `Profil güncellendi: ${ad}.` };
+}
+
+/* Müşterinin GİRİŞ e-postasını değiştir (auth.users).
+   ⚠️ Bu bir hesap-kimliği değişikliği: kişi artık ESKİ adresle giremez. Sık gelen destek
+   talebi ("yanlış mail ile kayıt oldum") ama geri alması manuel → arayüzde onay isteniyor.
+   ⚠️ `email_confirm: true`: doğrulama beklemeden geçerli olsun, yoksa müşteri arada
+   hiçbir adresle giremez duruma düşebilir. */
+export async function changeUserEmail(
+  userId: string,
+  oldEmail: string,
+  newEmail: string,
+): Promise<ActionResult> {
+  const actor = await requireAdmin();
+  if (!actor) return { ok: false, message: "Yetkin yok." };
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, message: "Sunucu anahtarı eksik." };
+
+  const yeni = newEmail.trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(yeni)) {
+    return { ok: false, message: "Geçerli bir e-posta yaz." };
+  }
+  if (yeni === oldEmail.trim().toLowerCase()) {
+    return { ok: false, message: "E-posta zaten bu." };
+  }
+
+  const { error } = await admin.auth.admin.updateUserById(userId, {
+    email: yeni,
+    email_confirm: true,
+  });
+  if (error) return { ok: false, message: `Değiştirilemedi: ${error.message}` };
+
+  await logAction(actor, "email_changed", { userId, email: oldEmail }, { newEmail: yeni });
+  revalidatePath("/admin/musteriler");
+  return {
+    ok: true,
+    message: `E-posta ${yeni} olarak değişti. Müşteri artık bu adresle giriyor.`,
+  };
 }
 
 /** Profilin planını değiştir. Mevcut kolonlar — şema DEĞİŞMEZ.
