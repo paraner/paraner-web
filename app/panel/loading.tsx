@@ -1,48 +1,16 @@
-// Panel'in TÜM sayfaları için ortak yükleniyor iskeleti.
-// Sayfa verisi gelene kadar ANINDA gösterilir → geçiş "tak" hisseder, donma olmaz.
-// (app/panel/loading.tsx, alt sayfaların kendi loading'i yoksa hepsini kapsar.)
-export default function PanelLoading() {
+/* Yükleniyor ekranı — bu kabuğun TÜM sayfaları için (alt sayfaların kendi loading'i yoksa).
+
+   ⚠️ TASARIM KARARI (Mehmet, 2026-07-19): gösterge SAYFANIN ORTASINDA, sol menüde DEĞİL.
+   Denenip ELENEN iki yaklaşım:
+     1) Menüde tıklanan öğeye dönen halka → "sol panel dahil edilmesin" denildi.
+     2) Gri iskelet çubukları → "yükleniyor" demiyordu; uzun beklemede "takıldı mı?" hissi.
+   Sol menü bu sırada normal ve TIKLANABİLİR kalır: loading yalnız içerik alanını kaplar
+   (Next'in layout/loading ayrımı) → kullanıcı fikrini değiştirip başka sayfaya geçebilir. */
+export default function SayfaYukleniyor() {
   return (
-    <div aria-busy="true" aria-label="Yükleniyor">
-      {/* Görünür "Yükleniyor…" (2026-07-19): eskiden yalnız aria-label vardı, yani ekran
-          okuyucu duyuyordu ama GÖZLE sadece gri çubuklar görünüyordu → "takıldı mı?" hissi. */}
-      <div className="admin-loading-flag">
-        <span className="admin-nav-spin" />
-        Yükleniyor…
-      </div>
-      <div className="skel skel-title" />
-      <div className="skel skel-sub" />
-
-      <div className="kpi-grid">
-        <div className="kpi-card">
-          <div className="skel skel-line sm" />
-          <div className="skel skel-line lg" />
-        </div>
-        <div className="kpi-card">
-          <div className="skel skel-line sm" />
-          <div className="skel skel-line lg" />
-        </div>
-        <div className="kpi-card">
-          <div className="skel skel-line sm" />
-          <div className="skel skel-line lg" />
-        </div>
-      </div>
-
-      <div className="skel skel-section" />
-      <div className="tx-list">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="tx-row">
-            <div className="tx-main">
-              <span className="skel skel-dot" />
-              <div className="tx-left" style={{ gap: 6 }}>
-                <span className="skel skel-line" style={{ width: 160 }} />
-                <span className="skel skel-line sm" style={{ width: 100 }} />
-              </div>
-            </div>
-            <span className="skel skel-line" style={{ width: 80 }} />
-          </div>
-        ))}
-      </div>
+    <div className="page-loading" aria-busy="true" aria-label="Yükleniyor">
+      <span className="page-loading-ring" />
+      <span className="page-loading-text">Yükleniyor…</span>
     </div>
   );
 }

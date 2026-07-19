@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import Link, { useLinkStatus } from "next/link";
+import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Users, LifeBuoy, UsersRound, Radio, ScrollText, Sparkles, LoaderCircle } from "lucide-react";
+import { LayoutDashboard, Users, LifeBuoy, UsersRound, Radio, ScrollText, Sparkles } from "lucide-react";
 import LogoutButton from "../panel/LogoutButton";
 import type { StaffRole } from "../../lib/adminGuard";
 
@@ -26,17 +26,6 @@ const ITEMS: { href: string; label: string; icon: typeof Users; exact?: boolean;
   // Kim neyi değiştirdi — müşteri e-postaları görünür → yalnız yönetici
   { href: "/admin/denetim", label: "Denetim Kaydı", icon: ScrollText, adminOnly: true },
 ];
-
-/* Tıklanan menü öğesinde dönen halka — "tıkladım mı, yükleniyor mu?" belirsizliğini bitirir.
-   ⚠️ `useLinkStatus` YALNIZCA bir <Link>'in ALTINDA çalışır (Next 16 API'si), o yüzden ayrı
-   bileşen. Neden gerekli: soğuk başlangıçta sunucu yanıtı saniyeler sürebiliyor
-   (ölçüm 2026-07-19: /admin soğukta 4579 ms, sıcakta 393 ms) ve o sırada ekranda ESKİ
-   sayfa duruyor → kullanıcı ikinci kez tıklıyor. */
-function NavYukleniyor() {
-  const { pending } = useLinkStatus();
-  if (!pending) return null;
-  return <LoaderCircle size={14} className="admin-nav-spin" aria-label="Yükleniyor" />;
-}
 
 export default function AdminSidebar({ role, email }: { role: StaffRole; email: string | null }) {
   const pathname = usePathname();
@@ -99,7 +88,6 @@ export default function AdminSidebar({ role, email }: { role: StaffRole; email: 
             >
               <Icon size={18} />
               <span>{it.label}</span>
-              <NavYukleniyor />
             </NavLink>
           );
         })}
