@@ -4155,9 +4155,18 @@ ul { list-style: none; }
 .staff-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 3px; }
 .staff-date { color: var(--text-dim); font-weight: 500; }
 
-/* Düzenleme satırı: tam genişlik form, hover tepkimesi yok */
-.staff-row-edit { display: block; background: rgba(255, 255, 255, 0.02); }
-.staff-edit-body { max-width: 560px; }
+/* Seçili satır — çekmecede hangisine baktığın belli olsun */
+.staff-row.on { background: rgba(255, 255, 255, 0.045); }
+
+/* Çekmece başlığı: avatar + e-posta + rol rozeti */
+.staff-dw-id { display: flex; align-items: center; gap: 12px; }
+.staff-avatar-lg { width: 44px; height: 44px; border-radius: 12px; font-size: 17px; }
+.staff-dw-mail {
+  font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px;
+  overflow-wrap: anywhere;
+}
+/* Çekmecedeki departman etiketleri satır sonunda alta insin */
+.tx-drawer .admin-dep-tags { justify-content: flex-start; }
 
 /* ⚠️ RENK KURALI: paneldeki .anim-act.edit teal'e boyanıyor (eski kod). Admin'de marka
    rengine bağlanmayalım → titanyum. Sil kırmızı KALIR (anlam rengi). */

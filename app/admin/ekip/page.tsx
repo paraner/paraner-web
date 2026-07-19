@@ -50,6 +50,7 @@ export default async function AdminEkipPage() {
       /* Davet kabul edildi mi: şifre kurup en az bir kez giren kişinin last_sign_in_at'i dolu.
          Beklemede olanı listede göstermek şart — yoksa "davet ettim ama gelmedi" sessiz kalır. */
       pending: !u?.last_sign_in_at,
+      lastSignIn: u?.last_sign_in_at ?? null,
     };
     entry.roles.push(r.role);
     if (r.created_at < entry.since) entry.since = r.created_at;
