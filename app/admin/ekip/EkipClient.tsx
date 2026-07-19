@@ -253,20 +253,21 @@ export default function EkipClient({
             />
           </div>
 
-          {/* SAĞ SÜTUN: rol + departman, ikisi de aynı açılır liste dili (Mehmet 2026-07-19) */}
-          <div className="admin-invite-right">
-            <Acilir
+          {/* Üç alan YAN YANA (Mehmet 2026-07-19): departman alta inince altta boşluk
+              kalıyordu, yer de vardı. E-posta · Rolü · Departmanlar tek satırda. */}
+          <Acilir
               label="Rolü"
               ozet={ROLES.find((r) => r.id === role)?.label ?? "Seç"}
               secenekler={ROLES.map((r) => ({ id: r.id, label: r.label, ipucu: r.desc }))}
               secili={[role]}
               onSec={(id) => setRole(id as "admin" | "agent")}
-              disabled={busy != null}
-            />
+            disabled={busy != null}
+          />
 
-            {/* Departman yalnız Destek rolünde sorulur — yönetici zaten hepsini görür. */}
-            {role === "agent" ? (
-              <Acilir
+          {/* Departman yalnız Destek rolünde sorulur — yönetici zaten hepsini görür.
+              Yönetici seçilince sütun BOŞ kalmasın diye yerine açıklama duruyor. */}
+          {role === "agent" ? (
+            <Acilir
                 label="Departmanlar"
                 ozet={
                   deps.length === 0
@@ -281,17 +282,16 @@ export default function EkipClient({
                 onSec={(id) =>
                   setDeps((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]))
                 }
-                disabled={busy != null}
-              />
-            ) : (
-              <div>
-                <span className="admin-field-label">Departmanlar</span>
-                <p className="admin-note" style={{ marginTop: 2 }}>
-                  Yönetici tüm departmanları görür — seçim gerekmez.
-                </p>
+              disabled={busy != null}
+            />
+          ) : (
+            <div className="admin-invite-field">
+              <span className="admin-field-label">Departmanlar</span>
+              <div className="admin-dep-bos">
+                <ShieldCheck size={13} /> Yönetici hepsini görür
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {depGerekli && (
