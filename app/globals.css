@@ -4518,3 +4518,24 @@ ul { list-style: none; }
   animation: admSpin 0.8s linear infinite;
 }
 .page-loading-text { font-size: 13.5px; color: var(--text-dim); }
+
+/* Menü tıklamasının ANLIK göstergesi (NavPending) — `loading.tsx` prefetch yüküyle geldiği
+   için bayat cache'te HİÇ görünmüyordu; bu onun boşluğunu dolduruyor. Aynı görünüm:
+   kullanıcı iki farklı "yükleniyor" tanımamalı.
+   · Konum JS'te ÖLÇÜLÜYOR (sol menünün sağ kenarı / üst barın altı) → sabit sayı yok,
+     daraltılmış menüde ve sürüklenerek boyutlanan menüde de doğru kalır.
+   · `pointer-events: none` ŞART: sol menü tıklanabilir kalmalı (kullanıcı fikrini
+     değiştirip başka sayfaya geçebilsin — loading.tsx'in de kuralı bu).
+   · 100 ms gecikmeli beliriyor: sıcak geçişler 14-26 ms sürüyor, orada göstergenin
+     çakıp sönmesi "takıldı" hissi verir. Yalnız GERÇEK bekleme görünür olsun. */
+.nav-pending {
+  position: fixed; right: 0; bottom: 0;
+  pointer-events: none;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 14px;
+  background: var(--bg);
+  opacity: 0;
+  animation: navPendingIn 0.12s ease-out 0.1s forwards;
+  z-index: 5;
+}
+@keyframes navPendingIn { to { opacity: 1; } }

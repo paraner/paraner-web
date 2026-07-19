@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { LayoutDashboard, Users, LifeBuoy, UsersRound, Radio, ScrollText, Sparkles } from "lucide-react";
 import LogoutButton from "../panel/LogoutButton";
+import NavPending from "../components/NavPending";
+import { useRewarmPrefetch } from "../components/useRewarmPrefetch";
 import type { StaffRole } from "../../lib/adminGuard";
 
 /* `unstable_dynamicOnHover` App Router Link'inde VAR ama next/link tip tanımına yansımamış
@@ -29,7 +30,6 @@ const ITEMS: { href: string; label: string; icon: typeof Users; exact?: boolean;
 
 export default function AdminSidebar({ role, email }: { role: StaffRole; email: string | null }) {
   const pathname = usePathname();
-  const router = useRouter();
   const items = ITEMS.filter((it) => !it.adminOnly || role === "admin");
 
   /* ⚠️ ADMIN YAVAŞLIĞININ SEBEBİ BUYDU (2026-07-18, Mehmet: "sayfalar arası geçiş yavaş").
@@ -46,19 +46,13 @@ export default function AdminSidebar({ role, email }: { role: StaffRole; email: 
         "çekirdek 6 rota" seçmiştik çünkü orada 30+ link var; admin'de en fazla 7 rota var,
         hepsini ısıtmak ucuz ve dokunmatikte hover olmadığı için ŞART.
      2) unstable_dynamicOnHover → hover'da tam yüke yükselt (peşin ısıtma kaçarsa yedek).
-     ⚠️ Prefetch DEV'de kapalıdır → etki yalnız prod'da ölçülür. */
-  useEffect(() => {
-    const t = setTimeout(() => {
-      items.forEach((it) => {
-        try {
-          router.prefetch(it.href, { kind: "full" as never });
-        } catch { /* prefetch başarısızsa sayfa yine normal açılır */ }
-      });
-    }, 300); // ilk boyamayı bloklamasın
-    return () => clearTimeout(t);
-    // items rol'e göre türüyor; role değişmedikçe referans değişse de içerik aynı.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router, role]);
+     ⚠️ Prefetch DEV'de kapalıdır → etki yalnız prod'da ölçülür.
+
+     ⚠️ 2026-07-19 EKİ: bu ısıtma MOUNT'TA BİR KEZ yapılıyordu ve `staleTimes.dynamic: 30`
+     onu 30 saniyede bayatlatıyordu → panel bir süre açık kalınca ısıtma boşa gidiyor,
+     tıklama yine soğuk tura düşüyordu (Mehmet: "Destek'e bastım, 8-9 sn hiçbir tepki yok").
+     Artık `useRewarmPrefetch` sekme öne geldiğinde ve fare menüye girdiğinde tekrar ısıtıyor. */
+  const isit = useRewarmPrefetch(items.map((it) => it.href));
 
   return (
     <aside className="admin-sidebar">
@@ -74,7 +68,9 @@ export default function AdminSidebar({ role, email }: { role: StaffRole; email: 
         />
         {email && <span className="admin-brand-mail" title={email}>{email}</span>}
       </div>
-      <nav className="admin-nav">
+      {/* Fare menüye girer girmez ısıt: tıklamadan önceki son şans (dokunmatikte hover yok,
+          orada sekme-öne-gelme tetikleyicisi devrede). */}
+      <nav className="admin-nav" onMouseEnter={isit} onFocus={isit}>
         {items.map((it) => {
           const active = it.exact ? pathname === it.href : pathname.startsWith(it.href);
           const Icon = it.icon;
@@ -88,6 +84,8 @@ export default function AdminSidebar({ role, email }: { role: StaffRole; email: 
             >
               <Icon size={18} />
               <span>{it.label}</span>
+              {/* Tıklama anında içerik alanına gösterge (prefetch bayatsa loading.tsx gelmez) */}
+              <NavPending />
             </NavLink>
           );
         })}

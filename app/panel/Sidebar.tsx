@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { BUSINESS_SECTIONS, type BusinessMenuItem } from "./businessMenu";
 import LogoutButton from "./LogoutButton";
+import NavPending from "../components/NavPending";
+import { useRewarmPrefetch } from "../components/useRewarmPrefetch";
 
 // `unstable_dynamicOnHover` App Router Link'inde VAR (next/dist/client/app-dir/link.d.ts:125)
 // ama `next/link` girişinin tip tanımına henüz yansımamış → prop'u tipe tanıtan ince sarmalayıcı.
@@ -54,6 +56,9 @@ const CORE_PREFETCH = new Set([
   "/panel/faturalar",
   "/panel/ayarlar",
 ]);
+// Aynı liste dizi hâlinde (useRewarmPrefetch dizi bekliyor) — MODÜL düzeyinde sabit,
+// her render'da yeni referans üretilmesin.
+const CORE_PREFETCH_LIST = [...CORE_PREFETCH];
 
 const SIDEBAR_OPEN = 248;
 const SIDEBAR_COLLAPSED = 74;
@@ -89,16 +94,11 @@ export default function Sidebar({
   // Link'teki prefetch={true} viewport'a bağlıdır: Faturalar gibi KAPALI akordeon içindeki
   // linkler hiç görünmediği için asla ısınmazdı. router.prefetch viewport'tan bağımsız çalışır.
   // kind:"full" şart — varsayılan (auto) dinamik rotada yalnız kabuğu getirir, veriyi getirmez.
-  useEffect(() => {
-    const t = setTimeout(() => {
-      CORE_PREFETCH.forEach((href) => {
-        try {
-          router.prefetch(href, { kind: "full" as never });
-        } catch { /* prefetch başarısızsa sayfa yine normal açılır */ }
-      });
-    }, 300); // ilk boyamayı bloklamasın
-    return () => clearTimeout(t);
-  }, [router]);
+  //
+  // ⚠️ 2026-07-19: bu ısıtma MOUNT'TA BİR KEZ yapılıyordu, `staleTimes.dynamic: 30` ise onu
+  // 30 saniyede bayatlatıyordu → panel bir süre açık kalınca ısıtma boşa gidiyordu. Artık
+  // sekme öne gelince + fare menüye girince tekrar ısıtılıyor (bkz. useRewarmPrefetch).
+  const isit = useRewarmPrefetch(CORE_PREFETCH_LIST);
   const searchParams = useSearchParams();
   const supabase = createClient();
 
@@ -295,6 +295,7 @@ export default function Sidebar({
           >
             <span className="nav-subicon">{item.icon}</span>
             <span className="nav-label">{item.label}</span>
+            <NavPending />
           </NavLink>
         ) : (
           <div className="nav-subitem soon">
@@ -632,7 +633,15 @@ export default function Sidebar({
       <div
         className={`nav-region${navFade.top ? " fade-top" : ""}${navFade.bottom ? " fade-bottom" : ""}`}
       >
-        <nav className="panel-nav" ref={navRef} onScroll={updateNavFade}>
+        {/* Fare menüye girer girmez çekirdek rotaları tazele — tıklamadan önceki son şans
+            (dokunmatikte hover yok, orada sekme-öne-gelme tetikleyicisi devrede). */}
+        <nav
+          className="panel-nav"
+          ref={navRef}
+          onScroll={updateNavFade}
+          onMouseEnter={isit}
+          onFocus={isit}
+        >
           {groups.map((g, gi) => (
             <div key={gi} className="nav-group">
               {g.label && <div className="nav-group-label">{g.label}</div>}
@@ -650,6 +659,8 @@ export default function Sidebar({
                 >
                   {item.icon}
                   <span className="nav-label">{item.label}</span>
+                  {/* Tıklama anında içerik alanına gösterge (prefetch bayatsa loading.tsx gelmez) */}
+                  <NavPending />
                     </NavLink>
               ))}
             </div>
