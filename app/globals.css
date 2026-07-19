@@ -4158,31 +4158,16 @@ ul { list-style: none; }
 /* Seçili satır — çekmecede hangisine baktığın belli olsun */
 .staff-row.on { background: rgba(255, 255, 255, 0.045); }
 
-/* --- Çekmece admin kabuğunda: SOL PANELLE AYNI YÜKSEKLİK (Mehmet, 2026-07-19) ---
-   ⚠️ `.tx-drawer` MÜŞTERİ paneli geometrisine göre ayarlı: orada üstte yüzen bir üst bar
-   var, o yüzden `top:83px` + `bottom:12px` ile yüzen kart gibi duruyor. Admin kabuğunda
-   ise sol panel TAM YÜKSEKLİK (0 → 100dvh) → ölçüm: panel 0-900, çekmece 83-888, yani
-   üstte 83px aşağıda başlayıp altta 12px yukarıda bitiyordu, hizasız duruyordu.
-   Burada çekmeceyi sol panelin AYNADAKİ karşılığı yapıyoruz: tam yükseklik, köşe
-   yuvarlaması yok, sağ kenara yapışık, ayırıcı olarak sol kenarlık (panelin border-right'ı
-   gibi). Kabuk artık simetrik: sol ray · içerik · sağ ray. */
-.admin-shell .tx-drawer {
-  top: 0; right: 0; bottom: 0; height: 100dvh;
-  border-radius: 0; border: 0; border-left: 1px solid var(--border-strong);
-  box-shadow: -16px 0 44px rgba(0, 0, 0, 0.5);
-  padding: 26px 22px 24px;
-}
-/* Çekmece artık tepeye kadar çıkıyor → üstteki sayaç kümesi altında kalmasın, sola kaysın.
-   :has() ile: çekmece varsa üst küme çekmece genişliği kadar içeri alınır. */
-.admin-main:has(.tx-drawer) .admin-top-actions {
-  right: calc(384px + 32px);
-  transition: right 0.24s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.admin-top-actions { transition: right 0.24s cubic-bezier(0.22, 1, 0.36, 1); }
-/* Dar ekranda çekmece tam genişliğe yakın → içerik kaymasın, üst küme de yerinde kalsın */
-@media (max-width: 1040px) {
-  .admin-main:has(.tx-drawer) .admin-top-actions { right: 32px; }
-}
+/* --- Çekmece admin kabuğunda: İÇERİK PANELLERİYLE HİZALI (Mehmet, 2026-07-19) ---
+   ⚠️ `.tx-drawer`ın `top:83px`i MÜŞTERİ paneli geometrisine göre: orada üstte yüzen bir
+   üst bar var. Admin'de o bar yok, içerik `.admin-content` içinde başlıyor → çekmece
+   sayfa panellerinden yukarıda kalıyordu.
+   111px NEREDEN: .admin-content padding-top 28 + .admin-h1 (~29) + .admin-sub
+   (margin-top 3 + ~21 + margin-bottom 24) ≈ 111 → ilk `.admin-panel`in üst kenarı.
+   Ölçümle doğrulandı (1600×900: panel top = 111). Her admin sayfası aynı başlık desenini
+   (h1 + sub) kullandığı için değer tüm sayfalarda geçerli.
+   ⚠️ Başlık deseni değişirse (ör. h1 kalkarsa) BU DEĞER DE güncellenmeli. */
+.admin-shell .tx-drawer { top: 111px; }
 
 /* Çekmece başlığı: avatar + e-posta + rol rozeti */
 .staff-dw-id { display: flex; align-items: center; gap: 12px; }
@@ -4195,11 +4180,16 @@ ul { list-style: none; }
 .tx-drawer .admin-dep-tags { justify-content: flex-start; }
 
 /* ⚠️ RENK KURALI: paneldeki .anim-act.edit teal'e boyanıyor (eski kod). Admin'de marka
-   rengine bağlanmayalım → titanyum. Sil kırmızı KALIR (anlam rengi). */
-.staff-row .anim-act.edit:hover {
+   rengine bağlanmayalım → titanyum. Sil kırmızı KALIR (anlam rengi).
+   Kapsam `.admin-shell`: hem satırdaki hem çekmecedeki Düzenle butonu için geçerli. */
+.admin-shell .anim-act.edit:hover {
   background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
   border-color: #a9afb6; color: #0a0b0d;
 }
+/* ⚠️ Etiket rengi AYRI kural: `.anim-act::before` kendi `color:#fff`ini taşıyor, butondan
+   miras ALMIYOR. Titanyum zeminde beyaz "Düzenle" okunmuyordu (Mehmet yakaladı) →
+   ikonla aynı koyu renge çekiyoruz. */
+.admin-shell .anim-act.edit:hover::before { color: #0a0b0d; }
 .staff-row .anim-act.mail::before { content: "Yenile"; }
 .staff-row .anim-act.mail:hover {
   background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.24);
