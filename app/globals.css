@@ -4158,6 +4158,32 @@ ul { list-style: none; }
 /* Seçili satır — çekmecede hangisine baktığın belli olsun */
 .staff-row.on { background: rgba(255, 255, 255, 0.045); }
 
+/* --- Çekmece admin kabuğunda: SOL PANELLE AYNI YÜKSEKLİK (Mehmet, 2026-07-19) ---
+   ⚠️ `.tx-drawer` MÜŞTERİ paneli geometrisine göre ayarlı: orada üstte yüzen bir üst bar
+   var, o yüzden `top:83px` + `bottom:12px` ile yüzen kart gibi duruyor. Admin kabuğunda
+   ise sol panel TAM YÜKSEKLİK (0 → 100dvh) → ölçüm: panel 0-900, çekmece 83-888, yani
+   üstte 83px aşağıda başlayıp altta 12px yukarıda bitiyordu, hizasız duruyordu.
+   Burada çekmeceyi sol panelin AYNADAKİ karşılığı yapıyoruz: tam yükseklik, köşe
+   yuvarlaması yok, sağ kenara yapışık, ayırıcı olarak sol kenarlık (panelin border-right'ı
+   gibi). Kabuk artık simetrik: sol ray · içerik · sağ ray. */
+.admin-shell .tx-drawer {
+  top: 0; right: 0; bottom: 0; height: 100dvh;
+  border-radius: 0; border: 0; border-left: 1px solid var(--border-strong);
+  box-shadow: -16px 0 44px rgba(0, 0, 0, 0.5);
+  padding: 26px 22px 24px;
+}
+/* Çekmece artık tepeye kadar çıkıyor → üstteki sayaç kümesi altında kalmasın, sola kaysın.
+   :has() ile: çekmece varsa üst küme çekmece genişliği kadar içeri alınır. */
+.admin-main:has(.tx-drawer) .admin-top-actions {
+  right: calc(384px + 32px);
+  transition: right 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.admin-top-actions { transition: right 0.24s cubic-bezier(0.22, 1, 0.36, 1); }
+/* Dar ekranda çekmece tam genişliğe yakın → içerik kaymasın, üst küme de yerinde kalsın */
+@media (max-width: 1040px) {
+  .admin-main:has(.tx-drawer) .admin-top-actions { right: 32px; }
+}
+
 /* Çekmece başlığı: avatar + e-posta + rol rozeti */
 .staff-dw-id { display: flex; align-items: center; gap: 12px; }
 .staff-avatar-lg { width: 44px; height: 44px; border-radius: 12px; font-size: 17px; }
