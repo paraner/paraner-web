@@ -119,9 +119,17 @@
 
 ### ⚡ 2026-07-19 OTURUMUNDAN KALANLAR
 > **Yeni sohbete başlarken önce buraya bak.** Sıra önerisi: 1 → 2 → 3.
-- [ ] **1) 🔴 Departman ayrımı canlı test** — en kritik açık iş, kod hazır ama doğrulanmadı.
-      `sql/destek/destek-departman-TEST.sql`. Agent rolünde hesap gerekiyor (mgzrco ekipten
-      çıkarıldı, şu an tek personel admin → ayrım görünmez). **İlk gerçek personelden ÖNCE.**
+- [x] **1) ✅ DEPARTMAN AYRIMI DOĞRULANDI (2026-07-19) — 7/7 geçti.** Geçici agent hesabı açılıp
+      RLS **doğrudan JWT ile** sorgulandı (tarayıcı yerine; panel zaten bu sorgunun sarmalayıcısı):
+      personel olmayan 0 · departmansız agent 0 (**fail-closed teyit**) · yalnız `oneri` verilince
+      6 talepten SADECE 1'i görüyor · başka departmana taşıma 403 · kendi talebinin durumunu
+      değiştirme 200 · göremediği talebin mesajları 0 ve yazma 403 · kendi departmanına yanıt 201
+      (**pozitif kontrol** — fazla daraltılmamış) · `sender_type='user'` taklidi 403 (**K3 korunuyor**).
+      Ortam başlangıç hâline geri alındı (hesap+mesaj silindi, `cdscsc` durumu `open`'a döndürüldü).
+      ⚠️ **Ders:** `ticket_messages` insert'i `sender_id = auth.uid()` ŞART koşuyor — testte
+      göndermeyi unutunca 403 alıp "politika fazla dar" diye yanlış alarm verecektim.
+      ⚠️ **Kalan (RLS DEĞİL, kod guard'ı):** agent `/admin/musteriler` görmemeli — `requireAdminPage`
+      kodda doğru duruyor ama sorguyla test edilemez, TARAYICI teyidi bekliyor.
 - [ ] **2) KARAR BEKLİYOR — test cihazı kayıtları:** `admin@paraner.com`'da 17 `user_devices`
       satırı var, 16'sı 19.07 testlerinden (her testte yeni tarayıcı profili açılmıştı).
       Silinsin mi? Silinirse Mehmet'in kendi tarayıcısı da gider → bir kez "yeni cihaz" maili
@@ -143,6 +151,10 @@
       **önbellek yok**. Bugün acıtmıyor (kullanıcı az; DB ölçüldü: sorgular 0.35-0.5 sn, throttle YOK) ama
       birkaç bin kullanıcıda sayfayı kilitler. Çözüm: taleplerden gelen `user_id` setiyle `.in(...)` daraltma.
       ⚠️ Daraltma sorguları SERİLEŞTİRİR (önce talepler, sonra kişiler) → küçük ölçekte net kayıp; **ölçek gelince** yapılacak.
+- [ ] 🔴 **DONMA DEVAM EDİYOR (Mehmet, 2026-07-19 akşam):** "sekmeden çıkıp geri girince, Genel
+      Bakış'tayken Destek'e basınca donuyor." ⚠️ **Düzeltmeler o an CANLIDA DEĞİLDİ** (5 commit
+      push edilmemişti) → önce deploy edip TEKRAR bak; hâlâ sürüyorsa sebep ısıtma/gösterge değil,
+      aşağıdaki soğuk lambda + `listPeople` maddeleri.
 - [ ] **8-9 sn'nin kalanı ÖLÇÜLMEDİ** — DB temiz çıktığına göre kalan şüpheli **Vercel Hobby soğuk lambda**
       (aşağıda ayrı madde). Doğrulama: sekmeyi uzun süre arkada bırak, DevTools Network açıkken tıkla,
       RSC isteğinin **TTFB**'sine bak. Soğuk başlangıçsa TTFB yüksek, sunucu render'ı kısa olur.
