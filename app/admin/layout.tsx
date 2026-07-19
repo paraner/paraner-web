@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { getStaffRoleResult } from "../../lib/adminGuard";
-import { createClient } from "../../lib/supabase/server";
+import { getStaffRoleResult, getSessionUser } from "../../lib/adminGuard";
 import AdminSidebar from "./AdminSidebar";
 import ToastHost from "../components/ToastHost";
 import ConfirmProvider from "../components/ConfirmProvider";
@@ -41,12 +40,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!role) redirect("/panel");
 
   /* Kenar çubuğunda "hangi hesapla bakıyorum" yazsın (Mehmet, 2026-07-18).
-     Admin panelinde birden fazla hesapla (kendi hesabın / test hesabı) çalışılıyor;
-     hangisiyle işlem yaptığını görmeden müşteri silmek/rol vermek riskli. */
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+     ⚠️ Ayrı bir auth.getUser() AÇMA — getSessionUser istek başına paylaşılan tek çağrı
+     (2026-07-19 disk IO ölçümü: sayfa başına 4 getUser = 16 auth sorgusu oluyordu). */
+  const user = await getSessionUser();
 
   return (
     <div className="admin-shell">

@@ -1,7 +1,6 @@
 import { createAdminClient, hasAdminKey } from "../../../lib/supabase/admin";
 import { listAuthUsers } from "../../../lib/adminUsers";
-import { requireAdminPage } from "../../../lib/adminGuard";
-import { createClient } from "../../../lib/supabase/server";
+import { requireAdminPage, getSessionUser } from "../../../lib/adminGuard";
 import AdminKeyNotice from "../AdminKeyNotice";
 import EkipClient, { type StaffMember } from "./EkipClient";
 
@@ -60,6 +59,6 @@ export default async function AdminEkipPage() {
   const staff = [...byUser.values()].sort((a, b) => a.email.localeCompare(b.email, "tr"));
   /* Kendi satırında "Ekipten çıkar" gösterilmesin (kilitlenme). Sunucu da engelliyor;
      düğmeyi hiç göstermemek daha anlaşılır. */
-  const { data: { user } } = await (await createClient()).auth.getUser();
+  const user = await getSessionUser(); // istek başına paylaşılan tek çağrı
   return <EkipClient staff={staff} selfEmail={user?.email ?? null} />;
 }

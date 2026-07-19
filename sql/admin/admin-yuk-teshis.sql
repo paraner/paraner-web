@@ -131,3 +131,21 @@ select jobid, schedule, jobname, active from cron.job order by jobid;
 --     select pg_stat_statements_reset();
 --   Sıfırladıktan sonra 1 gün bekleyip tekrar bak — değişimi net görürsün.
 -- ═══════════════════════════════════════════════════════════════════════════
+
+
+-- ═══════════ REALTIME YÜKÜ (2026-07-19 ölçümünden sonra eklendi) ══════════
+-- Ölçümde 1 numaralı yük: `wal->>...` sorgusu 635.577 çağrı → Supabase Realtime'ın
+-- WAL taraması. Realtime, YAYINA (publication) eklenmiş her tabloyu izler.
+-- Gereksiz tablo yayındaysa boşuna WAL işi yapılır.
+-- Yalnızca gerçekten canlı olması gerekenler kalmalı:
+--   · ticket_messages → destek sohbeti canlı akıyor (GEREKLİ)
+--   · notifications   → çan bildirimi (GEREKLİ)
+-- Listeyi gör:
+select schemaname, tablename
+from pg_publication_tables
+where pubname = 'supabase_realtime'
+order by tablename;
+
+-- Gereksiz bir tablo varsa yayından çıkar (ÖRNEK — körlemesine çalıştırma,
+-- önce üstteki listeyi gör ve mobil o tabloyu realtime dinliyor mu teyit et):
+--   alter publication supabase_realtime drop table public.<tablo>;

@@ -1,6 +1,23 @@
 import "server-only";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { createClient } from "./supabase/server";
+
+/* Oturumdaki kullanıcı — İSTEK BAŞINA BİR KEZ.
+   ⚠️ 2026-07-19 ölçümü (Supabase disk IO uyarısı): tek bir admin sayfası açılışında
+   `auth.getUser()` DÖRT kez çağrılıyordu (layout guard + layout e-posta + sayfa guard +
+   sayfa e-posta). Her getUser GoTrue'da 4 sorgu demek (users + sessions + identities +
+   mfa_factors) → sayfa başına ~16 auth sorgusu. pg_stat_statements'ta bu dördü ~21.600'er
+   çağrıyla ilk sıralardaydı.
+   React `cache()` aynı istek içinde sonucu paylaştırır → 4 çağrı 1'e iner.
+   (Farklı isteklerde paylaşılmaz; oturum sızması riski YOK.) */
+export const getSessionUser = cache(async () => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
+});
 
 export type StaffRole = "admin" | "agent";
 
@@ -15,11 +32,11 @@ export type StaffRole = "admin" | "agent";
    Kural: yetki sorgusu başarısızsa yetki VERME ama "yetkisi yok" da DEME — durumu söyle. */
 export type StaffRoleResult = { role: StaffRole | null; error: string | null };
 
-export async function getStaffRoleResult(): Promise<StaffRoleResult> {
+/* ⚠️ Bu da `cache()`li: layout guard + sayfa guard aynı istekte İKİ KEZ çağırıyordu,
+   yani user_roles sorgusu da iki kez gidiyordu. Artık istek başına bir kez. */
+export const getStaffRoleResult = cache(async (): Promise<StaffRoleResult> => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user) return { role: null, error: null }; // gerçekten oturum yok
 
   /* Şema önbelleği hatası GEÇİCİDİR (şema değişikliğinden sonra PostgREST kendini
@@ -40,7 +57,7 @@ export async function getStaffRoleResult(): Promise<StaffRoleResult> {
     return { role: null, error: error.message };
   }
   return { role: null, error: "bilinmeyen" };
-}
+});
 
 export async function getStaffRole(): Promise<StaffRole | null> {
   return (await getStaffRoleResult()).role;

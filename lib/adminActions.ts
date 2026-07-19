@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
-import { getStaffRole } from "./adminGuard";
+import { getStaffRole, getSessionUser } from "./adminGuard";
 import {
   FREE_TIER,
   TIER_LABELS,
@@ -67,10 +67,8 @@ type Actor = { id: string; email: string };
 async function requireAdmin(): Promise<Actor | null> {
   const role = await getStaffRole();
   if (role !== "admin") return null; // agent (destek) müşteri yönetemez — yalnız admin
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Paylaşılan tek çağrı — ayrı getUser açmıyoruz (2026-07-19 auth yükü ölçümü).
+  const user = await getSessionUser();
   if (!user) return null;
   return { id: user.id, email: user.email ?? "—" };
 }
