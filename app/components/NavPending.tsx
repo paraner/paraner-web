@@ -22,6 +22,33 @@ import { useLinkStatus } from "next/link";
 
    ⚠️ `pointer-events: none` (CSS): gösterge sol menüyü ASLA bloklamamalı — kullanıcı
    fikrini değiştirip başka sayfaya geçebilmeli (loading.tsx'in de kuralı bu). */
+/* Göstergenin ARDINDAKİ zemin rengi. Kutu opak olmak ZORUNDA — altında eski sayfanın
+   içeriği durur, saydam kalırsa kullanıcı "yükleniyor" halkasını eski tablonun üstünde görür.
+
+   ⚠️ `getComputedStyle(kabuk).backgroundColor` TEK BAŞINA YETMİYOR (bu, önceki turda
+   yaptığım düzeltmenin kendi hatasıydı): `.admin-shell`'in zemini var (#08090b) ama
+   `.panel-shell`'in YOK — renk `body`'de tanımlı. Orada ölçüm `rgba(0,0,0,0)` yani
+   SAYDAM dönüyordu → müşteri panelinde kutu tamamen şeffaf kalırdı.
+   Bu yüzden opak bir ata bulunana kadar yukarı tırmanıyoruz, en sonda body. */
+function zeminBul(el: Element | null): string {
+  /* ⚠️ "sonu ,0) ile bitiyorsa saydamdır" KESTİRMESİ YANLIŞ — ilk yazdığım buydu:
+     `rgb(0, 0, 0)` (opak SİYAH, tam da panelin zemini) ve `rgb(255, 255, 0)` de o kalıba
+     uyuyor. Doğrusu alfa BİLEŞENİNE bakmak: 3 bileşen = opak, 4. bileşen 0 = saydam. */
+  const saydam = (c: string) => {
+    if (!c || c === "transparent") return true;
+    const m = c.match(/^rgba?\(([^)]+)\)$/);
+    if (!m) return false; // beklenmedik biçim → opak say, kutu kesinlikle boyansın
+    const p = m[1].split(/[,/]/).map((s) => s.trim());
+    return p.length > 3 && parseFloat(p[3]) === 0;
+  };
+  for (let n: Element | null = el; n; n = n.parentElement) {
+    const c = getComputedStyle(n).backgroundColor;
+    if (!saydam(c)) return c;
+  }
+  const govde = getComputedStyle(document.body).backgroundColor;
+  return saydam(govde) ? "#000" : govde;
+}
+
 export default function NavPending() {
   const { pending } = useLinkStatus();
   const [kutu, setKutu] = useState<{
@@ -51,10 +78,9 @@ export default function NavPending() {
          EKRANIN ortasına çekiliyor (üst bar görsel olarak boş, göz orayı saymıyor).
          Aynı kaydırmayı burada alttan boşlukla yapıyoruz. Admin'de üst bar yok → 0. */
       kaydir: bar ? bar.getBoundingClientRect().height : 0,
-      /* ⚠️ Zemin SABİT YAZILMAZ: admin kabuğu #08090b, müşteri paneli var(--bg) (#000000).
-         `var(--bg)` yazdığımda admin'de saf siyah kutu sayfadan renk olarak ayrılıyordu.
-         Portal <body>'de durduğu için CSS ile kabuğa göre seçemiyoruz → ölçüp uyguluyoruz. */
-      zemin: kabuk ? getComputedStyle(kabuk).backgroundColor : "var(--bg)",
+      /* ⚠️ Zemin SABİT YAZILMAZ: admin kabuğu #08090b, müşteri panelinde renk body'de.
+         Portal <body>'de durduğu için CSS ile kabuğa göre seçemiyoruz → ölçüyoruz. */
+      zemin: zeminBul(kabuk),
     });
   }, [pending]);
 
