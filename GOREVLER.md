@@ -131,6 +131,21 @@
       hâlâ sessizce `teknik`'e düşüyor → satış talebi teknik kuyruğunda bekler.
 - [ ] 🔴 **Departman ayrımı canlı test edilmedi** (yukarıda Adım 4). Agent hesabı kalmadı
       (`mgzrco` ekipten çıkarıldı). İlk personel alınmadan ÖNCE `sql/destek/destek-departman-TEST.sql`.
+- [x] **Menü tıklamasında "hiç tepki yok" ÇÖZÜLDÜ (2026-07-19, `df28837`)** — sebep sunucu değildi:
+      `loading.tsx` ekranı PREFETCH YÜKÜYLE geliyor (Next 16 docs `linking-and-navigating.md:231`),
+      sol menü prefetch'i mount'ta BİR KEZ çalışıyordu, `staleTimes.dynamic: 30` onu 30 sn'de
+      bayatlatıyordu → sekme arkada bekleyince gösterilecek hiçbir şey kalmıyordu. Eklendi:
+      `NavPending` (useLinkStatus, prefetch'ten bağımsız, 100 ms gecikmeli) + `useRewarmPrefetch`
+      (sekme öne gelince + fare menüye girince, 15 sn boğazlamalı — **periyodik DEĞİL**, disk IO).
+      Admin + müşteri panelinin İKİSİNE de uygulandı. ⚠️ Prefetch DEV'de kapalı → **prod'da doğrula**.
+- [ ] ⚡ **`listPeople()` ölçek borcu (yeni, 2026-07-19)** — `/admin/destek` ≤200 talebi etiketlemek için
+      `auth.users`'ı SERİ sayfalayıp `profiles` + `user_devices` TAM TABLOSUNU (10.000 limit) çekiyor,
+      **önbellek yok**. Bugün acıtmıyor (kullanıcı az; DB ölçüldü: sorgular 0.35-0.5 sn, throttle YOK) ama
+      birkaç bin kullanıcıda sayfayı kilitler. Çözüm: taleplerden gelen `user_id` setiyle `.in(...)` daraltma.
+      ⚠️ Daraltma sorguları SERİLEŞTİRİR (önce talepler, sonra kişiler) → küçük ölçekte net kayıp; **ölçek gelince** yapılacak.
+- [ ] **8-9 sn'nin kalanı ÖLÇÜLMEDİ** — DB temiz çıktığına göre kalan şüpheli **Vercel Hobby soğuk lambda**
+      (aşağıda ayrı madde). Doğrulama: sekmeyi uzun süre arkada bırak, DevTools Network açıkken tıkla,
+      RSC isteğinin **TTFB**'sine bak. Soğuk başlangıçsa TTFB yüksek, sunucu render'ı kısa olur.
 - [ ] **Supabase Studio sekmesini açık bırakma** — ölçüldü: "Disk IO Budget" uyarısının en büyük
       kaynağı şema introspection sorguları (594+383 blok), Studio açık kaldıkça çalışıyorlar.
       Realtime çağrı sayısında 1. ama disk okumada HİÇ YOK (`sql/admin/admin-yuk-teshis.sql`).
