@@ -24,7 +24,12 @@ import { useLinkStatus } from "next/link";
    fikrini değiştirip başka sayfaya geçebilmeli (loading.tsx'in de kuralı bu). */
 export default function NavPending() {
   const { pending } = useLinkStatus();
-  const [kutu, setKutu] = useState<{ left: number; top: number } | null>(null);
+  const [kutu, setKutu] = useState<{
+    left: number;
+    top: number;
+    kaydir: number;
+    zemin: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!pending) {
@@ -36,9 +41,20 @@ export default function NavPending() {
        üst bar yok. Sabit değer yazmak 19.07'deki "gösterge 69px aşağıda" hatasının aynısı olurdu. */
     const yan = document.querySelector(".admin-sidebar, .panel-sidebar");
     const bar = document.querySelector(".panel-topbar");
+    const kabuk = document.querySelector(".admin-shell, .panel-shell");
     setKutu({
       left: yan ? yan.getBoundingClientRect().right : 0,
       top: bar ? bar.getBoundingClientRect().bottom : 0,
+      /* ⚠️ HALKA loading.tsx'inkiyle AYNI YERDE durmalı, yoksa ikisi arka arkaya çıkınca
+         (kabuk prefetch'li ama veri değilse) halka gözle görülür biçimde ZIPLIYOR.
+         loading.tsx panelde `margin-top: calc(var(--panel-topbar-h) / -2)` ile optik olarak
+         EKRANIN ortasına çekiliyor (üst bar görsel olarak boş, göz orayı saymıyor).
+         Aynı kaydırmayı burada alttan boşlukla yapıyoruz. Admin'de üst bar yok → 0. */
+      kaydir: bar ? bar.getBoundingClientRect().height : 0,
+      /* ⚠️ Zemin SABİT YAZILMAZ: admin kabuğu #08090b, müşteri paneli var(--bg) (#000000).
+         `var(--bg)` yazdığımda admin'de saf siyah kutu sayfadan renk olarak ayrılıyordu.
+         Portal <body>'de durduğu için CSS ile kabuğa göre seçemiyoruz → ölçüp uyguluyoruz. */
+      zemin: kabuk ? getComputedStyle(kabuk).backgroundColor : "var(--bg)",
     });
   }, [pending]);
 
@@ -47,7 +63,12 @@ export default function NavPending() {
   return createPortal(
     <div
       className="nav-pending"
-      style={{ left: kutu.left, top: kutu.top }}
+      style={{
+        left: kutu.left,
+        top: kutu.top,
+        paddingBottom: kutu.kaydir,
+        background: kutu.zemin,
+      }}
       aria-busy="true"
       aria-label="Yükleniyor"
     >

@@ -4527,15 +4527,20 @@ ul { list-style: none; }
    · `pointer-events: none` ŞART: sol menü tıklanabilir kalmalı (kullanıcı fikrini
      değiştirip başka sayfaya geçebilsin — loading.tsx'in de kuralı bu).
    · 100 ms gecikmeli beliriyor: sıcak geçişler 14-26 ms sürüyor, orada göstergenin
-     çakıp sönmesi "takıldı" hissi verir. Yalnız GERÇEK bekleme görünür olsun. */
+     çakıp sönmesi "takıldı" hissi verir. Yalnız GERÇEK bekleme görünür olsun.
+   · `background` ve `padding-bottom` (optik ortalama) İNLİNE geliyor — ikisi de kabuğa göre
+     DEĞİŞİYOR (admin #08090b · panel siyah; panelde 71px üst bar var, admin'de yok) ve portal
+     <body>'de durduğu için CSS ile kabuğa göre seçilemiyor. Bkz. NavPending.tsx.
+   · z-index: açık çekmecelerin (.tx-drawer vb. 200-300) ÜSTÜNDE olmalı — altında kalırsa
+     çekmece açıkken yapılan gezinmede gösterge görünmez ve hata aynen geri gelir.
+     Toast'ların (9999) altında kalır: bildirim her zaman en üstte. */
 .nav-pending {
   position: fixed; right: 0; bottom: 0;
   pointer-events: none;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 14px;
-  background: var(--bg);
   opacity: 0;
   animation: navPendingIn 0.12s ease-out 0.1s forwards;
-  z-index: 5;
+  z-index: 400;
 }
 @keyframes navPendingIn { to { opacity: 1; } }

@@ -55,7 +55,10 @@ export default function AdminSidebar({ role, email }: { role: StaffRole; email: 
   const isit = useRewarmPrefetch(items.map((it) => it.href));
 
   return (
-    <aside className="admin-sidebar">
+    /* Fare menüye girer girmez ısıt — tıklamadan önceki son şans (dokunmatikte hover yok,
+       orada sekme-öne-gelme tetikleyicisi devrede). <nav>'da değil <aside>'da: marka alanı
+       nav'ın dışında ve fare menüye çoğu zaman oradan geçerek giriyor. */
+    <aside className="admin-sidebar" onMouseEnter={isit} onFocus={isit}>
       {/* Metin wordmark yerine müşteri panelindeki GÖRSEL wordmark (Mehmet, 2026-07-18):
           iki panelin markası aynı görünsün. Altında oturum açık hesap yazıyor. */}
       <div className="admin-brand">
@@ -68,9 +71,7 @@ export default function AdminSidebar({ role, email }: { role: StaffRole; email: 
         />
         {email && <span className="admin-brand-mail" title={email}>{email}</span>}
       </div>
-      {/* Fare menüye girer girmez ısıt: tıklamadan önceki son şans (dokunmatikte hover yok,
-          orada sekme-öne-gelme tetikleyicisi devrede). */}
-      <nav className="admin-nav" onMouseEnter={isit} onFocus={isit}>
+      <nav className="admin-nav">
         {items.map((it) => {
           const active = it.exact ? pathname === it.href : pathname.startsWith(it.href);
           const Icon = it.icon;

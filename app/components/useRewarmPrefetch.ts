@@ -13,19 +13,35 @@ import { useRouter } from "next/navigation";
    `loading.tsx` de prefetch yüküyle geldiği için EKRANDA HİÇBİR ŞEY görünmüyordu.
 
    ⚠️ NEDEN PERİYODİK DEĞİL: her tur, ısıtılan HER rotanın sunucu render'ını (dolayısıyla
-   tüm sorgularını) yeniden çalıştırır. 19.07'de LiveRefresh'i tam bu yüzden seyrelttik —
-   Supabase Free planında disk IO bütçesi eridi. Bu yüzden ısıtma TALEP ÜZERİNE:
+   tüm sorgularını) yeniden çalıştırır. Admin'de bu 7 rota demek ve İKİSİ (`/admin/musteriler`,
+   `/admin/destek`) `listPeople()` ile auth.users + profiles + user_devices TAM TABLOSUNU
+   tarıyor. 19.07'de LiveRefresh'i tam bu yüzden seyrelttik — Supabase Free planında disk IO
+   bütçesi erimişti. Bu yüzden ısıtma TALEP ÜZERİNE:
      1) sekme öne geldiğinde (Mehmet'in senaryosu: panel arkada unutuldu, sonra tıklandı)
      2) fare sol menüye girdiğinde (tıklamadan hemen önce — masaüstü)
-   ve `ARA` ile boğazlanır, art arda tetiklenirse bir kez çalışır. */
+   ve `ARA` ile boğazlanır, art arda tetiklenirse bir kez çalışır.
+
+   ⚠️ SEKME GEÇİŞİNDE EK KOŞUL — ilk hâlinde YOKTU ve pahalı bir hataydı: her öne gelişte
+   ısıtıyordu, cache HÂLÂ TAZEYKEN bile. 5 saniyeliğine başka sekmeye bakıp dönmek 7 sunucu
+   render'ı + 2 tam tablo taraması tetikliyordu; günde onlarca sekme geçişiyle 19.07'de
+   kazanılan disk IO tasarrufu geri yanardı. Artık yalnız sekme `staleTimes.dynamic`ten
+   UZUN süre gizli kaldıysa ısıtılıyor — kısa gizlenmede zaten ısıtılacak bir şey yok. */
 const ARA = 15_000; // ms — bundan sık ısıtma yapma
+/* next.config.ts `staleTimes.dynamic: 30` (saniye) ile AYNI olmalı: bundan kısa süre gizli
+   kalan sekmede prefetch hâlâ geçerlidir, tekrar ısıtmak saf israftır.
+   ⚠️ next.config'teki değeri değiştirirsen BURAYI da güncelle. */
+const BAYATLAMA_MS = 30_000;
 
 export function useRewarmPrefetch(hrefs: string[]) {
   const router = useRouter();
   const sonRef = useRef(0);
+  const gizlendiRef = useRef(0); // sekmenin gizlenme anı (0 = hiç gizlenmedi)
   // hrefs her render'da yeni dizi olabilir → efektin bağımlılığı olarak ref kullan
   const hrefsRef = useRef(hrefs);
-  hrefsRef.current = hrefs;
+  // ⚠️ Render sırasında ref YAZMA (React saflık kuralı, StrictMode'da iki kez çalışır) → efektte.
+  useEffect(() => {
+    hrefsRef.current = hrefs;
+  });
 
   const isit = useCallback(() => {
     const simdi = Date.now();
@@ -48,7 +64,14 @@ export function useRewarmPrefetch(hrefs: string[]) {
     }, 300);
 
     const gorunurluk = () => {
-      if (document.visibilityState === "visible") isit();
+      if (document.visibilityState === "hidden") {
+        gizlendiRef.current = Date.now();
+        return;
+      }
+      // Kısa süre gizlenmişse prefetch hâlâ geçerli → ısıtma (ve sunucu yükü) GEREKSİZ.
+      const gizliKaldi = gizlendiRef.current ? Date.now() - gizlendiRef.current : Infinity;
+      if (gizliKaldi < BAYATLAMA_MS) return;
+      isit();
     };
     document.addEventListener("visibilitychange", gorunurluk);
     return () => {

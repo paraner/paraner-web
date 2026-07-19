@@ -474,6 +474,12 @@ export default function Sidebar({
       ref={asideRef}
       className={`panel-sidebar${showCollapsed ? " collapsed" : ""}${dragging ? " dragging" : ""}`}
       style={dragWidth !== null ? { width: `${dragWidth}px` } : undefined}
+      /* Fare menüye girer girmez rotaları tazele — tıklamadan önceki son şans (dokunmatikte
+         hover yok, orada sekme-öne-gelme tetikleyicisi devrede).
+         ⚠️ Bu <aside>'da, `.panel-nav`da DEĞİL: alt menü (Ayarlar/Destek) o <nav>'ın DIŞINDA,
+         doğrudan oraya giden fare ısıtmayı hiç tetiklemiyordu. */
+      onMouseEnter={isit}
+      onFocus={isit}
     >
       <div className="panel-brand">
         {/* Açık: tam PARANER wordmark · Daraltılmış: aynı wordmark'tan kırpılmış temiz P.
@@ -633,15 +639,7 @@ export default function Sidebar({
       <div
         className={`nav-region${navFade.top ? " fade-top" : ""}${navFade.bottom ? " fade-bottom" : ""}`}
       >
-        {/* Fare menüye girer girmez çekirdek rotaları tazele — tıklamadan önceki son şans
-            (dokunmatikte hover yok, orada sekme-öne-gelme tetikleyicisi devrede). */}
-        <nav
-          className="panel-nav"
-          ref={navRef}
-          onScroll={updateNavFade}
-          onMouseEnter={isit}
-          onFocus={isit}
-        >
+        <nav className="panel-nav" ref={navRef} onScroll={updateNavFade}>
           {groups.map((g, gi) => (
             <div key={gi} className="nav-group">
               {g.label && <div className="nav-group-label">{g.label}</div>}
@@ -732,6 +730,7 @@ export default function Sidebar({
         >
           <Settings />
           <span className="nav-label">Ayarlar</span>
+          <NavPending />
         </NavLink>
         <NavLink
           href="/panel/destek"
@@ -741,6 +740,9 @@ export default function Sidebar({
         >
           <LifeBuoy />
           <span className="nav-label">Destek</span>
+          {/* ⚠️ Alt menü (Ayarlar/Destek) İLK SÜRÜMDE ATLANMIŞTI — oysa /panel/destek yavaş
+              sayfalardan biri, yani düzeltilen hatanın en çok görüneceği yerlerden biriydi. */}
+          <NavPending />
         </NavLink>
         <LogoutButton variant="nav" collapsed={collapsed} />
       </div>
