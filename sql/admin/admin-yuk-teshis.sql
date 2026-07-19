@@ -8,6 +8,59 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 
 
+-- ⚠️ SUPABASE SQL EDITOR BİRDEN FAZLA SORGUDA YALNIZ SONUNCUNUN SONUCUNU GÖSTERİR
+--    (2026-07-19'da yaşandı: sadece cron listesi göründü). Bu yüzden aşağıdaki
+--    "TEK SORGU" bloğu hepsini TEK tabloda veriyor — normalde bunu çalıştır.
+--    Altındaki ayrı sorgular derinleşmek istersen; birini seçip Run'a bas
+--    (Supabase seçili metni çalıştırır).
+
+
+-- ═══════════ TEK SORGU — HEPSİ BİRDEN (bunu çalıştır) ═════════════════════
+with cagri as (
+  select 'A · EN ÇOK ÇALIŞAN' as bolum,
+         calls::text || ' çağrı · ort ' || round(mean_exec_time::numeric,1)::text || ' ms' as olcum,
+         left(regexp_replace(query, '\s+', ' ', 'g'), 90) as detay,
+         1 as sira, calls as sort
+  from pg_stat_statements order by calls desc limit 10
+),
+disk as (
+  select 'B · DİSKİ EN ÇOK YORAN',
+         shared_blks_read::text || ' blok · ' || calls::text || ' çağrı',
+         left(regexp_replace(query, '\s+', ' ', 'g'), 90),
+         2, shared_blks_read
+  from pg_stat_statements where shared_blks_read > 0
+  order by shared_blks_read desc limit 10
+),
+tablolar as (
+  select 'C · TABLOLAR',
+         n_live_tup::text || ' satır · ' || pg_size_pretty(pg_total_relation_size(relid)),
+         relname || '  (tam tarama: ' || seq_scan::text || ')',
+         3, pg_total_relation_size(relid)
+  from pg_stat_user_tables order by pg_total_relation_size(relid) desc limit 10
+),
+loglar as (
+  select 'D · LOG TABLOLARI', count(*)::text || ' satır', 'net._http_response', 4, count(*)
+  from net._http_response
+  union all
+  select 'D · LOG TABLOLARI', count(*)::text || ' satır', 'admin_audit_log', 4, count(*)
+  from public.admin_audit_log
+  union all
+  select 'D · LOG TABLOLARI', count(*)::text || ' satır', 'notifications', 4, count(*)
+  from public.notifications
+),
+cronlar as (
+  select 'E · CRON', schedule, jobname || (case when active then '' else '  (KAPALI)' end), 5, jobid
+  from cron.job
+)
+select bolum, olcum, detay from (
+  select * from cagri union all select * from disk union all select * from tablolar
+  union all select * from loglar union all select * from cronlar
+) x
+order by sira, sort desc;
+
+
+-- ═══════════ AYRI SORGULAR (derinleşmek istersen, birini seçip Run) ═══════
+
 -- ── 1) EN ÇOK ÇALIŞAN SORGULAR ────────────────────────────────────────────
 -- `calls` yüksek + `rows` düşük olanlar = sürekli tekrarlanan sayaç sorguları.
 -- Beklenen şüpheliler: support_tickets count, user_devices, profiles.
@@ -71,6 +124,9 @@ select jobid, schedule, jobname, active from cron.job order by jobid;
 -- · 3. listede tablolar küçük ama `tam_tarama` (seq_scan) yüksekse → `count(*)`
 --   exact sayımları. Denetimde bir kısmı reltuples'a çevrilmişti (O3).
 -- · 4'te net._http_response on binlerdeyse eski kayıtlar silinebilir.
+-- ⚠️ "relation pg_stat_statements does not exist" hatası alırsan eklenti kapalıdır:
+--    Dashboard → Database → Extensions → pg_stat_statements → Enable. O zaman A ve B
+--    bölümleri gelmez; C/D/E yine çalışır (üstteki TEK SORGU'dan A ve B CTE'lerini sil).
 -- ⚠️ pg_stat_statements sayaçları kümülatiftir; sıfırlamak istersen (opsiyonel):
 --     select pg_stat_statements_reset();
 --   Sıfırladıktan sonra 1 gün bekleyip tekrar bak — değişimi net görürsün.
