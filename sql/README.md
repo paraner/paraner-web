@@ -17,6 +17,7 @@
 | `admin-denetim-fix-K3.sql` | Müşterinin `sender_type='agent'` yazmasını engeller | ✅ çalıştırıldı ⚠️ bkz. not |
 | `admin-denetim-fix-olcek.sql` | Ölçek düzeltmeleri (indeks, sayaç RPC'si) | ✅ çalıştırıldı |
 | `admin-denetim-DOGRULAMA.sql` | **Sadece OKUR** — 8 satır ✅/❌ durum kontrolü | istediğin zaman |
+| `admin-yuk-teshis.sql` | **Sadece OKUR** — yük/disk IO nereden geliyor (en çok çalışan sorgular, tablo boyutları, cron) | yavaşlık/kota uyarısında |
 
 ## destek/ — destek + departman yönlendirme
 

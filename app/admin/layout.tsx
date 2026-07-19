@@ -52,9 +52,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="admin-shell">
       <ToastHost />
       <ConfirmProvider />
-      {/* Canlı sayaç + rozetleri taze tutar (görünürken 30sn; arka planda durur).
-          30sn yeterli: kalp atışı zaten 5 dk'da bir — daha sık tazelemek yeni veri getirmez. */}
-      <LiveRefresh everyMs={30_000} />
+      {/* Canlı sayaç + rozetleri taze tutar. Aralık SAYFAYA göre (LiveRefresh içinde):
+          canlı ekran 30sn · pano 2dk · liste ekranlarında otomatik yenileme YOK.
+          ⚠️ Sebep: her tur, açık sayfanın TÜM sorgularını yeniden çalıştırıyor ve
+          Free plan disk IO bütçesini eritiyordu (2026-07-19 Supabase uyarısı). */}
+      <LiveRefresh />
       <AdminSidebar role={role} email={user?.email ?? null} />
       <div className="admin-main">
         {/* Sağ üst küme: bekleyen talep ikonu (admin+agent) + canlı sayaç (yalnız admin —
