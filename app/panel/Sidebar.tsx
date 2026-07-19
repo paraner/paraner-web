@@ -74,7 +74,14 @@ const icons = {
 type Item = { label: string; href: string; icon: React.ReactNode };
 type Group = { label: string | null; items: Item[] };
 
-export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
+export default function Sidebar({
+  profiles,
+  initialCollapsed = false,
+}: {
+  profiles: ActiveProfile[];
+  /** Sunucudan gelir (çerez) → ilk render ZATEN doğru genişlikte, açılıp kapanma yok. */
+  initialCollapsed?: boolean;
+}) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -121,7 +128,7 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
     type: string | null;
   } | null>(null);
   const transitionStart = useRef(0);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [dragWidth, setDragWidth] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
   // Akordeon: aynı anda tek bölüm açık (Faturalar açıkken Finans'a basınca Faturalar
@@ -185,10 +192,20 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
     return () => clearTimeout(t);
   }, [transition]);
 
-  // Daralt/genişlet tercihini hatırla (localStorage). Sunucu hep "açık" render eder,
-  // tarayıcıda okunur → hydration uyumlu.
+  /* ⚠️ Eski `useEffect(localStorage → setCollapsed)` KALDIRILDI: sunucu "açık" render edip
+     tarayıcı sonradan kapattığı için sol panel her yenilemede açılıp kapanıyordu
+     (ölçüm: 248px → 74px, ~250ms göz kırpması). Tercih artık ÇEREZDE, ilk HTML doğru gelir.
+
+     Aşağısı TEK SEFERLİK TAŞIMA: bu değişiklikten önce tercihi localStorage'da olan
+     kullanıcılar (herkes) çerez olmadığı için panelini AÇIK bulurdu — sessiz bir kayıp.
+     Çerez yoksa ve localStorage "kapalı" diyorsa çerezi yazıp durumu düzeltiyoruz.
+     Bu bir kez göz kırpar, sonraki yenilemelerde hiç olmaz. Bir sonraki büyük temizlikte
+     (kullanıcılar geçince) bu blok silinebilir. */
   useEffect(() => {
-    if (localStorage.getItem(COLLAPSE_KEY) === "1") setCollapsed(true);
+    if (document.cookie.includes(`${COLLAPSE_KEY}=`)) return; // çerez zaten var
+    if (localStorage.getItem(COLLAPSE_KEY) !== "1") return;   // tercih "açık" → yapacak bir şey yok
+    document.cookie = `${COLLAPSE_KEY}=1; path=/; max-age=31536000; samesite=lax`;
+    setCollapsed(true);
   }, []);
 
   // Aktif sayfanın bulunduğu işletme bölümünü SADECE ilk yüklemede otomatik aç.
@@ -298,7 +315,10 @@ export default function Sidebar({ profiles }: { profiles: ActiveProfile[] }) {
 
   function applyCollapsed(next: boolean) {
     setCollapsed(next);
-    localStorage.setItem(COLLAPSE_KEY, next ? "1" : "0");
+    /* ÇEREZ: sunucu bir sonraki render'da doğru genişlikte üretsin (localStorage'ı sunucu
+       göremez → eskiden açılıp kapanma oluyordu). 1 yıl, tüm panel yolları için.
+       SameSite=Lax yeterli: sadece görsel tercih, hassas veri değil. */
+    document.cookie = `${COLLAPSE_KEY}=${next ? "1" : "0"}; path=/; max-age=31536000; samesite=lax`;
     setMenuOpen(false);
   }
 

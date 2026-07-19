@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { getProfiles } from "../../lib/supabase/profile";
 import Sidebar from "./Sidebar";
 import LoginReporter from "./LoginReporter";
@@ -18,7 +19,14 @@ export const metadata: Metadata = {
 // Profil verisini ÇEKEN parça — Suspense içinde stream edilir.
 // Böylece layout'un kabuğu (üst bar) getProfiles'u BEKLEMEDEN anında boyanır;
 // profiller/sayfa verisi arkadan akar.
+/* ⚠️ Daralt tercihi ÇEREZDE, localStorage'da DEĞİL (2026-07-19).
+   Eskiden sunucu her zaman "açık" render ediyor, tarayıcı localStorage'ı sonradan okuyup
+   kapatıyordu → ÖLÇÜLDÜ: sol panel 315ms'de 248px (açık) geliyor, 566ms'de 74px'e iniyor.
+   Genişlik animasyonu da olduğu için göz kırpması net görülüyordu (Mehmet fark etti).
+   Çerez sunucuya İSTEKLE BİRLİKTE gider → ilk HTML zaten doğru genişlikte gelir, hiç
+   zıplama olmaz. localStorage bunu yapamaz: sunucu onu göremez. */
 async function ProfileSidebar() {
+  const kapali = (await cookies()).get("paraner-sidebar-collapsed")?.value === "1";
   // Oturum kontrolü zaten proxy.ts'te yapılıyor (girişsizi /giris'e atar).
   // getProfiles cache'li: sidebar + sayfalar aynı render içinde paylaşır → tek sorgu.
   const profiles = await getProfiles();
@@ -27,7 +35,7 @@ async function ProfileSidebar() {
   if (!active) {
     return null;
   }
-  return <Sidebar profiles={profiles} />;
+  return <Sidebar profiles={profiles} initialCollapsed={kapali} />;
 }
 
 // Layout artık SENKRON (top-level await yok) → kabuk ilk byte'ta stream edilir.
