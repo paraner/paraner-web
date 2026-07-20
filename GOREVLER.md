@@ -145,8 +145,15 @@
       + `sender_id` nullable — **yazışma geçmişi kalır**, "silinmiş kullanıcı" olarak görünür.
       ⚠️ (b) daha doğru olabilir: müşteri silinse de destek yazışması denetim/anlaşmazlık kaydıdır.
       Karar Mehmet'in; seçilince `sql/destek/` altına migration + `sql/README.md` satırı.
-- [ ] **Silme akışı koda da yansımalı:** `lib/adminUsers`/silme server action'ı bugün hatayı olduğu gibi
-      yukarı veriyor (kullanıcı ham Postgres mesajı görür). Ya sıralı silme yapmalı ya anlaşılır mesaj vermeli.
+- [x] ~~Silme akışı ham Postgres hatasını gösteriyor~~ — **YANLIŞ TESPİTTİ (2026-07-20 düzeltmesi).**
+      `lib/adminActions.ts:326` hatayı yakalıyor, `user_delete_failed` telafi kaydı yazıyor (O10) ve
+      "Silinemedi: …" döndürüyor. Akış sağlam, yalnız mesaj gövdesi teknik. FK `SET NULL` yapılınca
+      hata zaten yok olacağı için metni ŞİMDİ düzeltmek boşa iş — karar sonrası bak.
+      Aynı şekilde `/admin/destek` sahibi bulunamayan talebi zaten *"müşteri kaydı bulunamadı
+      (silinmiş olabilir)"* diye çiziyor (`DestekListClient.tsx:191`) — orada da yapılacak iş yok.
+> 📄 **Tüm analiz + sektör/hukuk bulguları: `docs/HESAP-SILME-VERI-SAKLAMA.md`** (araştırma YARIM —
+> 106 doğrulama ajanının 68'i limite takıldı; Türk vergi mevzuatı saklama süreleri HİÇ araştırılmadı).
+> **Mehmet'in kararı bekleniyor:** kimlik tamamen mi kopsun, yoksa e-posta snapshot'ı da tutulsun mu?
 
 ### ⚡ 2026-07-19 OTURUMUNDAN KALANLAR
 > **Yeni sohbete başlarken önce buraya bak.** Sıra önerisi: 1 → 2 → 3.

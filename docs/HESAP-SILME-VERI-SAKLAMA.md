@@ -108,7 +108,15 @@ O noktada "hepsini sil" seçeneği hukuken kapanır: vergi mevzuatı saklamayı 
       (hukuken zayıf, silme talebinde ayrıca temizlenmesi gerekir)?
 - [ ] Karar sonrası `sql/destek/` altına migration (iki FK + etiket kolonu) + `sql/README.md` satırı.
       ⚠️ **DB şeması = önce sor** (CLAUDE.md) — bu dosya öneri, migration çalıştırılmadı.
-- [ ] `/admin/destek` + müşteri detay: sahibi NULL olan talebi "Silinmiş kullanıcı" olarak çiz
-      (bugün `listPeople` eşleşmeyince satır **sessizce boş** görünüyor — Y4 tipi sessiz yalan).
-- [ ] Silme akışının kodu ham Postgres hatasını ekrana veriyor → anlaşılır mesaj + sıralı silme.
+- [x] ~~`/admin/destek` sahibi NULL olan talebi "Silinmiş kullanıcı" olarak çizsin~~
+      **GEREKMİYOR — zaten yapılmış.** `DestekListClient.tsx:191-195` kişi bulunamayınca boş
+      bırakmıyor, *"müşteri kaydı bulunamadı (silinmiş olabilir)"* yazıyor.
+      ⚠️ Sohbette "sessizce boş görünüyor" demiştim, **YANLIŞTI** — kodu okumadan söylemiştim.
+- [x] ~~Silme akışı ham Postgres hatasını ekrana veriyor~~ **BU DA YANLIŞTI.**
+      `lib/adminActions.ts:326-329` hatayı yakalıyor, `user_delete_failed` telafi kaydı yazıyor
+      (denetim O10) ve *"Silinemedi: …"* döndürüyor. Yani akış sağlam; yalnız mesajın GÖVDESİ
+      teknik (`violates foreign key constraint …`).
+- [ ] **(düşük öncelik, FK kararına bağlı)** O teknik mesajı sadeleştirmek —
+      ⚠️ ama FK `SET NULL` yapılınca bu hata **tamamen ortadan kalkar**, yani şimdi yazılacak
+      metin sonra silinir. Karar verilmeden dokunma.
 - [ ] Araştırmanın eksik ayağı: **Türk vergi mevzuatı saklama süreleri** + KVKK destek yazışması görüşü.
