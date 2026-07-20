@@ -118,11 +118,35 @@
 > ⚠️ E-posta Database Webhook UI ile DEĞİL (o "supabase_functions does not exist" verdi) → webhook'suz:
 > `notify_on_agent_reply` trigger'ı `pg_net.http_post` ile support-reply-notify'ı çağırıyor, secret Vault'ta
 > (`support_webhook_secret`) + Edge Function Secrets (`SUPPORT_WEBHOOK_SECRET`) — ikisi aynı değer.
-- [ ] **Test verisi temizle:** `delete from notifications where data->>'ticket_id' in (select id::text from support_tickets where subject like 'ZZTEST%'); delete from support_tickets where subject like 'ZZTEST%';`
+- [x] **Test verisi temizlendi** (2026-07-20) — ZZTEST kaydı kalmadı.
+- [x] **VERİTABANI SIFIRLANDI (2026-07-20, Mehmet talebi):** admin@paraner.com HARİÇ 8 hesabın
+      tamamı kalıcı silindi (hepsi Mehmet'e ait test adresleriydi). Kalan: 1 kullanıcı · 1 profil ·
+      3 talep · 2 işlem. Yetim kayıt taraması temiz (profiles/tickets/messages/devices/notifications/
+      roles/departments + transactions/invoices/bank_accounts/savings_assets/products/employees).
+      ⚠️ Bu iş sırasında yukarıdaki **"Kalıcı sil" FK hatası** keşfedildi.
+      ℹ️ Yan tespit: `contacts` gerçekten **`profile_id`** kolonunu kullanıyor (web kodu doğruymuş —
+      eski açık soru kapandı; tablo şu an boş).
 - [ ] **Gerçek destek ekibi hesapları** `user_roles`'e (şu an sadece admin@paraner.com agent).
 - [ ] **Faz 1:** mobil push — mobilde `withNoPushEntitlement` yüzünden remote push KAPALI, **ücretli Apple hesabı + APNs** ister (Mehmet kararı).
 - [ ] **Faz 2 (opsiyonel):** kullanıcı yeni mesajında agent'a bildirim · agent atama/öncelik/filtre · ek dosya yükleme (ticket-attachments bucket) · çanda "tümünü okundu".
 - [ ] ⚠️ **Google Workspace ödeme** — `merhaba@paraner.com` aboneliği 3 Ağu 2026'ya kadar yenilenmeli, yoksa TÜM sistem mailleri durur.
+
+### 🔴 ADMIN "KALICI SİL" KIRIK — destek yazmış müşteri SİLİNEMİYOR (2026-07-20 keşfi)
+> Veritabanı temizliği sırasında ortaya çıktı: `auth.users` silme isteği **HTTP 500** veriyor.
+> `{"code":"23503", "constraint":"ticket_messages_sender_id_fkey"}` — `ticket_messages.sender_id
+> → auth.users` FK'sinde **ON DELETE davranışı YOK**. 8 hesabın 3'ü ilk denemede bu yüzden silinemedi.
+> ⚠️ Denetim O8'de "FK CASCADE" düzeltilmişti ama o `ticket_messages.ticket_id → support_tickets`
+> içindi; **`sender_id → auth.users` ATLANMIŞ.**
+- [ ] 🔴 **Etkisi ürün hatası:** `/admin/musteriler` → "Kalıcı sil", destek talebi açmış HERHANGİ bir
+      müşteride patlar. Bugün 3/8 hesapta patladı → gerçek müşteride de patlayacak.
+      Geçici çare (bugün kullanıldı): önce `support_tickets`'ı sil (mesajlar CASCADE ile gider), sonra hesabı sil.
+- [ ] **Kalıcı çözüm ŞEMA DEĞİŞİKLİĞİ → ÖNCE MEHMET'E SOR** (CLAUDE.md: DB şemasına dokunma).
+      İki seçenek: (a) `ON DELETE CASCADE` — kişi silinince mesajları da gider · (b) `ON DELETE SET NULL`
+      + `sender_id` nullable — **yazışma geçmişi kalır**, "silinmiş kullanıcı" olarak görünür.
+      ⚠️ (b) daha doğru olabilir: müşteri silinse de destek yazışması denetim/anlaşmazlık kaydıdır.
+      Karar Mehmet'in; seçilince `sql/destek/` altına migration + `sql/README.md` satırı.
+- [ ] **Silme akışı koda da yansımalı:** `lib/adminUsers`/silme server action'ı bugün hatayı olduğu gibi
+      yukarı veriyor (kullanıcı ham Postgres mesajı görür). Ya sıralı silme yapmalı ya anlaşılır mesaj vermeli.
 
 ### ⚡ 2026-07-19 OTURUMUNDAN KALANLAR
 > **Yeni sohbete başlarken önce buraya bak.** Sıra önerisi: 1 → 2 → 3.
