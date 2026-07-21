@@ -21,9 +21,8 @@
 - [x] ✅ **TALEP SİLME EKLENDİ (2026-07-21, Mehmet talebi)** — aşağıdaki bloğa bak.
       Test artığı (`ZZTEST ekli talep 11:29:27` + eki) artık panelden silinebilir; deploy sonrası
       bu talebin silinmesi aynı zamanda özelliğin canlı testi olacak.
-- [ ] 🟡 **Denetim listesinde ham anahtar:** eski kayıtlar `staff_removed · <e-posta>` diye çiziliyor
-      (çevrilmemiş teknik dize). Yeni silme kayıtları düzgün ("Hesap KALICI silindi · …") →
-      aksiyon türü sözlüğü eksik kalmış. Küçük iş, cila listesine.
+- [x] ✅ **Denetim listesindeki ham anahtar düzeltildi** (2026-07-21) — `staff_removed` artık
+      "Personel ekipten çıkarıldı"; yeni `ticket_deleted`/`ticket_delete_failed` de sözlükte.
 
 ## Şimdiki
 
@@ -76,10 +75,25 @@
       eklendi. Sebep: admin server-action referansı müşteri paketine sızmasın.
 - [x] **Yan düzeltme:** `/admin/destek/[id]` sayfasının **kendi guard'ı yoktu** (yalnız layout'a
       güveniyordu — CLAUDE.md kural 5 ihlali, denetim Y1'in aynısı). `requireStaffPage()` eklendi.
-- [ ] ⏳ **Canlı doğrulanacak:** (a) admin tek talebi silebiliyor · (b) çoklu seçim + toplu silme ·
-      (c) denetim kaydı `/admin/denetim`'e düşüyor · (d) ek dosya storage'dan gerçekten gitti ·
-      (e) **agent silme butonunu GÖRMÜYOR ve isteği elle atsa da reddediliyor** ← agent hesabı
-      gerektiği için `sql/destek/destek-departman-TEST.sql` turuyla birlikte yapılmalı.
+- [x] ✅ **DOĞRULANDI (2026-07-21, yerel prod build + CANLI Supabase — `admin.localhost:3999`):**
+      admin seçim kutularını görüyor · **tekil silme çalıştı** (ZZTEST talebi gerçekten silindi,
+      listeden düştü) · toplu seçim çubuğu (3 seçildi · "Seçilenleri sil" · "Seçimi bırak") ·
+      onay diyalogu çıkıyor ve **İPTAL edilince hiçbir şey silinmiyor** (3/3 duruyor) ·
+      denetim kaydı doğru detayla düştü (konu · durum · departman · ticket_id · sahibi-silinmiş).
+- [x] 🔴 **Test SIRASINDA iki kusur bulundu ve düzeltildi:**
+      **(1) "Sil" butonu TIKLANAMIYORDU** — `.admin-top-actions` mutlak konumlu (top:26/right:32)
+      ve içeriğin üstünde yüzüyor; `.thread-head` tam genişlikte flex satır olduğu için sondaki
+      butonlar kümenin ALTINA giriyordu. ⚠️ Sorun benim butonumla göründü ama **öncesinde de
+      vardı**: uzun konu başlığında "Çözüldü" aynı yere düşüyor. Admin kabuğunda başlığa sağ
+      rezervasyon eklendi (720px altında küme akışa döndüğü için rezervasyon kalkıyor).
+      **(2) Yeni aksiyon denetimde HAM ANAHTAR** ("ticket_deleted") çiziliyordu → sözlüğe eklendi;
+      aynı boşluktaki eski `staff_removed` de etiketlendi (yukarıdaki 🟡 madde kapandı).
+- [ ] ⏳ **HÂLÂ DOĞRULANMADI (dürüstlük notu):**
+      (a) **ek dosyanın storage'dan gerçekten silindiği** — private bucket, service_role gerekiyor;
+      kod siliyor ve sunucu logunda hata YOK ama bu "sildi" kanıtı değil, "hata vermedi" kanıtı.
+      (b) **agent'ın silememesi** — agent rolünde hesap yok; `sql/destek/destek-departman-TEST.sql`
+      turuyla birlikte yapılmalı. Kod tarafı: buton `role === "admin"` ile gizli + sunucuda
+      `requireAdmin()` reddediyor.
 
 ### 🛠️ ADMIN / İÇ EKİP PANELİ — canlı (admin.paraner.com)
 > Plan: `docs/ADMIN-PANEL.md`. Mehmet: kurucu+çalışanlar için müşteri yönetim paneli (üyeleri tür/abonelik
