@@ -16,6 +16,35 @@
 
 ---
 
+## 2026-07-21 — 20.07 işinin UÇTAN UCA CANLI testi: 6/6 geçti + "bugün/dün" hatası yakalandı
+
+20.07 oturumu kodu+SQL'i canlıya koymuş ama **gözle hiç denenmemişti**. Bugün gerçek tarayıcıyla
+(Playwright, prod), **gerçek bir müşteri hesabı açılarak** uçtan uca koşuldu — 6 iddianın 6'sı geçti:
+admin yanıtı yenilenmeden **1,1 sn** (müşteride echo 2,1 sn) · ekli talep `/admin/destek`'e
+**4,2 sn**'de sayfa yenilenmeden düştü (rozet 3→4, sayaçlar canlı) · ek **imzalı linkle 200/image-png** ·
+sebep seçilmeden silme butonu **kapalı** · `/admin/destek` *"hesap silindi · admin@… · sebep"* ·
+`/admin/denetim` *"1 destek talebi bu hesaba aitti · Sebep: Test / dahili hesap"*.
+**Silme artık 500 vermiyor** → SET NULL migration'ı gerçekten iş görüyor (asıl kanıt buydu).
+
+**🐞 Test sırasında GERÇEK bir hata çıktı — `relativeLabel` "bugün"ü yanlış söylüyordu.**
+Denetim ekranında **aynı güne ait iki kayıt farklı etiketliydi**: `20 Tem 15:36 · bugün` ve
+`20 Tem 09:54 · dün` (bakılan an 21 Tem 14:32). Sebep: `relativeDays` **yuvarlanan 24 saat**
+hesaplıyor (`(now-t)/86400000` floor) — 22,9 saat → `0` → "bugün". Ama "bugün/dün" **takvim**
+kavramı, süre değil. Yönetici denetim kaydında dünkü silmeyi "bugün" okuyor = yanlış bilgi.
+**Fix:** `relativeLabel` artık Europe/Istanbul **takvim gününden** hesaplıyor.
+⚠️ `relativeDays` BİLEREK değiştirilmedi: segment eşikleri (yeni kayıt, `LOST_AFTER_DAYS=30`)
+onu kullanıyor ve orada süre ölçümü doğru olan; ikisini birden değiştirmek segment sınırlarını
+sessizce kaydırırdı. 7 senaryoluk davranış testiyle doğrulandı (7/7), tsc + build temiz.
+**Ders:** hatayı bulan şey ekrandaki VERİYE bakmaktı — "test geçti" satırı değil.
+
+⚠️ **Kendi hatalarım (ikisi de seçici uydurmaktan):** admin giriş formunu `#email/#password`
+sandım, gerçeği `#adm-email/#adm-pass` · gönder butonunu `button[type=submit]` birleşimiyle
+aradım, modalın ARKASINDAKİ butonu yakalayıp 30 sn timeout aldım. İkisi de "kaynağa bakmadan
+seçici yazma" sınıfı. Çözüm her seferinde aynı: sayfayı önce **keşfet**, sonra tıkla.
+
+🧹 **Temizlenemeyen artık:** `ZZTEST ekli talep` talebi + eki DB'de duruyor (sahibi silindiği için
+`user_id` NULL). Panelde talep silme yok, SQL gerekiyor → Mehmet'e bırakıldı.
+
 ## 2026-07-20 — hesap silme kırığı: yazışma korunarak çözüldü (SET NULL)
 
 Mehmet karar verdi: **(b) `ON DELETE SET NULL`** — müşteri silinse de destek yazışması kalsın

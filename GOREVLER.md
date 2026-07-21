@@ -2,15 +2,28 @@
 
 > Sadece açık görevler. Tamamlananlar için `DAILY_LOG.md` + git geçmişi.
 
-## 🔴 ÖNCE BUNU TEST ET (2026-07-20 oturumu, kod+SQL CANLIDA, GÖZLE DENENMEDİ)
-> Kod tsc+build temiz, 2 SQL çalıştırıldı (realtime + ek dosya bucket doğrulaması ✅),
-> edge deploy edildi. AMA uçtan uca canlı test YAPILMADI. Yeni işe başlamadan ÖNCE:
-> 1. **Admin'den mesaj at** → sayfayı yenilemeden görünmeli
-> 2. **Müşteri hesabıyla EKLİ talep aç** (ekran görüntüsü) → `/admin/destek` listesine ANLIK
->    düşmeli + admin çanı çalmalı → eki tıkla, yeni sekmede açılmalı (imzalı link)
-> 3. **Test hesabını SEBEP seçerek sil** → destek listesinde "hesap silindi · admin@… · sebep"
-> Detay: `docs/DESTEK-CANLI-EK-DENETIM-PLAN.md` + aşağıdaki "🔔 DESTEK: CANLILIK…" bloğu.
-> ⚠️ Commit/push YAPILMADI — çalışan ağaçta duruyor.
+## ✅ UÇTAN UCA CANLI TEST GEÇTİ (2026-07-21) — 20.07 oturumunun tamamı doğrulandı
+> Gerçek tarayıcıyla, **canlı prod'da** (deploy = `ee87245`, Vercel'den teyitli), gerçek müşteri
+> hesabı açılıp uçtan uca koşuldu. Ölçümler:
+> 1. ✅ **Admin yanıtı yenilenmeden görünüyor — 1,1 sn** (üstelik müşteri tarafında da canlı: 2,1 sn)
+> 2. ✅ **Ekli talep `/admin/destek`'e ANLIK düştü — 4,2 sn**, sayfa YENİLENMEDEN
+>    (3 sn boğazlama düşünülürse beklenen aralık). Bekleyen rozeti 3→**4**, sayaçlar
+>    (5 talep · 4 yanıt bekliyor) canlı güncellendi, çanda nokta çıktı.
+>    Satırda müşteri bağlamı doğru: e-posta · ad · Ücretsiz · "Üye: bugün" · 1 profil · Teknik.
+> 3. ✅ **Ek dosya imzalı linkle açıldı** — yeni sekme, `…/storage/v1/object/sign/ticket-attachments/…`,
+>    **HTTP 200 · image/png**. (Private bucket + `createSignedUrl` zinciri sağlam.)
+> 4. ✅ **Silme sebebi zorlaması çalışıyor:** sebep seçilmeden "Kalıcı olarak sil" **kapalı**,
+>    seçilince açılıyor. Silme başarılı (eski FK 500 hatası YOK → SET NULL migration'ı iş görüyor).
+> 5. ✅ **`/admin/destek`:** *"hesap silindi · admin@paraner.com · Test / dahili hesap · 21 Tem 2026"*
+> 6. ✅ **`/admin/denetim`:** *"Hesap KALICI silindi · mgzrcom@gmail.com / admin@paraner.com ·
+>    21 Tem 2026 14:32 / 1 destek talebi bu hesaba aitti · Sebep: Test / dahili hesap"*
+> ✅ Commit + push YAPILDI (`ee87245`) ve canlıda. *(Eski "commit/push yapılmadı" notu bayattı.)*
+- [ ] 🧹 **Test artığı temizlenecek (DB erişimi gerek — Mehmet):** `ZZTEST ekli talep 11:29:27`
+      talebi + mesajları + `ticket-attachments/8f9d5f1d-…/ek-test.png` duruyor. Sahibi silindiği için
+      `user_id` NULL (sahipsiz talep — tasarım gereği). Panelden talep silme yok, SQL gerekiyor.
+- [ ] 🟡 **Denetim listesinde ham anahtar:** eski kayıtlar `staff_removed · <e-posta>` diye çiziliyor
+      (çevrilmemiş teknik dize). Yeni silme kayıtları düzgün ("Hesap KALICI silindi · …") →
+      aksiyon türü sözlüğü eksik kalmış. Küçük iş, cila listesine.
 
 ## Şimdiki
 
@@ -56,7 +69,13 @@
 - [x] **`sql/admin/admin-audit-log.sql` çalıştırıldı** (2026-07-17) — yazma + gizlilik (anon 0 satır) canlı doğrulandı.
 - [x] **Müşteri listesi yenilendi** — durum `is_premium`'dan DEĞİL, `trial_start_date + 14` ile HESAPLANIYOR (`lib/lifecycle.ts`). Segmentler (zombi/bitiyor/denemede/yeni/ücretli/ücretsiz/kayıp/askıda, sayaçlı) + sıralama (kayıt·son giriş·deneme bitişi·e-posta) + URL'de saklama (`?seg=&sort=&tur=`).
 - [x] **Canlı GÖZ teyidi** — admin.paraner.com giriş + panel + buton dili + sağ üst bekleyen-talep rozeti onaylandı (2026-07-18).
-- [ ] **Şifre sıfırlama maili ön koşulu:** Supabase → Auth → URL Configuration → Redirect URLs'te `https://paraner.com/sifre-sifirla` YOKSA link reddedilir (DAILY_LOG'da zaten bekleyen madde). Aksiyonu ilk kullanmadan teyit et.
+- [x] ✅ **Şifre sıfırlama maili ön koşulu KARŞILANDI** (2026-07-21, Mehmet ekran görüntüsüyle teyit):
+      Supabase → Auth → URL Configuration → Redirect URLs'te `https://paraner.com/sifre-sifirla` **var**.
+      Listedeki 5 URL: `paraner.com/auth/callback` · `app.paraner.com/auth/callback` ·
+      `localhost:3000/auth/callback` · `paraner.com/sifre-sifirla` · `admin.paraner.com/sifre-olustur`.
+      ℹ️ DAILY_LOG'daki *"dev `localhost:3137`"* notu YANLIŞMIŞ: `package.json` düz `next dev`
+      (port yok) → varsayılan **3000**, yani kayıtlı `localhost:3000/auth/callback` doğru adres.
+      Yerelde şifre sıfırlama akışı denenecekse `http://localhost:3000/sifre-sifirla` eklenmeli.
 - [x] ~~audit log'u panelde GÖSTER~~ — **BU MADDE BAYATMIŞ**: `/admin/denetim` ekranı zaten yazılmış
       (`app/admin/denetim/page.tsx` + `DenetimClient.tsx`). 2026-07-20'de fark edildi.
 - [ ] **Sonraki (kod):** müşterinin destek talepleri detay sayfasında · trial/abonelik analizi.
@@ -141,7 +160,6 @@
 - [ ] **Gerçek destek ekibi hesapları** `user_roles`'e (şu an sadece admin@paraner.com agent).
 - [ ] **Faz 1:** mobil push — mobilde `withNoPushEntitlement` yüzünden remote push KAPALI, **ücretli Apple hesabı + APNs** ister (Mehmet kararı).
 - [ ] **Faz 2 (opsiyonel):** kullanıcı yeni mesajında agent'a bildirim · agent atama/öncelik/filtre · ek dosya yükleme (ticket-attachments bucket) · çanda "tümünü okundu".
-- [ ] ⚠️ **Google Workspace ödeme** — `merhaba@paraner.com` aboneliği 3 Ağu 2026'ya kadar yenilenmeli, yoksa TÜM sistem mailleri durur.
 
 ### 🔴 ADMIN "KALICI SİL" KIRIK — destek yazmış müşteri SİLİNEMİYOR (2026-07-20 keşfi)
 > Veritabanı temizliği sırasında ortaya çıktı: `auth.users` silme isteği **HTTP 500** veriyor.
@@ -223,9 +241,10 @@
       `createSignedUrl`. ⚠️ Kolona TAM URL değil **YOL** yazılıyor (imzalı link süreli; URL saklansa
       kayıt dakikalar içinde ölü bağlantıya dönerdi). Ek silme/güncelleme policy'si BİLİNÇLİ YOK —
       destek eki yazışma kaydı, sonradan değiştirilememeli.
-- [ ] ⏳ **ÇALIŞTIRILACAK (2 SQL):** `sql/destek/destek-talep-realtime.sql` (yeni talep anlık düşsün —
-      `support_tickets` yayında DEĞİLDİ, kod tek başına yetmezdi) · `sql/destek/destek-ek-dosya.sql`
-      (private bucket + policy). İkisi de sonunda kendi doğrulama sorgusunu içeriyor.
+- [x] ✅ **ÇALIŞTIRILDI (2 SQL, 2026-07-20):** `sql/destek/destek-talep-realtime.sql` (yeni talep anlık
+      düşsün — `support_tickets` yayında DEĞİLDİ, kod tek başına yetmezdi) · `sql/destek/destek-ek-dosya.sql`
+      (private bucket + policy). İkisi de kendi doğrulama sorgusunu içeriyor, ikisi de ✅ döndü.
+      *(2026-07-21'de fark edildi: bu madde "⏳ çalıştırılacak" olarak kalmış — bayattı.)*
 - [ ] **Mobil ek dosya paritesi** — web önce bitti (Mehmet kararı). Mobilde seçici + sıkıştırma
       (`lib/imagePicker.ts`, `attachment-picker.tsx`) ZATEN HAZIR, yalnız bağlanacak + balonda render.
       ⚠️ Mobil de YOL→`createSignedUrl` kuralına uymalı. ⚠️ `attachmentStore` profil geçişinde
@@ -277,9 +296,6 @@
 - [ ] **8-9 sn'nin kalanı ÖLÇÜLMEDİ** — DB temiz çıktığına göre kalan şüpheli **Vercel Hobby soğuk lambda**
       (aşağıda ayrı madde). Doğrulama: sekmeyi uzun süre arkada bırak, DevTools Network açıkken tıkla,
       RSC isteğinin **TTFB**'sine bak. Soğuk başlangıçsa TTFB yüksek, sunucu render'ı kısa olur.
-- [ ] **Supabase Studio sekmesini açık bırakma** — ölçüldü: "Disk IO Budget" uyarısının en büyük
-      kaynağı şema introspection sorguları (594+383 blok), Studio açık kaldıkça çalışıyorlar.
-      Realtime çağrı sayısında 1. ama disk okumada HİÇ YOK (`sql/admin/admin-yuk-teshis.sql`).
 - [ ] **ESLint yapılandırması yok** — `npm run lint` çalışmıyor, kod denetimi tsc + build'e kalmış.
       Kullanılmayan değişken / eksik hook bağımlılığı / erişilebilirlik yakalanmıyor.
 - [ ] **Genel Bakış `transactions` limitsiz** (aşağıda da var) — panelin en yavaş sayfası (614 ms).

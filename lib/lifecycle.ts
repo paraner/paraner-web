@@ -1,4 +1,5 @@
 import { TRIAL_DAYS } from "./plans";
+import { TZ } from "./format";
 import type { AdminPerson, AdminPersonProfile } from "./adminUsers";
 
 /* Müşteri yaşam döngüsü — admin panelinin durum hesabı.
@@ -98,14 +99,32 @@ export function relativeDays(iso: string | null, now = Date.now()): number | nul
   return Math.floor((now - new Date(iso).getTime()) / DAY);
 }
 
+/* "bugün"/"dün" TAKVİM kavramı — geçen saatle ölçülemez.
+   ⚠️ 2026-07-21'de canlı testte yakalandı: denetim kaydında 20 Tem 15:36'daki silme,
+   21 Tem 14:32'de bakılınca "bugün" yazıyordu (arada 22,9 saat var → `relativeDays` 0 dönüyor).
+   Aynı listede 20 Tem 09:54 kaydı "dün" diyordu → aynı gün, iki farklı etiket.
+   Bu yüzden gün etiketi Europe/Istanbul TAKVİM gününden hesaplanıyor.
+   `relativeDays` (yuvarlanan 24 saat) BİLEREK değiştirilmedi: segment eşikleri
+   (yeni kayıt / LOST_AFTER_DAYS) onu kullanıyor, oralarda süre ölçümü doğru olan. */
+const gunAnahtari = (t: number): string =>
+  new Date(t).toLocaleDateString("en-CA", { timeZone: TZ }); // YYYY-MM-DD
+
+function takvimGunFarki(iso: string, now: number): number {
+  const a = gunAnahtari(new Date(iso).getTime());
+  const b = gunAnahtari(now);
+  if (a === b) return 0;
+  // Gün anahtarları UTC gece yarısına sabitlenip çıkarılır (DST'den etkilenmez)
+  return Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / DAY);
+}
+
 export function relativeLabel(iso: string | null, now = Date.now()): string {
-  const d = relativeDays(iso, now);
-  if (d == null) return "hiç";
-  if (d === 0) return "bugün";
-  if (d === 1) return "dün";
-  if (d < 30) return `${d} gün önce`;
-  if (d < 365) return `${Math.floor(d / 30)} ay önce`;
-  return `${Math.floor(d / 365)} yıl önce`;
+  if (!iso) return "hiç";
+  const gun = takvimGunFarki(iso, now);
+  if (gun <= 0) return "bugün";
+  if (gun === 1) return "dün";
+  if (gun < 30) return `${gun} gün önce`;
+  if (gun < 365) return `${Math.floor(gun / 30)} ay önce`;
+  return `${Math.floor(gun / 365)} yıl önce`;
 }
 
 /** Kayıp sayılma eşiği: 30+ gündür ORTALIKTA YOK (last_seen'e göre — last_sign_in_at'e değil,
