@@ -18,7 +18,9 @@ export const metadata = { title: "Destek Talepleri", robots: { index: false, fol
    · Müşteri bağlamı → listPeople() (service_role; auth.users + profiles)
    ⚠️ support_tickets.user_id = auth.users.id (KİŞİ), profil id DEĞİL. */
 export default async function AdminDestekPage() {
-  await requireStaffPage(); // sayfa kendi guard'ını çağırır (denetim Y1) — layout'a güvenme
+  /* Rol DÖNÜYOR: talep silme yalnız admin'e açık (Mehmet, 2026-07-21). Buradaki rol
+     UI'ı ayarlar; asıl kapı sunucuda `deleteTickets` → `requireAdmin()`. */
+  const role = await requireStaffPage(); // sayfa kendi guard'ını çağırır (denetim Y1) — layout'a güvenme
 
   const supabase = await createClient();
   const [ticketR, peopleR, auditR] = await Promise.all([
@@ -113,6 +115,7 @@ export default async function AdminDestekPage() {
         rows={rows}
         now={now}
         uyari={uyari}
+        silebilir={role === "admin"}
         /* 200 sınırı SESSİZ kalmasın (CLAUDE.md: listeye limit koy + kırpmayı söyle). */
         kirpildi={tickets.length >= 200}
       />

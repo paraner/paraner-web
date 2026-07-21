@@ -18,9 +18,9 @@
 > 6. ✅ **`/admin/denetim`:** *"Hesap KALICI silindi · mgzrcom@gmail.com / admin@paraner.com ·
 >    21 Tem 2026 14:32 / 1 destek talebi bu hesaba aitti · Sebep: Test / dahili hesap"*
 > ✅ Commit + push YAPILDI (`ee87245`) ve canlıda. *(Eski "commit/push yapılmadı" notu bayattı.)*
-- [ ] 🧹 **Test artığı temizlenecek (DB erişimi gerek — Mehmet):** `ZZTEST ekli talep 11:29:27`
-      talebi + mesajları + `ticket-attachments/8f9d5f1d-…/ek-test.png` duruyor. Sahibi silindiği için
-      `user_id` NULL (sahipsiz talep — tasarım gereği). Panelden talep silme yok, SQL gerekiyor.
+- [x] ✅ **TALEP SİLME EKLENDİ (2026-07-21, Mehmet talebi)** — aşağıdaki bloğa bak.
+      Test artığı (`ZZTEST ekli talep 11:29:27` + eki) artık panelden silinebilir; deploy sonrası
+      bu talebin silinmesi aynı zamanda özelliğin canlı testi olacak.
 - [ ] 🟡 **Denetim listesinde ham anahtar:** eski kayıtlar `staff_removed · <e-posta>` diye çiziliyor
       (çevrilmemiş teknik dize). Yeni silme kayıtları düzgün ("Hesap KALICI silindi · …") →
       aksiyon türü sözlüğü eksik kalmış. Küçük iş, cila listesine.
@@ -53,6 +53,33 @@
 - [x] 🟠 **Y1** `/admin/page.tsx` service_role okuyor ama sayfa guard'ı YOK (diğer 5 sayfada var, Next 16 layout-guard'ı önermiyor) · **Y2** premium/free tek tıkla, onay yok + `trial_*` null'lanıyor (geri alınamaz) · **Y3** `ai_usage_rollup()` PUBLIC EXECUTE (REVOKE yok) · **Y4** destek sorgusu patlarsa pano "hepsi yanıtlandı" der · **Y5** `inviteStaff` rol hatasını yutup "davet edildi" der · **Y6** `/admin/canli` tüm hataları yutup "kimse yok" der
 - [x] 🟡 **Orta bulgular (2. tur):** O1 indeks · O3 count(*)→reltuples (8sn timeout) · O4 ölü-kayıt sayacı ayrı RPC · O5 10.000 kırpma uyarısı · O7 "Kayıp" segmenti · O8 FK CASCADE · O9 audit target_user_id · O10 silme-başarısız telafi kaydı · O11 loading.tsx · D3 kolon seçimi. **Kalan:** O2 (K2 ile çözüldü) · O6 kart-segment birim çelişkisi (pano PROFİL, segment KİŞİ sayıyor + "Premium profil" kartı seg=paid ile uyuşmuyor) — birim etiketi veya kişi-bazlı hesap kararı gerek
 - [ ] 🟢 ~18 cila (loading.tsx yok, PageHead deseni kullanılmıyor, terminoloji Müşteri/Üye/Kullanıcı karışık, klavye erişimi, boş durum 3 ayrı sınıf…) — raporda
+
+### 🗑️ TALEP SİLME (2026-07-21) — admin-only, ⏳ CANLI TEST BEKLİYOR
+> Mehmet: "adminler talebi silebilsin ama çalışanlar değil; hem açık hem kapalı talepleri
+> kendim temizlerim." Kararlar: **detay + listede çoklu seçim** · **denetim kaydı VAR, sebep YOK**.
+> ⚠️ tsc + build temiz, **canlıda denenmedi** (deploy sonrası ilk iş).
+- [x] **SQL/şema GEREKMEDİ** — `ticket_messages.ticket_id → support_tickets` zaten CASCADE
+      (`destek-faz0.sql:27`). ⚠️ **RLS'e DELETE politikası BİLEREK EKLENMEDİ:** politika yoksa
+      hiçbir istemci (müşteri de agent de) talep silemez; silme yalnız guard'lı server action'dan
+      geçer. Politika eklemek yetki kapısını ikinci bir yere kopyalamak olurdu.
+- [x] **`deleteTickets()`** (`lib/adminActions.ts`) — `requireAdmin()` (agent reddedilir) +
+      talep başına `ticket_deleted` denetim kaydı (başlık/durum/departman, silmeden ÖNCE yazılır) +
+      başarısızlıkta `ticket_delete_failed` telafi kaydı. Tavan: **50 talep/işlem**.
+- [x] 🔴 **Cascade'in KAPSAMADIĞI iki şey elle siliniyor** (asıl iş buydu):
+      **(1) Ek dosyalar** — storage FK bilmez, `ticket-attachments/<talep_id>/…` yetim kalırdı
+      (private bucket → kimse göremez ama disk + "sildim" dediğin veri durur).
+      **(2) Bildirimler** — `notifications.data.ticket_id` **jsonb, FK DEĞİL** → çanda silinmiş
+      talebe giden ölü bağlantı kalırdı (tıklayınca 404).
+- [x] **UI:** talep detayında "Sil" · listede satır seçimi + "Görünenleri seç" + "Seçilenleri sil".
+      İkisi de `confirmDialog` ile onaylı. Buton yalnız `role === "admin"` iken çizilir.
+- [x] **`ThreadClient` müşteriyle ORTAK** → silme kodu içine gömülmedi, `headerAction` yuvası
+      eklendi. Sebep: admin server-action referansı müşteri paketine sızmasın.
+- [x] **Yan düzeltme:** `/admin/destek/[id]` sayfasının **kendi guard'ı yoktu** (yalnız layout'a
+      güveniyordu — CLAUDE.md kural 5 ihlali, denetim Y1'in aynısı). `requireStaffPage()` eklendi.
+- [ ] ⏳ **Canlı doğrulanacak:** (a) admin tek talebi silebiliyor · (b) çoklu seçim + toplu silme ·
+      (c) denetim kaydı `/admin/denetim`'e düşüyor · (d) ek dosya storage'dan gerçekten gitti ·
+      (e) **agent silme butonunu GÖRMÜYOR ve isteği elle atsa da reddediliyor** ← agent hesabı
+      gerektiği için `sql/destek/destek-departman-TEST.sql` turuyla birlikte yapılmalı.
 
 ### 🛠️ ADMIN / İÇ EKİP PANELİ — canlı (admin.paraner.com)
 > Plan: `docs/ADMIN-PANEL.md`. Mehmet: kurucu+çalışanlar için müşteri yönetim paneli (üyeleri tür/abonelik

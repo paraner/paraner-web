@@ -34,11 +34,14 @@ export default function ThreadClient({
   userId,
   isAgent,
   backHref = "/panel/destek",
+  headerAction,
 }: {
   ticket: Ticket;
   initialMessages: TicketMessage[];
   userId: string;
   isAgent: boolean;
+  /** Kabuk-özel başlık aksiyonu (admin: talep silme). Müşteri panelinde verilmez. */
+  headerAction?: React.ReactNode;
   /** Geri oku nereye dönsün — admin panelinden açılınca /admin/destek (yoksa ekip
       müşteri paneline düşer; admin.* host'unda /panel app.paraner.com'a redirect edilir). */
   backHref?: string;
@@ -140,6 +143,11 @@ export default function ThreadClient({
             <Check size={15} /> Çözüldü
           </button>
         )}
+        {/* Kabuk-özel aksiyon yuvası. Admin talep SİLME butonunu buraya koyuyor.
+            ⚠️ Buton bu bileşenin İÇİNE yazılmadı BİLEREK: ThreadClient müşteri panelinde de
+            kullanılıyor (tek kaynak) — silme aksiyonunu buraya gömmek admin server-action
+            referansını müşteri paketine sokardı. Yuva boşsa müşteri hiçbir şey görmez. */}
+        {headerAction}
       </div>
 
       <div className="thread-body">

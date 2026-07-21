@@ -11,7 +11,7 @@ import {
   isValidTier,
   type SubscriptionTier,
 } from "./plans";
-import { DEPARTMENTS, departmentLabel, type Department } from "./supportShared";
+import { DEPARTMENTS, departmentLabel, TICKET_DELETE_MAX, type Department } from "./supportShared";
 import { CURRENCIES } from "./currencies";
 import {
   isDeleteReason,
@@ -368,6 +368,89 @@ export async function deleteUserAccount(
 
   revalidatePath("/admin/musteriler");
   return { ok: true, message: `${email} kalıcı olarak silindi.` };
+}
+
+/* --- Destek talebi aksiyonları --- */
+
+/* Destek taleplerini KALICI sil (admin-only; agent SİLEMEZ — `requireAdmin` reddeder).
+   Mehmet, 2026-07-21: "adminler talebi silebilsin ama çalışanlar değil."
+
+   ⚠️ RLS'e DELETE politikası BİLEREK EKLENMEDİ: politika yoksa hiçbir istemci (müşteri de,
+   agent de) talep silemez — silme yalnız bu guard'lı, service_role'lü aksiyondan geçer.
+   Politika eklemek yetki kapısını ikinci bir yere kopyalamak olurdu.
+
+   Silinen üç şey ve NEDEN elle silindikleri:
+   1. `ticket_messages` — ELLE SİLİNMİYOR, FK CASCADE hallediyor (destek-faz0.sql:27).
+   2. **Ek dosyalar** — storage FK bilmez; `ticket-attachments/<talep_id>/…` altındaki
+      nesneler yetim kalırdı (private bucket, kimse göremez ama yer kaplar + KVKK'da
+      "sildim" dediğin veri diskte durur). Klasör listelenip siliniyor.
+   3. **Bildirimler** — `notifications.data.ticket_id` jsonb, FK DEĞİL → cascade yok.
+      Temizlenmezse çanda silinmiş talebe giden ölü bağlantı kalır (tıklayınca 404). */
+export async function deleteTickets(ticketIds: string[]): Promise<ActionResult> {
+  const actor = await requireAdmin();
+  if (!actor) return { ok: false, message: "Yetkin yok — talep silmeyi yalnız yöneticiler yapabilir." };
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, message: "Sunucu anahtarı eksik." };
+
+  const idler = [...new Set(ticketIds.filter((x) => typeof x === "string" && x.length > 0))];
+  if (idler.length === 0) return { ok: false, message: "Silinecek talep seçilmedi." };
+  if (idler.length > TICKET_DELETE_MAX) {
+    return { ok: false, message: `Tek seferde en fazla ${TICKET_DELETE_MAX} talep silinebilir.` };
+  }
+
+  /* Denetim kaydı SİLMEDEN ÖNCE hazırlanır: silindikten sonra başlık/sahip bilgisi yok olur,
+     kaydın neyi anlattığı kaybolurdu (hesap silmede öğrenilen ders — deleteUserAccount:351). */
+  const { data: talepler, error: okuErr } = await admin
+    .from("support_tickets")
+    .select("id, subject, user_id, status, department")
+    .in("id", idler);
+  if (okuErr) return { ok: false, message: `Talepler okunamadı: ${okuErr.message}` };
+  if (!talepler || talepler.length === 0) return { ok: false, message: "Talep bulunamadı (silinmiş olabilir)." };
+
+  // 1) Ek dosyalar — her talebin klasörü ayrı listelenip siliniyor.
+  for (const t of talepler) {
+    const { data: dosyalar } = await admin.storage.from("ticket-attachments").list(t.id as string);
+    const yollar = (dosyalar ?? []).map((d) => `${t.id}/${d.name}`);
+    if (yollar.length) {
+      const { error: stErr } = await admin.storage.from("ticket-attachments").remove(yollar);
+      /* Ek silinemezse talebi YİNE de siliyoruz: yönetici "bu talep gitsin" dedi, storage
+         hatası yüzünden kayıt ekranda kalırsa iş yapılmamış olur. Sessiz kalmıyoruz — denetim
+         kaydına yazılıyor ki yetim dosya sonradan bulunabilsin. */
+      if (stErr) console.error("[deleteTickets] ek silinemedi:", t.id, stErr.message);
+    }
+  }
+
+  // 2) Bildirimler (jsonb eşleşmesi — FK olmadığı için tek yol bu).
+  for (const t of talepler) {
+    const { error: nErr } = await admin
+      .from("notifications")
+      .delete()
+      .filter("data->>ticket_id", "eq", t.id as string);
+    if (nErr) console.error("[deleteTickets] bildirim silinemedi:", t.id, nErr.message);
+  }
+
+  // 3) Denetim kaydı — talep başına bir satır (aranabilir olsun diye tek toplu satır değil).
+  for (const t of talepler) {
+    await logAction(actor, "ticket_deleted", { userId: (t.user_id as string) ?? undefined }, {
+      ticket_id: t.id,
+      subject: t.subject,
+      status: t.status,
+      department: t.department,
+      ...(t.user_id ? {} : { orphan: true }), // sahibi zaten silinmiş talep
+    });
+  }
+
+  // 4) Talepler (mesajlar CASCADE ile gider).
+  const { error: silErr } = await admin.from("support_tickets").delete().in("id", idler);
+  if (silErr) {
+    await logAction(actor, "ticket_delete_failed", {}, { ticket_ids: idler, reason: silErr.message });
+    return { ok: false, message: `Silinemedi: ${silErr.message}` };
+  }
+
+  revalidatePath("/admin/destek");
+  revalidatePath("/admin");
+  const n = talepler.length;
+  return { ok: true, message: n === 1 ? "Talep kalıcı olarak silindi." : `${n} talep kalıcı olarak silindi.` };
 }
 
 /* --- Ekip aksiyonları --- */

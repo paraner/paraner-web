@@ -1,10 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Search, User, CalendarPlus, Layers, Clock } from "lucide-react";
-import { TICKET_STATUS_META, DEPARTMENT_META, DEPARTMENTS, type Ticket, type TicketStatus, type Department } from "../../../lib/supportShared";
+import { ChevronRight, Search, User, CalendarPlus, Layers, Clock, Trash2 } from "lucide-react";
+import { TICKET_STATUS_META, DEPARTMENT_META, DEPARTMENTS, TICKET_DELETE_MAX, type Ticket, type TicketStatus, type Department } from "../../../lib/supportShared";
 import { relativeLabel } from "../../../lib/lifecycle";
+import { deleteTickets } from "../../../lib/adminActions";
+import { confirmDialog } from "../../components/confirm";
+import { showToast } from "../../components/toast";
 
 /** Talep + o talebi yazan müşterinin bağlamı (sunucuda birleştirilir). */
 export type TicketRow = {
@@ -68,13 +72,19 @@ export default function DestekListClient({
   now,
   uyari,
   kirpildi,
+  silebilir,
 }: {
   rows: TicketRow[];
   /** Zaman SUNUCUDAN gelir → SSR ile hydrate aynı "x gün önce"yi hesaplar (zıplama olmaz). */
   now: number;
   uyari: string | null;
   kirpildi: boolean;
+  /** Yalnız admin siler (agent DEĞİL). UI kolaylık; asıl kapı sunucuda requireAdmin(). */
+  silebilir: boolean;
 }) {
+  const router = useRouter();
+  const [secili, setSecili] = useState<Set<string>>(new Set());
+  const [siliniyor, setSiliniyor] = useState(false);
   const [seg, setSeg] = useState<(typeof SEGMENTS)[number]["id"]>("bekleyen");
   /* Departman filtresi: "tüm ekipler" varsayılan. Admin hepsini görür; agent'a RLS zaten
      yalnız kendi departmanını verecek (daraltma ayrı adımda) → bu filtre onun için de anlamlı. */
@@ -162,6 +172,43 @@ export default function DestekListClient({
         </div>
       </div>
 
+      {/* Seçim çubuğu — yalnız seçim varken görünür (boşken araç çubuğu gürültüsü olmasın). */}
+      {silebilir && secili.size > 0 && (
+        <div className="admin-toolbar" style={{ alignItems: "center", gap: 12 }}>
+          <strong>{secili.size} talep seçildi</strong>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setSecili(new Set())} disabled={siliniyor}>
+            Seçimi bırak
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger btn-sm"
+            disabled={siliniyor}
+            onClick={async () => {
+              const idler = [...secili];
+              const ok = await confirmDialog({
+                title: `${idler.length} talep kalıcı olarak silinsin mi?`,
+                message:
+                  "Talep, tüm yazışması ve ek dosyaları geri alınamaz biçimde silinir. " +
+                  "İşlem denetim kaydına yazılır.",
+                confirmLabel: "Kalıcı olarak sil",
+                danger: true,
+              });
+              if (!ok) return;
+              setSiliniyor(true);
+              const r = await deleteTickets(idler);
+              setSiliniyor(false);
+              showToast({ title: r.message, variant: r.ok ? "success" : "error" });
+              if (r.ok) {
+                setSecili(new Set());
+                router.refresh(); // CLAUDE.md kuralı: mutasyondan sonra tek refresh
+              }
+            }}
+          >
+            <Trash2 size={14} /> {siliniyor ? "Siliniyor…" : "Seçilenleri sil"}
+          </button>
+        </div>
+      )}
+
       <div className="admin-panel" style={{ padding: 0 }}>
         {gorunen.length === 0 ? (
           <p className="admin-empty-cell" style={{ padding: 24 }}>
@@ -169,9 +216,31 @@ export default function DestekListClient({
           </p>
         ) : (
           <div className="admin-ticket-list">
+            {silebilir && (
+              /* "Görünenleri seç" — filtre + arama zaten daralttığı için temizlik böyle yapılır.
+                 ⚠️ Tavanla sınırlı: 200 talep listelenebiliyor ama tek seferde en fazla
+                 TICKET_DELETE_MAX silinir; sessiz kırpma olmasın diye kaç tanesinin
+                 seçildiği yazıyor. */
+              <label className="admin-ticket-pick admin-ticket-pick-all">
+                <input
+                  type="checkbox"
+                  checked={gorunen.length > 0 && gorunen.every((r) => secili.has(r.ticket.id))}
+                  onChange={(e) => {
+                    if (!e.target.checked) return setSecili(new Set());
+                    setSecili(new Set(gorunen.slice(0, TICKET_DELETE_MAX).map((r) => r.ticket.id)));
+                  }}
+                />
+                <span className="admin-td-dim">
+                  Görünenleri seç ({Math.min(gorunen.length, TICKET_DELETE_MAX)})
+                  {gorunen.length > TICKET_DELETE_MAX && ` — ${gorunen.length} taleptenki ilk ${TICKET_DELETE_MAX}'si`}
+                </span>
+              </label>
+            )}
             {gorunen.map((r) => {
               const meta = TICKET_STATUS_META[r.ticket.status] ?? TICKET_STATUS_META.open;
-              return (
+              /* Seçim kutusu Link'in İÇİNE konamaz (tıklayınca gezinir + iç içe etkileşimli
+                 öğe erişilebilirlik hatası) → kutu ile satır KARDEŞ, ortak sarmalayıcıda. */
+              const satir = (
                 <Link
                   key={r.ticket.id}
                   href={`/admin/destek/${r.ticket.id}`}
@@ -234,6 +303,27 @@ export default function DestekListClient({
                   <span className={`badge ${meta.badge}`}>{meta.label}</span>
                   <ChevronRight size={16} className="admin-ticket-chevron" />
                 </Link>
+              );
+
+              if (!silebilir) return satir;
+              const sec = secili.has(r.ticket.id);
+              return (
+                <div key={r.ticket.id} className="admin-ticket-pick">
+                  <input
+                    type="checkbox"
+                    checked={sec}
+                    aria-label={`"${r.ticket.subject}" talebini seç`}
+                    onChange={(e) => {
+                      setSecili((o) => {
+                        const y = new Set(o);
+                        if (e.target.checked) y.add(r.ticket.id);
+                        else y.delete(r.ticket.id);
+                        return y;
+                      });
+                    }}
+                  />
+                  {satir}
+                </div>
               );
             })}
           </div>

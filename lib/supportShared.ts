@@ -101,3 +101,9 @@ export const TICKET_STATUS_META: Record<TicketStatus, { label: string; badge: st
   resolved: { label: "Çözüldü", badge: "green" },
   closed: { label: "Kapandı", badge: "gray" },
 };
+
+/* Tek seferde silinebilecek talep sayısı — kazara "hepsini seç" felaketine karşı tavan.
+   ⚠️ BURADA duruyor, `adminActions.ts`'te DEĞİL: o dosya "use server" ve bir server-action
+   modülü yalnızca async fonksiyon export edebilir; sabit koyulursa build patlar.
+   Hem sunucu (deleteTickets doğrulaması) hem istemci (uyarı metni) buradan okur. */
+export const TICKET_DELETE_MAX = 50;

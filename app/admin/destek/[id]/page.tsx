@@ -1,5 +1,7 @@
 import { createClient } from "../../../../lib/supabase/server";
+import { requireStaffPage } from "../../../../lib/adminGuard";
 import ThreadClient from "../../../panel/destek/[id]/ThreadClient";
+import TalepSilButton from "./TalepSilButton";
 import { TICKET_COLS, type Ticket, type TicketMessage } from "../../../../lib/supportShared";
 
 export const metadata = { title: "Destek talebi", robots: { index: false, follow: false } };
@@ -15,6 +17,10 @@ export default async function AdminTicketThreadPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  /* Sayfa KENDİ guard'ını çağırır (CLAUDE.md kural 5 / denetim Y1): Next 16'da layout
+     istemci-taraflı gezinmede yeniden çalışmıyor, layout guard'ına güvenilmez.
+     Rol ayrıca silme butonunu belirliyor — talebi yalnız admin siler, agent DEĞİL. */
+  const role = await requireStaffPage();
   const supabase = await createClient();
   const {
     data: { user },
@@ -51,6 +57,7 @@ export default async function AdminTicketThreadPage({
       userId={userId}
       isAgent
       backHref="/admin/destek"
+      headerAction={role === "admin" ? <TalepSilButton ticketId={id} /> : undefined}
     />
   );
 }
