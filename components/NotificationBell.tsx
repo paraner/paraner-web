@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Bell, ChevronRight } from "lucide-react";
-import { BellIcon } from "../../components/icons";
-import { createClient } from "../../lib/supabase/client";
-import { TZ } from "../../lib/format";
+import { BellIcon } from "./icons";
+import { createClient } from "../lib/supabase/client";
+import { TZ } from "../lib/format";
 
 /* Üst bar bildirim çanı — gerçek `notifications` tablosu (Faz 0 destek sistemi).
    Fetch + Realtime INSERT (agent yanıtı → DB trigger → notifications → buraya anlık düşer).

@@ -4544,3 +4544,77 @@ ul { list-style: none; }
   z-index: 400;
 }
 @keyframes navPendingIn { to { opacity: 1; } }
+
+/* ═══ Destek: ek dosya + silme modalı (2026-07-20) ═══════════════════════════
+   ⚠️ RENK KURALI (CLAUDE.md): aksiyon öğeleri markaya bağlı OLMAZ → nötr/titanyum.
+   Teal kullanma; marka rengi değişecek. */
+
+/* Yazma alanı artık iki satır: seçili ek çipi ÜSTTE, giriş satırı altta */
+.thread-compose-wrap {
+  flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;
+  padding-top: 14px; border-top: 1px solid var(--border);
+}
+/* İç satır üstteki çizgiyi tekrar çizmesin (dış sarmalayıcıda zaten var) */
+.thread-compose-wrap .thread-compose { padding-top: 0; border-top: none; }
+
+/* Ataç düğmesi — native dosya butonu tema dışı kaldığı için gizli input + etiket */
+.thread-clip {
+  display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0;
+  border-radius: 12px; cursor: pointer; color: var(--text-dim);
+  background: var(--card-2); border: 1px solid var(--border);
+  transition: color .14s ease, border-color .14s ease;
+}
+.thread-clip:hover { color: var(--text); border-color: var(--focus-ring); }
+.thread-clip input { display: none; }
+
+/* Gönderilmeden önce seçilen ek */
+.thread-ek-secili {
+  display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+  max-width: 100%; padding: 7px 10px; border-radius: 10px; font-size: 12.5px;
+  background: var(--card-2); border: 1px solid var(--border); color: var(--text-dim);
+}
+.thread-ek-ad {
+  color: var(--text); font-weight: 600;
+  max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.thread-ek-secili button {
+  display: grid; place-items: center; width: 20px; height: 20px; flex-shrink: 0;
+  border: none; background: transparent; color: var(--text-dim);
+  border-radius: 6px; cursor: pointer;
+}
+.thread-ek-secili button:hover { color: var(--danger); background: rgba(226,75,74,0.12); }
+.thread-ek-secili button:disabled { opacity: 0.5; cursor: default; }
+
+/* Mesaj balonundaki ek bağlantısı */
+.msg-ek {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
+  padding: 6px 10px; border-radius: 9px; font-size: 12.5px; text-decoration: none;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text);
+  transition: border-color .14s ease, background .14s ease;
+}
+.msg-ek:hover { background: rgba(255,255,255,0.09); border-color: var(--focus-ring); }
+.msg-ek-ad { font-weight: 600; }
+.msg-ek-dim { color: var(--text-dim); font-size: 11.5px; }
+.msg-ek-hata {
+  display: inline-block; margin-top: 8px; font-size: 12px; color: var(--warning, #d9a441);
+}
+
+/* Talep açma formundaki "Dosya seç" */
+.ek-sec-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 13px; border-radius: 10px; font-size: 13px; cursor: pointer;
+  background: var(--card-2); border: 1px solid var(--border); color: var(--text);
+  transition: border-color .14s ease;
+}
+.ek-sec-btn:hover { border-color: var(--focus-ring); }
+.ek-sec-btn input { display: none; }
+
+/* Kalıcı silme modalı (SilModal) */
+.sil-alan { display: block; margin-bottom: 14px; }
+.sil-genis { width: 100%; }
+.sil-not {
+  width: 100%; resize: vertical; padding: 10px 12px; font-family: inherit;
+  font-size: 13.5px; line-height: 1.5; border-radius: 10px; outline: none;
+  background: var(--card-2); border: 1px solid var(--border); color: var(--text);
+}
+.sil-not:focus { border-color: var(--focus-ring); }

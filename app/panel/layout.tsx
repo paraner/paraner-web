@@ -8,7 +8,7 @@ import Heartbeat from "./Heartbeat";
 import AccountStatusGuard from "./AccountStatusGuard";
 import ToastHost from "../components/ToastHost";
 import ConfirmProvider from "../components/ConfirmProvider";
-import NotificationBell from "./NotificationBell";
+import NotificationBell from "../../components/NotificationBell";
 
 // Panel uygulamanın içi — tüm /panel sayfaları arama motorlarına kapalı
 export const metadata: Metadata = {

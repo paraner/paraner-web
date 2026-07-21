@@ -18,6 +18,9 @@ export type TicketRow = {
   durumBadge: string | null;
   profilSayisi: number;
   sonAktiflik: string | null;
+  /** Müşteri KALICI silinmişse: kim, neden, ne zaman sildi (admin_audit_log'dan).
+      null = müşteri duruyor VEYA silme kaydı eşleşmedi (eski silmelerde ticket_ids yok). */
+  silme: { kim: string; sebep: string; not: string | null; ne_zaman: string } | null;
 };
 
 /* ⚠️ timeZone SABİT olmalı (2026-07-18). İki ayrı sorunu birden çözüyor:
@@ -188,9 +191,21 @@ export default function DestekListClient({
                             <span className={`badge ${r.durumBadge ?? "gray"}`}>{r.durum}</span>
                           )}
                         </>
+                      ) : r.silme ? (
+                        /* Denetim kaydı eşleşti → tahmin değil, BELGE: kim sildi, neden.
+                           Not varsa balonda (title) — satırı uzatmadan erişilebilir olsun. */
+                        <span
+                          className="admin-td-dim"
+                          title={r.silme.not ? `Not: ${r.silme.not}` : undefined}
+                        >
+                          hesap silindi · <strong>{r.silme.kim}</strong> · {r.silme.sebep} ·{" "}
+                          {fmtTarih(r.silme.ne_zaman)}
+                          {r.silme.not && " · not var"}
+                        </span>
                       ) : (
-                        /* Kişi bulunamadı = hesap silinmiş ya da müşteri listesi kırpılmış.
-                           "—" yerine sebebi yaz: agent boş alana bakıp kafası karışmasın. */
+                        /* Kişi bulunamadı ama eşleşen silme kaydı da yok: müşteri listesi
+                           kırpılmış OLABİLİR, ya da silme sebep alanı eklenmeden (2026-07-20
+                           öncesi) yapılmış eski bir silmedir. "—" yerine sebebi yaz. */
                         <span className="admin-td-dim">müşteri kaydı bulunamadı (silinmiş olabilir)</span>
                       )}
                     </div>

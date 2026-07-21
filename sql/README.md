@@ -29,6 +29,10 @@ Sıra önemliydi, uygulanma sırası:
 | 2 | `destek-departman.sql` | `department` kolonu (DEFAULT'lu → mobil kırılmadı), `staff_departments`, ekibe çan bildirimi | ✅ |
 | 3 | `destek-departman-rls.sql` | **RLS daraltma** — agent yalnız kendi departmanını görür (fail-closed) | ✅ |
 | 4 | `destek-departman-bildirim.sql` | Yeni talepte departman ekibine **e-posta** (edge: `staff-invite-notify` değil, `support-new-ticket-notify`) | ✅ |
+| 5 | `destek-hesap-silme-set-null.sql` | Hesap silme 500 hatasını kapatır: 3 FK → `ON DELETE SET NULL` (yazışma denetim kaydı olarak KALIR) | ✅ **çalıştırıldı 2026-07-20** (doğrulama 6/6 ✅) |
+| — | `destek-hesap-silme-DOGRULAMA.sql` | **Sadece OKUR** — 6 satır ✅/❌ + auth.users'a bakan TÜM FK'lerin silme davranışı | 5'ten sonra |
+| 6 | `destek-talep-realtime.sql` | `support_tickets`'ı realtime yayınına ekler → yeni talep admin listesine ANLIK düşer | ⏳ **BEKLİYOR** |
+| 7 | `destek-ek-dosya.sql` | `ticket-attachments` **private** bucket + storage policy'leri (ek dosya) | ⏳ **BEKLİYOR** |
 | — | `destek-departman-DOGRULAMA.sql` | **Sadece OKUR** — 13 satır ✅/❌ | istediğin zaman |
 | — | `destek-departman-TEST.sql` | İkinci hesapla canlı test betiği (rol/departman atar, sonunda geri alır) | test için |
 
@@ -37,6 +41,12 @@ Sıra önemliydi, uygulanma sırası:
 - **`destek-departman-rls.sql`, `destek-faz0.sql`'in politikalarını EZER.** Faz 0'ı tekrar
   çalıştırırsan departman daraltmasını geri alırsın — agent tüm talepleri görmeye başlar.
   Aynı dosya K3 korumasını da içinde taşır (`admin-denetim-fix-K3.sql` ayrıca gerekmez).
+- **`destek-hesap-silme-set-null.sql`'in edge bağımlılığı KAPANDI** (2026-07-20): `ticket.user_id`
+  NULL gelebildiği için `support-reply-notify` + `support-new-ticket-notify` NULL guard'lı
+  sürümleriyle deploy edildi. ⚠️ Bu iki fonksiyonu bir daha deploy edersen **`--no-verify-jwt`
+  bayrağını unutma** — ya da daha iyisi, ayar artık `paraner-app/supabase/config.toml`'da
+  kayıtlı olduğu için bayrak gerekmez. Kayıt silinirse deploy sessizce JWT zorunlu yapar ve
+  destek e-postaları durur (2026-07-20'de tam bu oldu, yakalandı).
 - **`paraner-app/supabase/ai-usage-rpc-fix.sql` GEÇERSİZ** — tekrar çalıştırılırsa denetimdeki
   K2 düzeltmesini sessizce geri alır.
 - `*-DOGRULAMA.sql` dosyaları hiçbir şeyi değiştirmez; "hangi adım gerçekten canlıda?"

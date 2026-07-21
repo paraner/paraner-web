@@ -16,6 +16,119 @@
 
 ---
 
+## 2026-07-20 — hesap silme kırığı: yazışma korunarak çözüldü (SET NULL)
+
+Mehmet karar verdi: **(b) `ON DELETE SET NULL`** — müşteri silinse de destek yazışması kalsın
+("silinmiş kullanıcı"), çünkü o yazışma bir denetim/anlaşmazlık kaydı.
+
+**⚠️ TEK FK YETMİYORDU — asıl tuzak buydu.** GOREVLER'de sorun `ticket_messages.sender_id`
+FK'si diye kayıtlıydı. Ama yalnız onu SET NULL yapmak **hiçbir şeyi korumazdı**:
+`support_tickets.user_id` **CASCADE**'di (`destek-faz0.sql:11`) ve `ticket_messages.ticket_id`
+da CASCADE → kullanıcı silinir, TALEP gider, mesajlar peşinden giderdi. 500 hatası kaybolur,
+veri de kaybolurdu ve "düzelttik" sanırdık. Migration üç FK'yi birden çeviriyor.
+
+**Üçüncü FK — uyuyan kopya:** `support_tickets.assignee_id` de ON DELETE davranışsızdı.
+Bugün acıtmıyor çünkü kolon hiç kullanılmıyor; talebe atama özelliği açılır açılmaz, atama
+yapılmış bir **personeli** silmek aynı 23503'ü verirdi. Kapatıldı.
+Bunu bulmak için iki repodaki `references auth.users` geçen TÜM FK'ler tarandı — kalan
+hepsi CASCADE (notifications/user_roles/staff_departments/profiles/login-devices), doğru.
+DOGRULAMA betiğine ayrıca **canlı catalog denetimi** kondu: repo'daki SQL dosyaları
+Dashboard'dan elle açılmış tabloları göstermez, doğruyu `pg_constraint`'ten okumak gerek.
+
+**Güvenlik kontrolü — "NOT NULL kalktı, sahipsiz kayıt yazılabilir mi?"** Hayır. RLS
+`user_id = auth.uid()` / `sender_id = auth.uid()` NULL'da **true dönmez** (üç değerli mantık,
+fail-closed) → istemci NULL yazamaz; NULL'a yalnız FK'nin SET NULL'ı ile geçilir.
+Sahipsiz talep departman kuyruğunda kalır (`department` kolonu duruyor), yeni müşteri mesajı
+imkânsız → yazışma donar, arşiv gibi davranır.
+
+**İki repo tarandı (paralel ajan), kod NULL'a hazırlandı.** Web'de çöken yer yoktu (her Map
+lookup'ta guard varmış) ama tipler `null`'a izin vermiyordu → `Ticket.user_id` +
+`TicketMessage.sender_id` `string | null`, 4 tüketici guard'landı, yazışma ekranına
+"Silinmiş müşteri"/"Silinmiş kullanıcı" etiketi. **Mobil UI hiç değişmedi** — balon hizalaması
+`sender_type` üzerinden yürüyor, `sender_id` okunmuyor (şanslıyız).
+🔴 **Ama mobil edge function'larda gerçek açık vardı:** `support-reply-notify:94` ve
+`support-new-ticket-notify:145` `getUserById(ticket.user_id)` çağırıyordu, ikincisi `as string`
+cast'iyle NULL'u TS'ten gizleyerek. SDK throw ederse 500 → pg_net retry döngüsü. Guard eklendi.
+⚠️ **Kod yetmez → `supabase functions deploy` şart** (ikisi de). SQL + deploy Mehmet'te.
+
+**SQL + deploy CANLIDA (aynı gün).** Doğrulama 6/6 ✅; genel FK denetimi 16 satır, **🔴 yok**
+(8 Supabase `auth.*` + 5 bizim tablo CASCADE = doğru, 3 destek FK'si SET NULL). Artık DB'de
+hesap silmeyi kilitleyen tek bir FK bile yok. Sahipsiz sayaç 0/0 — ilk silmede artmalı.
+⚠️ Doğrulama betiği ilk denemede 42601 verdi: kolon takma adını `notnull` koymuşum,
+**NOTNULL Postgres'te ayrılmış kelime** (`x NOTNULL` = `x IS NOT NULL`). Tam olarak kendime
+"ayrılmış/otomatik adları tahmin etme" dediğim hata sınıfı, bu sefer kendi betiğimde.
+
+**🔴 DEPLOY SIRASINDA GİZLİ TUZAK — az kalsın e-posta akışını sessizce kırıyordum.**
+`support-reply-notify`'ın `supabase/config.toml`'da **kaydı yoktu**; `verify_jwt=false` yalnız
+`--no-verify-jwt` BAYRAĞIYLA tutuluyormuş. GOREVLER'deki komut listesinde bayrak sadece ikinci
+fonksiyonda yazılıydı → ilk deploy'u bayraksız yaptım, ayar sıfırlandı. Trigger (`pg_net`)
+`Authorization` header'ı göndermediği için gateway 401 verirdi ve **agent yanıtı e-postaları
+sessizce dururdu** — talep akışı çalışmaya devam ettiği için kimse fark etmezdi.
+Kalıcı düzeltme: ayar `config.toml`'a yazıldı (bayrağa bağlı değil) + yeniden deploy.
+**Kanıt:** sahte secret'la POST → dönen `Unauthorized` gateway'in DEĞİL fonksiyonun kendi
+cevabı (`index.ts:74`) = JWT'siz istek gateway'i geçiyor. Kontrol grubu olarak config'te zaten
+`false` olan `support-new-ticket-notify` birebir aynı cevabı verdi.
+**Ders:** edge davranışı komut satırı bayrağında değil `config.toml`'da yaşamalı.
+
+**Açık kalan karar:** silinen kişinin e-posta snapshot'ı tutulsun mu? Şu an kimlik tamamen
+kopuyor (KVKK/GDPR silme hakkıyla uyumlu taraf); anlaşmazlıkta "kimdi bu" cevapsız kalır.
+Sonradan kolon eklemek kolay, sızmış kişisel veriyi geri almak zor → bilinçli olarak eklenmedi.
+
+## 2026-07-20 (2) — destek canlılığı · ek dosya · silme denetimi
+
+Mehmet canlı kullanımda 4 eksik buldu. Kod yazmadan önce 3 paralel ajanla etki haritası
+çıkarıldı (`docs/DESTEK-CANLI-EK-DENETIM-PLAN.md`) — ikisi beklenenden farklı çıktı.
+
+**"Kendi mesajımı yenilemeden göremiyorum" — bir değil ÜÇ hata.** Görünen sebep `ThreadClient`'ın
+mesajı listeye eklemeyip realtime echo'suna güvenmesiydi. Altından iki tane daha çıktı:
+(1) `useState(initialMessages)` prop değişimini yok sayıyordu → `router.refresh()` ekrana
+**hiçbir şey** yansıtmıyordu, yalnız F5 çalışıyordu; (2) `subscribeMessages`'ta `setAuth`
+await EDİLMİYOR, `.subscribe()` aynı tick'te çalışıyordu → kanal token'sız açılırsa RLS'te
+`auth.uid()` null olur, politika hiçbir satırı geçirmez ve olay **hata vermeden** düşer.
+⚠️ Doğru sıra repoda ZATEN VARDI (`NotificationBell.tsx:73-75`); destek ondan sapmıştı.
+⚠️ **Mobil bu hataya hiç düşmemiş** — `sendMessage` `.select().single()` döndürüp iyimser
+ekliyor. Yani doğru desen elimizdeydi, web geri kalmıştı.
+
+**"Yeni talep anlık düşmüyor" — üç bağımsız sebep üst üste.** DestekListClient'ta abone yoktu ·
+`LiveRefresh` bu rota için `0` (disk IO kararı, bilinçli) · **`support_tickets` realtime
+publication'ında bile DEĞİLDİ**. Üçüncüsü kritik: client kodu yazsak bile olay hiç yayınlanmaz,
+"yazdım ama çalışmıyor" derdik. `TicketsLive` olay-tabanlı tazeliyor (3 sn boğazlamalı) —
+yoklama değil. Satırı elle eklemek yerine `router.refresh()`: liste satırı müşteri bağlamını da
+taşıyor (service_role'lü `listPeople`), realtime yükü onu vermiyor → elle eklesek
+"müşteri kaydı bulunamadı" yalanı çizerdik.
+
+**Çan admin panelinde HİÇ YOKTU.** Müşteri tarafındaki zincir sağlammış (trigger → notifications →
+realtime), kırılma kapsamdaydı: bileşen yalnız `app/panel/layout.tsx`'te mount ediliyordu.
+`components/`e taşındı, iki kabuk da kullanıyor. Kabuk-farkında olması gerekmedi — bildirimin
+kendi `link` alanı zaten doğru hedefi taşıyor.
+
+**Silme denetimi — şema değişikliği GEREKMEDİ.** `admin_audit_log.detail` zaten jsonb; sebep+not
+oraya yazılıyor. Sebep listesi tek kaynakta (`lib/deleteReasons.ts`) ve **sunucuda da doğrulanıyor**
+— bu kayıt ileride kanıt olarak okunacak, istemciden uydurma değer yazılabiliyorsa denetim
+değersizdir. `confirmDialog` form alamıyor ve 30+ çağıranı var → dönüş tipini genişletmek yerine
+silmeye özel `SilModal`. Ayrıca **`/admin/denetim` ekranı zaten yazılmışmış** — GOREVLER'deki
+"audit log'u panelde göster" maddesi bayatmış, kapatıldı.
+
+**"Bu talebi kim sildi" — dünkü kararın bedeli.** `user_id` SET NULL olduğu için talep ile silinen
+kişi arasında join edecek anahtar kalmamıştı. Üç seçenekten şema değişikliği gerektirmeyeni
+seçildi: silmeden ÖNCE o kişinin talep id'leri `detail.ticket_ids`'e yazılıyor, destek listesi
+oradan eşleştiriyor. **Kişisel veri eklemiyor** (e-posta snapshot'ı değil) → KVKK duruşu korundu.
+⚠️ Yalnız admin görür (audit RLS admin-only) · ⚠️ 20.07'den önceki silmelerde çalışmaz.
+
+**Ek dosya.** `attachment_url` kolonu VARDI ama tamamen ölüydü (hiç yazılmıyor, hiç render
+edilmiyor); bucket hiç oluşturulmamıştı. Bucket **private** seçildi → `receipts`/`avatars`'ın
+`getPublicUrl` deseni burada geçersiz, `createSignedUrl` kullanılıyor. ⚠️ Kolona **tam URL değil
+YOL** yazılıyor: imzalı link süreli, URL saklansa kayıt dakikalar içinde ölü bağlantıya dönerdi.
+Görsel önizleme de bilinçli olarak yapılmadı (aynı sebep — açık kalan sohbette `<img>` sessizce
+kırılırdı); tıklandığı an taze link üretiliyor. Ek silme/güncelleme policy'si YOK: destek eki
+yazışma kaydıdır, müşteri "kanıtı" sonradan değiştirememeli.
+⚠️ Storage policy'leri kopyalanamadı — mevcutlar klasörü `profiles.id` ile eşliyor, destek ise
+kişi bazlı + departman görüşlü; `support_tickets` üzerinden yeniden yazıldı.
+
+**Kendi hatam:** `SilModal`'ı yazarken `admin-input`/`admin-field` sınıflarını kullandım —
+ikisi de projede YOK, uydurmuşum. tsc/build bunu yakalamaz (CSS sınıfı denetlenmez). Mevcut
+`admin-select`/`admin-field-label` ile değiştirildi. [[liste-tanim-kopyalarken-uydurma]]
+
 ## 2026-07-19 — destek departman bitti · ekip daveti · disk IO teşhisi · yükleniyor UX
 
 **Destek departman yönlendirme TAMAMLANDI (Adım 4-5).** RLS daraltıldı (`destek-departman-rls.sql`,

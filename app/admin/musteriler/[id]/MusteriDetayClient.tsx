@@ -20,6 +20,7 @@ import { profileLifecycle, lifecycleLabel, LIFECYCLE_META, relativeLabel } from 
 import { tierLabel } from "../../../../lib/plans";
 import { TZ } from "../../../../lib/format";
 import { CURRENCIES } from "../../../../lib/currencies";
+import SilModal from "./SilModal";
 
 export type ProfileUsage = {
   profileId: string;
@@ -52,6 +53,7 @@ export default function MusteriDetayClient({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
+  const [silAcik, setSilAcik] = useState(false);
   /* Profil bilgisi düzenleme (2026-07-19) + e-posta değiştirme taslakları */
   const [duzenlenen, setDuzenlenen] = useState<string | null>(null);
   const [tAd, setTAd] = useState("");
@@ -402,20 +404,25 @@ export default function MusteriDetayClient({
           type="button"
           className="btn btn-danger btn-sm"
           disabled={busy != null}
-          onClick={async () => {
-            const ok = await confirmDialog({
-              title: "Hesabı kalıcı sil",
-              message: `${person.email} ve TÜM verisi kalıcı olarak silinecek. Bu işlem geri alınamaz. Emin misin?`,
-              confirmLabel: "Kalıcı olarak sil",
-              danger: true,
-            });
-            if (ok) run("delete", () => deleteUserAccount(person.id, person.email), true);
-          }}
+          onClick={() => setSilAcik(true)}
         >
           <Trash2 size={14} />
           {busy === "delete" ? "Siliniyor…" : "Hesabı kalıcı sil"}
         </button>
       </div>
+
+      {/* Sebep + not zorunluluğu burada; onay artık evet/hayır değil (2026-07-20). */}
+      {silAcik && (
+        <SilModal
+          email={person.email}
+          busy={busy === "delete"}
+          onClose={() => setSilAcik(false)}
+          onConfirm={(reason, note) => {
+            setSilAcik(false);
+            run("delete", () => deleteUserAccount(person.id, person.email, reason, note), true);
+          }}
+        />
+      )}
     </div>
   );
 }

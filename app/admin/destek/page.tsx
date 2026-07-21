@@ -4,6 +4,7 @@ import { listPeople } from "../../../lib/adminUsers";
 import { TICKET_COLS, type Ticket } from "../../../lib/supportShared";
 import { personLifecycle, lifecycleLabel, LIFECYCLE_META, displayName } from "../../../lib/lifecycle";
 import DestekListClient, { type TicketRow } from "./DestekListClient";
+import TicketsLive from "./TicketsLive";
 
 export const metadata = { title: "Destek Talepleri", robots: { index: false, follow: false } };
 
@@ -20,13 +21,25 @@ export default async function AdminDestekPage() {
   await requireStaffPage(); // sayfa kendi guard'ını çağırır (denetim Y1) — layout'a güvenme
 
   const supabase = await createClient();
-  const [ticketR, peopleR] = await Promise.all([
+  const [ticketR, peopleR, auditR] = await Promise.all([
     supabase
       .from("support_tickets")
       .select(TICKET_COLS)
       .order("last_message_at", { ascending: false })
       .limit(200),
     listPeople(),
+    /* Silinmiş müşterinin talebinde "kim, neden sildi" gösterebilmek için.
+       ⚠️ Talep ↔ silinen kişi arasında join edecek anahtar YOK: user_id silinince NULL'a
+       düşüyor (ON DELETE SET NULL). Bağı `detail.ticket_ids` kuruyor — deleteUserAccount
+       silmeden ÖNCE o kişinin talep id'lerini denetim kaydına yazıyor.
+       KULLANICI OTURUMUYLA okunuyor (service_role değil): admin_audit_log'un SELECT
+       politikası admin-only → agent 0 satır alır ve bu bilgiyi görmez. Bilinçli. */
+    supabase
+      .from("admin_audit_log")
+      .select("actor_email, detail, created_at")
+      .eq("action", "user_deleted")
+      .order("created_at", { ascending: false })
+      .limit(200),
   ]);
 
   if (ticketR.error) {
@@ -42,12 +55,32 @@ export default async function AdminDestekPage() {
   const now = Date.now();
   const byUser = new Map(peopleR.people.map((p) => [p.id, p]));
 
+  /* talep id → o talebi kapsayan silme kaydı. Aynı talep tek bir silmede geçer
+     (kişi bir kez silinir), o yüzden düz Map yeterli. */
+  const silmeByTicket = new Map<string, { kim: string; sebep: string; not: string | null; ne_zaman: string }>();
+  for (const kayit of auditR.data ?? []) {
+    const d = (kayit.detail ?? {}) as Record<string, unknown>;
+    const ids = Array.isArray(d.ticket_ids) ? (d.ticket_ids as string[]) : [];
+    for (const tid of ids) {
+      if (silmeByTicket.has(tid)) continue; // en yeni kayıt önce geliyor (order desc)
+      silmeByTicket.set(tid, {
+        kim: kayit.actor_email as string,
+        sebep: typeof d.reason_label === "string" ? d.reason_label : "belirtilmemiş",
+        not: typeof d.note === "string" ? d.note : null,
+        ne_zaman: kayit.created_at as string,
+      });
+    }
+  }
+
   const rows: TicketRow[] = tickets.map((t) => {
-    const person = byUser.get(t.user_id);
+    // t.user_id null = müşteri silinmiş (FK SET NULL).
+    const person = t.user_id ? byUser.get(t.user_id) : undefined;
     if (!person) {
       return {
         ticket: t, email: null, ad: null, uyelik: null,
         durum: null, durumBadge: null, profilSayisi: 0, sonAktiflik: null,
+        // Denetim kaydından eşleşen silme varsa "kim, neden" göster; yoksa null → eski metin.
+        silme: silmeByTicket.get(t.id) ?? null,
       };
     }
     const l = personLifecycle(person, now);
@@ -60,6 +93,7 @@ export default async function AdminDestekPage() {
       durumBadge: LIFECYCLE_META[l.kind].badge,
       profilSayisi: person.profiles.length,
       sonAktiflik: person.last_seen_at ?? person.last_sign_in_at,
+      silme: null, // müşteri duruyor
     };
   });
 
@@ -72,12 +106,16 @@ export default async function AdminDestekPage() {
     : null;
 
   return (
-    <DestekListClient
-      rows={rows}
-      now={now}
-      uyari={uyari}
-      /* 200 sınırı SESSİZ kalmasın (CLAUDE.md: listeye limit koy + kırpmayı söyle). */
-      kirpildi={tickets.length >= 200}
-    />
+    <>
+      {/* Yeni talep/yeni mesaj gelince listeyi anlık tazeler (realtime → router.refresh) */}
+      <TicketsLive />
+      <DestekListClient
+        rows={rows}
+        now={now}
+        uyari={uyari}
+        /* 200 sınırı SESSİZ kalmasın (CLAUDE.md: listeye limit koy + kırpmayı söyle). */
+        kirpildi={tickets.length >= 200}
+      />
+    </>
   );
 }

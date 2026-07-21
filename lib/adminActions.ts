@@ -13,6 +13,12 @@ import {
 } from "./plans";
 import { DEPARTMENTS, departmentLabel, type Department } from "./supportShared";
 import { CURRENCIES } from "./currencies";
+import {
+  isDeleteReason,
+  deleteReasonLabel,
+  NOTE_REQUIRED_FOR,
+  DELETE_NOTE_MAX,
+} from "./deleteReasons";
 import { sendInviteEmail, hasMailKey } from "./staffInvite";
 
 /* Personel davet/kurtarma linkinin gideceği sayfa — şifre kurulumu buradan yapılır.
@@ -307,16 +313,48 @@ export async function setUserBanned(
   };
 }
 
-/** Hesabı KALICI sil. auth.users DELETE trigger'ı veda mailini gönderir. */
-export async function deleteUserAccount(userId: string, email: string): Promise<ActionResult> {
+/** Hesabı KALICI sil. auth.users DELETE trigger'ı veda mailini gönderir.
+    `reason`+`note` (2026-07-20): geri alınamaz bir işlem, "kim, neden" sorusunun cevabı
+    denetim kaydında durmalı — müşteri "hesabımı siz mi sildiniz" diye döndüğünde belge olsun. */
+export async function deleteUserAccount(
+  userId: string,
+  email: string,
+  reason: string,
+  note: string,
+): Promise<ActionResult> {
   const actor = await requireAdmin();
   if (!actor) return { ok: false, message: "Yetkin yok." };
   if (userId === actor.id) return { ok: false, message: "Kendi hesabını buradan silemezsin." };
   const admin = createAdminClient();
   if (!admin) return { ok: false, message: "Sunucu anahtarı eksik." };
 
+  /* ⚠️ Sebebi SUNUCUDA doğrula — istemciden gelen metne güvenme. Bu kayıt ileride kanıt
+     olarak okunacak; uydurma bir sebep yazılabiliyorsa denetim değersizdir. */
+  if (!isDeleteReason(reason)) return { ok: false, message: "Geçersiz silme sebebi." };
+  const temizNot = note.trim().slice(0, DELETE_NOTE_MAX);
+  if (NOTE_REQUIRED_FOR.includes(reason) && !temizNot) {
+    return { ok: false, message: "Bu sebep için not zorunlu — ne olduğunu yaz." };
+  }
+
+  /* Bu kişinin destek talepleri, SİLMEDEN ÖNCE. Silinince `support_tickets.user_id` NULL'a
+     düşüyor (ON DELETE SET NULL, 2026-07-20) → talep ile silen kişi arasında join edecek
+     anahtar KALMIYOR. Id'leri denetim kaydına yazarak o bağı kuruyoruz: /admin/destek
+     "silinmiş müşteri" satırında "kim, neden sildi" gösterilebiliyor.
+     ⚠️ Kişisel veri EKLEMİYOR (e-posta/ad snapshot'ı DEĞİL) → dünkü KVKK duruşu korunuyor. */
+  const { data: talepler } = await admin
+    .from("support_tickets")
+    .select("id")
+    .eq("user_id", userId)
+    .limit(200);
+  const ticketIds = (talepler ?? []).map((t) => t.id as string);
+
   // Log SİLMEDEN ÖNCE yazılır: silme sonrası kullanıcı yok, kaydın kime ait olduğu kaybolur.
-  await logAction(actor, "user_deleted", { userId, email });
+  await logAction(actor, "user_deleted", { userId, email }, {
+    reason,
+    reason_label: deleteReasonLabel(reason),
+    ...(temizNot ? { note: temizNot } : {}),
+    ...(ticketIds.length ? { ticket_ids: ticketIds } : {}),
+  });
 
   const { error } = await admin.auth.admin.deleteUser(userId);
   /* ⚠️ TELAFİ KAYDI (denetim 2026-07-18 / O10): log silmeden ÖNCE yazılıyor (yukarıdaki sebep

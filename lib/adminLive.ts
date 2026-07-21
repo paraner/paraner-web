@@ -184,11 +184,12 @@ export async function getLiveSnapshot(): Promise<LiveSnapshot> {
       detail: [nameByProfile.get(i.user_id), i.title, money(i.amount, i.currency)].filter(Boolean).join(" · "),
       at: i.created_at,
     })),
-    ...((ticketR.data ?? []) as { id: string; user_id: string; subject: string; created_at: string }[]).map((t) => ({
+    // user_id null olabilir: talep sahibi silinmiş (FK SET NULL) → ad düşer, konu kalır.
+    ...((ticketR.data ?? []) as { id: string; user_id: string | null; subject: string; created_at: string }[]).map((t) => ({
       id: `tk-${t.id}`,
       kind: "ticket" as const,
       title: "Destek talebi açıldı",
-      detail: [nameByUser.get(t.user_id), t.subject].filter(Boolean).join(" · "),
+      detail: [t.user_id ? nameByUser.get(t.user_id) : null, t.subject].filter(Boolean).join(" · "),
       at: t.created_at,
     })),
     ...profiles

@@ -63,7 +63,9 @@ export const departmentLabel = (d: string | null | undefined) =>
 
 export type Ticket = {
   id: string;
-  user_id: string;
+  /** ⚠️ Talep sahibi SİLİNMİŞSE null (FK ON DELETE SET NULL — sql/destek/destek-hesap-silme-set-null.sql).
+      Yazışma denetim kaydı olarak KALIR, kimliği kopar. Okurken null'ı "silinmiş müşteri" diye karşıla. */
+  user_id: string | null;
   subject: string;
   status: TicketStatus;
   priority: string;
@@ -79,7 +81,8 @@ export type Ticket = {
 export type TicketMessage = {
   id: string;
   ticket_id: string;
-  sender_id: string;
+  /** ⚠️ Gönderen SİLİNMİŞSE null (aynı migration). Mesaj gövdesi korunur, kimliği kopar. */
+  sender_id: string | null;
   sender_type: "user" | "agent";
   body: string;
   attachment_url: string | null;

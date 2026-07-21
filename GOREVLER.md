@@ -2,6 +2,16 @@
 
 > Sadece açık görevler. Tamamlananlar için `DAILY_LOG.md` + git geçmişi.
 
+## 🔴 ÖNCE BUNU TEST ET (2026-07-20 oturumu, kod+SQL CANLIDA, GÖZLE DENENMEDİ)
+> Kod tsc+build temiz, 2 SQL çalıştırıldı (realtime + ek dosya bucket doğrulaması ✅),
+> edge deploy edildi. AMA uçtan uca canlı test YAPILMADI. Yeni işe başlamadan ÖNCE:
+> 1. **Admin'den mesaj at** → sayfayı yenilemeden görünmeli
+> 2. **Müşteri hesabıyla EKLİ talep aç** (ekran görüntüsü) → `/admin/destek` listesine ANLIK
+>    düşmeli + admin çanı çalmalı → eki tıkla, yeni sekmede açılmalı (imzalı link)
+> 3. **Test hesabını SEBEP seçerek sil** → destek listesinde "hesap silindi · admin@… · sebep"
+> Detay: `docs/DESTEK-CANLI-EK-DENETIM-PLAN.md` + aşağıdaki "🔔 DESTEK: CANLILIK…" bloğu.
+> ⚠️ Commit/push YAPILMADI — çalışan ağaçta duruyor.
+
 ## Şimdiki
 
 ### 💳 ÜCRETSİZ DENEME 14 GÜN + FİYAT/PLAN HİZALAMASI ✅ TAMAMLANDI (2026-07-17)
@@ -47,7 +57,9 @@
 - [x] **Müşteri listesi yenilendi** — durum `is_premium`'dan DEĞİL, `trial_start_date + 14` ile HESAPLANIYOR (`lib/lifecycle.ts`). Segmentler (zombi/bitiyor/denemede/yeni/ücretli/ücretsiz/kayıp/askıda, sayaçlı) + sıralama (kayıt·son giriş·deneme bitişi·e-posta) + URL'de saklama (`?seg=&sort=&tur=`).
 - [x] **Canlı GÖZ teyidi** — admin.paraner.com giriş + panel + buton dili + sağ üst bekleyen-talep rozeti onaylandı (2026-07-18).
 - [ ] **Şifre sıfırlama maili ön koşulu:** Supabase → Auth → URL Configuration → Redirect URLs'te `https://paraner.com/sifre-sifirla` YOKSA link reddedilir (DAILY_LOG'da zaten bekleyen madde). Aksiyonu ilk kullanmadan teyit et.
-- [ ] **Sonraki (kod):** audit log'u panelde GÖSTER (şu an yalnız yazılıyor) · müşterinin destek talepleri detay sayfasında · trial/abonelik analizi.
+- [x] ~~audit log'u panelde GÖSTER~~ — **BU MADDE BAYATMIŞ**: `/admin/denetim` ekranı zaten yazılmış
+      (`app/admin/denetim/page.tsx` + `DenetimClient.tsx`). 2026-07-20'de fark edildi.
+- [ ] **Sonraki (kod):** müşterinin destek talepleri detay sayfasında · trial/abonelik analizi.
 - [ ] **Karar:** `app.paraner.com/admin` hâlâ açık (rol-korumalı, açık değil). DNS canlıya alınınca admin host'una redirect edilsin mi (tek adres) — Mehmet.
 - [ ] **Ölçek notu:** Dashboard "Toplam Üye" = distinct `auth_user_id` (PostgREST'te distinct count yok → kolon çekilip Set'leniyor, `.limit(10000)`). Binlerce profilde RPC gerekir → **DB şeması = önce sor**.
 
@@ -137,14 +149,45 @@
 > → auth.users` FK'sinde **ON DELETE davranışı YOK**. 8 hesabın 3'ü ilk denemede bu yüzden silinemedi.
 > ⚠️ Denetim O8'de "FK CASCADE" düzeltilmişti ama o `ticket_messages.ticket_id → support_tickets`
 > içindi; **`sender_id → auth.users` ATLANMIŞ.**
-- [ ] 🔴 **Etkisi ürün hatası:** `/admin/musteriler` → "Kalıcı sil", destek talebi açmış HERHANGİ bir
+- [x] 🔴 **Etkisi ürün hatası:** `/admin/musteriler` → "Kalıcı sil", destek talebi açmış HERHANGİ bir
       müşteride patlar. Bugün 3/8 hesapta patladı → gerçek müşteride de patlayacak.
       Geçici çare (bugün kullanıldı): önce `support_tickets`'ı sil (mesajlar CASCADE ile gider), sonra hesabı sil.
-- [ ] **Kalıcı çözüm ŞEMA DEĞİŞİKLİĞİ → ÖNCE MEHMET'E SOR** (CLAUDE.md: DB şemasına dokunma).
-      İki seçenek: (a) `ON DELETE CASCADE` — kişi silinince mesajları da gider · (b) `ON DELETE SET NULL`
-      + `sender_id` nullable — **yazışma geçmişi kalır**, "silinmiş kullanıcı" olarak görünür.
-      ⚠️ (b) daha doğru olabilir: müşteri silinse de destek yazışması denetim/anlaşmazlık kaydıdır.
-      Karar Mehmet'in; seçilince `sql/destek/` altına migration + `sql/README.md` satırı.
+- [x] **KARAR VERİLDİ (Mehmet, 2026-07-20): seçenek (b) `ON DELETE SET NULL`** — yazışma geçmişi
+      kalır, "silinmiş kullanıcı" olarak görünür (destek yazışması = denetim/anlaşmazlık kaydı).
+      **KOD + SQL HAZIR, ÇALIŞTIRILMADI ↓**
+- [x] ✅ **ÇALIŞTIRILDI (2026-07-20): `sql/destek/destek-hesap-silme-set-null.sql`** —
+      `destek-hesap-silme-DOGRULAMA.sql` **6/6 ✅**. Genel FK denetimi: 16 satır, **🔴 YOK**
+      (8 Supabase `auth.*` + 5 bizim tablo CASCADE = doğru; 3 destek FK'si SET NULL).
+      Sahipsiz kayıt sayacı 0/0 — beklenen, henüz kimse silinmedi.
+      ⚠️ Doğrulama betiğinde ilk denemede 42601 aldık: kolon takma adı `notnull` idi,
+      **NOTNULL Postgres'te ayrılmış kelime** (`x NOTNULL` = `x IS NOT NULL`) → `zorunlu` yapıldı.
+      ⚠️ **TEK FK YETMİYOR — asıl tuzak buydu:** `sender_id`'yi SET NULL yapmak tek başına hiçbir
+      şeyi korumaz, çünkü `support_tickets.user_id` **CASCADE**'di (faz0.sql:11) → kullanıcı silinince
+      talep gider, talep gidince mesajlar CASCADE ile peşinden giderdi. Hata kaybolur, VERİ DE kaybolurdu.
+      Migration 3 FK'yi birden çeviriyor: `ticket_messages.sender_id` · `support_tickets.user_id` ·
+      `support_tickets.assignee_id` (**uyuyan kopya**: atama özelliği açılınca personel silme aynı 23503'ü verirdi).
+- [x] ✅ **EDGE DEPLOY TAMAM (2026-07-20):** `support-reply-notify` (v3) +
+      `support-new-ticket-notify` (v2) — ikisi de ACTIVE, NULL guard'ları canlıda.
+      🔴 **Bu sırada gizli bir tuzağa düştüm ve düzelttim:** `support-reply-notify`'ın
+      `config.toml`'da KAYDI YOKTU → `verify_jwt=false` yalnız `--no-verify-jwt` BAYRAĞIYLA
+      tutuluyordu. Bayrağı vermeden deploy edince ayar sıfırlanıyor; trigger `Authorization`
+      göndermediği için gateway 401 verir ve **agent yanıtı e-postaları sessizce durur**
+      (talep akışı bozulmaz → kimse fark etmez). Artık `config.toml`'da kayıtlı, bayrağa bağlı değil.
+      **Canlı doğrulandı:** sahte secret'la POST → dönen `Unauthorized` gateway'in değil
+      FONKSİYONUN kendi cevabı (`index.ts:74`) = JWT'siz istek geçiyor ✔ (kontrol grubu:
+      config'te zaten false olan `support-new-ticket-notify` birebir aynı cevabı veriyor).
+      ⚠️ **Ders:** edge ayarı bayrakta değil `config.toml`'da yaşamalı — yoksa bir sonraki
+      deploy sessizce geri alır. Yeni fonksiyon eklerken config kaydını da yaz.
+- [x] **Kod tarafı tamam (iki repo, tsc + build temiz):** web `Ticket.user_id`/`TicketMessage.sender_id`
+      → `string | null`; `/admin/destek`, `/admin` panosu, `lib/adminLive.ts` null-guard'landı;
+      yazışma ekranında "Silinmiş müşteri" / "Silinmiş kullanıcı" etiketi. Mobil UI **değişmedi**
+      (balon hizalaması `sender_type` üzerinden yürüyor, `sender_id` okumuyor).
+      ℹ️ **Güvenlik:** NOT NULL kalkması yeni yazma açığı AÇMAZ — RLS `user_id = auth.uid()` /
+      `sender_id = auth.uid()` NULL'da true dönmez (fail-closed), NULL'a yalnız FK'nin kendisi yazar.
+- [ ] ❓ **AÇIK KARAR (Mehmet):** silinen kişinin **e-posta snapshot'ı** talepte tutulsun mu?
+      Şu an kimlik TAMAMEN kopuyor (KVKK/GDPR silme hakkıyla uyumlu taraf). Anlaşmazlıkta
+      "kimdi bu" sorusunun cevabı kalmaz. Sonradan kolon eklemek kolay, sızmış veriyi geri almak zor
+      → bilinçli olarak EKLENMEDİ. Detay: `docs/HESAP-SILME-VERI-SAKLAMA.md`.
 - [x] ~~Silme akışı ham Postgres hatasını gösteriyor~~ — **YANLIŞ TESPİTTİ (2026-07-20 düzeltmesi).**
       `lib/adminActions.ts:326` hatayı yakalıyor, `user_delete_failed` telafi kaydı yazıyor (O10) ve
       "Silinemedi: …" döndürüyor. Akış sağlam, yalnız mesaj gövdesi teknik. FK `SET NULL` yapılınca
@@ -154,6 +197,41 @@
 > 📄 **Tüm analiz + sektör/hukuk bulguları: `docs/HESAP-SILME-VERI-SAKLAMA.md`** (araştırma YARIM —
 > 106 doğrulama ajanının 68'i limite takıldı; Türk vergi mevzuatı saklama süreleri HİÇ araştırılmadı).
 > **Mehmet'in kararı bekleniyor:** kimlik tamamen mi kopsun, yoksa e-posta snapshot'ı da tutulsun mu?
+
+### 🔔 DESTEK: CANLILIK + EK DOSYA + SİLME DENETİMİ (2026-07-20) — plan: `docs/DESTEK-CANLI-EK-DENETIM-PLAN.md`
+> Mehmet canlı kullanımda 4 eksik buldu. Kod TAMAM (tsc + build temiz), **2 SQL BEKLİYOR**.
+- [x] **Kendi mesajını görememe ÇÖZÜLDÜ** — `sendMessage` artık eklenen satırı döndürüyor,
+      `ThreadClient` iyimser ekliyor. Yanında iki gizli hata daha çıktı: (1) `useState(initialMessages)`
+      prop değişimini yok sayıyordu → `router.refresh()` ekrana HİÇBİR ŞEY yansıtmıyordu, yalnız F5
+      çalışıyordu; (2) realtime abonesinde `setAuth` await EDİLMİYORDU → kanal token'sız açılırsa
+      RLS hiçbir satırı geçirmez ve olay **hata vermeden** düşer. Doğru sıra `NotificationBell`'de
+      zaten vardı, destek ondan sapmıştı. **Mobil bu hataya hiç düşmemiş** (zaten iyimser ekliyor).
+- [x] **Silme sebebi + not** — `SilModal` (sebep seçilmeden buton kapalı, "Diğer"de not zorunlu).
+      Sebep **sunucuda da** doğrulanıyor (`lib/deleteReasons.ts` tek kaynak) — denetim kaydı kanıt
+      olarak okunacak, istemciden uydurma değer yazılamamalı. **Şema değişikliği GEREKMEDİ**:
+      `admin_audit_log.detail` zaten jsonb. `/admin/denetim` ekranı da ZATEN VARMIŞ (eski
+      "audit log'u panelde göster" maddesi bayattı, kapatıldı) — detail artık okunur biçimde basılıyor.
+- [x] **"Bu talebi kim, neden sildi"** — talep ↔ silinen kişi arasında join anahtarı KALMAMIŞTI
+      (user_id SET NULL). Çözüm: `deleteUserAccount` silmeden ÖNCE o kişinin talep id'lerini
+      `detail.ticket_ids`'e yazıyor, `/admin/destek` oradan eşleştirip "hesap silindi · kim · sebep"
+      gösteriyor. ⚠️ Kişisel veri EKLEMİYOR (e-posta snapshot'ı değil) → KVKK duruşu korundu.
+      ⚠️ Yalnız **admin** görür (audit RLS admin-only). ⚠️ 20.07'den ÖNCEKİ silmelerde çalışmaz.
+- [x] **Admin panelinde bildirim çanı** — hiç yoktu; `NotificationBell` `components/`e taşındı,
+      iki kabuk da kullanıyor (bildirimin kendi `link` alanına gidiyor, kabuk-farkında olması gerekmedi).
+- [x] **Ek dosya (web)** — talep açarken + sohbette; `ticket_messages.attachment_url` ÖLÜ ALANDI,
+      artık yazılıyor+render ediliyor. Bucket **private** → `getPublicUrl` yok, her görüntülemede
+      `createSignedUrl`. ⚠️ Kolona TAM URL değil **YOL** yazılıyor (imzalı link süreli; URL saklansa
+      kayıt dakikalar içinde ölü bağlantıya dönerdi). Ek silme/güncelleme policy'si BİLİNÇLİ YOK —
+      destek eki yazışma kaydı, sonradan değiştirilememeli.
+- [ ] ⏳ **ÇALIŞTIRILACAK (2 SQL):** `sql/destek/destek-talep-realtime.sql` (yeni talep anlık düşsün —
+      `support_tickets` yayında DEĞİLDİ, kod tek başına yetmezdi) · `sql/destek/destek-ek-dosya.sql`
+      (private bucket + policy). İkisi de sonunda kendi doğrulama sorgusunu içeriyor.
+- [ ] **Mobil ek dosya paritesi** — web önce bitti (Mehmet kararı). Mobilde seçici + sıkıştırma
+      (`lib/imagePicker.ts`, `attachment-picker.tsx`) ZATEN HAZIR, yalnız bağlanacak + balonda render.
+      ⚠️ Mobil de YOL→`createSignedUrl` kuralına uymalı. ⚠️ `attachmentStore` profil geçişinde
+      temizlenmiyor (`paraner-app/diğer/docs/AUDIT_2026-04-24.md:52-54`) — destek formunda miras alma.
+- [ ] **`LiveRefresh` /admin/destek için hâlâ 0** (periyodik yenileme kapalı, disk IO kararı).
+      Artık gerek yok: `TicketsLive` olay-tabanlı tazeliyor (3 sn boğazlamalı). Bilinçli bırakıldı.
 
 ### ⚡ 2026-07-19 OTURUMUNDAN KALANLAR
 > **Yeni sohbete başlarken önce buraya bak.** Sıra önerisi: 1 → 2 → 3.

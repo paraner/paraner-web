@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Send, Check } from "lucide-react";
+import { ArrowLeft, Send, Check, Paperclip, X } from "lucide-react";
 import { showToast } from "../../../components/toast";
 import { useSubmitLock } from "../../../../lib/useSubmitLock";
 import { TZ } from "../../../../lib/format";
+import { TICKET_FILE_ACCEPT, dosyaGecerliMi, boyutMetni } from "../../../../lib/ticketAttachments";
+import Ek from "./Ek";
 import {
   sendMessage,
   resolveTicket,
@@ -46,13 +48,30 @@ export default function ThreadClient({
   const [messages, setMessages] = useState<TicketMessage[]>(initialMessages);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [dosya, setDosya] = useState<File | null>(null);
   const [status, setStatus] = useState(ticket.status);
   const endRef = useRef<HTMLDivElement>(null);
 
   // Bu ticket bana mı ait? Değilse (agent başkasının ticket'ına yazıyor) → sender_type 'agent'
-  const iAmOwner = ticket.user_id === userId;
+  // ⚠️ user_id null = sahibi silinmiş. Bunu ASLA "sahibi benim" saymamalı → açık kontrol.
+  // (Zaten müşteri sahipsiz talebi RLS'ten geçiremez; bu ekran ona yalnız agent tarafında açılır.)
+  const ownerDeleted = ticket.user_id === null;
+  const iAmOwner = !ownerDeleted && ticket.user_id === userId;
   const mySenderType: "user" | "agent" = iAmOwner ? "user" : "agent";
   const meta = TICKET_STATUS_META[status] ?? TICKET_STATUS_META.open;
+
+  /* Sunucudan yeni veri gelince (router.refresh() sonrası) listeyi TAZELE.
+     ⚠️ Bu olmadan `useState(initialMessages)` yalnız ilk mount'ta tohumlanır ve prop
+     değişimini yok sayar → refresh() ekrana hiçbir şey yansıtmaz, yalnız F5 çalışırdı.
+     Sunucu listesi otorite; iyimser eklediğimiz mesaj zaten orada olacağı için birleştirme
+     gerekmiyor, ama henüz yazılmamışsa kaybolmasın diye yereldeki fazlalar korunuyor. */
+  useEffect(() => {
+    setMessages((prev) => {
+      const sunucuIds = new Set(initialMessages.map((m) => m.id));
+      const yereldeKalan = prev.filter((m) => !sunucuIds.has(m.id));
+      return yereldeKalan.length ? [...initialMessages, ...yereldeKalan] : initialMessages;
+    });
+  }, [initialMessages]);
 
   // Realtime: yeni mesaj gelince ekle (kendi eklediğimiz mükerrer olmasın → id kontrolü)
   useEffect(() => {
@@ -69,17 +88,22 @@ export default function ThreadClient({
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     const body = text.trim();
-    if (!body || sending || !lock.acquire()) return;
+    // Yalnız ek gönderilebilsin (ekran görüntüsü tek başına anlamlı olabilir)
+    if ((!body && !dosya) || sending || !lock.acquire()) return;
     setSending(true);
-    const ok = await sendMessage(ticket.id, body, mySenderType);
+    const yeni = await sendMessage(ticket.id, body, mySenderType, dosya);
     setSending(false);
     lock.release();
-    if (!ok) {
+    if (!yeni) {
       showToast({ title: "Gönderilemedi", message: "Mesaj iletilemedi, tekrar dene.", variant: "error" });
       return;
     }
     setText("");
-    // Realtime kendi mesajımızı da getirir; anlık his için status'u da güncelle
+    setDosya(null);
+    /* Mesajı HEMEN listeye ekle — realtime echo'suna güvenme. Echo gecikirse/düşerse
+       gönderen kendi mesajını sayfayı yenileyene kadar göremiyordu (2026-07-20).
+       Echo sonradan gelirse id kontrolü mükerrer eklemeyi engelliyor (aşağıdaki abone). */
+    setMessages((prev) => (prev.some((x) => x.id === yeni.id) ? prev : [...prev, yeni]));
     setStatus(mySenderType === "agent" ? "answered" : "open");
     router.refresh();
   }
@@ -102,7 +126,12 @@ export default function ThreadClient({
         <div className="thread-head-main">
           <div className="thread-subject">{ticket.subject}</div>
           <div className="thread-sub">
-            {isAgent && !iAmOwner ? "Müşteri talebi · " : ""}Talep #{ticket.id.slice(0, 8)}
+            {ownerDeleted
+              ? "Silinmiş müşteri · "
+              : isAgent && !iAmOwner
+                ? "Müşteri talebi · "
+                : ""}
+            Talep #{ticket.id.slice(0, 8)}
           </div>
         </div>
         <span className={`badge ${meta.badge}`}>{meta.label}</span>
@@ -115,15 +144,26 @@ export default function ThreadClient({
 
       <div className="thread-body">
         {messages.map((m) => {
-          const mine = m.sender_id === userId;
+          // sender_id null = gönderen silinmiş → kimse "benim" saymamalı, etiket dürüst olsun.
+          const senderDeleted = m.sender_id === null;
+          const mine = !senderDeleted && m.sender_id === userId;
           const isAgentMsg = m.sender_type === "agent";
           return (
             <div key={m.id} className={`msg-row${mine ? " mine" : ""}`}>
               <div className={`msg-bubble${isAgentMsg ? " agent" : ""}`}>
                 {!mine && (
-                  <div className="msg-sender">{isAgentMsg ? "Destek ekibi" : "Kullanıcı"}</div>
+                  <div className="msg-sender">
+                    {senderDeleted
+                      ? isAgentMsg
+                        ? "Destek ekibi (silinmiş)"
+                        : "Silinmiş kullanıcı"
+                      : isAgentMsg
+                        ? "Destek ekibi"
+                        : "Kullanıcı"}
+                  </div>
                 )}
                 <div className="msg-body">{m.body}</div>
+                {m.attachment_url && <Ek path={m.attachment_url} />}
                 <div className="msg-time">{timeLabel(m.created_at)}</div>
               </div>
             </div>
@@ -137,22 +177,62 @@ export default function ThreadClient({
           Bu talep {meta.label.toLocaleLowerCase("tr")}. Yeni bir sorun için Destek&apos;ten yeni talep oluşturabilirsin.
         </div>
       ) : (
-        <form className="thread-compose" onSubmit={handleSend}>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={isAgent && !iAmOwner ? "Kullanıcıya yanıt yaz…" : "Mesajını yaz…"}
-            rows={1}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend(e);
-              }
-            }}
-          />
-          <button type="submit" className="thread-send" disabled={!text.trim() || sending} aria-label="Gönder">
-            <Send size={17} />
-          </button>
+        <form className="thread-compose-wrap" onSubmit={handleSend}>
+          {/* Seçilen ek, GÖNDERİLMEDEN ÖNCE görünür + kaldırılabilir olmalı — yoksa kullanıcı
+              neyi gönderdiğini bilmiyor (yanlış ekran görüntüsü gönderme riski). */}
+          {dosya && (
+            <div className="thread-ek-secili">
+              <Paperclip size={13} />
+              <span className="thread-ek-ad">{dosya.name}</span>
+              <span className="msg-ek-dim">{boyutMetni(dosya.size)}</span>
+              <button type="button" onClick={() => setDosya(null)} disabled={sending} aria-label="Eki kaldır">
+                <X size={13} />
+              </button>
+            </div>
+          )}
+          <div className="thread-compose">
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder={isAgent && !iAmOwner ? "Kullanıcıya yanıt yaz…" : "Mesajını yaz…"}
+              rows={1}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend(e);
+                }
+              }}
+            />
+            {/* Ek — ataç. Gizli input, etiket görünür buton gibi davranıyor (native dosya
+                düğmesi tema dışı kalıyor ve TR metni işletim sisteminden geliyor). */}
+            <label className="thread-clip" title="Dosya ekle (görsel veya PDF, en fazla 10 MB)">
+              <Paperclip size={17} />
+              <input
+                type="file"
+                accept={TICKET_FILE_ACCEPT}
+                disabled={sending}
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null;
+                  e.target.value = ""; // aynı dosya tekrar seçilebilsin
+                  if (!f) return;
+                  const hata = dosyaGecerliMi(f);
+                  if (hata) {
+                    showToast({ title: "Dosya eklenemedi", message: hata, variant: "error" });
+                    return;
+                  }
+                  setDosya(f);
+                }}
+              />
+            </label>
+            <button
+              type="submit"
+              className="thread-send"
+              disabled={(!text.trim() && !dosya) || sending}
+              aria-label="Gönder"
+            >
+              <Send size={17} />
+            </button>
+          </div>
         </form>
       )}
     </div>

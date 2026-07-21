@@ -100,7 +100,7 @@ export default async function AdminDashboard() {
     const n = p.profile_name || p.name;
     if (p.auth_user_id && n && !nameByUser.has(p.auth_user_id)) nameByUser.set(p.auth_user_id, n);
   }
-  const tickets = (ticketsR.data ?? []) as unknown as Ticket[];
+  const tickets = (ticketsR.data ?? []) as Ticket[];
   const openCount = openR.count ?? 0;
   const isAdmin = isAdminRole;
 
@@ -243,7 +243,10 @@ export default async function AdminDashboard() {
                   <div className="admin-ticket-main">
                     <div className="admin-ticket-subject">{t.subject}</div>
                     <div className="admin-ticket-meta">
-                      {nameByUser.get(t.user_id) ?? `#${t.id.slice(0, 8)}`} ·{" "}
+                      {/* user_id null = müşteri silinmiş (FK SET NULL); talep denetim kaydı olarak durur */}
+                      {(t.user_id ? nameByUser.get(t.user_id) : "Silinmiş müşteri") ??
+                        `#${t.id.slice(0, 8)}`}{" "}
+                      ·{" "}
                       {relativeLabel(t.last_message_at, now)}
                     </div>
                   </div>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LifeBuoy } from "lucide-react";
+import NotificationBell from "../../components/NotificationBell";
 import { getOnlineCount } from "../../lib/adminLive";
 import { createClient } from "../../lib/supabase/server";
 import type { StaffRole } from "../../lib/adminGuard";
@@ -37,6 +38,14 @@ export default async function AdminTopActions({ role }: { role: StaffRole }) {
 
   return (
     <div className="admin-top-actions">
+      {/* Bildirim çanı — 2026-07-20'ye kadar admin kabuğunda HİÇ YOKTU: personel yeni talebi
+          ancak sayfayı yenileyince görüyordu. Müşteri panelindekiyle AYNI bileşen; nereye
+          gideceğini bildirimin kendi `link` alanı söylüyor (personele /admin/destek/<id>,
+          müşteriye /panel/destek/<id> — trigger ikisini de doğru yazıyor).
+          Yukarıdaki talep sayacı SUNUCUDA hesaplanıyor (sayfa yenilenince tazelenir);
+          çan ise realtime → ikisi birbirini tamamlıyor. */}
+      <NotificationBell />
+
       <Link
         href="/admin/destek"
         className={`admin-ic-btn${bilinmiyor ? " warn" : bekleyen > 0 ? " on" : ""}`}

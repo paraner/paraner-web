@@ -33,6 +33,41 @@ const ACTION_META: Record<string, { label: string; icon: typeof Mail; tone: stri
   staff_invited: { label: "Personel davet edildi", icon: UserPlus, tone: "blue" },
 };
 
+/* `detail` jsonb'sini okunur tek satıra çevirir.
+   ⚠️ Eskiden ham `key: value` basılıyordu — silmeye sebep/not eklenince (2026-07-20)
+   "reason: customer_request · reason_label: Müşteri talebi üzerine" gibi hem teknik hem
+   MÜKERRER görünüyordu. Kurallar:
+   · `reason_label` varsa `reason`ı gösterme (etiket zaten insan dili)
+   · `ticket_ids` EKRANA YAZILMAZ — makine için var (destek listesinde eşleştirme yapar),
+     denetim satırında 20 uuid kalabalıktan başka bir şey değil; sayısını söyle
+   · bilinmeyen anahtar gelirse yine göster (sessizce yutma) */
+const DETAIL_ETIKET: Record<string, string> = {
+  reason_label: "Sebep",
+  reason: "Sebep",
+  note: "Not",
+  newEmail: "Yeni e-posta",
+  role: "Rol",
+  departments: "Departman",
+  tier: "Plan",
+};
+
+function detayMetni(detail: Record<string, unknown> | null): string {
+  if (!detail) return "";
+  const parcalar: string[] = [];
+  const varEtiket = typeof detail.reason_label === "string";
+  for (const [k, v] of Object.entries(detail)) {
+    if (v == null || v === "") continue;
+    if (k === "reason" && varEtiket) continue; // ham id'yi atla, etiketi göster
+    if (k === "ticket_ids") {
+      const n = Array.isArray(v) ? v.length : 0;
+      if (n) parcalar.push(`${n} destek talebi bu hesaba aitti`);
+      continue;
+    }
+    parcalar.push(`${DETAIL_ETIKET[k] ?? k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`);
+  }
+  return parcalar.join(" · ");
+}
+
 const fmt = (iso: string) => {
   try {
     return new Date(iso).toLocaleString("tr-TR", {
@@ -124,12 +159,8 @@ export default function DenetimClient({ rows, now }: { rows: AuditRow[]; now: nu
                     </div>
                     <div className="audit-meta">
                       {r.actor_email} · {fmt(r.created_at)} · {relativeLabel(r.created_at, now)}
-                      {r.detail && Object.keys(r.detail).length > 0 && (
-                        <span className="audit-detail">
-                          {Object.entries(r.detail)
-                            .map(([k, v]) => `${k}: ${String(v)}`)
-                            .join(" · ")}
-                        </span>
+                      {detayMetni(r.detail) && (
+                        <span className="audit-detail">{detayMetni(r.detail)}</span>
                       )}
                     </div>
                   </div>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { LifeBuoy, Plus, Search, ChevronDown, MessageCircle, Mail, ChevronRight } from "lucide-react";
+import { LifeBuoy, Plus, Search, ChevronDown, MessageCircle, Mail, ChevronRight, Paperclip, X } from "lucide-react";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import SaveButton from "../../../components/SaveButton";
@@ -11,6 +11,7 @@ import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { showToast } from "../../components/toast";
 import { formatDate } from "../../../lib/format";
 import { createTicket, TICKET_STATUS_META, DEPARTMENTS, type Ticket, type Department } from "../../../lib/support";
+import { TICKET_FILE_ACCEPT, dosyaGecerliMi, boyutMetni } from "../../../lib/ticketAttachments";
 
 const WHATSAPP = "905322379909";
 const WHATSAPP_LABEL = "+90 532 237 99 09";
@@ -65,6 +66,7 @@ export default function DestekClient({
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [dosya, setDosya] = useState<File | null>(null);
 
   const q = query.trim().toLocaleLowerCase("tr");
   const filtered = FAQ.map((f, i) => ({ f, i })).filter(
@@ -77,7 +79,7 @@ export default function DestekClient({
     e.preventDefault();
     if (!canSend || !lock.acquire()) return;
     setSaving(true);
-    const id = await createTicket(title, message, dep!);
+    const id = await createTicket(title, message, dep!, dosya);
     setSaving(false);
     lock.release();
     if (!id) {
@@ -88,6 +90,7 @@ export default function DestekClient({
     setDep(null);
     setTitle("");
     setMessage("");
+    setDosya(null);
     router.push(`/panel/destek/${id}`);
   }
 
@@ -220,6 +223,44 @@ export default function DestekClient({
                 style={{ width: "100%", resize: "vertical", fontFamily: "inherit", lineHeight: 1.5 }}
               />
             </Field>
+
+            {/* Ek dosya — Mehmet: "kullanıcıdan ekran görüntüsü isteyebilelim, hatayı daha iyi
+                anlayalım". İSTEĞE BAĞLI: zorunlu yapmak talep açmayı yavaşlatır. */}
+            <Field label="Ek dosya (isteğe bağlı)">
+              {dosya ? (
+                <div className="thread-ek-secili">
+                  <Paperclip size={13} />
+                  <span className="thread-ek-ad">{dosya.name}</span>
+                  <span className="msg-ek-dim">{boyutMetni(dosya.size)}</span>
+                  <button type="button" onClick={() => setDosya(null)} disabled={saving} aria-label="Eki kaldır">
+                    <X size={13} />
+                  </button>
+                </div>
+              ) : (
+                <label className="ek-sec-btn">
+                  <Paperclip size={14} />
+                  <span>Dosya seç</span>
+                  <input
+                    type="file"
+                    accept={TICKET_FILE_ACCEPT}
+                    disabled={saving}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null;
+                      e.target.value = ""; // aynı dosya tekrar seçilebilsin
+                      if (!f) return;
+                      const hata = dosyaGecerliMi(f);
+                      if (hata) {
+                        showToast({ title: "Dosya eklenemedi", message: hata, variant: "error" });
+                        return;
+                      }
+                      setDosya(f);
+                    }}
+                  />
+                </label>
+              )}
+              <span className="set-hint">Ekran görüntüsü (PNG, JPG, GIF, WEBP) veya PDF · en fazla 10 MB</span>
+            </Field>
+
             <div className="fg-actions">
               <SaveButton busy={saving} disabled={!canSend || saving}>Talebi Gönder</SaveButton>
             </div>
