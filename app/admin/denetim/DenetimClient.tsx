@@ -31,6 +31,11 @@ const ACTION_META: Record<string, { label: string; icon: typeof Mail; tone: stri
   role_granted: { label: "Rol verildi", icon: ShieldCheck, tone: "green" },
   role_revoked: { label: "Rol kaldırıldı", icon: ShieldCheck, tone: "amber" },
   staff_invited: { label: "Personel davet edildi", icon: UserPlus, tone: "blue" },
+  /* 2026-07-21 — talep silme (admin-only). ⚠️ Sözlüğe eklenmezse satır ham anahtarla
+     ("ticket_deleted") çizilir; `staff_removed` bugüne kadar tam olarak böyle kalmıştı. */
+  ticket_deleted: { label: "Destek talebi silindi", icon: Trash2, tone: "red" },
+  ticket_delete_failed: { label: "Talep silme BAŞARISIZ (talep duruyor)", icon: Trash2, tone: "gray" },
+  staff_removed: { label: "Personel ekipten çıkarıldı", icon: ShieldCheck, tone: "amber" },
 };
 
 /* `detail` jsonb'sini okunur tek satıra çevirir.
@@ -49,6 +54,11 @@ const DETAIL_ETIKET: Record<string, string> = {
   role: "Rol",
   departments: "Departman",
   tier: "Plan",
+  subject: "Konu",
+  status: "Durum",
+  department: "Departman",
+  ticket_id: "Talep",
+  orphan: "Sahibi silinmiş",
 };
 
 function detayMetni(detail: Record<string, unknown> | null): string {

@@ -3981,6 +3981,18 @@ ul { list-style: none; }
 @media (max-width: 720px) {
   .admin-top-actions { position: static; margin-bottom: 14px; }
 }
+/* ⚠️ `.admin-top-actions` MUTLAK konumlu (top:26px/right:32px) ve içerik akışının ÜSTÜNDE
+   yüzüyor. Talep yazışması başlığı ise tam genişlikte bir flex satır — sondaki rozet/butonlar
+   sağ kenara yaslandığı için o yüzen kümenin ALTINA giriyor ve TIKLANAMIYOR.
+   2026-07-21'de talep "Sil" butonu eklenince ortaya çıktı (buton çanın altında kaldı), ama
+   sorun ondan önce de vardı: uzun konu başlığında "Çözüldü" aynı yere düşüyordu.
+   Çözüm: admin kabuğunda başlığın sağında küme kadar yer ayır. 720px altında küme zaten
+   akışa döndüğü için (yukarıdaki media query) rezervasyon KALKMALI, yoksa başlık boşuna daralır. */
+.admin-content .thread-head { padding-right: 300px; }
+@media (max-width: 720px) {
+  .admin-content .thread-head { padding-right: 0; }
+}
+
 
 /* --- Canlı Görünüm sayfası --- */
 /* Sol (aktif kullanıcılar) esner, sağ (konum/platform) SABİT 360px — oransal (2fr/1fr)
