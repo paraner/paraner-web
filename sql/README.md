@@ -34,7 +34,8 @@ Sıra önemliydi, uygulanma sırası:
 | 6 | `destek-talep-realtime.sql` | `support_tickets`'ı realtime yayınına ekler → yeni talep admin listesine ANLIK düşer | ✅ **çalıştırıldı 2026-07-20** (canlı ölçüm: 4,2 sn) |
 | 7 | `destek-ek-dosya.sql` | `ticket-attachments` **private** bucket + storage policy'leri (ek dosya) | ✅ **çalıştırıldı 2026-07-20** (imzalı link 200 doğrulandı) |
 | 8 | `destek-sahibe-bildirim.sql` | Yeni talepte **talebi açana** da bildirim ("Talebin alındı"); ekip bildirimi aynen kalır | ✅ **çalıştırıldı 2026-07-22** (2/2 ✅) |
-| 9 | `destek-bildirim-silme-policy.sql` | **`notif_delete` politikası** — faz0'da tanımlıydı ama canlıda YOKTU; çandaki "Temizle" sessizce 0 satır siliyordu | ⏳ **BEKLİYOR** |
+| 9 | `destek-bildirim-silme-policy.sql` | **`notif_delete` politikası** — faz0'da tanımlıydı ama canlıda YOKTU; çandaki "Temizle" sessizce 0 satır siliyordu | ✅ **çalıştırıldı 2026-07-22** (4/4 ✅, silme canlı doğrulandı) |
+| — | `agent-yetki-TEST.sql` | **Sadece test** — agent talebi SİLEBİLİYOR MU + departman ayrımı (tarayıcıda). Beklenen sayı sabit değil, Adım 0 canlıdan okur | agent hesabı gerekir |
 | — | `destek-departman-DOGRULAMA.sql` | **Sadece OKUR** — 13 satır ✅/❌ | istediğin zaman |
 | — | `destek-departman-TEST.sql` | İkinci hesapla canlı test betiği (rol/departman atar, sonunda geri alır) | test için |
 
