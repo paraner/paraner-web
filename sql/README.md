@@ -31,13 +31,20 @@ Sıra önemliydi, uygulanma sırası:
 | 4 | `destek-departman-bildirim.sql` | Yeni talepte departman ekibine **e-posta** (edge: `staff-invite-notify` değil, `support-new-ticket-notify`) | ✅ |
 | 5 | `destek-hesap-silme-set-null.sql` | Hesap silme 500 hatasını kapatır: 3 FK → `ON DELETE SET NULL` (yazışma denetim kaydı olarak KALIR) | ✅ **çalıştırıldı 2026-07-20** (doğrulama 6/6 ✅) |
 | — | `destek-hesap-silme-DOGRULAMA.sql` | **Sadece OKUR** — 6 satır ✅/❌ + auth.users'a bakan TÜM FK'lerin silme davranışı | 5'ten sonra |
-| 6 | `destek-talep-realtime.sql` | `support_tickets`'ı realtime yayınına ekler → yeni talep admin listesine ANLIK düşer | ⏳ **BEKLİYOR** |
-| 7 | `destek-ek-dosya.sql` | `ticket-attachments` **private** bucket + storage policy'leri (ek dosya) | ⏳ **BEKLİYOR** |
+| 6 | `destek-talep-realtime.sql` | `support_tickets`'ı realtime yayınına ekler → yeni talep admin listesine ANLIK düşer | ✅ **çalıştırıldı 2026-07-20** (canlı ölçüm: 4,2 sn) |
+| 7 | `destek-ek-dosya.sql` | `ticket-attachments` **private** bucket + storage policy'leri (ek dosya) | ✅ **çalıştırıldı 2026-07-20** (imzalı link 200 doğrulandı) |
+| 8 | `destek-sahibe-bildirim.sql` | Yeni talepte **talebi açana** da bildirim ("Talebin alındı"); ekip bildirimi aynen kalır | ✅ **çalıştırıldı 2026-07-22** (2/2 ✅) |
+| 9 | `destek-bildirim-silme-policy.sql` | **`notif_delete` politikası** — faz0'da tanımlıydı ama canlıda YOKTU; çandaki "Temizle" sessizce 0 satır siliyordu | ⏳ **BEKLİYOR** |
 | — | `destek-departman-DOGRULAMA.sql` | **Sadece OKUR** — 13 satır ✅/❌ | istediğin zaman |
 | — | `destek-departman-TEST.sql` | İkinci hesapla canlı test betiği (rol/departman atar, sonunda geri alır) | test için |
 
 ## ⚠️ Bilinmesi gerekenler
 
+- **Repo'da SQL olması "çalıştırıldı" DEMEK DEĞİLDİR** (2026-07-22 dersi): `notif_delete`
+  politikası `destek-faz0.sql:107-108`'de yazılıydı ama canlıda YOKTU — faz0 çalıştırıldığında
+  o satırlar muhtemelen henüz dosyada değildi. Belirti sessizdi: `DELETE` **200** dönüyor ama
+  gövde `[]` (0 satır) — PostgREST'te RLS'in gizlediği satır "hata" değildir. Şüphelenince
+  `pg_policies`'i CANLIDAN oku, dosyaya güvenme.
 - **`destek-departman-rls.sql`, `destek-faz0.sql`'in politikalarını EZER.** Faz 0'ı tekrar
   çalıştırırsan departman daraltmasını geri alırsın — agent tüm talepleri görmeye başlar.
   Aynı dosya K3 korumasını da içinde taşır (`admin-denetim-fix-K3.sql` ayrıca gerekmez).

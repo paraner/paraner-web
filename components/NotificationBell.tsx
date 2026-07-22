@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Bell, ChevronRight } from "lucide-react";
+import { Bell, ChevronRight, CheckCheck, Trash2 } from "lucide-react";
 import { BellIcon } from "./icons";
 import { createClient } from "../lib/supabase/client";
 import { TZ } from "../lib/format";
+import { confirmDialog } from "../app/components/confirm";
+import { showToast } from "../app/components/toast";
 
 /* Üst bar bildirim çanı — gerçek `notifications` tablosu (Faz 0 destek sistemi).
    Fetch + Realtime INSERT (agent yanıtı → DB trigger → notifications → buraya anlık düşer).
@@ -53,6 +55,70 @@ export default function NotificationBell() {
   const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [islem, setIslem] = useState(false);
+
+  /* Toplu işlemler (2026-07-22, Mehmet): tek tek tıklamadan okundu işaretle / temizle.
+     SQL GEREKMEDİ — `notifications` üzerinde kullanıcının kendi satırları için UPDATE ve
+     DELETE politikaları zaten var (sql/destek/destek-faz0.sql: notif_update / notif_delete).
+     ⚠️ Her ikisi de `user_id = auth.uid()` ile sınırlı; RLS başkasının bildirimine
+     dokundurmaz, o yüzden istemciden çağırmak güvenli. */
+  async function tumunuOkundu() {
+    const okunmamis = items.filter((n) => !n.is_read).map((n) => n.id);
+    if (okunmamis.length === 0 || islem) return;
+    setIslem(true);
+    // İyimser: ekran hemen güncellensin (mesaj gönderme akışında öğrenilen ders).
+    setItems((o) => o.map((n) => ({ ...n, is_read: true })));
+    const supabase = createClient();
+    /* ⚠️ `.select()` ŞART: PostgREST'te update/delete RLS yüzünden 0 SATIR etkilese bile
+       HATA DÖNDÜRMEZ. `.select()` olmadan "başarılı" sanıp ekranı temizliyorduk; kullanıcı
+       sayfayı yenileyince her şey geri geliyordu ve hiçbir uyarı yoktu (2026-07-22'de
+       tam olarak bu yaşandı). Artık kaç satırın gerçekten değiştiğine bakıyoruz. */
+    const { data, error } = await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .in("id", okunmamis)
+      .select("id");
+    setIslem(false);
+    if (error || !data || data.length === 0) {
+      // Sessizce "oldu" gösterme — geri al ve söyle (denetim Y4/Y6 dersi).
+      setItems((o) => o.map((n) => (okunmamis.includes(n.id) ? { ...n, is_read: false } : n)));
+      showToast({
+        title: "İşaretlenemedi",
+        message: error?.message ?? "Kayıtlara erişilemedi (yetki).",
+        variant: "error",
+      });
+    }
+  }
+
+  async function tumunuSil() {
+    if (items.length === 0 || islem) return;
+    const ok = await confirmDialog({
+      title: "Tüm bildirimler silinsin mi?",
+      message: "Bildirim listesi temizlenir. Talepler ve mesajlar SİLİNMEZ, yalnızca bildirimler.",
+      confirmLabel: "Temizle",
+      danger: true,
+    });
+    if (!ok) return;
+    setIslem(true);
+    const yedek = items;
+    setItems([]);
+    const supabase = createClient();
+    // `.select()` gerekçesi yukarıdaki tumunuOkundu ile aynı: 0 satır ≠ hata.
+    const { data, error } = await supabase
+      .from("notifications")
+      .delete()
+      .in("id", yedek.map((n) => n.id))
+      .select("id");
+    setIslem(false);
+    if (error || !data || data.length === 0) {
+      setItems(yedek);
+      showToast({
+        title: "Silinemedi",
+        message: error?.message ?? "Kayıtlara erişilemedi (yetki).",
+        variant: "error",
+      });
+    }
+  }
 
   // Fetch + Realtime
   useEffect(() => {
@@ -163,6 +229,33 @@ export default function NotificationBell() {
               <div>
                 <div className="notif-head-title">Bildirimler</div>
                 <div className="notif-head-sub">Yeni bildirimler burada görünür</div>
+              </div>
+              {/* Toplu işlemler — başlığın SAĞINDA, listeyle yer değiştirmez.
+                  Yapacak iş yoksa buton hiç çizilmiyor (okunmamış yoksa "okundu işaretle"
+                  anlamsız; liste boşsa "temizle" anlamsız). */}
+              <div className="notif-head-actions">
+                {unread.length > 0 && (
+                  <button
+                    type="button"
+                    className="notif-act"
+                    onClick={tumunuOkundu}
+                    disabled={islem}
+                    title="Tümünü okundu işaretle"
+                  >
+                    <CheckCheck size={14} /> Okundu
+                  </button>
+                )}
+                {items.length > 0 && (
+                  <button
+                    type="button"
+                    className="notif-act notif-act-danger"
+                    onClick={tumunuSil}
+                    disabled={islem}
+                    title="Tüm bildirimleri sil"
+                  >
+                    <Trash2 size={14} /> Temizle
+                  </button>
+                )}
               </div>
             </div>
 

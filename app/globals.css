@@ -1736,6 +1736,20 @@ ul { list-style: none; }
   display: flex; align-items: center; gap: 12px;
   padding: 16px 18px; border-bottom: 1px solid var(--border); background: var(--card-2);
 }
+/* Toplu işlem butonları — başlığın sağında. `margin-left:auto` ile sağa yaslanır;
+   böylece başlık metni uzasa da butonlar yer değiştirmez. */
+.notif-head-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.notif-act {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 9px; border-radius: 8px; cursor: pointer;
+  font-size: 12px; font-weight: 600; line-height: 1;
+  color: var(--text-dim); background: transparent; border: 1px solid var(--border);
+  transition: background 0.15s, color 0.15s;
+}
+.notif-act:hover:not(:disabled) { background: rgba(255,255,255,0.06); color: var(--text); }
+.notif-act:disabled { opacity: 0.5; cursor: default; }
+.notif-act-danger:hover:not(:disabled) { color: var(--danger); border-color: var(--danger); background: transparent; }
+
 .notif-head-ic {
   display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0;
   border-radius: 10px; background: var(--card); border: 1px solid var(--border); color: var(--text-dim);
@@ -3433,8 +3447,15 @@ ul { list-style: none; }
 }
 
 /* === Onay kutusu (ConfirmDialog) — native confirm() yerine === */
+/* ⚠️ KATMAN SIRASI (2026-07-22'de gerçek hata olarak ortaya çıktı): onay diyaloğu 200'deydi,
+   yani `.cat-menu`/`.dp-pop`/`.switch-overlay` ile AYNI seviyede ve `.notif-menu` (300) ALTINDA.
+   Çandaki "Temizle" onay isteyince diyalog menünün ARKASINDA kalıyordu → onay butonuna
+   BASILAMIYORDU (kullanıcı için "buton çalışmıyor" gibi görünür).
+   Kural: onay diyaloğunu HERHANGİ bir menü tetikleyebilir → hepsinin üstünde olmalı.
+   Sıra: menüler/popover 200 < çan 300 < ONAY 1000 < toast 9999
+   (toast üstte kalsın ki hata mesajı diyalog açıkken de okunabilsin). */
 .confirm-overlay {
-  position: fixed; inset: 0; z-index: 200;
+  position: fixed; inset: 0; z-index: 1000;
   display: flex; align-items: center; justify-content: center; padding: 24px;
   background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
