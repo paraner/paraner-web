@@ -4423,24 +4423,26 @@ ul { list-style: none; }
 .admin-ticket-pick-all span { font-size: 12.5px; }
 /* Seçim çubuğu (Shopify sipariş listesi deseni): sayaç solda, yıkıcı aksiyon sağda.
    "İptal" butonu YOK — seçimi bırakmak ana kutuya ya da boş yere tıklamakla olur. */
-/* Seçim çubuğu — LİSTENİN İÇİNDE, başlık satırının yerine geçer (Shopify deseni).
-   Panel dışında ayrı kutu DEĞİL: öyleyken seçim yapınca liste aşağı kayıyordu.
-   Kendi kenarlığı/köşesi yok; listenin bir satırı gibi davranır. */
-.admin-sec-bar {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 7px 14px 7px 16px; background: var(--card-2);
-  border-bottom: 1px solid var(--border);
-}
+
 .admin-ticket-pick > input[type="checkbox"]:indeterminate { accent-color: #c4c8ce; }
 .admin-sec-bar-pick { display: flex; align-items: center; gap: 10px; cursor: pointer; }
 .admin-sec-bar-pick input[type="checkbox"] { width: 16px; height: 16px; accent-color: #c4c8ce; cursor: pointer; }
-/* Sütun başlığı — seçim çubuğuyla AYNI yerde durur, biri diğerinin yerine geçer.
-   Yükseklikleri yakın tutuluyor ki seçim yapınca liste zıplamasın. */
-.admin-ticket-head {
+/* Sütun başlığı ⇄ seçim çubuğu: AYNI yerde dururlar, biri diğerinin YERİNE geçer.
+   ⚠️ ÖLÇÜLER TEK KURALDA — ayrı yazıldığında (2026-07-22) başlık 43px/12px-600,
+   çubuk 50px/16px-700 çıkmıştı: seçim yapınca üst bölüm büyüyüp yazı zıplıyordu
+   (Mehmet yakaladı). Yükseklik ve tipografi burada ORTAK; ayrışan tek şey renk/arka plan.
+   Silme butonu da satırı yükseltmesin diye min-height sabit. */
+.admin-ticket-head,
+.admin-sec-bar {
   display: flex; align-items: center; gap: 10px;
-  padding: 11px 20px 11px 16px; border-bottom: 1px solid var(--border);
-  font-size: 12px; font-weight: 600; letter-spacing: 0.01em; color: var(--text-dim);
+  min-height: 43px; padding: 0 20px 0 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
 }
+.admin-ticket-head { color: var(--text-dim); }
+.admin-sec-bar { justify-content: space-between; background: var(--card-2); color: var(--text); }
+/* Çubuktaki buton satırı uzatmasın */
+.admin-sec-bar .btn-sm { padding-top: 4px; padding-bottom: 4px; }
 .admin-ticket-head input[type="checkbox"] { width: 16px; height: 16px; accent-color: #c4c8ce; cursor: pointer; flex: none; }
 .admin-ticket-head-main { flex: 1; min-width: 0; }
 .admin-ticket-head-chev { width: 16px; flex: none; }

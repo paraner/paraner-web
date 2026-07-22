@@ -217,7 +217,10 @@ export default function DestekListClient({
                     onChange={() => setSecili(new Set())}
                     aria-label="Seçimi bırak"
                   />
-                  <strong>{secili.size} talep seçildi</strong>
+                  {/* ⚠️ <strong> DEĞİL: kalın etiket 16px/700'e çıkıp başlık satırından
+                      (12px/600) büyük duruyordu → seçim yapınca yazı zıplıyordu. Boyutu
+                      çubuğun ortak kuralından alsın. */}
+                  <span>{secili.size} talep seçildi</span>
                 </label>
                 <button
                   type="button"
