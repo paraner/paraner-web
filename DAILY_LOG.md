@@ -16,6 +16,58 @@
 
 ---
 
+## 2026-07-22 — talep silme · müşteri talep akışı · çan toplu işlemleri · agent yetki testi
+
+**Talep silme (admin-only) eklendi ve canlıya çıktı.** SQL/şema gerekmedi (`ticket_messages`
+zaten CASCADE). ⚠️ **RLS'e DELETE politikası BİLEREK eklenmedi** — politika yoksa hiçbir istemci
+silemez, silme yalnız guard'lı server action'dan geçer; politika eklemek yetki kapısını ikinci
+bir yere kopyalamak olurdu. Asıl iş cascade'in KAPSAMADIĞI iki şeydi: **ek dosyalar** (storage
+FK bilmez → yetim nesne) ve **bildirimler** (`notifications.data.ticket_id` jsonb, FK değil →
+çanda ölü bağlantı). Liste tasarımı Shopify deseniyle hizalandı (Mehmet ekran görüntüsüyle
+yönlendirdi): sütun başlığı ⇄ seçim çubuğu **aynı yerde**, biri diğerinin yerine geçiyor.
+
+**🐞 Mehmet'in canlıda bulduğu 3 müşteri kusuru — üçü de AYRI sebepti.**
+① Liste bayat kalıyordu: `submitTicket`'ta **`router.refresh()` yoktu** (CLAUDE.md kural 1).
+⚠️ Kendi test boşluğum: 21.07'de admin tarafını ölçmüş, MÜŞTERİ listesini hiç test etmemiştim.
+② Yavaşlık **2,23 → 1,49 sn** (ölçülerek): `getUser()`→`getSession()` (164 ms'lik ağ turu gitti,
+RLS gerçek kapı olduğu için güvenlik kaybı yok) + ek yükleme ile mesaj yazımı **paralel**.
+⚠️ "Önce mesajı yaz sonra `attachment_url`'i UPDATE et" yolu SEÇİLMEDİ: realtime yalnız INSERT
+dinliyor → UPDATE karşı tarafa gitmez, ek ancak yenilemede görünürdü = **sessiz regresyon**.
+③ Bildirim yoktu; kök neden `destek-departman.sql:125`'teki `WHERE s.user_id <> NEW.user_id`.
+Doğru amaçla yazılmıştı (ekip üyesi kendi talebine İŞ bildirimi almasın) ama sonucu hiçbir
+müşterinin onay bildirimi almamasıydı. Artık iki ayrı bildirim: ekibe `support_new`, sahibe
+`support_created` "Talebin alındı". Mobil de kazandı (aynı tablo), mobil kod değişmedi.
+
+**Çana "Okundu" + "Temizle" eklendi — peşinden iki gerçek hata çıktı.**
+🔴 **Onay diyaloğu çan menüsünün ALTINDA kalıyordu:** `.confirm-overlay` z-index 200 = sıradan
+menülerle aynı seviye, `.notif-menu` ise 300 → onay butonuna **basılamıyordu**. Bu yalnız bildirim
+temizlemeyi değil, **bir menüden açılan HER onayı** etkiliyordu. 1000'e alındı (toast 9999'da
+kaldı ki hata diyalog açıkken okunabilsin).
+🔴 **`notif_delete` politikası canlıda YOKTU.** Kanıt: `DELETE` → **HTTP 200, gövde `[]`** (0 satır).
+`destek-faz0.sql:107-108`'de yazılı, yani repoda VAR, canlıda yok.
+⚠️ **Ders: repoda SQL olması "çalıştırıldı" demek değildir** — şüphelenince `pg_policies`'i
+canlıdan oku. `sql/README.md`'ye yazıldı.
+Ayrıca update/delete'lere `.select()` eklendi: **PostgREST'te RLS'in gizlediği satır HATA DEĞİLDİR**,
+0 satır etkilense bile `error` null döner. `.select()` olmadan ekranı temizleyip "oldu" sanıyorduk,
+kullanıcı yenileyince hepsi geri geliyordu ve hiçbir uyarı yoktu.
+
+**★ Uzun süredir bekleyen İKİ doğrulama kapandı ★**
+① **Ek dosya gerçekten siliniyor** (service_role denetimi): denetim kaydındaki 6 silinmiş talebin
+hiçbirinde dosya kalmamış (3'ünün eki vardı), yetim klasör yok.
+② **Agent talebi SİLEMİYOR — 13/13** (geçici agent hesabı, canlıda). Arayüz: seçim kutusu yok ·
+"Sil" yok · menüde Müşteriler/Ekip yok · `/admin/musteriler` 404. **Departman ayrımı İLK KEZ
+TARAYICIDA**: 5 talepten 1'ini gördü. 🔴 **DB katmanı ayrıca test edildi** ("UI'ı gizlemek güvenlik
+değildir"): agent'ın kendi JWT'siyle doğrudan PostgREST'e gidildi → gördüğünü de görmediğini de
+silemedi, mesajları silemedi, talep sayısı 5→5. Hesap sonra silindi; rol/departman FK CASCADE ile
+gitti, SQL temizliği gerekmedi.
+
+⚠️ **Kendi hatalarım:** `confirmDialog`'un alanlarını ezberden yazdım (`body/confirmText` sandım,
+gerçeği `message/confirmLabel`) · `"use server"` dosyasından sabit export etmeye kalktım (Next
+buna izin vermez, `supportShared.ts`'e taşındı) · talep başlığına eklediğim "Sil" butonu üst
+bardaki yüzen kümenin altında kalıp TIKLANAMIYORDU (sorun benden önce de vardı, uzun başlıkta
+"Çözüldü" aynı yere düşüyordu) · başlık ile seçim çubuğunun ölçülerini iki ayrı kuralda yazdım →
+seçim yapınca üst bölüm 43→50px büyüyordu (Mehmet yakaladı, tek kurala bağlandı).
+
 ## 2026-07-21 — 20.07 işinin UÇTAN UCA CANLI testi: 6/6 geçti + "bugün/dün" hatası yakalandı
 
 20.07 oturumu kodu+SQL'i canlıya koymuş ama **gözle hiç denenmemişti**. Bugün gerçek tarayıcıyla

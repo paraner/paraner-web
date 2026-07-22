@@ -97,12 +97,22 @@
       rezervasyon eklendi (720px altında küme akışa döndüğü için rezervasyon kalkıyor).
       **(2) Yeni aksiyon denetimde HAM ANAHTAR** ("ticket_deleted") çiziliyordu → sözlüğe eklendi;
       aynı boşluktaki eski `staff_removed` de etiketlendi (yukarıdaki 🟡 madde kapandı).
-- [ ] ⏳ **HÂLÂ DOĞRULANMADI (dürüstlük notu):**
-      (a) **ek dosyanın storage'dan gerçekten silindiği** — private bucket, service_role gerekiyor;
-      kod siliyor ve sunucu logunda hata YOK ama bu "sildi" kanıtı değil, "hata vermedi" kanıtı.
-      (b) **agent'ın silememesi** — agent rolünde hesap yok; `sql/destek/destek-departman-TEST.sql`
-      turuyla birlikte yapılmalı. Kod tarafı: buton `role === "admin"` ile gizli + sunucuda
-      `requireAdmin()` reddediyor.
+- [x] ✅ **(a) EK DOSYA SİLME KANITLANDI (2026-07-22, service_role denetimi):** denetim kaydındaki
+      **6 silinmiş talebin hiçbirinde dosya kalmamış** (3'ünün eki vardı). Genel yetim taraması da
+      temiz: bucket'taki tek klasör hâlâ yaşayan bir talebe ait. Betik: `22-storage-denetim.mjs`
+      (scratchpad) — denetim kaydından silinen id'leri alıp storage'da arıyor.
+- [x] ✅ **(b) AGENT SİLEMİYOR — 13/13 DOĞRULANDI (2026-07-22, gerçek agent hesabıyla, CANLIDA).**
+      Geçici hesap açıldı → `agent` + yalnız `oneri` departmanı verildi → test → hesap silindi
+      (rol/departman FK CASCADE ile gitti, SQL temizliği gerekmedi).
+      **Arayüz:** listede seçim kutusu YOK · başlıkta "hepsini seç" YOK · talep detayında yalnız
+      "Çözüldü" var, **"Sil" YOK** · sol menü sadece "Genel Bakış | Destek" · `/admin/musteriler`
+      elle yazılınca **404**.
+      **Departman ayrımı (İLK KEZ TARAYICIDA):** 5 talepten yalnız 1'ini gördü (`cdscsc`, oneri).
+      🔴 **DB katmanı da ayrıca test edildi** — "UI'ı gizlemek güvenlik değildir": agent'ın KENDİ
+      JWT'siyle doğrudan PostgREST'e gidildi → gördüğü talebi silemedi (0 satır) · görmediğini
+      silemedi · mesajları silemedi · talep sayısı 5→5 değişmedi. `support_tickets`'ta DELETE
+      politikası bilerek YOK → hiçbir istemci silemiyor, yalnız guard'lı server action siliyor.
+      **Denetim:** agent'e ait hiç `ticket_deleted` kaydı düşmedi.
 
 ### 🐞 MÜŞTERİ TALEP AÇMA: 3 KUSUR (2026-07-22, Mehmet canlıda buldu) — ⏳ 1 SQL BEKLİYOR
 > "Talep açınca sayfayı yenilemeden görünmüyor · çok yavaş · 'talebiniz oluşturuldu' bildirimi
@@ -355,8 +365,9 @@
       *(Sebep düzeltildi: artık kalıcı profil + oturum tazeleme kullanılıyor, yeni çöp kayıt yok.)*
 - [x] **3) ✅ MOBİL departman seçimi TAMAM** (2026-07-19) — detay yukarıda "Adım 6".
       ⚠️ Etkisi App Store sürümüyle sahaya çıkar.
-- [ ] 🔴 **Departman ayrımı canlı test edilmedi** (yukarıda Adım 4). Agent hesabı kalmadı
-      (`mgzrco` ekipten çıkarıldı). İlk personel alınmadan ÖNCE `sql/destek/destek-departman-TEST.sql`.
+- [x] ✅ **Departman ayrımı TARAYICIDA da doğrulandı (2026-07-22)** — geçici agent hesabıyla:
+      5 talepten yalnız kendi departmanındaki 1'ini gördü. Daha önce yalnız doğrudan JWT
+      sorgusuyla test edilmişti. Detay: yukarıdaki "TALEP SİLME" bloğu · `sql/destek/agent-yetki-TEST.sql`.
 - [x] **Menü tıklamasında "hiç tepki yok" ÇÖZÜLDÜ (2026-07-19, `df28837`)** — sebep sunucu değildi:
       `loading.tsx` ekranı PREFETCH YÜKÜYLE geliyor (Next 16 docs `linking-and-navigating.md:231`),
       sol menü prefetch'i mount'ta BİR KEZ çalışıyordu, `staleTimes.dynamic: 30` onu 30 sn'de
