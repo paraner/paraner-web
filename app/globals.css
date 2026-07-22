@@ -4421,6 +4421,18 @@ ul { list-style: none; }
 .admin-ticket-pick > input[type="checkbox"] { width: 16px; height: 16px; accent-color: #c4c8ce; cursor: pointer; flex: none; }
 .admin-ticket-pick-all { padding: 10px 16px; gap: 10px; cursor: pointer; }
 .admin-ticket-pick-all span { font-size: 12.5px; }
+/* Seçim çubuğu (Shopify sipariş listesi deseni): sayaç solda, yıkıcı aksiyon sağda.
+   "İptal" butonu YOK — seçimi bırakmak ana kutuya ya da boş yere tıklamakla olur. */
+.admin-sec-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin: 14px 0; padding: 10px 14px;
+  background: var(--card-2); border: 1px solid var(--border); border-radius: 12px;
+}
+.admin-ticket-pick > input[type="checkbox"]:indeterminate { accent-color: #c4c8ce; }
+.admin-sec-bar-pick { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.admin-sec-bar-pick input[type="checkbox"] { width: 16px; height: 16px; accent-color: #c4c8ce; cursor: pointer; }
+
+
 
 .admin-ticket-row:hover { background: var(--card-2); }
 .admin-ticket-main { flex: 1; min-width: 0; }

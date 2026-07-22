@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Search, User, CalendarPlus, Layers, Clock, Trash2 } from "lucide-react";
@@ -85,6 +85,25 @@ export default function DestekListClient({
   const router = useRouter();
   const [secili, setSecili] = useState<Set<string>>(new Set());
   const [siliniyor, setSiliniyor] = useState(false);
+
+  /* "Boş bir yere tıklayınca seçim bırakılsın" (Mehmet, 2026-07-22).
+     ⚠️ Dinleyici BELGE seviyesinde: bileşenin kendi <div>'ine koymak YETMEDİ — listenin
+     ALTINDAKİ boşluk o div'e dahil değil (div yalnız içeriği kadar yüksek), tıklama hiç
+     ulaşmıyordu (ölçümle görüldü).
+     ⚠️ Dışlananlar: satır/kutu/çubuk/araç çubuğu (yoksa kutuyu işaretlemek kendini iptal
+     ederdi) ve onay diyalogu (`.confirm-overlay`) — diyaloga basınca seçim uçarsa silinecek
+     talepler kaybolurdu.
+     Seçim yokken dinleyici hiç kurulmaz. */
+  useEffect(() => {
+    if (!silebilir || secili.size === 0) return;
+    const f = (e: MouseEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t?.closest(".admin-ticket-pick, .admin-sec-bar, .admin-toolbar, .admin-ticket-row, .confirm-overlay")) return;
+      setSecili(new Set());
+    };
+    document.addEventListener("click", f);
+    return () => document.removeEventListener("click", f);
+  }, [silebilir, secili.size]);
   const [seg, setSeg] = useState<(typeof SEGMENTS)[number]["id"]>("bekleyen");
   /* Departman filtresi: "tüm ekipler" varsayılan. Admin hepsini görür; agent'a RLS zaten
      yalnız kendi departmanını verecek (daraltma ayrı adımda) → bu filtre onun için de anlamlı. */
@@ -172,13 +191,28 @@ export default function DestekListClient({
         </div>
       </div>
 
-      {/* Seçim çubuğu — yalnız seçim varken görünür (boşken araç çubuğu gürültüsü olmasın). */}
+      {/* Seçim çubuğu — yalnız seçim varken görünür (boşken araç çubuğu gürültüsü olmasın).
+          ⚠️ "Seçimi bırak" butonu KALDIRILDI (Mehmet, 2026-07-22, Shopify sipariş listesi örneği):
+          seçimi bırakmanın yolu ayrı bir buton değil, ana seç kutusuna ya da boş bir yere
+          tıklamak. Ayrı "iptal" butonu hem çubuğu kalabalıklaştırıyor hem de "Seçilenleri sil"in
+          yanında durduğu için yanlış butona basma riski yaratıyordu. */}
       {silebilir && secili.size > 0 && (
-        <div className="admin-toolbar" style={{ alignItems: "center", gap: 12 }}>
-          <strong>{secili.size} talep seçildi</strong>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setSecili(new Set())} disabled={siliniyor}>
-            Seçimi bırak
-          </button>
+        <div className="admin-sec-bar">
+          <label className="admin-sec-bar-pick">
+            {/* Shopify'daki gibi ana kutu ÇUBUĞUN İÇİNDE: "seçimi bırak" diye bir YAZI yok,
+                seçili kutuya basmak bırakır. Aşağıdaki panel içi satır da bu sırada gizleniyor
+                (iki ayrı ana kutu kafa karıştırırdı). */}
+            <input
+              type="checkbox"
+              checked={gorunen.length > 0 && gorunen.every((r) => secili.has(r.ticket.id))}
+              ref={(el) => {
+                if (el) el.indeterminate = !gorunen.every((r) => secili.has(r.ticket.id));
+              }}
+              onChange={() => setSecili(new Set())}
+              aria-label="Seçimi bırak"
+            />
+            <strong>{secili.size} talep seçildi</strong>
+          </label>
           <button
             type="button"
             className="btn btn-danger btn-sm"
@@ -216,7 +250,9 @@ export default function DestekListClient({
           </p>
         ) : (
           <div className="admin-ticket-list">
-            {silebilir && (
+            {/* Panel içi ana kutu YALNIZ seçim yokken — seçim başlayınca yerini üstteki
+                çubuktaki kutu alıyor (tek ana kutu kuralı). */}
+            {silebilir && secili.size === 0 && (
               /* "Görünenleri seç" — filtre + arama zaten daralttığı için temizlik böyle yapılır.
                  ⚠️ Tavanla sınırlı: 200 talep listelenebiliyor ama tek seferde en fazla
                  TICKET_DELETE_MAX silinir; sessiz kırpma olmasın diye kaç tanesinin
@@ -224,15 +260,15 @@ export default function DestekListClient({
               <label className="admin-ticket-pick admin-ticket-pick-all">
                 <input
                   type="checkbox"
-                  checked={gorunen.length > 0 && gorunen.every((r) => secili.has(r.ticket.id))}
-                  onChange={(e) => {
-                    if (!e.target.checked) return setSecili(new Set());
-                    setSecili(new Set(gorunen.slice(0, TICKET_DELETE_MAX).map((r) => r.ticket.id)));
-                  }}
+                  checked={false}
+                  onChange={() =>
+                    setSecili(new Set(gorunen.slice(0, TICKET_DELETE_MAX).map((r) => r.ticket.id)))
+                  }
                 />
                 <span className="admin-td-dim">
                   Görünenleri seç ({Math.min(gorunen.length, TICKET_DELETE_MAX)})
-                  {gorunen.length > TICKET_DELETE_MAX && ` — ${gorunen.length} taleptenki ilk ${TICKET_DELETE_MAX}'si`}
+                  {gorunen.length > TICKET_DELETE_MAX &&
+                    ` — ${gorunen.length} taleptenki ilk ${TICKET_DELETE_MAX}'si`}
                 </span>
               </label>
             )}

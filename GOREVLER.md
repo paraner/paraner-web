@@ -71,6 +71,15 @@
       talebe giden ölü bağlantı kalırdı (tıklayınca 404).
 - [x] **UI:** talep detayında "Sil" · listede satır seçimi + "Görünenleri seç" + "Seçilenleri sil".
       İkisi de `confirmDialog` ile onaylı. Buton yalnız `role === "admin"` iken çizilir.
+- [x] **Seçim deseni Shopify'a hizalandı** (Mehmet, 2026-07-22, sipariş listesi ekran görüntüsü):
+      ayrı **"Seçimi bırak" butonu KALDIRILDI** (yıkıcı butonun yanında duruyordu = yanlış tıklama
+      riski). Ekranda **tek ana kutu** var: seçim yokken panelde "Görünenleri seç (N)", seçim
+      başlayınca yerini çubuktaki kutu alıyor (kısmi seçimde **belirsiz** hâli). Seçimi bırakmanın
+      iki yolu: o kutuya bas ya da **boş bir yere tıkla**.
+      ⚠️ Boş-yer dinleyicisi BELGE seviyesinde: bileşenin kendi `<div>`'ine koymak YETMEDİ —
+      listenin altındaki boşluk o div'e dahil değil (ölçümle görüldü, ilk denemede çalışmadı).
+      Dışlananlar: satır/kutu/çubuk/araç çubuğu + `.confirm-overlay` (onay diyaloguna basınca
+      seçim uçarsa silinecek talepler kaybolurdu).
 - [x] **`ThreadClient` müşteriyle ORTAK** → silme kodu içine gömülmedi, `headerAction` yuvası
       eklendi. Sebep: admin server-action referansı müşteri paketine sızmasın.
 - [x] **Yan düzeltme:** `/admin/destek/[id]` sayfasının **kendi guard'ı yoktu** (yalnız layout'a
