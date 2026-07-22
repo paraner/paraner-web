@@ -38,6 +38,19 @@ Doğru amaçla yazılmıştı (ekip üyesi kendi talebine İŞ bildirimi alması
 müşterinin onay bildirimi almamasıydı. Artık iki ayrı bildirim: ekibe `support_new`, sahibe
 `support_created` "Talebin alındı". Mobil de kazandı (aynı tablo), mobil kod değişmedi.
 
+**③'ün SQL'i çalıştırıldı ve uçtan uca ölçüldü (gün sonu).** Doğrulama 2/2 ✅, ardından canlıda
+gerçek talep açılıp bakıldı: sahibine `support_created` "Talebin alındı" düştü, link `/panel/...`,
+**tek satır** — sahip aynı zamanda admin olduğu hâlde ekip bildirimi gitmedi (çift bildirim yok).
+🔴 **Ama çalıştırmadan önce dosyada iki kusur çıktı.** Dosya, fonksiyonu **20.07'deki sürümden değil
+daha eski bir kopyadan** türetmişti: (1) `IS DISTINCT FROM` sertleştirmesini `<>`'ye geri alıyordu
+(NEW.user_id NULL'sa ekibe HİÇ bildirim gitmez); (2) bildirim tipini `support_new_ticket` →
+`support_new` diye sessizce yeniden adlandırıyordu (kodda `type`'ı okuyan yer yok, kırılma değil).
+⚠️ **Ders:** aynı fonksiyonu 3 ayrı dosya `CREATE OR REPLACE` ediyorsa, yeni dosyayı **en son
+çalıştırılanın gövdesinden** türet. "Repoda SQL olması çalıştırıldı demek değildir"in ikiz kardeşi:
+*repodaki en eski kopya, canlıdaki gerçek gövde değildir.*
+⚠️ Ayrıca "çalıştırdım mı?" sorusunun cevabı VERİDEN okunamadı — `notifications` tablosu aynı gün
+"Temizle" testinde boşaltılmıştı, yani "bildirim yok" kanıt değildi. Cevap yalnız gövdededir.
+
 **Çana "Okundu" + "Temizle" eklendi — peşinden iki gerçek hata çıktı.**
 🔴 **Onay diyaloğu çan menüsünün ALTINDA kalıyordu:** `.confirm-overlay` z-index 200 = sıradan
 menülerle aynı seviye, `.notif-menu` ise 300 → onay butonuna **basılamıyordu**. Bu yalnız bildirim

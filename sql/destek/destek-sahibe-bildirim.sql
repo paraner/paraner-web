@@ -36,7 +36,7 @@ BEGIN
      (/panel/destek/...) atılırdı; oysa işini admin panelinde yapıyor. */
   INSERT INTO public.notifications (user_id, type, title, body, link, data)
   SELECT DISTINCT s.user_id,
-         'support_new',
+         'support_new_ticket',
          'Yeni destek talebi',
          NEW.subject,
          '/admin/destek/' || NEW.id::text,
@@ -46,7 +46,10 @@ BEGIN
     UNION
     SELECT r.user_id FROM public.user_roles r WHERE r.role = 'admin'
   ) s
-  WHERE s.user_id <> NEW.user_id;   -- kendi talebinin İŞ bildirimini alma
+  WHERE s.user_id IS DISTINCT FROM NEW.user_id;   -- kendi talebinin İŞ bildirimini alma
+  -- ⚠️ `<>` DEĞİL `IS DISTINCT FROM`: NEW.user_id NULL olursa `<>` NULL döner ve
+  --    EKİBE HİÇ bildirim gitmez (üç-değerli mantık). destek-hesap-silme-set-null.sql:130
+  --    bunu bilerek sertleştirmişti; buraya kopyalanırken geri alınmasın.
 
   /* 2) SAHİP: "Talebin alındı" onayı. Sahibi silinmiş olamaz (INSERT anı) ama kolon
      NULL kabul ettiği için (ON DELETE SET NULL, 2026-07-20) yine de guard'lı. */

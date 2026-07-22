@@ -114,7 +114,7 @@
       politikası bilerek YOK → hiçbir istemci silemiyor, yalnız guard'lı server action siliyor.
       **Denetim:** agent'e ait hiç `ticket_deleted` kaydı düşmedi.
 
-### 🐞 MÜŞTERİ TALEP AÇMA: 3 KUSUR (2026-07-22, Mehmet canlıda buldu) — ⏳ 1 SQL BEKLİYOR
+### 🐞 MÜŞTERİ TALEP AÇMA: 3 KUSUR (2026-07-22, Mehmet canlıda buldu) — ✅ ÜÇÜ DE KAPANDI
 > "Talep açınca sayfayı yenilemeden görünmüyor · çok yavaş · 'talebiniz oluşturuldu' bildirimi
 > ne çanda ne bildirim sayfasında." Üçü de doğrulandı, üçü de AYRI sebepti.
 - [x] 🔴 **Liste bayat kalıyordu — CLAUDE.md kural 1 ihlali.** `submitTicket` yalnız `router.push`
@@ -132,7 +132,21 @@
       karşı tarafa GİTMEZ, ek ancak yenilemede görünürdü = sessiz regresyon.
       Yükleme düşerse kolon temizleniyor (ölü yol kalmasın), talep yine açılıyor.
       ℹ️ Kalan süre büyük ölçüde 3 zorunlu tur + yazışma sayfasının sunucu render'ı.
-- [ ] ⏳ **ÇALIŞTIRILACAK: `sql/destek/destek-sahibe-bildirim.sql`** — bildirim eksiğinin KÖK NEDENİ
+- [x] ✅ **ÇALIŞTIRILDI + CANLI DOĞRULANDI (2026-07-22): `sql/destek/destek-sahibe-bildirim.sql`**
+      Doğrulama betiği 2/2 ✅. Ardından **uçtan uca ölçüldü** (service_role ile gerçek talep açıldı):
+      sahibine `support_created` / "Talebin alındı" düştü, link `/panel/destek/<id>` (müşteri sayfası).
+      **Tek satır** düştü — sahip aynı zamanda admin olduğu hâlde ekip bildirimi (`support_new_ticket`)
+      GİTMEDİ → dışlama korunuyor, çift bildirim yok. Test talebi + bildirim silindi (5 talep, 0 bildirim).
+      🔴 **Çalıştırmadan ÖNCE dosyada iki kusur bulundu ve düzeltildi:**
+      **(1)** `WHERE s.user_id <> NEW.user_id` yazıyordu → 20.07'de `destek-hesap-silme-set-null.sql:130`
+      ile bilerek yapılan `IS DISTINCT FROM` sertleştirmesini **geri alıyordu** (NEW.user_id NULL olursa
+      `<>` NULL döner → EKİBE HİÇ bildirim gitmez). Geri getirildi + dosyaya "kopyalarken geri alma" notu.
+      **(2)** Bildirim tipini sessizce `support_new_ticket` → `support_new` diye yeniden adlandırıyordu.
+      Kodda `type` alanını okuyan hiçbir yer YOK (web + mobil tarandı, 0 eşleşme) → kırılma değildi,
+      yine de canlıdaki adla hizalandı.
+      ⚠️ **Ders (yine):** bir fonksiyonu 3 ayrı SQL dosyası `CREATE OR REPLACE` ediyorsa, yeni dosya
+      yazarken **en son çalıştırılanın gövdesinden** türet — eski bir kopyadan değil.
+      *(eski not)* bildirim eksiğinin KÖK NEDENİ
       `destek-departman.sql:125`'teki `WHERE s.user_id <> NEW.user_id` satırıydı: talebi açan kişi
       bildirim listesinden dışlanıyordu. Doğru amaçla yazılmıştı (ekip üyesi kendi talebine "Yeni
       destek talebi" İŞ bildirimi almasın) ama sonucu **hiçbir müşterinin onay bildirimi almaması**
