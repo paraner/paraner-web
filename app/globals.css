@@ -4423,14 +4423,31 @@ ul { list-style: none; }
 .admin-ticket-pick-all span { font-size: 12.5px; }
 /* Seçim çubuğu (Shopify sipariş listesi deseni): sayaç solda, yıkıcı aksiyon sağda.
    "İptal" butonu YOK — seçimi bırakmak ana kutuya ya da boş yere tıklamakla olur. */
+/* Seçim çubuğu — LİSTENİN İÇİNDE, başlık satırının yerine geçer (Shopify deseni).
+   Panel dışında ayrı kutu DEĞİL: öyleyken seçim yapınca liste aşağı kayıyordu.
+   Kendi kenarlığı/köşesi yok; listenin bir satırı gibi davranır. */
 .admin-sec-bar {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  margin: 14px 0; padding: 10px 14px;
-  background: var(--card-2); border: 1px solid var(--border); border-radius: 12px;
+  padding: 7px 14px 7px 16px; background: var(--card-2);
+  border-bottom: 1px solid var(--border);
 }
 .admin-ticket-pick > input[type="checkbox"]:indeterminate { accent-color: #c4c8ce; }
 .admin-sec-bar-pick { display: flex; align-items: center; gap: 10px; cursor: pointer; }
 .admin-sec-bar-pick input[type="checkbox"] { width: 16px; height: 16px; accent-color: #c4c8ce; cursor: pointer; }
+/* Sütun başlığı — seçim çubuğuyla AYNI yerde durur, biri diğerinin yerine geçer.
+   Yükseklikleri yakın tutuluyor ki seçim yapınca liste zıplamasın. */
+.admin-ticket-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 20px 11px 16px; border-bottom: 1px solid var(--border);
+  font-size: 12px; font-weight: 600; letter-spacing: 0.01em; color: var(--text-dim);
+}
+.admin-ticket-head input[type="checkbox"] { width: 16px; height: 16px; accent-color: #c4c8ce; cursor: pointer; flex: none; }
+.admin-ticket-head-main { flex: 1; min-width: 0; }
+.admin-ticket-head-chev { width: 16px; flex: none; }
+/* Rozet yuvaları: başlık ile satır AYNI genişliği kullanır → etiketler hizalı kalır. */
+.admin-ticket-col { width: 132px; flex: none; display: flex; align-items: center; }
+.admin-ticket-col-durum { width: 96px; }
+
 
 
 

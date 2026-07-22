@@ -191,33 +191,39 @@ export default function DestekListClient({
         </div>
       </div>
 
-      {/* Seçim çubuğu — yalnız seçim varken görünür (boşken araç çubuğu gürültüsü olmasın).
-          ⚠️ "Seçimi bırak" butonu KALDIRILDI (Mehmet, 2026-07-22, Shopify sipariş listesi örneği):
-          seçimi bırakmanın yolu ayrı bir buton değil, ana seç kutusuna ya da boş bir yere
-          tıklamak. Ayrı "iptal" butonu hem çubuğu kalabalıklaştırıyor hem de "Seçilenleri sil"in
-          yanında durduğu için yanlış butona basma riski yaratıyordu. */}
-      {silebilir && secili.size > 0 && (
-        <div className="admin-sec-bar">
-          <label className="admin-sec-bar-pick">
-            {/* Shopify'daki gibi ana kutu ÇUBUĞUN İÇİNDE: "seçimi bırak" diye bir YAZI yok,
-                seçili kutuya basmak bırakır. Aşağıdaki panel içi satır da bu sırada gizleniyor
-                (iki ayrı ana kutu kafa karıştırırdı). */}
-            <input
-              type="checkbox"
-              checked={gorunen.length > 0 && gorunen.every((r) => secili.has(r.ticket.id))}
-              ref={(el) => {
-                if (el) el.indeterminate = !gorunen.every((r) => secili.has(r.ticket.id));
-              }}
-              onChange={() => setSecili(new Set())}
-              aria-label="Seçimi bırak"
-            />
-            <strong>{secili.size} talep seçildi</strong>
-          </label>
-          <button
-            type="button"
-            className="btn btn-danger btn-sm"
-            disabled={siliniyor}
-            onClick={async () => {
+      <div className="admin-panel" style={{ padding: 0 }}>
+        {gorunen.length === 0 ? (
+          <p className="admin-empty-cell" style={{ padding: 24 }}>
+            {rows.length === 0 ? "Henüz talep yok." : "Bu filtrede talep yok."}
+          </p>
+        ) : (
+          <div className="admin-ticket-list">
+            {/* ── BAŞLIK SATIRI ⇄ SEÇİM ÇUBUĞU ──
+                Shopify sipariş listesi deseni (Mehmet, 2026-07-22): ikisi AYNI YERDE,
+                biri diğerinin YERİNE geçiyor. Eskiden seçim çubuğu panelin DIŞINDA ayrı bir
+                kutu olarak beliriyordu → hem liste aşağı kayıyor hem iki ayrı ana kutu oluyordu.
+                ⚠️ "Görünenleri seç" YAZISI kaldırıldı; başlık artık sütunları adlandırıyor. */}
+            {secili.size > 0 ? (
+              <div className="admin-sec-bar">
+                <label className="admin-sec-bar-pick">
+                  {/* Ana kutu ÇUBUĞUN İÇİNDE: "seçimi bırak" diye bir YAZI yok, seçili
+                      kutuya basmak bırakır. Kısmi seçimde belirsiz (—) hâli. */}
+                  <input
+                    type="checkbox"
+                    checked={gorunen.length > 0 && gorunen.every((r) => secili.has(r.ticket.id))}
+                    ref={(el) => {
+                      if (el) el.indeterminate = !gorunen.every((r) => secili.has(r.ticket.id));
+                    }}
+                    onChange={() => setSecili(new Set())}
+                    aria-label="Seçimi bırak"
+                  />
+                  <strong>{secili.size} talep seçildi</strong>
+                </label>
+                <button
+                  type="button"
+                  className="btn btn-danger btn-sm"
+                  disabled={siliniyor}
+                  onClick={async () => {
               const idler = [...secili];
               const ok = await confirmDialog({
                 title: `${idler.length} talep kalıcı olarak silinsin mi?`,
@@ -237,40 +243,32 @@ export default function DestekListClient({
                 router.refresh(); // CLAUDE.md kuralı: mutasyondan sonra tek refresh
               }
             }}
-          >
-            <Trash2 size={14} /> {siliniyor ? "Siliniyor…" : "Seçilenleri sil"}
-          </button>
-        </div>
-      )}
-
-      <div className="admin-panel" style={{ padding: 0 }}>
-        {gorunen.length === 0 ? (
-          <p className="admin-empty-cell" style={{ padding: 24 }}>
-            {rows.length === 0 ? "Henüz talep yok." : "Bu filtrede talep yok."}
-          </p>
-        ) : (
-          <div className="admin-ticket-list">
-            {/* Panel içi ana kutu YALNIZ seçim yokken — seçim başlayınca yerini üstteki
-                çubuktaki kutu alıyor (tek ana kutu kuralı). */}
-            {silebilir && secili.size === 0 && (
-              /* "Görünenleri seç" — filtre + arama zaten daralttığı için temizlik böyle yapılır.
-                 ⚠️ Tavanla sınırlı: 200 talep listelenebiliyor ama tek seferde en fazla
-                 TICKET_DELETE_MAX silinir; sessiz kırpma olmasın diye kaç tanesinin
-                 seçildiği yazıyor. */
-              <label className="admin-ticket-pick admin-ticket-pick-all">
-                <input
-                  type="checkbox"
-                  checked={false}
-                  onChange={() =>
-                    setSecili(new Set(gorunen.slice(0, TICKET_DELETE_MAX).map((r) => r.ticket.id)))
-                  }
-                />
-                <span className="admin-td-dim">
-                  Görünenleri seç ({Math.min(gorunen.length, TICKET_DELETE_MAX)})
-                  {gorunen.length > TICKET_DELETE_MAX &&
-                    ` — ${gorunen.length} taleptenki ilk ${TICKET_DELETE_MAX}'si`}
+                >
+                  <Trash2 size={14} /> {siliniyor ? "Siliniyor…" : "Seçilenleri sil"}
+                </button>
+              </div>
+            ) : (
+              /* Sütun başlığı. Kutu SOLDA, yanında "Talepler"; sağda satırdaki rozetlerle
+                 HİZALI "Ekip" ve "Durum" etiketleri (rozet yuvaları sabit genişlikte,
+                 yoksa "Faturalandırma" ile "Teknik" farklı yere düşer ve başlık kayardı). */
+              <div className="admin-ticket-head">
+                {silebilir && (
+                  <input
+                    type="checkbox"
+                    checked={false}
+                    onChange={() =>
+                      setSecili(new Set(gorunen.slice(0, TICKET_DELETE_MAX).map((r) => r.ticket.id)))
+                    }
+                    aria-label={`Görünen ${Math.min(gorunen.length, TICKET_DELETE_MAX)} talebi seç`}
+                  />
+                )}
+                <span className="admin-ticket-head-main">
+                  Talepler <span className="admin-td-dim">· müşteri</span>
                 </span>
-              </label>
+                <span className="admin-ticket-col">Ekip</span>
+                <span className="admin-ticket-col admin-ticket-col-durum">Durum</span>
+                <span className="admin-ticket-head-chev" />
+              </div>
             )}
             {gorunen.map((r) => {
               const meta = TICKET_STATUS_META[r.ticket.status] ?? TICKET_STATUS_META.open;
@@ -332,11 +330,17 @@ export default function DestekListClient({
                     </div>
                   </div>
 
-                  {/* Hangi ekibe düştüğü satırda görünsün — kuyruk karışmasın. */}
-                  <span className={`badge ${DEPARTMENT_META[r.ticket.department]?.badge ?? "gray"}`}>
-                    {DEPARTMENT_META[r.ticket.department]?.label ?? "Teknik"}
+                  {/* Hangi ekibe düştüğü satırda görünsün — kuyruk karışmasın.
+                      Rozetler SABİT genişlikli yuvalarda: başlıktaki "Ekip"/"Durum"
+                      etiketleriyle hizalı kalsınlar. */}
+                  <span className="admin-ticket-col">
+                    <span className={`badge ${DEPARTMENT_META[r.ticket.department]?.badge ?? "gray"}`}>
+                      {DEPARTMENT_META[r.ticket.department]?.label ?? "Teknik"}
+                    </span>
                   </span>
-                  <span className={`badge ${meta.badge}`}>{meta.label}</span>
+                  <span className="admin-ticket-col admin-ticket-col-durum">
+                    <span className={`badge ${meta.badge}`}>{meta.label}</span>
+                  </span>
                   <ChevronRight size={16} className="admin-ticket-chevron" />
                 </Link>
               );
