@@ -104,6 +104,36 @@
       turuyla birlikte yapılmalı. Kod tarafı: buton `role === "admin"` ile gizli + sunucuda
       `requireAdmin()` reddediyor.
 
+### 🐞 MÜŞTERİ TALEP AÇMA: 3 KUSUR (2026-07-22, Mehmet canlıda buldu) — ⏳ 1 SQL BEKLİYOR
+> "Talep açınca sayfayı yenilemeden görünmüyor · çok yavaş · 'talebiniz oluşturuldu' bildirimi
+> ne çanda ne bildirim sayfasında." Üçü de doğrulandı, üçü de AYRI sebepti.
+- [x] 🔴 **Liste bayat kalıyordu — CLAUDE.md kural 1 ihlali.** `submitTicket` yalnız `router.push`
+      yapıyordu, **`router.refresh()` YOKTU** → `staleTimes.dynamic:30` yüzünden kullanıcı listeye
+      dönünce yeni talebini GÖREMİYORDU. ⚠️ **Kendi test boşluğum:** 21.07'de admin tarafının
+      canlı düştüğünü ölçmüştüm ama MÜŞTERİ listesini hiç test etmemiştim.
+      Doğrulandı: uygulama içi geri ile 6 → 7 talep, yenileme yok.
+- [x] ⚡ **Yavaşlık ölçüldü ve yarıya indi: 2,23 sn → 1,49 sn (−%33).**
+      Ölçüm (ek dosyalı): `getUser` 164ms → ticket 282ms → **yükleme 669ms** → mesaj 341ms, hepsi ARDIŞIK.
+      (1) `getUser()` → `getSession()`: getUser her çağrıda Supabase'e gidiyor, getSession yerel okuyor.
+      Güvenlik kaybı yok — gerçek kapı RLS'in `user_id = auth.uid()`'i, oradaki id JWT'den okunuyor.
+      (2) **Ek yükleme ile mesaj yazımı PARALEL.** Mümkün oldu çünkü yol yüklemeden ÖNCE
+      üretilebiliyor (`ticketFilePath`). ⚠️ **"Önce mesajı yaz, sonra attachment_url'i UPDATE et"
+      YOLU SEÇİLMEDİ:** realtime yalnız INSERT dinliyor (`subscribeMessages`) → sonradan UPDATE
+      karşı tarafa GİTMEZ, ek ancak yenilemede görünürdü = sessiz regresyon.
+      Yükleme düşerse kolon temizleniyor (ölü yol kalmasın), talep yine açılıyor.
+      ℹ️ Kalan süre büyük ölçüde 3 zorunlu tur + yazışma sayfasının sunucu render'ı.
+- [ ] ⏳ **ÇALIŞTIRILACAK: `sql/destek/destek-sahibe-bildirim.sql`** — bildirim eksiğinin KÖK NEDENİ
+      `destek-departman.sql:125`'teki `WHERE s.user_id <> NEW.user_id` satırıydı: talebi açan kişi
+      bildirim listesinden dışlanıyordu. Doğru amaçla yazılmıştı (ekip üyesi kendi talebine "Yeni
+      destek talebi" İŞ bildirimi almasın) ama sonucu **hiçbir müşterinin onay bildirimi almaması**
+      oldu. Fix: iki AYRI bildirim → ekibe `support_new` (/admin/...), sahibe `support_created`
+      "Talebin alındı" (/panel/...). Sahip ekip sorgusundan hâlâ dışlı → çift bildirim yok.
+      ⚠️ **MOBİL DE ETKİLENİR ve bu İSTENEN:** mobil çan aynı tabloyu okuyor, mobil kod değişmiyor.
+      Dosya sonunda 2 satırlık doğrulama sorgusu var.
+- [x] **Anlık geri bildirim:** "Talebin alındı" toast'u eklendi (çandaki kalıcı kayıttan ayrı).
+- [x] **Yan kazanç:** test talepleri yeni TOPLU SİLME ile temizlendi → toplu silme gerçek veriyle
+      de uçtan uca doğrulanmış oldu (4 talep tek işlemde).
+
 ### 🛠️ ADMIN / İÇ EKİP PANELİ — canlı (admin.paraner.com)
 > Plan: `docs/ADMIN-PANEL.md`. Mehmet: kurucu+çalışanlar için müşteri yönetim paneli (üyeleri tür/abonelik
 > analiz + destek). Aynı repo içinde `/admin` route (Next code-split → müşteri bundle'ını şişirmez).

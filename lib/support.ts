@@ -21,7 +21,7 @@ export {
   type Department,
 } from "./supportShared";
 import { DEPARTMENTS, type TicketStatus, type TicketMessage, type Department } from "./supportShared";
-import { uploadTicketFile } from "./ticketAttachments";
+import { uploadTicketFile, uploadTicketFileTo, ticketFilePath } from "./ticketAttachments";
 
 // Yeni talep = ticket + ilk kullanıcı mesajı. Thread'e gitmek için ticket id döner.
 /* Talep aç. `department` 2026-07-18'de eklendi (sql/destek/destek-departman.sql):
@@ -35,7 +35,13 @@ export async function createTicket(
   file?: File | null,
 ): Promise<string | null> {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  /* ⚠️ getUser() DEĞİL getSession() (2026-07-22 hız ölçümü): getUser her çağrıda
+     Supabase'e GİDİYOR ve ölçümde 164 ms yiyordu — üstelik talep açma zaten 4 ardışık
+     turdan oluşuyordu. getSession yereldeki oturumu okur, ağ turu yok.
+     Güvenlik kaybı YOK: buradaki id yalnız satıra yazılacak değer; gerçek kapı RLS'in
+     `user_id = auth.uid()` koşulu ve o JWT'den okunuyor. Uydurma bir id yazılamaz. */
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
   if (!user) return null;
   const oncelik = DEPARTMENTS.find((d) => d.id === department)?.oncelik ?? "normal";
   const { data: ticket, error } = await supabase
@@ -50,16 +56,36 @@ export async function createTicket(
      ⚠️ Yükleme düşerse TALEP YİNE AÇILIR (ek olmadan): müşteri sorununu anlatan metni
      yazmış, dosya yüzünden bütün talebi kaybettirmek yanlış olur. Sessiz de kalmıyoruz —
      çağıran `null` dönen yolu görüp kullanıcıya "ek eklenemedi" diyebilir. */
-  let attachment: string | null = null;
-  if (file) attachment = await uploadTicketFile(ticket.id as string, file);
+  /* ⚠️ YÜKLEME İLE MESAJ YAZIMI PARALEL (2026-07-22). Eskiden sıralıydı ve ölçümde
+     yükleme 669 ms, mesaj 341 ms sürüyordu — toplam 1 sn'yi tek başına bu ikili yiyordu.
+     Yol yüklemeden ÖNCE üretilebildiği için (ticketFilePath) mesaj satırı yolu İÇİNDE
+     taşıyarak hemen yazılabiliyor.
+     ⚠️ Neden "önce mesajı yaz, sonra attachment_url'i UPDATE et" DEĞİL: realtime aboneliği
+     yalnız INSERT dinliyor (subscribeMessages) → sonradan yapılan UPDATE karşı tarafa
+     GİTMEZ, ek ancak sayfa yenilenince görünürdü. Yani o yol sessiz bir regresyondu.
+     ⚠️ Bedeli: yükleme düşerse satırda ölü bir yol kalır → aşağıda temizleniyor. */
+  const yol = file ? ticketFilePath(ticket.id as string, file) : null;
+  const yukleme = file && yol ? uploadTicketFileTo(yol, file) : Promise.resolve(null);
 
-  await supabase.from("ticket_messages").insert({
-    ticket_id: ticket.id,
-    sender_id: user.id,
-    sender_type: "user",
-    body: body.trim(),
-    attachment_url: attachment,
-  });
+  const mesaj = supabase
+    .from("ticket_messages")
+    .insert({
+      ticket_id: ticket.id,
+      sender_id: user.id,
+      sender_type: "user",
+      body: body.trim(),
+      attachment_url: yol,
+    })
+    .select("id")
+    .single();
+
+  const [yuklendi, { data: mesajSatiri }] = await Promise.all([yukleme, mesaj]);
+
+  /* Yükleme düştü ama mesaj yolu taşıyor → ek "açılamadı" diye görünürdü. Kolonu temizle:
+     talep yine açılır (metin yazılmış, dosya yüzünden talebi kaybettirmek yanlış olur). */
+  if (file && !yuklendi && mesajSatiri) {
+    await supabase.from("ticket_messages").update({ attachment_url: null }).eq("id", mesajSatiri.id);
+  }
   return ticket.id as string;
 }
 
@@ -77,7 +103,9 @@ export async function sendMessage(
   file?: File | null,
 ): Promise<TicketMessage | null> {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // getSession = yerel okuma (createTicket'taki aynı gerekçe: RLS gerçek kapı).
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
   if (!user) return null;
   const attachment = file ? await uploadTicketFile(ticketId, file) : null;
   const { data, error } = await supabase

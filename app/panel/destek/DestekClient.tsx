@@ -91,7 +91,15 @@ export default function DestekClient({
     setTitle("");
     setMessage("");
     setDosya(null);
+    /* Anlık geri bildirim: kullanıcı "gitti mi?" diye kalmasın. Çana düşen kalıcı
+       "Talebin alındı" bildirimi ayrı (sql/destek/destek-sahibe-bildirim.sql). */
+    showToast({ title: "Talebin alındı", message: "En kısa sürede döneceğiz.", variant: "success" });
     router.push(`/panel/destek/${id}`);
+    /* ⚠️ CLAUDE.md kural 1 — mutasyondan sonra ZORUNLU (2026-07-22'de eksik olduğu görüldü):
+       istemci önbelleği açık (staleTimes.dynamic: 30) ve liste sunucu verisini `initialX`
+       prop'uyla alıyor → refresh çağrılmazsa kullanıcı listeye dönünce YENİ TALEBİNİ GÖREMİYOR
+       ("talebim kayboldu"). Mehmet canlıda yakaladı. push'tan SONRA: yeni segment de tazelensin. */
+    router.refresh();
   }
 
   return (

@@ -45,13 +45,19 @@ export function dosyaGecerliMi(file: File): string | null {
   return null;
 }
 
-/** Dosyayı talebin klasörüne yükler, DB'ye yazılacak YOLU döndürür. Hata olursa null. */
-export async function uploadTicketFile(ticketId: string, file: File): Promise<string | null> {
-  const supabase = createClient();
+/* Yükleme YOLU'nu üretir — yüklemeden ÖNCE bilinebilir olması bilinçli (2026-07-22).
+   Sayesinde mesaj satırı ek yüklemesini BEKLEMEDEN, yolu içinde taşıyarak yazılabiliyor
+   (ikisi paralel gidiyor). Yol tamamen istemcide üretiliyor, sunucudan bir şey sormuyor. */
+export function ticketFilePath(ticketId: string, file: File): string {
   const uzanti = (file.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
   /* Dosya adı KULLANICIDAN gelmiyor: özel karakter/yol kaçışı (`../`) ve aynı adın
      üzerine yazma riskini baştan kesiyoruz. Klasör = talep id → policy oradan yetki soruyor. */
-  const yol = `${ticketId}/${crypto.randomUUID()}.${uzanti}`;
+  return `${ticketId}/${crypto.randomUUID()}.${uzanti}`;
+}
+
+/** Dosyayı VERİLEN yola yükler. Başarılıysa yolu, değilse null döner. */
+export async function uploadTicketFileTo(yol: string, file: File): Promise<string | null> {
+  const supabase = createClient();
   const { error } = await supabase.storage
     .from("ticket-attachments")
     .upload(yol, file, { contentType: file.type || undefined, upsert: false });
@@ -60,6 +66,11 @@ export async function uploadTicketFile(ticketId: string, file: File): Promise<st
     return null;
   }
   return yol;
+}
+
+/** Dosyayı talebin klasörüne yükler, DB'ye yazılacak YOLU döndürür. Hata olursa null. */
+export async function uploadTicketFile(ticketId: string, file: File): Promise<string | null> {
+  return uploadTicketFileTo(ticketFilePath(ticketId, file), file);
 }
 
 /** Görüntüleme için süreli link üretir. RLS geçmezse null (başkasının dosyası). */
