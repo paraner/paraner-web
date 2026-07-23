@@ -183,7 +183,14 @@
 - [x] ~~audit log'u panelde GÖSTER~~ — **BU MADDE BAYATMIŞ**: `/admin/denetim` ekranı zaten yazılmış
       (`app/admin/denetim/page.tsx` + `DenetimClient.tsx`). 2026-07-20'de fark edildi.
 - [ ] **Sonraki (kod):** müşterinin destek talepleri detay sayfasında · trial/abonelik analizi.
-- [ ] **Karar:** `app.paraner.com/admin` hâlâ açık (rol-korumalı, açık değil). DNS canlıya alınınca admin host'una redirect edilsin mi (tek adres) — Mehmet.
+- [x] ✅ **`app.paraner.com/admin` KAPATILDI (2026-07-23, Mehmet kararı).** Karar: cross-host köprü
+      KURMA — app host'undan admin'e otomatik yönlendirme yapma; admin'e girecek `admin.paraner.com`'a
+      kendisi bassın. proxy.ts'e mevcut `admin.*+/panel → app.*` kuralının simetriği eklendi:
+      `isApp && /admin → /panel` (aynı host, müşteri paneli). Böylece `app.paraner.com/admin` diye
+      çalışan bir adres kalmadı. Güvenlik zaten `requireStaffPage` guard'ındaydı; bu adresi tekilleştirdi.
+      Lokal prod'da 4 senaryo curl ile doğrulandı: app/admin→/panel · app/admin/alt→/panel ·
+      admin/admin→kendi girişi (app'e köprü yok) · admin/panel→app (kontrol grubu bozulmadı). tsc+build temiz.
+      İç link taraması: app host'unda /admin'e giden hiçbir link yoktu (`goPanel` köke atıyor).
 - [ ] **Ölçek notu:** Dashboard "Toplam Üye" = distinct `auth_user_id` (PostgREST'te distinct count yok → kolon çekilip Set'leniyor, `.limit(10000)`). Binlerce profilde RPC gerekir → **DB şeması = önce sor**.
 
 ### 🤖 AI TOKEN + MALİYET TAKİBİ (/admin/ai) ✅ TAMAMLANDI (2026-07-17)

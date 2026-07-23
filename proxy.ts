@@ -125,6 +125,17 @@ export async function proxy(request: NextRequest) {
     return copyCookies(NextResponse.redirect(url), response);
   }
 
+  // Simetrik kural: admin paneli app.* üzerinden SERVİS EDİLMEZ. "app.paraner.com/admin" diye
+  // bir adres YOKTUR — admin'e girecek kişi admin.paraner.com'a gider. Cross-host KÖPRÜ kurmuyoruz
+  // (app host'undan admin host'una redirect etmiyoruz, bu app'i admin'e giriş kapısı yapardı) →
+  // müşteri paneline düşürüyoruz. Güvenlik zaten requireStaffPage guard'ında; bu, adresi tekilleştirir.
+  if (isApp && pathname.startsWith("/admin")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/panel";
+    url.search = "";
+    return copyCookies(NextResponse.redirect(url), response);
+  }
+
   // Giriş/kayıt gibi herkese açık sayfalar korumadan muaf (yoksa /giris kendine döngü yapar)
   // /sifre-olustur = iç ekip daveti (admin.paraner.com'da açılır) — korumadan muaf OLMALI,
   // çünkü davet linkine tıklayan kişinin henüz oturumu yoktur (token URL'de gelir).
