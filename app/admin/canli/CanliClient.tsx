@@ -17,6 +17,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import type { LiveSnapshot, FeedEvent } from "../../../lib/adminLive";
+import AdminPageHead from "../AdminPageHead";
 
 /* Canlı Görünüm — "şu an sistemde ne oluyor" tek ekranda.
    Veri: lib/adminLive.getLiveSnapshot(). Tazeleme: kabuktaki LiveRefresh (30 sn).
@@ -76,12 +77,16 @@ export default function CanliClient({ snap, now }: { snap: LiveSnapshot; now: nu
 
   return (
     <div>
-      <h1 className="admin-h1">Canlı Görünüm</h1>
-      <p className="admin-sub">
-        Şu an uygulamayı kullananlar ve son 24 saatteki hareket. Müşteri uygulamayı açtığında
-        5 dakikada bir sinyal gönderir; &quot;şu an aktif&quot; = son 12 dakikada sinyal veren.
-        Sayfa 30 saniyede bir kendini tazeler.
-      </p>
+      <AdminPageHead
+        title="Canlı Görünüm"
+        sub={
+          <>
+            Şu an uygulamayı kullananlar ve son 24 saatteki hareket. Müşteri uygulamayı açtığında
+            5 dakikada bir sinyal gönderir; &quot;şu an aktif&quot; = son 12 dakikada sinyal veren.
+            Sayfa 30 saniyede bir kendini tazeler.
+          </>
+        }
+      />
 
       {/* ⚠️ Sessiz "kimse yok" YOK (denetim 2026-07-18 / Y6): sorgu düşerse sayaçlar 0 gelir ve
           ekran sistemin sessiz olduğunu sanmaya davet eder. Sebebi açıkça yaz. */}

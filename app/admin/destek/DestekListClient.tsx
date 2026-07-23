@@ -9,6 +9,7 @@ import { relativeLabel } from "../../../lib/lifecycle";
 import { deleteTickets } from "../../../lib/adminActions";
 import { confirmDialog } from "../../components/confirm";
 import { showToast } from "../../components/toast";
+import AdminPageHead from "../AdminPageHead";
 
 /** Talep + o talebi yazan müşterinin bağlamı (sunucuda birleştirilir). */
 export type TicketRow = {
@@ -156,11 +157,15 @@ export default function DestekListClient({
 
   return (
     <div>
-      <h1 className="admin-h1">Destek Talepleri</h1>
-      <p className="admin-sub">
-        {rows.length} talep · {sayac.bekleyen} yanıt bekliyor. Satırda müşterinin kayıt tarihi,
-        planı ve son aktifliği görünür — talebe girmeden kiminle konuştuğunu bilirsin.
-      </p>
+      <AdminPageHead
+        title="Destek Talepleri"
+        sub={
+          <>
+            {rows.length} talep · {sayac.bekleyen} yanıt bekliyor. Satırda müşterinin kayıt tarihi,
+            planı ve son aktifliği görünür — talebe girmeden kiminle konuştuğunu bilirsin.
+          </>
+        }
+      />
 
       {uyari && (
         <p className="admin-sub" style={{ color: "var(--danger)", marginTop: -4 }}>⚠️ {uyari}</p>

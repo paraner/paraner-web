@@ -55,8 +55,8 @@
       kartı seg=paid ile uyuşmuyor. Ya birim etiketi ekle ya kişi-bazlı hesaba geç (karar gerek).
 - [ ] 🟢 **UX cila — KALAN** (07-23'te kapananlar: satır klavye erişimi, boş seçili-segment çipi,
       AI ay seçici pending, admin not-found kabuk içinde, **terminoloji birliği = "Müşteri"** Mehmet
-      kararı). Kalanlar: PageHead deseni (21 yerde kopya başlık) · boş durum 3 ayrı sınıf birleştirme ·
-      ekip formu label/aria · "son admin" koruması (düz yönetici modeli).
+      kararı, **AdminPageHead** 7 sayfa başlığı tek bileşende). Kalanlar: boş durum 3 ayrı sınıf
+      birleştirme · ekip formu label/aria · "son admin" koruması (düz yönetici modeli).
       *(07-23: `/admin/destek` filtre/arama zaten VARDI (denetim notu bayattı); eksik olan
       SAYFALAMA eklendi — 25/sayfa, seçim sayfalar arası korunuyor, filtre değişince temizleniyor.)*
 - [ ] **Ölçek notu:** Dashboard "Toplam Üye" = distinct `auth_user_id` (PostgREST'te distinct count yok →

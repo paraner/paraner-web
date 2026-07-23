@@ -10,6 +10,7 @@ import {
   PRICING_CHECKED_AT,
   PRICING_SOURCE,
 } from "../../../lib/aiPricing";
+import AdminPageHead from "../AdminPageHead";
 
 export type AiRow = {
   profil_id: string;
@@ -85,14 +86,18 @@ export default function AiClient({
 
   return (
     <div>
-      <h1 className="admin-h1">AI Kullanımı</h1>
-      <p className="admin-sub">
-        Hangi hesap ne kadar AI harcadı. Token sayıları Gemini&apos;den <b>birebir</b> geliyor;
-        maliyet bu token&apos;ların {PRICING_SOURCE} fiyatlarıyla çarpımıdır (giriş
-        ${GEMINI_FLASH_PRICING.inputPerMillionUsd}/1M · çıkış ${GEMINI_FLASH_PRICING.outputPerMillionUsd}/1M,
-        {" "}{PRICING_CHECKED_AT} tarihinde doğrulandı). Google fiyat değiştirirse{" "}
-        <code>lib/aiPricing.ts</code> güncellenmeli.
-      </p>
+      <AdminPageHead
+        title="AI Kullanımı"
+        sub={
+          <>
+            Hangi hesap ne kadar AI harcadı. Token sayıları Gemini&apos;den <b>birebir</b> geliyor;
+            maliyet bu token&apos;ların {PRICING_SOURCE} fiyatlarıyla çarpımıdır (giriş
+            ${GEMINI_FLASH_PRICING.inputPerMillionUsd}/1M · çıkış ${GEMINI_FLASH_PRICING.outputPerMillionUsd}/1M,
+            {" "}{PRICING_CHECKED_AT} tarihinde doğrulandı). Google fiyat değiştirirse{" "}
+            <code>lib/aiPricing.ts</code> güncellenmeli.
+          </>
+        }
+      />
 
       <div className="admin-filters">
         <select

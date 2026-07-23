@@ -12,6 +12,7 @@ import {
   getModuleAdoption,
 } from "../../lib/adminMetrics";
 import AdminKeyNotice from "./AdminKeyNotice";
+import AdminPageHead from "./AdminPageHead";
 
 export default async function AdminDashboard() {
   /* ⚠️ SAYFA guard'ı — layout'takine GÜVENME (denetim 2026-07-18 / Y1): Next 16'da layout
@@ -181,10 +182,10 @@ export default async function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="admin-h1">Genel Bakış</h1>
-      <p className="admin-sub">
-        Tüm müşteriler ve abonelik dağılımı. Bir müşteri birden fazla profil açabilir — dağılımlar profil bazlıdır.
-      </p>
+      <AdminPageHead
+        title="Genel Bakış"
+        sub="Tüm müşteriler ve abonelik dağılımı. Bir müşteri birden fazla profil açabilir — dağılımlar profil bazlıdır."
+      />
       {ownersTruncated && (
         <p className="admin-sub" style={{ color: "var(--danger)", marginTop: -4 }}>
           ⚠️ Profil listesi 10.000&apos;de kırpıldı ({(ownersR.count ?? 0).toLocaleString("tr-TR")}{" "}

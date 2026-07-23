@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Ban } from "lucide-react";
+import AdminPageHead from "../AdminPageHead";
 import type { AdminPerson } from "../../../lib/adminUsers";
 import {
   personLifecycle,
@@ -191,11 +192,15 @@ export default function MusterilerClient({
 
   return (
     <div>
-      <h1 className="admin-h1">Müşteriler</h1>
-      <p className="admin-sub">
-        {people.length.toLocaleString("tr-TR")} müşteri · {nProfiles.toLocaleString("tr-TR")} profil ·
-        durum denemenin gerçek tarihinden hesaplanır, satıra tıkla.
-      </p>
+      <AdminPageHead
+        title="Müşteriler"
+        sub={
+          <>
+            {people.length.toLocaleString("tr-TR")} müşteri · {nProfiles.toLocaleString("tr-TR")} profil ·
+            durum denemenin gerçek tarihinden hesaplanır, satıra tıkla.
+          </>
+        }
+      />
 
       <div className="admin-filters">
         <div className="admin-chip-row">

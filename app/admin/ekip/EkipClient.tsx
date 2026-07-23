@@ -27,6 +27,7 @@ import {
   type ActionResult,
 } from "../../../lib/adminActions";
 import { DEPARTMENTS, departmentLabel } from "../../../lib/supportShared";
+import AdminPageHead from "../AdminPageHead";
 
 export type StaffMember = {
   id: string;
@@ -225,11 +226,15 @@ export default function EkipClient({
   return (
     /* tx-area: çekmece açıkken içerik sola kayar (drawer'ın altına girmez) — İşlemler deseni */
     <div className={`tx-area${secili ? " shifted" : ""}`}>
-      <h1 className="admin-h1">Ekip</h1>
-      <p className="admin-sub">
-        Paraner&apos;i yöneten iç ekip. <b>Yönetici</b> her şeyi görür ve müşteri yönetir;{" "}
-        <b>Destek</b> yalnız <b>atandığı departmanların</b> taleplerini görür.
-      </p>
+      <AdminPageHead
+        title="Ekip"
+        sub={
+          <>
+            Paraner&apos;i yöneten iç ekip. <b>Yönetici</b> her şeyi görür ve müşteri yönetir;{" "}
+            <b>Destek</b> yalnız <b>atandığı departmanların</b> taleplerini görür.
+          </>
+        }
+      />
 
       {/* --- Ekle / davet --- */}
       <div className="admin-panel">

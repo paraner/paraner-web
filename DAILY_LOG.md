@@ -16,6 +16,19 @@
 
 ---
 
+## 2026-07-23 (8) — AdminPageHead: 7 sayfa başlığı tek bileşende (görsel-nötr)
+
+Denetim cila: admin panelinde ~21 yerde `<h1 className="admin-h1">…</h1><p className="admin-sub">…</p>`
+elle kopyalanıyordu. `app/admin/AdminPageHead.tsx` eklendi (müşteri panelinin `PageHead`'inin admin
+karşılığı; admin KENDİ stilini kullanır — `admin-h1`/`admin-sub`, bilerek daha ağır). 7 günlük-görünen
+başlık ona bağlandı: Genel Bakış · Müşteriler · Destek · Canlı · AI · Denetim · Ekip.
+⚠️ **GÖRSEL-NÖTR:** aksiyon yokken bileşen sarmalayıcı div KOYMAZ, düz `<h1>`+`<p>` fragment üretir →
+eski işaretlemeyle birebir (margin kaymaz). `sub` ReactNode (alt yazılar JSX içeriyor: kalın, sayaç,
+fiyat sabitleri). Hook yok → sunucu + istemci bileşenlerinden import edilebilir.
+Bilinçli DIŞARIDA: sınır sayfaları (error/not-found/AdminKeyNotice/layout), sunucu sayfalarının
+nadir HATA dalı başlıkları ("Liste yüklenemedi"), rozet içeren müşteri detay başlığı (admin-detail-head).
+Doğrulama: 7 sayfada h1 metni + font-weight 700 korunuyor (görsel-nötr), gözle de teyit. tsc + build temiz.
+
 ## 2026-07-23 (7) — /admin/destek sayfalama (filtre/arama zaten vardı)
 
 Denetim notu "/admin/destek filtre/arama/sayfalama yok" diyordu ama koda bakınca **filtre

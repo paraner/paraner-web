@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, ShieldCheck, Mail, Star, Ban, Trash2, UserPlus, KeyRound } from "lucide-react";
 import { relativeLabel } from "../../../lib/lifecycle";
 import { TZ } from "../../../lib/format";
+import AdminPageHead from "../AdminPageHead";
 
 export type AuditRow = {
   id: string;
@@ -107,11 +108,15 @@ export default function DenetimClient({ rows, now }: { rows: AuditRow[]; now: nu
 
   return (
     <div>
-      <h1 className="admin-h1">Denetim Kaydı</h1>
-      <p className="admin-sub">
-        İç ekibin müşteri hesaplarında yaptığı her işlem. Kimse (yönetici dahil) bu kayıtları
-        silemez veya değiştiremez. Son 500 kayıt.
-      </p>
+      <AdminPageHead
+        title="Denetim Kaydı"
+        sub={
+          <>
+            İç ekibin müşteri hesaplarında yaptığı her işlem. Kimse (yönetici dahil) bu kayıtları
+            silemez veya değiştiremez. Son 500 kayıt.
+          </>
+        }
+      />
 
       <div className="admin-filters">
         <label className="admin-search">
