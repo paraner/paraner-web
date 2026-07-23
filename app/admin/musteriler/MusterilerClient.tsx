@@ -201,7 +201,10 @@ export default function MusterilerClient({
         <div className="admin-chip-row">
           {SEGMENTS.map((s) => {
             const c = segCount(s.id);
-            if (s.id !== "all" && c === 0) return null; // boş segmenti gösterme (gürültü)
+            /* Boş segmenti gizle (gürültü) — AMA seçili olanı ASLA gizleme: LiveRefresh 30 sn'de
+               tazeleyince aktif segment 0'a düşerse çip kaybolur ve kullanıcı "müşteriler kayboldu"
+               sanır, filtrede olduğunu göremez (denetim cila, 2026-07-18). */
+            if (s.id !== "all" && c === 0 && seg !== s.id) return null;
             return (
               <button
                 key={s.id}
@@ -274,6 +277,18 @@ export default function MusterilerClient({
                     key={p.id}
                     className="admin-row-click"
                     onClick={() => router.push(`/admin/musteriler/${p.id}`)}
+                    /* Klavye erişimi (denetim cila): satır detaya giden TEK yol, `tr onClick`
+                       tek başına klavyeye kapalıydı. `/admin/canli` <button> ile çözüyor ama
+                       tabloda satır buton olamaz → tabIndex + Enter/Space. */
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`${p.email} — müşteri detayını aç`}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        router.push(`/admin/musteriler/${p.id}`);
+                      }
+                    }}
                   >
                     <td className="admin-td-name">
                       {p.email}

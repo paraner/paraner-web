@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles, MessageSquare, ScanLine, Coins, Search } from "lucide-react";
 import {
@@ -46,6 +46,9 @@ export default function AiClient({
 }) {
   const router = useRouter();
   const [q, setQ] = useState("");
+  // Ay değişimi sunucuya gidiyor → geri bildirim (denetim cila): seçici kilitlenir + tablo soluklaşır,
+  // yoksa yeni ay seçilmiş ama tablo eski ayda kalıyor gibi görünüyordu.
+  const [pending, startTransition] = useTransition();
 
   const filtered = useMemo(() => {
     const query = q.trim().toLocaleLowerCase("tr");
@@ -95,7 +98,11 @@ export default function AiClient({
         <select
           className="admin-select"
           value={selected}
-          onChange={(e) => router.push(`/admin/ai?ay=${e.target.value}`)}
+          onChange={(e) => {
+            const ay = e.target.value;
+            startTransition(() => router.push(`/admin/ai?ay=${ay}`));
+          }}
+          disabled={pending}
           aria-label="Ay seç"
         >
           {months.map((m) => (
@@ -110,6 +117,11 @@ export default function AiClient({
         </label>
       </div>
 
+      {/* Ay değişirken veri alanı soluklaşır → "güncelleniyor" görünür (aria-busy erişilebilir) */}
+      <div
+        aria-busy={pending}
+        style={{ opacity: pending ? 0.45 : 1, transition: "opacity 0.15s", pointerEvents: pending ? "none" : undefined }}
+      >
       <div className="admin-kpi-grid">
         {kpis.map((k) => {
           const Icon = k.icon;
@@ -186,6 +198,7 @@ export default function AiClient({
             </table>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

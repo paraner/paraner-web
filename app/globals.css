@@ -4112,6 +4112,9 @@ ul { list-style: none; }
 /* --- Müşteri detayı + ekip --- */
 .admin-row-click { cursor: pointer; }
 .admin-row-click:hover { background: rgba(255,255,255,0.03); }
+/* Klavyeyle gezinince odak GÖRÜNSÜN (satır tıklanabilir + tabIndex'li). Fareyle tıklamada
+   çıkmasın diye :focus-visible. İç gölge: satır yüksekliğini/tablo düzenini bozmaz. */
+.admin-row-click:focus-visible { outline: none; background: rgba(255,255,255,0.05); box-shadow: inset 2px 0 0 var(--focus-ring); }
 .admin-badge-row { display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .admin-detail-head { display: flex; align-items: flex-start; gap: 12px; }
 .admin-profile-list { display: grid; gap: 12px; }

@@ -16,6 +16,31 @@
 
 ---
 
+## 2026-07-23 (5) — denetim UX cilası (bir grup) + ikon optimizasyonu "yapılmadı" (öncül bayat)
+
+**İkon yükü maddesi kapatıldı — YAPMAYA DEĞMEZ (öncülü doğrulayarak).** Not "`categoryIcons.tsx`
+86 lucide ikonunu barrel import ediyor → ~15 KB, tembel yükle" diyordu. Kaynaktan doğrulandı:
+Next 16 `lucide-react`'i **otomatik** `optimizePackageImports`'a alıyor (config.js:988) → barrel
+zaten tek tek ikon import'una çevriliyor, tüm kütüphane gelmiyor. 81 ikonun **hepsi** ICON_MAP'te
+kullanılıyor (ölü import yok, tarandı) → import stili ne olursa hepsi gerekli. Tembel yükleme
+yalnız işlem listesinde ikon "pop-in"i yaratır, karşılığında ~4-5 KB. Kötü takas → GOREVLER'den düşürüldü.
+
+**Denetim UX cilasından bir grup kapandı (hepsi güvenli, kod-only, canlı doğrulandı):**
+1. **Müşteri tablosu klavye erişimi** — satır detaya giden TEK yoldu ama `<tr onClick>` klavyeye
+   kapalıydı (`/admin/canli` `<button>` ile çözüyor, tabloda satır buton olamaz). `tabIndex=0` +
+   `role=button` + `aria-label` + Enter/Space handler + `:focus-visible` odak halkası. Doğrulandı:
+   satır odaklanıyor, halka görünüyor, Enter detaya gidiyor.
+2. **Boş seçili-segment çipi kaybolmuyor** — `MusterilerClient` boş segmenti gizliyordu; LiveRefresh
+   30 sn'de aktif segmenti 0'a düşürünce çip kaybolup "müşteriler kayboldu" hissi veriyordu. Artık
+   `seg !== s.id` koşuluyla seçili olan asla gizlenmiyor.
+3. **AI ay seçici geri bildirimi** — `router.push` sunucuya gidiyordu ama tablo eski ayda kalıyor
+   gibiydi. `useTransition` + seçici `disabled` + veri alanı `aria-busy` ile soluklaşma. Doğrulandı: aria-busy=true.
+4. **Admin `not-found.tsx`** — `notFound()` (silinmiş kişi) kök global not-found'a düşüp admin
+   kabuğunun DIŞINDA (sidebar'sız) açılıyordu. `app/admin/not-found.tsx` eklendi → kabuk içinde,
+   "Müşterilere dön" linkiyle. Doğrulandı: sidebar+üst bar var.
+**Kalan cila** (GOREVLER'de): terminoloji birliği (KARAR gerek), PageHead deseni, boş durum sınıf
+birleştirme, /admin/destek filtre/sayfalama, ekip formu label/aria, "son admin" koruması.
+
 ## 2026-07-23 (4) — GOREVLER temizliği + yanlış şifre inline hatası
 
 **GOREVLER.md temizlendi: 577 → 183 satır.** Dosyanın kendi kuralı ("sadece açık görevler")
