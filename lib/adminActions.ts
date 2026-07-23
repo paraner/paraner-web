@@ -112,6 +112,25 @@ async function logAction(
   if (error) console.error("[admin_audit_log] yazılamadı:", error.message, { action });
 }
 
+/* "En az bir yönetici" DEĞİŞMEZ KURALI (2026-07-23, denetim: düz yönetici modeli).
+   Bu kişiyi yöneticilikten düşürmek/ekipten çıkarmak sistemdeki SON yöneticiyi mi siler?
+   ⚠️ Her aksiyondaki `userId === actor.id` self-check'i KENDİNİ kilitlemeyi zaten engelliyor;
+   bu kural onu tamamlar: (1) iki admin'in aynı anda birbirini düşürdüğü yarışta pencereyi
+   daraltır, (2) self-check ileride bozulursa yine ≥1 admin kalır (defense-in-depth).
+   ⚠️ Tam TOCTOU garantisi DEĞİL (iki eşzamanlı okuma da 2 görüp ikisi de geçebilir) — kesin
+   garanti DB kısıtı/trigger ister (şema dokunuşu → önce Mehmet'e sor). Bir kişi hem admin hem
+   agent satırına sahip olabildiği için "yönetici" = role='admin' satırı olan DISTINCT kişi. */
+async function sonAdminMi(
+  admin: NonNullable<ReturnType<typeof createAdminClient>>,
+  userId: string,
+): Promise<boolean> {
+  const { data } = await admin.from("user_roles").select("user_id").eq("role", "admin");
+  const adminlar = new Set((data ?? []).map((r) => r.user_id as string));
+  return adminlar.has(userId) && adminlar.size <= 1;
+}
+const SON_ADMIN_MESAJI =
+  "Sistemdeki son yöneticiyi düşüremezsin — önce başka birini Yönetici yap, sonra bunu değiştir.";
+
 /* --- Müşteri aksiyonları --- */
 
 /** Şifre sıfırlama maili gönder (Supabase Auth üzerinden). */
@@ -533,6 +552,10 @@ export async function revokeRole(
   const admin = createAdminClient();
   if (!admin) return { ok: false, message: "Sunucu anahtarı eksik." };
 
+  if (role === "admin" && (await sonAdminMi(admin, userId))) {
+    return { ok: false, message: SON_ADMIN_MESAJI };
+  }
+
   const { error } = await admin.from("user_roles").delete().eq("user_id", userId).eq("role", role);
   if (error) return { ok: false, message: `Kaldırılamadı: ${error.message}` };
 
@@ -707,6 +730,10 @@ export async function updateStaff(
   if (userId === actor.id && role !== "admin") {
     return { ok: false, message: "Kendi yöneticiliğini kaldıramazsın (panele kilitlenirsin)." };
   }
+  // Başka bir admin'i düşürüyor olsa bile: son yönetici kalmamalı (yukarıdaki değişmez kural).
+  if (role !== "admin" && (await sonAdminMi(admin, userId))) {
+    return { ok: false, message: SON_ADMIN_MESAJI };
+  }
 
   const deps = role === "agent" ? temizDepartmanlar(departments) : [];
   if (role === "agent" && deps.length === 0) {
@@ -755,6 +782,10 @@ export async function removeFromTeam(userId: string, email: string): Promise<Act
 
   if (userId === actor.id) {
     return { ok: false, message: "Kendini ekipten çıkaramazsın (panele kilitlenirsin)." };
+  }
+  // Ekipten çıkarmak TÜM rollerini siler → son yönetici ise sistem yöneticisiz kalır.
+  if (await sonAdminMi(admin, userId)) {
+    return { ok: false, message: "Sistemdeki son yöneticiyi ekipten çıkaramazsın — önce başka birini Yönetici yap." };
   }
 
   const { error: depErr } = await admin.from("staff_departments").delete().eq("user_id", userId);

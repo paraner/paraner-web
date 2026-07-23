@@ -56,8 +56,6 @@
       (`.dz-title/.dz-desc/.dz-btn` bekliyor). Tek desene birleştir.
 - [ ] 🟢 **Ekip formu erişilebilirlik** — `<label>`/`aria-label` yok; giriş ekranının `adm-login-input`
       sınıfı form alanı olarak kullanılıyor.
-- [ ] 🟢 **"Son admin" koruması** — düz yönetici modeli: admin'ler birbirinin (ve kendinin) rolünü
-      kaldırabiliyor, "son admin" koruması yok → panele girecek kimse kalmayabilir.
 - [ ] **Ölçek notu:** Dashboard "Toplam Müşteri" = distinct `auth_user_id` (PostgREST'te distinct count yok →
       kolon çekilip Set'leniyor, `.limit(10000)`). Binlerce profilde RPC gerekir → **DB şeması = önce sor**.
 - [ ] ⚡ **`listPeople()` ölçek borcu:** `/admin/destek` + `/admin/musteriler` `auth.users`'ı seri sayfalayıp

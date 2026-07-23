@@ -16,6 +16,26 @@
 
 ---
 
+## 2026-07-23 (9) — "en az bir yönetici" değişmez kuralı (son admin koruması)
+
+Denetim: "düz yönetici modeli, son admin koruması yok". **Kaynağı okurken önemli bir nüans
+çıktı:** üç rol-aksiyonunun (revokeRole, updateStaff, removeFromTeam) HER BİRİNDE zaten
+`userId === actor.id` self-check'i var → pratikteki kilitlenmeyi (kendi rolünü düşürme) engelliyor.
+Üstelik requireAdmin actor'ü hep admin yaptığı için, başka bir admin'i düşürsen bile en az sen
+kalırsın → **sıralı akışta sıfır-admin ULAŞILAMAZ**. Yani self-check'ler asıl vektörü zaten kapatmış.
+
+Yine de "≥1 admin" kuralını AÇIKÇA uygulayan bir koruma eklendi (`sonAdminMi` helper +
+`SON_ADMIN_MESAJI`), üç aksiyona da bağlandı. Değeri **defense-in-depth**: (1) iki admin'in aynı
+anda birbirini düşürdüğü YARIŞ durumunda pencereyi daraltır, (2) ileride biri self-check'i
+bozarsa yine ≥1 admin kalır. ⚠️ Tam TOCTOU garantisi DEĞİL (iki eşzamanlı okuma da 2 görüp
+geçebilir) — kesin garanti DB kısıtı/trigger ister (şema dokunuşu → Mehmet'e sorulacak, bugün YAPILMADI).
+
+Doğrulama: `sonAdminMi` mantığı CANLI veriye karşı salt-okuma ile test edildi — sistemde 1 admin
+(admin@paraner.com), fonksiyon onu `true` (son admin), rastgele non-admin id'yi `false` döndürüyor.
+⚠️ Uçtan uca UI testi YAPILAMADI: guard self-check'ten SONRA ve tek-admin durumunda yalnız kendini
+hedefleyebilirsin (o da self-check'e takılır) → guard'ı tetiklemek 2. admin + self-check baypası
+ister. Bu, guard'ın zaten "sıralı ulaşılamaz, saf defense-in-depth" oluşunun teyidi. tsc + build temiz.
+
 ## 2026-07-23 (8) — AdminPageHead: 7 sayfa başlığı tek bileşende (görsel-nötr)
 
 Denetim cila: admin panelinde ~21 yerde `<h1 className="admin-h1">…</h1><p className="admin-sub">…</p>`
