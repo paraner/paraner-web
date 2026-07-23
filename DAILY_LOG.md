@@ -16,6 +16,21 @@
 
 ---
 
+## 2026-07-23 (6) — terminoloji birliği: kişi = "Müşteri" (Mehmet kararı)
+
+Admin paneli aynı şeye (kayıt olmuş kişi) üç ayrı isim veriyordu: Müşteri (menü + sayfa
+başlığı) · Üye (pano "Toplam Üye", müşteriler alt yazısı) · Kullanıcı (Canlı Görünüm, üst bar
+rozeti). Mehmet'e seçenekler önizlemeyle sunuldu → **"Müşteri"** seçildi (iç ekip/CRM diline en
+yakın, en az değişiklik). Tüm GÖRÜNEN metinler müşteriye getirildi; **Profil** ayrı kavram olarak
+korundu (1 kişi = çok profil). Değişenler: pano "Toplam Müşteri" + alt yazı + kırpma uyarısı ·
+müşteriler "N müşteri" + boş durum · müşteri detay "Bu müşterinin profili yok" · üst bar rozeti
+"Canlı müşteriler" · Canlı Görünüm açıklaması + boş durumlar · destek liste kırpma.
+Dokunulmayanlar (bilinçli): **"Ekip Üyesi"** (gerçekten personel) · **kod yorumları** · paylaşılan
+`ThreadClient`'taki "Silinmiş kullanıcı" (müşteri paneli de kullanıyor, karar admin kapsamındaydı).
+Yan tutarlılık: destek listesindeki "Üye: {tarih}"/"Üyelik tarihi" → **"Kayıt: {tarih}"/"Kayıt
+tarihi"** yapıldı (müşteri detay sayfası zaten "Kayıt {tarih}" diyor). Yerel prod'da doğrulandı:
+pano/müşteriler/canlı/rozet hepsi "müşteri", profil ayrımı duruyor. tsc + build temiz.
+
 ## 2026-07-23 (5) — denetim UX cilası (bir grup) + ikon optimizasyonu "yapılmadı" (öncül bayat)
 
 **İkon yükü maddesi kapatıldı — YAPMAYA DEĞMEZ (öncülü doğrulayarak).** Not "`categoryIcons.tsx`

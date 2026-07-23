@@ -77,7 +77,7 @@ export default async function AdminTopActions({ role }: { role: StaffRole }) {
           title="Canlı Görünüm — şu an uygulamayı kullananlar"
         >
           <span className="admin-live-btn-dot" />
-          Canlı kullanıcılar
+          Canlı müşteriler
           <span className="admin-live-btn-count">{online}</span>
         </Link>
       )}

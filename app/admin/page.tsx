@@ -23,8 +23,8 @@ export default async function AdminDashboard() {
   if (!hasAdminKey()) return <AdminKeyNotice />;
   const admin = createAdminClient()!;
 
-  /* Üye (kişi) ≠ profil: bir kişi hem bireysel hem işletme profili açabilir. Kart/yüzdeler PROFİL
-     bazlı; "Toplam Üye" gerçek kişi sayısı olmalı. PostgREST'te distinct count yok → auth_user_id
+  /* Müşteri (kişi) ≠ profil: bir kişi hem bireysel hem işletme profili açabilir. Kart/yüzdeler PROFİL
+     bazlı; "Toplam Müşteri" gerçek kişi sayısı olmalı. PostgREST'te distinct count yok → auth_user_id
      kolonu çekilip benzersizleştiriliyor (tek uuid kolonu; büyürse RPC gerekir → DB şeması = önce sor). */
   // Rol: agent Müşteriler'e giremez (requireAdminPage) → ona kart linki VERME, 404 yerdi.
   // (role/isAdminRole yukarıda, guard ile birlikte alınıyor.)
@@ -58,7 +58,7 @@ export default async function AdminDashboard() {
     ]);
 
   /* ⚠️ Hataları GÖSTER, yutma: `count ?? 0` sessizce 0'a düşüyordu → kolon/izin hatasında
-     panelin ilk ekranı "Toplam Üye 0 · %0" der ve kimse sebebini bilmez.
+     panelin ilk ekranı "Toplam Müşteri 0 · %0" der ve kimse sebebini bilmez.
      ⚠️ ticketsR/openR de LİSTEDE olmalı (denetim 2026-07-18 / Y4): destek sorgusu 400 dönerse
      tickets=[] + openCount=0 → kart "Bekleyen talep 0 · hepsi yanıtlandı" der ve müşteri
      talepleri sessizce yanıtsız kalır. Panelin BİRİNCİ işi bu. */
@@ -165,7 +165,7 @@ export default async function AdminDashboard() {
         ]
       : []),
     {
-      label: "Toplam Üye",
+      label: "Toplam Müşteri",
       value: members,
       sub: `${plural(total)} profil · son 7 günde +${recent}`,
       icon: Users,
@@ -183,12 +183,12 @@ export default async function AdminDashboard() {
     <div>
       <h1 className="admin-h1">Genel Bakış</h1>
       <p className="admin-sub">
-        Tüm üyeler ve abonelik dağılımı. Bir üye birden fazla profil açabilir — dağılımlar profil bazlıdır.
+        Tüm müşteriler ve abonelik dağılımı. Bir müşteri birden fazla profil açabilir — dağılımlar profil bazlıdır.
       </p>
       {ownersTruncated && (
         <p className="admin-sub" style={{ color: "var(--danger)", marginTop: -4 }}>
           ⚠️ Profil listesi 10.000&apos;de kırpıldı ({(ownersR.count ?? 0).toLocaleString("tr-TR")}{" "}
-          profil var). &quot;Toplam Üye&quot; ve &quot;Denemesi bitiyor&quot; artık EKSİK sayıyor —
+          profil var). &quot;Toplam Müşteri&quot; ve &quot;Denemesi bitiyor&quot; artık EKSİK sayıyor —
           bu sayaçlar RPC&apos;ye taşınmalı.
         </p>
       )}

@@ -53,11 +53,10 @@
 - [ ] **trial/abonelik analizi** (`/admin/musteriler` detay) — henüz yok. Destek talepleri kısmı 07-23'te bitti.
 - [ ] **Denetim O6 — birim çelişkisi:** pano PROFİL sayıyor, segmentler KİŞİ sayıyor; "Premium profil"
       kartı seg=paid ile uyuşmuyor. Ya birim etiketi ekle ya kişi-bazlı hesaba geç (karar gerek).
-- [ ] 🟢 **UX cila — KALAN** (07-23'te bir grup kapandı: satır klavye erişimi, boş seçili-segment çipi,
-      AI ay seçici pending, admin not-found kabuk içinde). Kalanlar: **terminoloji birliği** (Müşteri/Üye/
-      Kullanıcı/Hesap — hangi terim kanonik olsun, KARAR gerek) · PageHead deseni (21 yerde kopya başlık) ·
-      boş durum 3 ayrı sınıf birleştirme · `/admin/destek` filtre/arama/sayfalama · ekip formu label/aria ·
-      "son admin" koruması (düz yönetici modeli).
+- [ ] 🟢 **UX cila — KALAN** (07-23'te kapananlar: satır klavye erişimi, boş seçili-segment çipi,
+      AI ay seçici pending, admin not-found kabuk içinde, **terminoloji birliği = "Müşteri"** Mehmet
+      kararı). Kalanlar: PageHead deseni (21 yerde kopya başlık) · boş durum 3 ayrı sınıf birleştirme ·
+      `/admin/destek` filtre/arama/sayfalama · ekip formu label/aria · "son admin" koruması (düz yönetici modeli).
 - [ ] **Ölçek notu:** Dashboard "Toplam Üye" = distinct `auth_user_id` (PostgREST'te distinct count yok →
       kolon çekilip Set'leniyor, `.limit(10000)`). Binlerce profilde RPC gerekir → **DB şeması = önce sor**.
 - [ ] ⚡ **`listPeople()` ölçek borcu:** `/admin/destek` + `/admin/musteriler` `auth.users`'ı seri sayfalayıp

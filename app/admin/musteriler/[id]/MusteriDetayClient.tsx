@@ -124,7 +124,7 @@ export default function MusteriDetayClient({
         <div className="admin-panel-head">Profiller</div>
         {person.profiles.length === 0 ? (
           <p className="admin-td-dim" style={{ fontSize: 13 }}>
-            Bu üyenin profili yok (kayıt olmuş ama kuruluma girmemiş).
+            Bu müşterinin profili yok (kayıt olmuş ama kuruluma girmemiş).
           </p>
         ) : (
           <div className="admin-profile-list">

@@ -193,7 +193,7 @@ export default function MusterilerClient({
     <div>
       <h1 className="admin-h1">Müşteriler</h1>
       <p className="admin-sub">
-        {people.length.toLocaleString("tr-TR")} üye · {nProfiles.toLocaleString("tr-TR")} profil ·
+        {people.length.toLocaleString("tr-TR")} müşteri · {nProfiles.toLocaleString("tr-TR")} profil ·
         durum denemenin gerçek tarihinden hesaplanır, satıra tıkla.
       </p>
 
@@ -266,7 +266,7 @@ export default function MusterilerClient({
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="admin-empty-cell">Bu filtrede üye yok.</td>
+                <td colSpan={6} className="admin-empty-cell">Bu filtrede müşteri yok.</td>
               </tr>
             ) : (
               filtered.slice(0, 300).map((p) => {
@@ -345,7 +345,7 @@ export default function MusterilerClient({
       )}
       {truncated && (
         <p className="admin-sub" style={{ marginTop: 10 }}>
-          ⚠️ Kullanıcı listesi 10.000&apos;de kırpıldı — bu ekran sayfalama ister.
+          ⚠️ Müşteri listesi 10.000&apos;de kırpıldı — bu ekran sayfalama ister.
         </p>
       )}
     </div>

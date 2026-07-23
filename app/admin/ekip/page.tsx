@@ -42,7 +42,7 @@ export default async function AdminEkipPage() {
     const u = users.find((x) => x.id === r.user_id);
     const entry = byUser.get(r.user_id) ?? {
       id: r.user_id,
-      email: u?.email ?? "(kullanıcı bulunamadı)",
+      email: u?.email ?? "(hesap bulunamadı)",
       roles: [],
       since: r.created_at,
       departments: depsByUser.get(r.user_id) ?? [],

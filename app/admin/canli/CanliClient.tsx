@@ -78,7 +78,7 @@ export default function CanliClient({ snap, now }: { snap: LiveSnapshot; now: nu
     <div>
       <h1 className="admin-h1">Canlı Görünüm</h1>
       <p className="admin-sub">
-        Şu an uygulamayı kullananlar ve son 24 saatteki hareket. Kullanıcı uygulamayı açtığında
+        Şu an uygulamayı kullananlar ve son 24 saatteki hareket. Müşteri uygulamayı açtığında
         5 dakikada bir sinyal gönderir; &quot;şu an aktif&quot; = son 12 dakikada sinyal veren.
         Sayfa 30 saniyede bir kendini tazeler.
       </p>
@@ -173,7 +173,7 @@ export default function CanliClient({ snap, now }: { snap: LiveSnapshot; now: nu
                 <span>Biri paneli veya mobil uygulamayı açtığında burada anında belirir.</span>
               </p>
             ) : people.length === 0 ? (
-              <p className="live-empty">Aramanla eşleşen aktif kullanıcı yok.</p>
+              <p className="live-empty">Aramanla eşleşen aktif müşteri yok.</p>
             ) : (
               <>
                 <div className="live-people">
@@ -250,7 +250,7 @@ export default function CanliClient({ snap, now }: { snap: LiveSnapshot; now: nu
               <MapPin size={16} /> Konuma göre
             </div>
             {snap.cities.length === 0 ? (
-              <p className="admin-td-dim" style={{ fontSize: 13, margin: 0 }}>Aktif kullanıcı yok.</p>
+              <p className="admin-td-dim" style={{ fontSize: 13, margin: 0 }}>Aktif müşteri yok.</p>
             ) : (
               <div className="live-bars">
                 {snap.cities.map((c) => (
@@ -271,7 +271,7 @@ export default function CanliClient({ snap, now }: { snap: LiveSnapshot; now: nu
               <Smartphone size={16} /> Platform
             </div>
             {snap.platforms.length === 0 ? (
-              <p className="admin-td-dim" style={{ fontSize: 13, margin: 0 }}>Aktif kullanıcı yok.</p>
+              <p className="admin-td-dim" style={{ fontSize: 13, margin: 0 }}>Aktif müşteri yok.</p>
             ) : (
               <div className="live-chips">
                 {snap.platforms.map((p) => (

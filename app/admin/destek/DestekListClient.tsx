@@ -139,7 +139,7 @@ export default function DestekListClient({
     <div>
       <h1 className="admin-h1">Destek Talepleri</h1>
       <p className="admin-sub">
-        {rows.length} talep · {sayac.bekleyen} yanıt bekliyor. Satırda müşterinin üyelik tarihi,
+        {rows.length} talep · {sayac.bekleyen} yanıt bekliyor. Satırda müşterinin kayıt tarihi,
         planı ve son aktifliği görünür — talebe girmeden kiminle konuştuğunu bilirsin.
       </p>
 
@@ -318,8 +318,8 @@ export default function DestekListClient({
 
                     {/* 2. satır: BAĞLAM — üyelik, profil, son aktiflik, talep no */}
                     <div className="admin-ticket-meta">
-                      <span title="Üyelik tarihi">
-                        <CalendarPlus size={11} /> Üye: {fmtTarih(r.uyelik)}
+                      <span title="Kayıt tarihi">
+                        <CalendarPlus size={11} /> Kayıt: {fmtTarih(r.uyelik)}
                         {r.uyelik && <> ({relativeLabel(r.uyelik, now)})</>}
                       </span>
                       <span title="Profil sayısı">
