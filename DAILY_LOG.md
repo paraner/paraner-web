@@ -16,6 +16,29 @@
 
 ---
 
+## 2026-07-23 — sahibe bildirim SQL'i canlıda · app.paraner.com/admin kapatıldı
+
+**Kısa oturum, iki iş canlıya çıktı.**
+
+**① `destek-sahibe-bildirim.sql` çalıştırıldı + uçtan uca ölçüldü.** Mehmet "çalıştırdım mı?" diye
+sordu — cevap VERİDEN okunamadı (`notifications` tablosu 22.07 "Temizle" testinde boşaltılmıştı →
+"bildirim yok" kanıt değil), yalnız fonksiyon gövdesinde. Doğrulama 2/2 ✅, sonra service_role ile
+gerçek talep açıldı: sahibine `support_created` "Talebin alındı" düştü (link `/panel/...`), **tek
+satır** — sahip admin olduğu hâlde ekip bildirimi gitmedi (çift bildirim yok). Test artığı silindi.
+🔴 **Çalıştırmadan önce dosyada iki gerileme bulundu:** dosya fonksiyonu 20.07'deki canlı sürümden
+değil daha eski kopyadan türetmişti → (1) `IS DISTINCT FROM` sertleştirmesini `<>`'ye geri alıyordu
+(NULL'da ekibe hiç bildirim gitmeme riski), (2) tipi `support_new_ticket`→`support_new` yeniden
+adlandırıyordu. İkisi de düzeltildi. **Ders:** aynı fonksiyonu N dosya `CREATE OR REPLACE` ediyorsa
+yeni dosyayı EN SON çalıştırılanın gövdesinden türet.
+
+**② `app.paraner.com/admin` kapatıldı (Mehmet kararı).** İki URL'den açılan admin panelini
+tekilleştirme. Karar: cross-host köprü KURMA — app'ten admin'e otomatik yönlendirme yapma; admin'e
+girecek `admin.paraner.com`'a kendisi bassın. proxy.ts'e mevcut `admin.*+/panel→app.*` kuralının
+simetriği eklendi: `isApp && /admin → /panel`. Güvenlik zaten `requireStaffPage` guard'ındaydı;
+bu yalnız adresi tekilleştirdi. İç link taraması temiz (`goPanel` köke atıyor, admin'e link yok).
+Lokal prod'da 4 senaryo curl ile + **canlıda** doğrulandı: `app.paraner.com/admin → /panel` ✅,
+`admin.paraner.com` etkilenmedi. tsc+build temiz.
+
 ## 2026-07-22 — talep silme · müşteri talep akışı · çan toplu işlemleri · agent yetki testi
 
 **Talep silme (admin-only) eklendi ve canlıya çıktı.** SQL/şema gerekmedi (`ticket_messages`
