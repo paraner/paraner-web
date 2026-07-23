@@ -438,8 +438,18 @@
       ✅ Yerel prod + canlı Supabase'te doğrulandı (3/3): patlama gitti (29 istek, hepsi 2-14 ms) ·
       önbellek isabet ediyor (musteriler 2194→451 ms) · **yazma sonrası önbellek anında düşüyor**
       (profil adı değiştirildi → liste hemen güncellendi → geri alındı).
-- [ ] ⏳ **PROD ÖLÇÜMÜ BEKLİYOR** — deploy sonrası aynı betikle (`donma-olcum.mjs`, scratchpad)
-      B/B2/C/A tekrar koşulacak. Beklenen: 5 859 ms → 1 sn altı. Sayı `docs/DONMA-TESHIS-2026-07-23.md`'ye yazılacak.
+- [x] ✅ **PROD ÖLÇÜMÜ YAPILDI (2026-07-23, deploy `53ec251` sonrası, aynı betik+hesap):**
+      şikâyet senaryosu **5 859 → 1 042 ms** (tekrarında 3 359 → 1 915 ms), gösterge 4-13 ms.
+      Isıtma patlaması canlıda da gitti: sekme öne gelince açılan 15 isteğin hepsi 108-326 ms.
+      `LiveRefresh` gecikmesi çalışıyor (pano tazelemesi +1 200 ms'de başlıyor).
+      **Niyet yolu ayrıca ölçüldü** (`niyet-olcum.mjs`): hover'sız 2 730 ms · hover'dan
+      **400 ms** sonra tıkla **315 ms** · 1,5 sn sonra **21 ms**. Full prefetch isteği artık
+      310-489 ms (dalga içinde 3-6 sn'ydi).
+      ⚠️ **Dürüst kayıt — kaybedilen taraf:** hover'sız tıklama (dokunmatik / fareyi durdurmadan
+      tıklama) 1,0-2,7 sn. Eskiden dalga TAMAMLANMIŞSA anındaydı; ama o dalga donmanın sebebiydi
+      ve arkada bekleyen sekmede zaten tamamlanmıyordu. Kalan sürenin şüphelisi soğuk lambda.
+      ⚠️ İlk koşumda "sıcak kontrol" adımı yanıltıcıydı (menü kutusuna hover ediyordu, oysa artık
+      link'in kendisine hover şart) → ayrı betikle düzeltildi.
 - [ ] **ESLint yapılandırması yok** — `npm run lint` çalışmıyor, kod denetimi tsc + build'e kalmış.
       Kullanılmayan değişken / eksik hook bağımlılığı / erişilebilirlik yakalanmıyor.
 - [ ] **Genel Bakış `transactions` limitsiz** (aşağıda da var) — panelin en yavaş sayfası (614 ms).

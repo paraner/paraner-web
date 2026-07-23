@@ -128,10 +128,42 @@ Sekmeye dönüp hemen başka sayfaya geçen kullanıcı o tazelemeyi artık hiç
 4. ✅ Destek'e tıklama yerelde: gösterge 4-6 ms, sayfa 444-544 ms.
    ⚠️ Yereldeki mutlak süreler prod'la kıyaslanamaz (Vercel lambda eşzamanlılık sınırı yok).
 
-### ⏳ KALAN: prod ölçümü
-Asıl kanıt canlıda: deploy sonrası **aynı betik** (`donma-olcum.mjs`) tekrar koşulup
-B/B2/C/A senaryoları ölçülecek ve bu dosyaya yazılacak. Beklenen: B'nin 5 859 ms'den
-1 sn altına inmesi.
+### ✅ PROD ÖLÇÜMÜ (deploy `53ec251` sonrası, aynı betik, aynı hesap)
+
+| Senaryo | ÖNCE | SONRA |
+|---|---|---|
+| **Sekmeden dön → 0,8 sn sonra tıkla** (Mehmet'in senaryosu) | 🔴 5 859 ms / 3 359 ms | **1 042 ms / 1 915 ms** |
+| Sekmeden dön → 15 sn bekle → tıkla | 17 ms | 622 ms |
+| Gösterge (`.nav-pending`) | 8-10 ms | **4-13 ms** |
+
+**Isıtma patlaması canlıda da gitti:** sekme öne gelince açılan 15 isteğin hepsi **108-326 ms**
+(ucuz kabuk). Tek uzun istek `/admin?_rsc` 2 324 ms ve o da **+1 200 ms**'de başlıyor — yani
+③'teki gecikme çalışıyor, tıklamanın önünü kesmiyor.
+
+#### Niyet (hover) yolu — ayrı ölçüm, `niyet-olcum.mjs`
+> ⚠️ İlk koşuda "sıcak kontrol" adımı YANILTICIYDI: `.admin-sidebar`'a hover ediyordu, oysa o
+> artık kaldırılmış `onMouseEnter` tetikleyicisi içindi. Link'in KENDİSİNE hover şart.
+
+| Tıklamadan önce | Sayfa çizildi |
+|---|---|
+| hover YOK | 2 730 ms |
+| hover → **400 ms** sonra tıkla (gerçekçi masaüstü) | ✅ **315 ms** |
+| hover → 1,5 sn sonra tıkla | ✅ **21 ms** |
+| hover → 3 sn sonra tıkla | ✅ **21 ms** |
+
+Full prefetch isteğinin kendisi artık **310-489 ms** (dalga içinde 3-6 sn'ydi). Fare linkin
+üstünden geçtiği an tam yük başlıyor; masaüstünde tıklama ondan 200-800 ms sonra geldiği için
+pratikte ~300 ms'de açılıyor, 1,5 sn duraklarsa anında.
+
+#### Dürüst okuma — ne kazandık, ne kaybettik
+- ✅ **Şikâyet edilen senaryo 3-5× düzeldi** (5 859 → 1 042 ms) ve her durumda 4-13 ms'de gösterge var.
+- ✅ **Masaüstünde normal kullanım (fare link üstünden geçer) hâlâ anında** (21-315 ms).
+- ⚠️ **Kaybedilen:** hover'sız tıklama (dokunmatik, ya da fareyi hiç durdurmadan tıklama)
+  artık 1,0-2,7 sn. Eskiden bu, ısıtma DALGASI TAMAMLANMIŞSA anındaydı — ama tam da o dalga
+  donmanın sebebiydi ve arkada bekleyen sekmede zaten tamamlanmıyordu.
+- ℹ️ Kalan 1-2,7 sn'nin şüphelisi artık eşzamanlılık değil, **Vercel Hobby soğuk lambda**
+  (GOREVLER'de ayrı madde). Dokunmatik kullanım gerçekten sorun olursa çözüm ısıtmayı geri
+  getirmek DEĞİL, o maddedir.
 
 ## Yapılacak (öneri — ÜÇÜ DE YUKARIDA UYGULANDI)
 

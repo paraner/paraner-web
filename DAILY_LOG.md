@@ -16,6 +16,46 @@
 
 ---
 
+## 2026-07-23 (2) — DONMA çözüldü: suçlu, donmayı çözmek için yazdığım ısıtmanın kendisiymiş
+
+19.07'de bildirilen *"sekmeden çıkıp geri girince Destek'e basınca donuyor"* ilk kez **canlıda
+gerçek tarayıcıyla ölçüldü** (o gün düzeltmeler push edilmemişti, bugün canlıdaydı).
+Ölçüm: sekmeden dönüp 0,8 sn sonra tıkla → **5 859 ms**; dönüp 15 sn bekleyip tıkla → **17 ms**.
+Aynı sayfa, aynı veri — tek fark tıklamanın ısıtma dalgasının içine mi düştüğü.
+
+🔴 **Kök neden: 19.07'de bu donmayı çözmek için eklediğim `useRewarmPrefetch`.** Sekme öne
+gelince 7 rotayı birden `kind:"full"` ısıtıyor, `LiveRefresh` de panoyu tazeliyordu → 10 istek
+aynı anda. Arka uç fiilen **tek isteği seri işliyor**: aynı rota eşzamanlı 3-6 sn, tek başına
+0,1-1,1 sn. Kullanıcının tıkladığı sayfa **kendi ısıtma isteğinin arkasında** kuyruğa giriyordu.
+Yani mekanizma, hızlandırmak için yazıldığı senaryoyu 4× yavaşlatıyordu.
+✅ Yan tespit: `NavPending` işini yapıyor (gösterge 8-10 ms) → *"hiçbir tepki yok"* kısmı zaten
+19.07'de çözülmüştü; kalan şey beklemenin kendisiydi.
+
+**Düzeltme (3 parça, iki paneli de kapsıyor):** ① toplu ısıtma kaldırıldı — hook silindi, menü
+linkleri `prefetch={true}` (= tam rota + verisi) yerine `auto`; tam yük yalnız NİYETTE
+(`unstable_dynamicOnHover`). ② `listPeopleCached()` = 60 sn `unstable_cache`, 6 aksiyon
+`updateTag` ile anında düşürüyor. ③ `LiveRefresh` odak tazelemesi 1,2 sn gecikmeli.
+
+⚠️ **19.07'nin gerekçesi iki ayaktan da çürüdü.** "Dokunmatikte hover yok → peşin ısıtma şart"
+denmişti; Next'in Link'i **dokunmayı da niyet sayıyor** (`onTouchStart` → `onNavigationIntent`,
+hover ile birebir aynı Full yükseltmesi — `next/dist/client/app-dir/link.js:340-354`). Belgeye
+değil KAYNAĞA bakılarak doğrulandı.
+
+**SONUÇ (prod, deploy sonrası aynı betik):** şikâyet senaryosu **5 859 → 1 042 ms**, gösterge
+4-13 ms, ısıtma dalgasındaki 15 isteğin hepsi 108-326 ms. Niyet yolu ayrıca ölçüldü:
+hover'sız 2 730 ms · hover'dan **400 ms** sonra tıkla **315 ms** · 1,5 sn sonra **21 ms**.
+⚠️ **Dürüst kayıt:** hover'sız tıklama (dokunmatik) 1-2,7 sn'ye çıktı — eskiden dalga
+tamamlanmışsa anındaydı, ama o dalga donmanın sebebiydi ve arkadaki sekmede zaten
+tamamlanmıyordu. Kalanın şüphelisi soğuk lambda.
+
+⚠️ **Kendi ölçüm hatalarım (ikisi de "seçici/varsayım uydurma" sınıfı):** ① içerik dedektörü
+olarak `.admin-ticket-row` seçtim — o sınıf **Genel Bakış panosunda da var** (`page.tsx:242`),
+tıklamadan önce DOM'daydı, "1 ms'de geldi" diye yalan ölçüyordu. ② "sıcak kontrol" adımı
+`.admin-sidebar`'a hover ediyordu, oysa o artık **kaldırdığım** tetikleyiciydi; link'in
+kendisine hover etmeden `unstable_dynamicOnHover` hiç çalışmıyor → "hover fayda etmiyor"
+diye yanlış sonuç çıkaracaktım. İkisi de ayrı betikle düzeltildi.
+Tam rapor: `docs/DONMA-TESHIS-2026-07-23.md`.
+
 ## 2026-07-23 — sahibe bildirim SQL'i canlıda · app.paraner.com/admin kapatıldı · DMARC teşhisi
 
 **İki iş canlıya çıktı, bir teşhis yapıldı (DMARC — kod/DNS değişmedi, ön koşul bekliyor).**
