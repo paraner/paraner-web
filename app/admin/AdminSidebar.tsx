@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Users, LifeBuoy, UsersRound, Radio, ScrollText, Sparkles } from "lucide-react";
 import LogoutButton from "../panel/LogoutButton";
 import NavPending from "../components/NavPending";
-import { useRewarmPrefetch } from "../components/useRewarmPrefetch";
 import type { StaffRole } from "../../lib/adminGuard";
 
 /* `unstable_dynamicOnHover` App Router Link'inde VAR ama next/link tip tanımına yansımamış
@@ -32,33 +31,8 @@ export default function AdminSidebar({ role, email }: { role: StaffRole; email: 
   const pathname = usePathname();
   const items = ITEMS.filter((it) => !it.adminOnly || role === "admin");
 
-  /* ⚠️ ADMIN YAVAŞLIĞININ SEBEBİ BUYDU (2026-07-18, Mehmet: "sayfalar arası geçiş yavaş").
-     Müşteri panelinde 14.07'de çözülen mekanizma admin'e HİÇ uygulanmamıştı: menü düz
-     <Link> kullanıyordu. next.config'teki dynamicOnHover + staleTimes AÇIK ama ikisi de
-     LINK TARAFINDA OPT-IN ister — bayrak tek başına yetmiyor.
-
-     Next 16'da <Link> DİNAMİK rotalarda yalnız loading sınırına kadar prefetch eder, SAYFA
-     VERİSİNİ GETİRMEZ → tıklamada veri turu sıfırdan başlar (panelde ölçüm: 1554 ms + iskelet;
-     ısıtılmış rota 14-26 ms). Admin sayfaları daha da ağır (listPeople auth API + profiller).
-
-     İki katman birlikte:
-     1) router.prefetch(kind:"full") → menüdeki TÜM admin rotaları peşin ısıtılır. Panelde
-        "çekirdek 6 rota" seçmiştik çünkü orada 30+ link var; admin'de en fazla 7 rota var,
-        hepsini ısıtmak ucuz ve dokunmatikte hover olmadığı için ŞART.
-     2) unstable_dynamicOnHover → hover'da tam yüke yükselt (peşin ısıtma kaçarsa yedek).
-     ⚠️ Prefetch DEV'de kapalıdır → etki yalnız prod'da ölçülür.
-
-     ⚠️ 2026-07-19 EKİ: bu ısıtma MOUNT'TA BİR KEZ yapılıyordu ve `staleTimes.dynamic: 30`
-     onu 30 saniyede bayatlatıyordu → panel bir süre açık kalınca ısıtma boşa gidiyor,
-     tıklama yine soğuk tura düşüyordu (Mehmet: "Destek'e bastım, 8-9 sn hiçbir tepki yok").
-     Artık `useRewarmPrefetch` sekme öne geldiğinde ve fare menüye girdiğinde tekrar ısıtıyor. */
-  const isit = useRewarmPrefetch(items.map((it) => it.href));
-
   return (
-    /* Fare menüye girer girmez ısıt — tıklamadan önceki son şans (dokunmatikte hover yok,
-       orada sekme-öne-gelme tetikleyicisi devrede). <nav>'da değil <aside>'da: marka alanı
-       nav'ın dışında ve fare menüye çoğu zaman oradan geçerek giriyor. */
-    <aside className="admin-sidebar" onMouseEnter={isit} onFocus={isit}>
+    <aside className="admin-sidebar">
       {/* Metin wordmark yerine müşteri panelindeki GÖRSEL wordmark (Mehmet, 2026-07-18):
           iki panelin markası aynı görünsün. Altında oturum açık hesap yazıyor. */}
       <div className="admin-brand">
@@ -76,11 +50,23 @@ export default function AdminSidebar({ role, email }: { role: StaffRole; email: 
           const active = it.exact ? pathname === it.href : pathname.startsWith(it.href);
           const Icon = it.icon;
           return (
+            /* ⚠️ `prefetch` (=true) BİLEREK KALDIRILDI — 2026-07-23 ölçümü.
+               `prefetch={true}` = TAM rota + VERİSİ (next docs link.md:303). Menüdeki 7 link
+               de görüş alanında olduğu için her mount'ta 7 ağır sunucu render'ı birden
+               tetikleniyordu. Ölçüm (prod): eşzamanlı koşan bu rotalar 3-6 sn sürüyor,
+               tek başına 0,1-1,1 sn — yani kapasite fiilen TEK isteği seri işliyor
+               (Vercel Hobby + Supabase Free). Kullanıcı tam o sırada tıklayınca kendi sayfası
+               kuyruğun arkasına düşüyordu: Destek 5 859 ms (docs/DONMA-TESHIS-2026-07-23.md).
+               Prop'suz hâli `auto`: dinamik rotada YALNIZ `loading.tsx` sınırına kadar ucuz
+               kabuk prefetch'i (ölçüm: 110-450 ms) → tıklamada iskelet ANINDA çıkar.
+               Tam yük NİYETTE geliyor: `unstable_dynamicOnHover` hover'da VE DOKUNMADA
+               (link.js:340-354 `onTouchStart` → `onNavigationIntent`) tek bir rotayı
+               Full'e yükseltir. Yani bedel yalnız kullanıcının gerçekten istediği sayfa için
+               ödeniyor, hepsi için değil. */
             <NavLink
               key={it.href}
               href={it.href}
               className={`admin-nav-item${active ? " active" : ""}`}
-              prefetch
               unstable_dynamicOnHover
             >
               <Icon size={18} />

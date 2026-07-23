@@ -420,13 +420,26 @@
       **önbellek yok**. Bugün acıtmıyor (kullanıcı az; DB ölçüldü: sorgular 0.35-0.5 sn, throttle YOK) ama
       birkaç bin kullanıcıda sayfayı kilitler. Çözüm: taleplerden gelen `user_id` setiyle `.in(...)` daraltma.
       ⚠️ Daraltma sorguları SERİLEŞTİRİR (önce talepler, sonra kişiler) → küçük ölçekte net kayıp; **ölçek gelince** yapılacak.
-- [ ] 🔴 **DONMA DEVAM EDİYOR (Mehmet, 2026-07-19 akşam):** "sekmeden çıkıp geri girince, Genel
-      Bakış'tayken Destek'e basınca donuyor." ⚠️ **Düzeltmeler o an CANLIDA DEĞİLDİ** (5 commit
-      push edilmemişti) → önce deploy edip TEKRAR bak; hâlâ sürüyorsa sebep ısıtma/gösterge değil,
-      aşağıdaki soğuk lambda + `listPeople` maddeleri.
-- [ ] **8-9 sn'nin kalanı ÖLÇÜLMEDİ** — DB temiz çıktığına göre kalan şüpheli **Vercel Hobby soğuk lambda**
-      (aşağıda ayrı madde). Doğrulama: sekmeyi uzun süre arkada bırak, DevTools Network açıkken tıkla,
-      RSC isteğinin **TTFB**'sine bak. Soğuk başlangıçsa TTFB yüksek, sunucu render'ı kısa olur.
+- [x] 🔴 **DONMA ÖLÇÜLDÜ + KÖK NEDEN BULUNDU + DÜZELTİLDİ (2026-07-23)** — tam rapor:
+      `docs/DONMA-TESHIS-2026-07-23.md`. Canlı prod'da gerçek tarayıcıyla ölçüldü:
+      sekmeden dönüp 0,8 sn sonra Destek'e basınca sayfa **5 859 ms** (tekrarında 3 359 ms);
+      dönüp 15 sn bekleyince **17 ms**, sıcak kontrol **14 ms**.
+      🔴 **Sebep 19.07'de bu donmayı çözmek için eklediğim mekanizmanın KENDİSİYDİ:** sekme öne
+      gelince `useRewarmPrefetch` 7 rotayı birden `kind:"full"` ısıtıyor + `LiveRefresh` panoyu
+      tazeliyordu → 10 istek aynı anda. Arka uç (Vercel Hobby + Supabase Free) fiilen TEK isteği
+      seri işliyor: aynı rota eşzamanlı 3-6 sn, tek başına 0,1-1,1 sn. Kullanıcının tıkladığı
+      sayfa kendi ısıtma isteğinin arkasında kuyrukta bekliyordu.
+      ✅ `NavPending` işini yapıyor (gösterge 8-10 ms) → "hiçbir tepki yok" kısmı zaten çözülmüş.
+      **Düzeltme (3 parça):** ① ısıtma patlaması kaldırıldı — hook silindi, linkler
+      `prefetch={true}` yerine `auto`, tam yük yalnız NİYETTE (hover **VE DOKUNMA** — Next
+      kaynağıyla doğrulandı) · ② `listPeopleCached()` 60 sn `unstable_cache` + 6 aksiyonda
+      `updateTag` · ③ `LiveRefresh` odak tazelemesi 1,2 sn gecikmeli.
+      ⚠️ **Aynı hook müşteri panelinde de vardı** (6 rota) → orası da düzeldi.
+      ✅ Yerel prod + canlı Supabase'te doğrulandı (3/3): patlama gitti (29 istek, hepsi 2-14 ms) ·
+      önbellek isabet ediyor (musteriler 2194→451 ms) · **yazma sonrası önbellek anında düşüyor**
+      (profil adı değiştirildi → liste hemen güncellendi → geri alındı).
+- [ ] ⏳ **PROD ÖLÇÜMÜ BEKLİYOR** — deploy sonrası aynı betikle (`donma-olcum.mjs`, scratchpad)
+      B/B2/C/A tekrar koşulacak. Beklenen: 5 859 ms → 1 sn altı. Sayı `docs/DONMA-TESHIS-2026-07-23.md`'ye yazılacak.
 - [ ] **ESLint yapılandırması yok** — `npm run lint` çalışmıyor, kod denetimi tsc + build'e kalmış.
       Kullanılmayan değişken / eksik hook bağımlılığı / erişilebilirlik yakalanmıyor.
 - [ ] **Genel Bakış `transactions` limitsiz** (aşağıda da var) — panelin en yavaş sayfası (614 ms).

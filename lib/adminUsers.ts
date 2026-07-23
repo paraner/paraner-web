@@ -1,5 +1,11 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { createAdminClient } from "./supabase/admin";
+
+/** `listPeopleCached()` önbelleğinin etiketi. Kişi/profil değiştiren HER server action
+    `revalidateTag(KISILER_TAG)` çağırmalı — yoksa yönetici sildiği müşteriyi listede
+    görmeye devam eder (CLAUDE.md kural 1'in sunucu-önbelleği karşılığı). */
+export const KISILER_TAG = "admin-kisiler";
 
 /* Admin panelinin "müşteri" görünümü.
    ⚠️ Şema gerçeği: e-posta `profiles`'ta YOK — kişi auth.users'ta. `profiles.auth_user_id` kişiye
@@ -126,6 +132,43 @@ export async function listPeople(): Promise<{
 
   people.sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
   return { people, truncated };
+}
+
+/* ── ÖNBELLEKLİ SÜRÜM (2026-07-23) ─────────────────────────────────────────────
+   NEDEN: `listPeople()` iki admin sayfasının (destek + müşteriler) en ağır ayağı —
+   auth.users'ı SERİ sayfalıyor + profiles ve user_devices tam tablosunu çekiyor.
+   2026-07-23 ölçümünde bu iki rota eşzamanlı koştuğunda 3-6 sn'ye çıkıyordu
+   (docs/DONMA-TESHIS-2026-07-23.md).
+   NEDEN GÜVENLİ: fonksiyon service_role ile çalışıyor, ÇEREZ OKUMUYOR → oturuma bağlı
+   hiçbir şey önbelleğe girmiyor. (19.07'de /admin panosunda tam bu ayrım yüzünden sayfa
+   patlamıştı: `unstable_cache` içinde cookie okumak YASAK — bkz. lib/adminMetrics.ts:98.)
+   Yetki DEĞİŞMİYOR: iki çağıran da kendi guard'ını (requireStaffPage/requireAdminPage)
+   çalıştırmaya devam ediyor; önbellek yalnız VERİYİ paylaşıyor, erişimi değil.
+   ⚠️ HATA ÖNBELLEĞE GİRMEZ: hata durumunda `throw` ediyoruz — `unstable_cache` yalnız
+   başarılı dönüşü saklar. Yoksa geçici bir PostgREST hatası 60 sn boyunca "müşteri
+   bilgileri okunamadı" diye ekrana yapışırdı. */
+const listPeopleOnbellekli = unstable_cache(
+  async () => {
+    const r = await listPeople();
+    if (r.error) throw new Error(r.error);
+    return r;
+  },
+  ["admin-kisiler"],
+  { revalidate: 60, tags: [KISILER_TAG] },
+);
+
+/** `listPeople()` ile aynı sözleşme, 60 sn sunucu önbellekli.
+    Yazma işlemleri `revalidateTag(KISILER_TAG)` ile anında düşürür. */
+export async function listPeopleCached(): Promise<{
+  people: AdminPerson[];
+  truncated: boolean;
+  error?: string;
+}> {
+  try {
+    return await listPeopleOnbellekli();
+  } catch (e) {
+    return { people: [], truncated: false, error: (e as Error).message };
+  }
 }
 
 /** Tek kişi + profilleri. Bulunamazsa null. */

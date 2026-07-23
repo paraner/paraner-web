@@ -1,6 +1,6 @@
 import { requireStaffPage } from "../../../lib/adminGuard";
 import { createClient } from "../../../lib/supabase/server";
-import { listPeople } from "../../../lib/adminUsers";
+import { listPeopleCached } from "../../../lib/adminUsers";
 import { TICKET_COLS, type Ticket } from "../../../lib/supportShared";
 import { personLifecycle, lifecycleLabel, LIFECYCLE_META, displayName } from "../../../lib/lifecycle";
 import DestekListClient, { type TicketRow } from "./DestekListClient";
@@ -29,7 +29,7 @@ export default async function AdminDestekPage() {
       .select(TICKET_COLS)
       .order("last_message_at", { ascending: false })
       .limit(200),
-    listPeople(),
+    listPeopleCached(),
     /* Silinmiş müşterinin talebinde "kim, neden sildi" gösterebilmek için.
        ⚠️ Talep ↔ silinen kişi arasında join edecek anahtar YOK: user_id silinince NULL'a
        düşüyor (ON DELETE SET NULL). Bağı `detail.ticket_ids` kuruyor — deleteUserAccount

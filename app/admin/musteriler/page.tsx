@@ -1,6 +1,6 @@
 import { hasAdminKey } from "../../../lib/supabase/admin";
 import { requireAdminPage } from "../../../lib/adminGuard";
-import { listPeople } from "../../../lib/adminUsers";
+import { listPeopleCached } from "../../../lib/adminUsers";
 import AdminKeyNotice from "../AdminKeyNotice";
 import MusterilerClient from "./MusterilerClient";
 
@@ -9,7 +9,7 @@ export default async function AdminMusterilerPage() {
   if (!hasAdminKey()) return <AdminKeyNotice />;
 
   // Müşteri = KİŞİ (auth.users), profiller onun altında. E-posta profiles'ta yok → auth'tan gelir.
-  const { people, truncated, error } = await listPeople();
+  const { people, truncated, error } = await listPeopleCached();
 
   // Hata varsa BOŞ LİSTE ÇİZME — "müşteri yok" yalanı yerine gerçeği söyle.
   if (error) {

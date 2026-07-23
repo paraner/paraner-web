@@ -27,7 +27,6 @@ import {
 import { BUSINESS_SECTIONS, type BusinessMenuItem } from "./businessMenu";
 import LogoutButton from "./LogoutButton";
 import NavPending from "../components/NavPending";
-import { useRewarmPrefetch } from "../components/useRewarmPrefetch";
 
 // `unstable_dynamicOnHover` App Router Link'inde VAR (next/dist/client/app-dir/link.d.ts:125)
 // ama `next/link` girişinin tip tanımına henüz yansımamış → prop'u tipe tanıtan ince sarmalayıcı.
@@ -40,25 +39,22 @@ const MAX_PROFILES = 3; // mobil ile aynı: kullanıcı en fazla 3 hesap açabil
 const COLLAPSE_KEY = "paraner-sidebar-collapsed";
 const FAV_KEY = "paraner-fav-ops"; // favori işlemler (web'e özel)
 // Sidebar genişlikleri (globals.css ile aynı): sürükle-bırak snap için referans
-// Çekirdek rotalar: menü göründüğü anda TAM YÜK (veri dahil) prefetch edilir → tıklama anında
-// açılır, iskelet görünmez. Alt menülerdeki 30+ link hover'da ısınıyor (unstable_dynamicOnHover)
-// — hepsini peşin çekmek her açılışta 30 sunucu render'ı demek olurdu.
-//
-// Neden hover YETMİYOR da peşin liste gerekiyor: canlı ölçüm (2026-07-14, admin hesabı) —
-// hover'lı tıklama 14-26 ms (iskelet YOK), hover'sız ısıtılmamış rota 1554 ms (iskelet VAR).
-// Dokunmatikte hover diye bir şey yok → telefondan panele girenler o 1.5 sn'yi yerdi.
-// Bu yüzden en sık kullanılan rotalar peşin ısıtılıyor.
-const CORE_PREFETCH = new Set([
-  "/panel",
-  "/panel/islemler",
-  "/panel/hesaplar",
-  "/panel/cuzdanim",
-  "/panel/faturalar",
-  "/panel/ayarlar",
-]);
-// Aynı liste dizi hâlinde (useRewarmPrefetch dizi bekliyor) — MODÜL düzeyinde sabit,
-// her render'da yeni referans üretilmesin.
-const CORE_PREFETCH_LIST = [...CORE_PREFETCH];
+/* ⚠️ "ÇEKİRDEK ROTALARI PEŞİN TAM ISIT" LİSTESİ KALDIRILDI (2026-07-23, canlı ölçüm).
+   Eski gerekçe (14.07): hover'lı tıklama 14-26 ms, ısıtılmamış rota 1554 ms; dokunmatikte
+   hover yok → en sık 6 rotayı peşin tam yükle ısıtalım.
+   ÖLÇÜM İKİ AYAĞINI DA ÇÜRÜTTÜ (admin panelinde, docs/DONMA-TESHIS-2026-07-23.md):
+   1) Peşin ısıtma BEDAVA DEĞİL. `prefetch={true}` = tam rota + verisi; görüş alanındaki
+      linklerin hepsi birden ağır sunucu render'ı tetikliyor. Arka uç (Vercel Hobby +
+      Supabase Free) fiilen TEK isteği seri işliyor: aynı rota eşzamanlı 3-6 sn, tek başına
+      0,1-1,1 sn. Kullanıcı o sırada tıklarsa kendi sayfası kuyruğun ARKASINA düşüyor
+      (ölçüldü: Destek 5 859 ms — yani ısıtma, hızlandırmak için yazıldığı senaryoyu
+      4× YAVAŞLATIYORDU).
+   2) "Dokunmatikte hover yok" doğru ama sonucu yanlış: Next'in Link'i DOKUNMAYI da niyet
+      sayıyor — `onTouchStart` → `onNavigationIntent(el, upgrade)` ile aynı Full yükseltmesini
+      yapıyor (next/dist/client/app-dir/link.js:340-354). Yani `unstable_dynamicOnHover`
+      dokunmatikte de çalışıyor, peşin listeye gerek yok.
+   Artık: tüm linkler `auto` (dinamik rotada yalnız `loading.tsx` sınırına kadar UCUZ kabuk
+   prefetch'i → tıklamada iskelet anında) + niyet gösterilen TEK rota Full'e yükseliyor. */
 
 const SIDEBAR_OPEN = 248;
 const SIDEBAR_COLLAPSED = 74;
@@ -90,15 +86,6 @@ export default function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
 
-  // Çekirdek rotaları panel açılır açılmaz ISIT (veri dahil tam yük).
-  // Link'teki prefetch={true} viewport'a bağlıdır: Faturalar gibi KAPALI akordeon içindeki
-  // linkler hiç görünmediği için asla ısınmazdı. router.prefetch viewport'tan bağımsız çalışır.
-  // kind:"full" şart — varsayılan (auto) dinamik rotada yalnız kabuğu getirir, veriyi getirmez.
-  //
-  // ⚠️ 2026-07-19: bu ısıtma MOUNT'TA BİR KEZ yapılıyordu, `staleTimes.dynamic: 30` ise onu
-  // 30 saniyede bayatlatıyordu → panel bir süre açık kalınca ısıtma boşa gidiyordu. Artık
-  // sekme öne gelince + fare menüye girince tekrar ısıtılıyor (bkz. useRewarmPrefetch).
-  const isit = useRewarmPrefetch(CORE_PREFETCH_LIST);
   const searchParams = useSearchParams();
   const supabase = createClient();
 
@@ -474,12 +461,6 @@ export default function Sidebar({
       ref={asideRef}
       className={`panel-sidebar${showCollapsed ? " collapsed" : ""}${dragging ? " dragging" : ""}`}
       style={dragWidth !== null ? { width: `${dragWidth}px` } : undefined}
-      /* Fare menüye girer girmez rotaları tazele — tıklamadan önceki son şans (dokunmatikte
-         hover yok, orada sekme-öne-gelme tetikleyicisi devrede).
-         ⚠️ Bu <aside>'da, `.panel-nav`da DEĞİL: alt menü (Ayarlar/Destek) o <nav>'ın DIŞINDA,
-         doğrudan oraya giden fare ısıtmayı hiç tetiklemiyordu. */
-      onMouseEnter={isit}
-      onFocus={isit}
     >
       <div className="panel-brand">
         {/* Açık: tam PARANER wordmark · Daraltılmış: aynı wordmark'tan kırpılmış temiz P.
@@ -649,10 +630,8 @@ export default function Sidebar({
                   href={item.href}
                   className={`panel-nav-item${isActive(item.href) ? " active" : ""}`}
                   title={collapsed ? item.label : undefined}
-                  // Çekirdek rotalar (Genel Bakış / İşlemler / Hesaplar / Cüzdanım): hover'ı
-                  // BEKLEMEDEN tam yükü (veri dahil) çek → menüde bunlar hep sıcak, tıklama anında.
-                  // Alt menülerdeki 30+ link'e verilmez; onlar hover'da yükseliyor (aşağıda).
-                  prefetch={CORE_PREFETCH.has(item.href) ? true : undefined}
+                  // prefetch prop'u YOK = `auto` (ucuz kabuk prefetch'i). Tam yük niyette
+                  // geliyor — sebebi yukarıdaki CORE_PREFETCH notunda.
                   unstable_dynamicOnHover
                 >
                   {item.icon}

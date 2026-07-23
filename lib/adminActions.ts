@@ -1,6 +1,19 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+/* ⚠️ `listPeopleCached()` 60 sn SUNUCU önbellekli (lib/adminUsers.ts). `revalidatePath` bunu
+   düşürmez — o rota önbelleğini hedefler, `unstable_cache` girdisini değil. Kişi/profil
+   değiştiren her aksiyon etiketi ELLE düşürmeli, yoksa yönetici sildiği/askıya aldığı
+   müşteriyi 60 sn daha listede görür.
+
+   ⚠️ `revalidateTag` DEĞİL `updateTag` (Next 16): `revalidateTag(tag, "max")` bayat-içeriği
+   servis edip arkada tazeliyor (stale-while-revalidate) — yani yönetici sildiği müşteriyi
+   BİR KEZ DAHA listede görürdü, tam da kaçındığımız hata sınıfı. `updateTag` anında
+   düşürüyor, sonraki istek taze veriyi BEKLİYOR (read-your-own-writes) ve yalnız server
+   action'dan çağrılabiliyor — bu dosyanın tamamı zaten "use server".
+   İkisi de aynı iç `revalidate()` çağrısına iniyor (next/dist/server/web/spec-extension/
+   revalidate.js:40-63) → `unstable_cache` etiketleri de kapsam içinde. */
+import { KISILER_TAG } from "./adminUsers";
 import { createAdminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
 import { getStaffRole, getSessionUser } from "./adminGuard";
@@ -167,6 +180,7 @@ export async function updateProfileInfo(
     { profileId, profileName: ad, profileType, currency },
   );
   revalidatePath("/admin/musteriler");
+  updateTag(KISILER_TAG); // kişi/profil değişti → önbellekli müşteri listesi düşsün
   return { ok: true, message: `Profil güncellendi: ${ad}.` };
 }
 
@@ -201,6 +215,7 @@ export async function changeUserEmail(
 
   await logAction(actor, "email_changed", { userId, email: oldEmail }, { newEmail: yeni });
   revalidatePath("/admin/musteriler");
+  updateTag(KISILER_TAG); // kişi/profil değişti → önbellekli müşteri listesi düşsün
   return {
     ok: true,
     message: `E-posta ${yeni} olarak değişti. Müşteri artık bu adresle giriyor.`,
@@ -279,6 +294,7 @@ export async function setProfilePlan(
     { profileId, tier: nextTier },
   );
   revalidatePath("/admin/musteriler");
+  updateTag(KISILER_TAG); // kişi/profil değişti → önbellekli müşteri listesi düşsün
   return {
     ok: true,
     message: isPremium
@@ -307,6 +323,7 @@ export async function setUserBanned(
 
   await logAction(actor, banned ? "user_banned" : "user_unbanned", { userId, email });
   revalidatePath("/admin/musteriler");
+  updateTag(KISILER_TAG); // kişi/profil değişti → önbellekli müşteri listesi düşsün
   return {
     ok: true,
     message: banned ? "Hesap askıya alındı — giriş yapamaz." : "Askı kaldırıldı, hesap tekrar aktif.",
@@ -367,6 +384,7 @@ export async function deleteUserAccount(
   }
 
   revalidatePath("/admin/musteriler");
+  updateTag(KISILER_TAG); // kişi/profil değişti → önbellekli müşteri listesi düşsün
   return { ok: true, message: `${email} kalıcı olarak silindi.` };
 }
 
@@ -621,6 +639,10 @@ export async function inviteStaff(
     { role, departments: deps, roleGranted: !roleErr, departmentsGranted: !depErr }
   );
   revalidatePath("/admin/ekip");
+  /* Davet YENİ bir auth kullanıcısı yaratabiliyor → müşteri listesinde de görünür.
+     (Diğer /admin/ekip aksiyonları yalnız user_roles/staff_departments'a dokunuyor,
+     listPeople onları okumuyor → orada etiket düşürmeye gerek yok.) */
+  updateTag(KISILER_TAG);
   if (!newUserId)
     return {
       ok: false,
