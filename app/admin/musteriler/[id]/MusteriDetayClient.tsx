@@ -463,18 +463,18 @@ export default function MusteriDetayClient({
         </div>
       </div>
 
-      {/* --- Tehlike bölgesi --- */}
+      {/* --- Tehlike bölgesi (ayarlar deseniyle aynı sözleşme: dz-info + dz-btn) --- */}
       <div className="danger-zone" style={{ marginTop: 16 }}>
-        <div className="admin-panel-head" style={{ color: "var(--danger)" }}>
-          Tehlike Bölgesi
+        <div className="dz-info">
+          <div className="dz-title">Tehlike Bölgesi</div>
+          <div className="dz-desc">
+            Hesabı kalıcı olarak siler — tüm profilleri, işlemleri ve faturaları gider.{" "}
+            <b>Geri alınamaz.</b> Silinen kişiye &quot;Görüşmek üzere&quot; maili gider.
+          </div>
         </div>
-        <p className="admin-td-dim" style={{ fontSize: 13, margin: "0 0 12px" }}>
-          Hesabı kalıcı olarak siler — tüm profilleri, işlemleri ve faturaları gider.{" "}
-          <b>Geri alınamaz.</b> Silinen kişiye &quot;Görüşmek üzere&quot; maili gider.
-        </p>
         <button
           type="button"
-          className="btn btn-danger btn-sm"
+          className="btn btn-sm dz-btn"
           disabled={busy != null}
           onClick={() => setSilAcik(true)}
         >

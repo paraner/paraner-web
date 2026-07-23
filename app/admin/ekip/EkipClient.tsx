@@ -66,6 +66,7 @@ const ROLES = [
    diliyle aynı görünür.
    `coklu` ile hem tek seçim (rol) hem çok seçim (departman) aynı bileşenden çıkıyor. */
 function Acilir({
+  idBase,
   label,
   ozet,
   secenekler,
@@ -74,6 +75,8 @@ function Acilir({
   coklu = false,
   disabled,
 }: {
+  /** Etiketi butona bağlamak için benzersiz kök (aria-labelledby). */
+  idBase: string;
   label: string;
   ozet: string;
   secenekler: { id: string; label: string; ipucu?: string }[];
@@ -102,21 +105,23 @@ function Acilir({
 
   return (
     <div className="adm-dd" ref={kutu}>
-      <span className="admin-field-label">{label}</span>
+      <span className="admin-field-label" id={`${idBase}-lbl`}>{label}</span>
       <button
         type="button"
         className={`adm-dd-btn${acik ? " on" : ""}`}
         disabled={disabled}
         aria-expanded={acik}
         aria-haspopup="listbox"
+        /* Etiket + seçili değeri birlikte oku: "Rolü Destek" */
+        aria-labelledby={`${idBase}-lbl ${idBase}-ozet`}
         onClick={() => setAcik((a) => !a)}
       >
-        <span className="adm-dd-ozet">{ozet}</span>
+        <span className="adm-dd-ozet" id={`${idBase}-ozet`}>{ozet}</span>
         <ChevronDown size={16} className="adm-dd-ok" />
       </button>
 
       {acik && (
-        <div className="adm-dd-panel" role="listbox">
+        <div className="adm-dd-panel" role="listbox" aria-label={label}>
           {secenekler.map((s) => {
             const on = secili.includes(s.id);
             return (
@@ -157,7 +162,7 @@ function DepartmanSecici({
   disabled?: boolean;
 }) {
   return (
-    <div className="admin-dep-picker">
+    <div className="admin-dep-picker" role="group" aria-label="Departmanlar">
       {DEPARTMENTS.map((d) => {
         const on = secili.includes(d.id);
         return (
@@ -261,6 +266,7 @@ export default function EkipClient({
           {/* Üç alan YAN YANA (Mehmet 2026-07-19): departman alta inince altta boşluk
               kalıyordu, yer de vardı. E-posta · Rolü · Departmanlar tek satırda. */}
           <Acilir
+              idBase="ekip-rol"
               label="Rolü"
               ozet={ROLES.find((r) => r.id === role)?.label ?? "Seç"}
               secenekler={ROLES.map((r) => ({ id: r.id, label: r.label, ipucu: r.desc }))}
@@ -273,6 +279,7 @@ export default function EkipClient({
               Yönetici seçilince sütun BOŞ kalmasın diye yerine açıklama duruyor. */}
           {role === "agent" ? (
             <Acilir
+                idBase="ekip-dep"
                 label="Departmanlar"
                 ozet={
                   deps.length === 0
