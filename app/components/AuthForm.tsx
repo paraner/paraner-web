@@ -30,6 +30,10 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
   // yönlendiren ince sarmalayıcılar; null çağrıları (temizleme) no-op'tur.
   const setError = (msg: string | null) => { if (msg) showToast({ title: msg, variant: "error" }); };
   const setResetMsg = (msg: string | null) => { if (msg) showToast({ title: msg, variant: "success" }); };
+  /* Şifreli girişte hata KALICI inline gösterilir (toast DEĞİL). Sebep (Mehmet, 2026-07-14):
+     "yanlış şifre" toast'ı birkaç saniyede kaybolduğu için kullanıcı neden giremediğini görmüyordu.
+     Şifre alanının altında durur; kullanıcı e-posta/şifreyi düzeltmeye başlayınca temizlenir. */
+  const [pwError, setPwError] = useState<string | null>(null);
 
   const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
 
@@ -47,6 +51,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
     setPwMode(false);
     setError(null);
     setResetMsg(null);
+    setPwError(null);
     setPassword("");
     if (typeof window !== "undefined") {
       window.history.replaceState(null, "", next === "kayit" ? "/kayit" : "/giris");
@@ -142,8 +147,8 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
   // Giriş — şifre ile (fallback)
   async function handlePasswordLogin(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    if (!email.trim() || !password) return setError("E-posta ve şifre gerekli.");
+    setPwError(null);
+    if (!email.trim() || !password) return setPwError("E-posta ve şifre gerekli.");
     setLoading(true);
     try {
       const supabase = createClient();
@@ -152,7 +157,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
         password,
       });
       if (error) {
-        setError(
+        setPwError(
           error.message.includes("Invalid login credentials")
             ? "E-posta veya şifre hatalı."
             : error.message.includes("Email not confirmed")
@@ -163,7 +168,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
       }
       goPanel();
     } catch {
-      setError("Bağlantı hatası. İnternetini kontrol et.");
+      setPwError("Bağlantı hatası. İnternetini kontrol et.");
     } finally {
       setLoading(false);
     }
@@ -290,18 +295,20 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
             <form onSubmit={handlePasswordLogin}>
               <div className="field">
                 <input id="email" type="email" placeholder="E-posta" aria-label="E-posta" autoComplete="email"
-                  value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
+                  value={email} onChange={(e) => { setEmail(e.target.value); if (pwError) setPwError(null); }} disabled={loading} />
               </div>
               <div className="field">
                 <div className="input-wrap">
                   <input id="password" type={showPw ? "text" : "password"} placeholder="Şifre" aria-label="Şifre"
                     autoComplete="current-password" value={password}
-                    onChange={(e) => setPassword(e.target.value)} disabled={loading} />
+                    onChange={(e) => { setPassword(e.target.value); if (pwError) setPwError(null); }} disabled={loading} />
                   <button type="button" className="toggle-pw" onClick={() => setShowPw((s) => !s)}>
                     {showPw ? "Gizle" : "Göster"}
                   </button>
                 </div>
               </div>
+              {/* Kalıcı inline hata — toast değil, kullanıcı düzeltene kadar durur (2026-07-14 Mehmet) */}
+              {pwError && <div className="auth-msg error" role="alert">{pwError}</div>}
               <div className="auth-row">
                 <button type="button" onClick={handleForgotPassword} disabled={loading}>
                   Şifremi unuttum
@@ -311,7 +318,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
                 loadingLabel={forgotBusy ? "E-postanı kontrol et…" : "Giriş yapılıyor…"}
                 loading={loading} />
               <button type="button" className="auth-text-link"
-                onClick={() => { setPwMode(false); setError(null); setResetMsg(null); }}>
+                onClick={() => { setPwMode(false); setError(null); setResetMsg(null); setPwError(null); }}>
                 Kod ile giriş yap
               </button>
             </form>
@@ -323,7 +330,7 @@ export default function AuthForm({ initialMode }: { initialMode: Mode }) {
               </div>
               <FancySubmit label="Devam Et" loadingLabel="Kod gönderiliyor…" loading={loading} />
               <button type="button" className="auth-text-link"
-                onClick={() => { setPwMode(true); setError(null); setResetMsg(null); }}>
+                onClick={() => { setPwMode(true); setError(null); setResetMsg(null); setPwError(null); }}>
                 Şifre ile giriş yap
               </button>
             </form>

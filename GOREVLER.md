@@ -89,8 +89,6 @@
       Bir sayfa düzenli 1 sn'yi geçerse o sayfaya özel iskelet yazılır.
 
 ## 🐞 AUTH / HESAP — açık maddeler
-- [ ] **Yanlış şifreyle girişte kullanıcı hata görmüyor** — giriş reddedildi ama kalıcı uyarı yok (toast
-      birkaç sn'de kaybolur). `/giris` şifre akışında inline hata gösterilmeli.
 - [ ] **Apple "e-postamı gizle" (`@privaterelay.appleid.com`) + şifreyle giriş** — giriş formuna hangi
       adresi yazacak? O adrese mail gitmiyor. Web akışı provider-bağımsız (Apple kullanıcısı da "Şifre Belirle"
       görüyor) ama gizli-mail girişi doğrulanacak. Web + mobil ortak soru.

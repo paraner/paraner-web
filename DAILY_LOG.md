@@ -16,6 +16,23 @@
 
 ---
 
+## 2026-07-23 (4) — GOREVLER temizliği + yanlış şifre inline hatası
+
+**GOREVLER.md temizlendi: 577 → 183 satır.** Dosyanın kendi kuralı ("sadece açık görevler")
+uygulandı — 74 tamamlanmış `[x]` madde çıkarıldı (tarihçe git'te, anlatı DAILY_LOG'da). 66 açık
+madde kaldı, tekrarlar birleştirildi. İleriye dönük TÜM ⚠️ tuzaklar tek "KALICI TUZAKLAR"
+bölümünde toplandı (deneme süresi 4 yerde, fiyat kaynağı, geçersiz SQL, config.toml/edge, CHECK
+yok, prefetch DEV'de kapalı, şema=önce sor).
+
+**Yanlış şifreyle girişte inline hata (Mehmet 14.07 bulmuştu).** Şifreli giriş hataları toast'la
+gösteriliyordu → birkaç saniyede kaybolduğu için kullanıcı neden giremediğini göremiyordu. Şifre
+alanının altına KALICI inline hata eklendi (`pwError` state, mevcut `.auth-msg.error` kutusu —
+danger rengi, marka-bağımsız). Kullanıcı e-posta/şifreyi düzeltmeye başlayınca temizleniyor; mod
+değişiminde de temizleniyor. Yalnız şifreli giriş inline; OTP/reset/OAuth toast'ta kaldı.
+Yerel prod'da doğrulandı (3/3): yanlış şifre → "E-posta veya şifre hatalı." · 4,5 sn sonra hâlâ
+ekranda · şifreye dokununca temizlendi. ⚠️ Betik hatası: sayfada İKİ "Giriş Yap" var (sekme
+switcher + submit) → ilk denemede switcher'a tıklamış, `.fancy-submit`'e yönlendirildi.
+
 ## 2026-07-23 (3) — müşteri detayına destek talepleri (salt okuma, DB'ye dokunmadan)
 
 Mehmet: sıradaki iş. Agent bir müşteriye bakarken "bu kişi bize ne sormuş" bilgisi yoktu →
