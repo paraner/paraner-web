@@ -38,6 +38,25 @@
 - [ ] **Eski test verisi:** aktif 3 deneme `business_max_monthly` planında — artık sunulmayan plan (düzeltme öncesi açılmış). Bozuk değil, temizlenebilir.
 - [ ] **Fiyat/plan sözlüğü tek kaynak notu:** `paraner-web/lib/plans.ts` mobil `stores/authStore.ts`'ten kopya — mobil tier listesi değişirse burası da güncellenmeli (DB'de CHECK constraint YOK, uydurma değer sessizce yazılır).
 
+### 📧 E-POSTA KİMLİĞİ (DMARC) — durum sağlam, sıkılaştırma ÖDEME ile birlikte · `docs/DMARC-EPOSTA-KIMLIK.md`
+> 2026-07-23, Mehmet'e gelen günlük Google raporlarından çıktı. **O mailler hata değil**, DMARC
+> toplu raporu. İlk rapor: **6/6 mail DKIM+SPF geçti**, taklit yok. SPF+DKIM her iki gönderende
+> (Workspace + Resend) DNS'te tam kurulu. Eksik olan tek şey politika: `p=none` = **kamera var, kilit yok**.
+- [ ] 🔴 **ÖN KOŞUL — Supabase SMTP sorusu (Mehmet, 1 ekran görüntüsü):** Authentication → Emails/SMTP'de
+      özel SMTP (Resend) tanımlı mı? `signInWithOtp` / `resetPasswordForEmail` / `inviteUserByEmail`
+      mailleri Resend'den DEĞİL bu ayardan çıkıyor ve repoda kaydı YOK.
+      ⚠️ From `paraner.com` ama gönderim Supabase sunucusundansa, politika sıkılaşınca **kayıt OTP'si
+      ve şifre sıfırlama mailleri sessizce spam'e düşer** ("kayıt olamıyorum" şikâyeti gelir).
+- [ ] **Gmail filtresi (Mehmet):** `noreply-dmarc-support@google.com` → "DMARC" etiketi + gelen kutusunu
+      atla. ⚠️ **Raporları SİLME** — sıkılaştırma kararı bu birikime bakılarak verilecek.
+- [ ] ⏳ **Aşama 1 (2-3 hafta rapor + Supabase cevabı sonrası):** `p=quarantine; sp=quarantine`.
+      **Aşama 2 (ondan 2-4 hafta sonra):** `p=reject; sp=reject`. Tam kayıt metinleri dokümanda.
+      ⚠️ Aşama 2'nin ön koşulu: raporlarda YALNIZ SES(Resend) + Google IP'leri görünmesi.
+      Beklenmedik IP çıkarsa önce o kaynak bulunacak. ⚠️ `aspf=s` YAZMA (Resend hizalamasını kırar, kazancı yok).
+- [ ] 💳 **ÖDEME ENTEGRASYONU İLE BİRLİKTE ele alınacak:** "faturanız/kartınız" maili taklidi ödeme
+      gelince para kazandıran dolandırıcılığa döner; aşamalı geçiş haftalar sürdüğü için kilit o gün
+      TAKILI olmalı, o gün takılmaya başlanmamalı. (Bkz. yukarıdaki ödeme entegrasyonu maddesi.)
+
 ### 🔍 ADMIN PANEL DENETİMİ (2026-07-18) — tam liste: `docs/DENETIM-ADMIN-2026-07-18.md`
 > 4 paralel ajan (güvenlik·doğruluk·SQL·UX), her kritik bulgu elle doğrulandı. Mimari sağlam
 > (service_role sızmıyor, tüm server action'lar guard'lı, enjeksiyon/IDOR/XSS yok). Kusurlar:

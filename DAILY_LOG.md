@@ -16,9 +16,9 @@
 
 ---
 
-## 2026-07-23 — sahibe bildirim SQL'i canlıda · app.paraner.com/admin kapatıldı
+## 2026-07-23 — sahibe bildirim SQL'i canlıda · app.paraner.com/admin kapatıldı · DMARC teşhisi
 
-**Kısa oturum, iki iş canlıya çıktı.**
+**İki iş canlıya çıktı, bir teşhis yapıldı (DMARC — kod/DNS değişmedi, ön koşul bekliyor).**
 
 **① `destek-sahibe-bildirim.sql` çalıştırıldı + uçtan uca ölçüldü.** Mehmet "çalıştırdım mı?" diye
 sordu — cevap VERİDEN okunamadı (`notifications` tablosu 22.07 "Temizle" testinde boşaltılmıştı →
@@ -38,6 +38,29 @@ simetriği eklendi: `isApp && /admin → /panel`. Güvenlik zaten `requireStaffP
 bu yalnız adresi tekilleştirdi. İç link taraması temiz (`goPanel` köke atıyor, admin'e link yok).
 Lokal prod'da 4 senaryo curl ile + **canlıda** doğrulandı: `app.paraner.com/admin → /panel` ✅,
 `admin.paraner.com` etkilenmedi. tsc+build temiz.
+
+**③ DMARC raporları incelendi — "bu mailler ne?" sorusu (Mehmet, gün içi).** Her gün gelen
+`noreply-dmarc-support@google.com` zip'i **hata bildirimi değil**, Google'ın günlük DMARC toplu
+raporu. Açıldı: 22 Tem'de Gmail'e ulaşan **6 mailin 6'sı da DKIM+SPF geçmiş** (hepsi SES/Resend =
+bizim destek/davet maillerimiz), taklit girişimi yok. Canlı DNS okundu: SPF · Workspace DKIM
+(`google._domainkey`) · Resend DKIM (`resend._domainkey`) · `send.paraner.com` SPF+MX — **hepsi
+doğru kurulu**. Eksik tek şey politika: `p=none` = **kamera var, kilit yok** (sahte mail tespit
+edilir ama yine de teslim edilir).
+🔴 **Sıkılaştırma BİLEREK yapılmadı — tarama sırasında sessiz kırılma riski çıktı.** Repo tarandı:
+6 edge function Resend'le `merhaba@paraner.com` gönderiyor (kapsam içi), ama **Supabase Auth'un
+kendi mailleri** (`signInWithOtp` kayıt kodu · `resetPasswordForEmail` · `inviteUserByEmail`)
+Resend'den DEĞİL, Supabase'in SMTP ayarından çıkıyor ve **o ayarın ne olduğu repoda hiçbir yerde
+yazmıyor**. From `paraner.com` ama gönderim Supabase sunucusundansa, `p=quarantine` yazıldığı gün
+kayıt OTP'leri ve şifre sıfırlama mailleri **spam'e düşer — hata vermeden**; sonuç "kayıt
+olamıyorum" şikâyeti olur. Yönetim API'sinden okumak denendi, CLI access token yok → **Mehmet'in
+panel ekran görüntüsü bekleniyor**.
+Plan `docs/DMARC-EPOSTA-KIMLIK.md`'ye yazıldı (durum tablosu · gönderen envanteri · kopyala-yapıştır
+DNS metinleri · doğrulama komutları): Aşama 1 `p=quarantine`, 2-3 hafta sonra Aşama 2 `p=reject`.
+⚠️ `aspf=s` YAZMA — Resend'in `send.paraner.com` hizalamasını kırar, kazancı yok.
+⚠️ `pct=` örneklemesi bizde anlamsız (günde ~6 mail). ⚠️ Raporlar SİLİNMEYECEK, karar birikime bakacak.
+**Zamanlama kararı:** iş ödeme entegrasyonuyla BİRLİKTE yapılacak — kimliğe bürünme kazançlı hedefe
+yapılır; ödeme geldiği gün "faturanız/kartınız" maili taklidi para kazandıran dolandırıcılığa döner
+ve aşamalı geçiş haftalar sürdüğü için kilit o gün TAKILI olmalı, o gün takılmaya başlanmamalı.
 
 ## 2026-07-22 — talep silme · müşteri talep akışı · çan toplu işlemleri · agent yetki testi
 
