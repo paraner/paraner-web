@@ -56,7 +56,9 @@
 - [ ] 🟢 **UX cila — KALAN** (07-23'te kapananlar: satır klavye erişimi, boş seçili-segment çipi,
       AI ay seçici pending, admin not-found kabuk içinde, **terminoloji birliği = "Müşteri"** Mehmet
       kararı). Kalanlar: PageHead deseni (21 yerde kopya başlık) · boş durum 3 ayrı sınıf birleştirme ·
-      `/admin/destek` filtre/arama/sayfalama · ekip formu label/aria · "son admin" koruması (düz yönetici modeli).
+      ekip formu label/aria · "son admin" koruması (düz yönetici modeli).
+      *(07-23: `/admin/destek` filtre/arama zaten VARDI (denetim notu bayattı); eksik olan
+      SAYFALAMA eklendi — 25/sayfa, seçim sayfalar arası korunuyor, filtre değişince temizleniyor.)*
 - [ ] **Ölçek notu:** Dashboard "Toplam Üye" = distinct `auth_user_id` (PostgREST'te distinct count yok →
       kolon çekilip Set'leniyor, `.limit(10000)`). Binlerce profilde RPC gerekir → **DB şeması = önce sor**.
 - [ ] ⚡ **`listPeople()` ölçek borcu:** `/admin/destek` + `/admin/musteriler` `auth.users`'ı seri sayfalayıp

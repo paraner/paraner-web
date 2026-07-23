@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Search, User, CalendarPlus, Layers, Clock, Trash2 } from "lucide-react";
+import { ChevronRight, ChevronLeft, Search, User, CalendarPlus, Layers, Clock, Trash2 } from "lucide-react";
 import { TICKET_STATUS_META, DEPARTMENT_META, DEPARTMENTS, TICKET_DELETE_MAX, type Ticket, type TicketStatus, type Department } from "../../../lib/supportShared";
 import { relativeLabel } from "../../../lib/lifecycle";
 import { deleteTickets } from "../../../lib/adminActions";
@@ -57,6 +57,10 @@ function fmtSaat(s: string | null) {
   }
 }
 
+/* Sayfa başına talep — istemci sayfalaması (veri zaten tek seferde geldi, ≤200).
+   ⚠️ TICKET_DELETE_MAX (50) altında: "sayfayı seç" hep silme tavanına sığar. */
+const PER_PAGE = 25;
+
 /* Sıra bilinçli: iş bekleyenler önce. "Tümü" hep görünür. */
 const SEGMENTS: { id: "bekleyen" | TicketStatus | "hepsi"; label: string }[] = [
   { id: "bekleyen", label: "Yanıt bekleyen" },
@@ -98,7 +102,9 @@ export default function DestekListClient({
     if (!silebilir || secili.size === 0) return;
     const f = (e: MouseEvent) => {
       const t = e.target as HTMLElement | null;
-      if (t?.closest(".admin-ticket-pick, .admin-sec-bar, .admin-toolbar, .admin-ticket-row, .confirm-overlay")) return;
+      /* .admin-ticket-pager EKLENDİ: sayfa değiştirmek seçimi bırakmasın (seçim sayfalar
+         arası korunuyor; kullanıcı sayfa 1'de seçip 2'ye geçince kaybolmamalı). */
+      if (t?.closest(".admin-ticket-pick, .admin-sec-bar, .admin-toolbar, .admin-ticket-row, .admin-ticket-pager, .confirm-overlay")) return;
       setSecili(new Set());
     };
     document.addEventListener("click", f);
@@ -109,6 +115,7 @@ export default function DestekListClient({
      yalnız kendi departmanını verecek (daraltma ayrı adımda) → bu filtre onun için de anlamlı. */
   const [dep, setDep] = useState<Department | "hepsi">("hepsi");
   const [q, setQ] = useState("");
+  const [page, setPage] = useState(0);
 
   const sayac = useMemo(() => {
     const m: Record<string, number> = { hepsi: rows.length, bekleyen: 0 };
@@ -134,6 +141,18 @@ export default function DestekListClient({
         .some((x) => (x as string).toLocaleLowerCase("tr").includes(ara));
     });
   }, [rows, seg, q, dep]);
+
+  /* Sayfalama filtre SONUCU üzerinden. safePage: filtre daralınca (ör. sayfa 3'teyken
+     arama yapılınca) mevcut sayfa listenin dışında kalabilir → sınıra çek. */
+  const pageCount = Math.max(1, Math.ceil(gorunen.length / PER_PAGE));
+  const safePage = Math.min(page, pageCount - 1);
+  const sayfaGorunen = gorunen.slice(safePage * PER_PAGE, safePage * PER_PAGE + PER_PAGE);
+  /* Filtre/arama değişince başa dön + SEÇİMİ TEMİZLE. Seçim çalışma kümesine bağlı:
+     ⚠️ temizlemezsek filtre daralınca seçili talepler EKRANDAN kaybolur ama `secili`'de
+     kalır → "gizli seçili" talep yanlışlıkla silinebilir (yıkıcı işlem, footgun).
+     Sayfalama seçimi KORUR (aynı küme, sadece gezinti); filtre onu DEĞİŞTİRİR → sıfırla.
+     Mount'ta secili zaten boş → no-op. */
+  useEffect(() => { setPage(0); setSecili(new Set()); }, [seg, dep, q]);
 
   return (
     <div>
@@ -208,11 +227,13 @@ export default function DestekListClient({
                 <label className="admin-sec-bar-pick">
                   {/* Ana kutu ÇUBUĞUN İÇİNDE: "seçimi bırak" diye bir YAZI yok, seçili
                       kutuya basmak bırakır. Kısmi seçimde belirsiz (—) hâli. */}
+                  {/* checked/indeterminate BU SAYFAYI yansıtır; sayaç ("N talep seçildi")
+                      sayfalar arası TOPLAMI söyler. Kutuya basmak TÜM seçimi bırakır. */}
                   <input
                     type="checkbox"
-                    checked={gorunen.length > 0 && gorunen.every((r) => secili.has(r.ticket.id))}
+                    checked={sayfaGorunen.length > 0 && sayfaGorunen.every((r) => secili.has(r.ticket.id))}
                     ref={(el) => {
-                      if (el) el.indeterminate = !gorunen.every((r) => secili.has(r.ticket.id));
+                      if (el) el.indeterminate = !sayfaGorunen.every((r) => secili.has(r.ticket.id));
                     }}
                     onChange={() => setSecili(new Set())}
                     aria-label="Seçimi bırak"
@@ -256,13 +277,15 @@ export default function DestekListClient({
                  yoksa "Faturalandırma" ile "Teknik" farklı yere düşer ve başlık kayardı). */
               <div className="admin-ticket-head">
                 {silebilir && (
+                  /* Bu SAYFADAKİ talepleri seç (ekranda görünen). Sayfa ≤ PER_PAGE (25) <
+                     TICKET_DELETE_MAX (50) → hep tavana sığar. */
                   <input
                     type="checkbox"
                     checked={false}
                     onChange={() =>
-                      setSecili(new Set(gorunen.slice(0, TICKET_DELETE_MAX).map((r) => r.ticket.id)))
+                      setSecili(new Set(sayfaGorunen.map((r) => r.ticket.id)))
                     }
-                    aria-label={`Görünen ${Math.min(gorunen.length, TICKET_DELETE_MAX)} talebi seç`}
+                    aria-label={`Bu sayfadaki ${sayfaGorunen.length} talebi seç`}
                   />
                 )}
                 <span className="admin-ticket-head-main">
@@ -273,7 +296,7 @@ export default function DestekListClient({
                 <span className="admin-ticket-head-chev" />
               </div>
             )}
-            {gorunen.map((r) => {
+            {sayfaGorunen.map((r) => {
               const meta = TICKET_STATUS_META[r.ticket.status] ?? TICKET_STATUS_META.open;
               /* Seçim kutusu Link'in İÇİNE konamaz (tıklayınca gezinir + iç içe etkileşimli
                  öğe erişilebilirlik hatası) → kutu ile satır KARDEŞ, ortak sarmalayıcıda. */
@@ -371,11 +394,42 @@ export default function DestekListClient({
             })}
           </div>
         )}
+
+        {/* Sayfalama — filtre sonucu bir sayfaya sığmıyorsa. Çubuk PANELİN İÇİNDE (liste
+            zeminiyle aynı), boş-yer-tıkla-bırak dinleyicisinden dışlandı (aşağı bak). */}
+        {pageCount > 1 && (
+          <div className="admin-ticket-pager">
+            <span className="admin-td-dim">
+              {safePage * PER_PAGE + 1}–{Math.min(gorunen.length, (safePage + 1) * PER_PAGE)} / {gorunen.length} talep
+            </span>
+            <div className="live-pager" style={{ margin: 0 }}>
+              <button
+                type="button"
+                className="live-pager-btn"
+                onClick={() => setPage((n) => Math.max(0, n - 1))}
+                disabled={safePage === 0}
+                aria-label="Önceki sayfa"
+              >
+                <ChevronLeft size={14} />
+              </button>
+              <span>{safePage + 1} / {pageCount}</span>
+              <button
+                type="button"
+                className="live-pager-btn"
+                onClick={() => setPage((n) => Math.min(pageCount - 1, n + 1))}
+                disabled={safePage >= pageCount - 1}
+                aria-label="Sonraki sayfa"
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {kirpildi && (
         <p className="admin-sub" style={{ marginTop: 10 }}>
-          ⚠️ En yeni 200 talep gösteriliyor — daha eskisi için sayfalama gerekir.
+          ⚠️ En yeni 200 talep gösteriliyor — daha eskisi henüz getirilmiyor (sunucu sınırı).
         </p>
       )}
     </div>

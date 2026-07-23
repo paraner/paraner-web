@@ -4041,6 +4041,12 @@ ul { list-style: none; }
 }
 .live-pager-btn:hover:not(:disabled) { border-color: rgba(255,255,255,0.25); }
 .live-pager-btn:disabled { opacity: 0.35; cursor: default; }
+/* Destek listesi sayfalayıcısı: solda "X–Y / Z talep", sağda ok'lar. Liste zemininde,
+   üst kenarında ince ayraç (satırlardan görsel olarak ayrılsın). */
+.admin-ticket-pager {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 20px; border-top: 1px solid var(--border); font-size: 12px;
+}
 
 .live-empty { font-size: 13px; color: var(--text-dim); margin: 0; line-height: 1.7; }
 .live-empty span { display: block; font-size: 12px; opacity: 0.7; }

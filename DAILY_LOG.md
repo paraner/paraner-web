@@ -16,6 +16,29 @@
 
 ---
 
+## 2026-07-23 (7) — /admin/destek sayfalama (filtre/arama zaten vardı)
+
+Denetim notu "/admin/destek filtre/arama/sayfalama yok" diyordu ama koda bakınca **filtre
+(segment + departman) ve arama ZATEN VARDI** (18.07 sonrası eklenmiş, not bayatmış). Gerçekten
+eksik olan tek şey **sayfalama** — `gorunen.map` eşleşen tüm talepleri (≤200) tek seferde
+çiziyordu. İstemci sayfalaması eklendi (25/sayfa, `/admin/canli` deseni + `.live-pager`).
+Alt çubuk: solda "X–Y / Z talep", sağda "sayfa / toplam" + ok'lar (`.admin-ticket-pager`).
+
+⚠️ **Seçim + sayfalama etkileşimi (asıl incelik):**
+- Filtre/arama değişince → **başa dön (setPage 0) + SEÇİMİ TEMİZLE**. Temizlemezsek filtre
+  daralınca seçili talepler ekrandan kaybolur ama `secili`'de kalır → "gizli seçili" yanlışlıkla
+  silinebilir (yıkıcı footgun). Bu davranış filtreler öncesinden beri vardı ama sayfalama +
+  çapraz-sayfa seçimle daha tehlikeli hâle gelirdi.
+- Sayfa değiştirmek → **seçimi KORUR** (aynı çalışma kümesi, sadece gezinti). Pager, boş-yer-
+  tıkla-bırak dinleyicisinden dışlandı (yoksa "sonraki sayfa" seçimi uçururdu).
+- "Sayfayı seç" başlık kutusu artık O SAYFAYI seçiyor (eski "ilk 50") — sayfa ≤25 < silme
+  tavanı 50, hep sığar. Sec-bar kutusunun checked/indeterminate'i o sayfayı yansıtır, sayaç
+  ("N talep seçildi") sayfalar arası TOPLAMI söyler.
+
+Doğrulama: PER_PAGE geçici 2'ye düşürülüp (commit'lenmeden) canlı Supabase ile 5/5 test edildi
+(sayfa gezinti, X–Y/Z bilgisi, sayfayı-seç, sayfa değişince seçim korunur, filtre değişince
+temizlenir), sonra 25'e geri alındı. tsc + build temiz.
+
 ## 2026-07-23 (6) — terminoloji birliği: kişi = "Müşteri" (Mehmet kararı)
 
 Admin paneli aynı şeye (kayıt olmuş kişi) üç ayrı isim veriyordu: Müşteri (menü + sayfa
