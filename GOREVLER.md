@@ -52,10 +52,6 @@
 - [ ] **trial/abonelik analizi** (`/admin/musteriler` detay) — henüz yok.
 - [ ] **Denetim O6 — birim çelişkisi:** pano PROFİL sayıyor, segmentler KİŞİ sayıyor; "Premium profil"
       kartı seg=paid ile uyuşmuyor. Ya birim etiketi ekle ya kişi-bazlı hesaba geç (karar gerek).
-- [ ] 🟢 **Boş durum sınıfları** — denetimde 3 ayrı sınıf; `.danger-zone` yanlış CSS sözleşmesiyle
-      (`.dz-title/.dz-desc/.dz-btn` bekliyor). Tek desene birleştir.
-- [ ] 🟢 **Ekip formu erişilebilirlik** — `<label>`/`aria-label` yok; giriş ekranının `adm-login-input`
-      sınıfı form alanı olarak kullanılıyor.
 - [ ] **Ölçek notu:** Dashboard "Toplam Müşteri" = distinct `auth_user_id` (PostgREST'te distinct count yok →
       kolon çekilip Set'leniyor, `.limit(10000)`). Binlerce profilde RPC gerekir → **DB şeması = önce sor**.
 - [ ] ⚡ **`listPeople()` ölçek borcu:** `/admin/destek` + `/admin/musteriler` `auth.users`'ı seri sayfalayıp

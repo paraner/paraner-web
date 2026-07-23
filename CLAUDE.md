@@ -6,7 +6,19 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 > ⚠️ Next 16: `middleware` → **`proxy`** olarak yeniden adlandırıldı (`proxy.ts`, fonksiyon adı `proxy`).
 
-# ⚠️ KODA BAŞLAMADAN ÖNCE: ETKİ HARİTASI ÇIKAR (2026-07-17)
+# 👤 MEHMET YAZILIMCI DEĞİL — HER İŞ BİTİNCE SADE AÇIKLA + TEST YOLUNU VER
+
+Mehmet kod okumaz; değişiklikleri **canlıda gözle** test eder. Her görev bitince ya da bir şey
+değiştir/eklediğinde, teknik özet YERİNE şunu yaz (kısa, sade Türkçe, jargon yok):
+1. **NEYDİ → NE OLDU:** eskiden ne vardı/ne bozuktu, şimdi ne değişti (bir-iki cümle).
+2. **NEREYE BAKACAK:** tam yol — hangi site (`admin.` / `app.` / `paraner.com`), hangi sayfa,
+   hangi tıklama. "Şunu yapınca şunu göreceksin" diye somut.
+3. **GÖRÜNÜR MÜ:** değişiklik gözle görülür mü, yoksa perde-arkası mı ("hiçbir fark olmamalı,
+   eskisi gibi çalışmalı" da geçerli bir test talimatıdır).
+4. **CANLIDA MI:** iş henüz bilgisayarda mı, yoksa yayında mı — test edebilmesi için yayına
+   gitmesi gerekiyorsa söyle (commit/deploy onayını iste).
+
+# ⚠️ KODA BAŞLAMADAN ÖNCE: ETKİ HARİTASI ÇIKAR
 
 Paraner tek kod tabanı DEĞİL: **paraner-web + paraner-app (`~/Developer/Paraner/paraner-app`) + ORTAK Supabase**.
 Bir yeri değiştirip diğerini atlamak = kullanıcının gördüğü tutarsızlık. Değişiklik/ekleme isteği gelince
@@ -65,7 +77,7 @@ docs/                        — plan/denetim/şema notları + email-templates/ 
 
 **Kurallar:** Aktif profil = `profiles.is_active`; veri sorguları `user_id = aktif profil id` ile filtreli (RLS `user_profile_ids()`). Yeni modül = mevcut desen (server page + client component), `lib/format` + `lib/categories` kullan. Dil TR. Koyu tema.
 
-### 🎨 RENK KURALI — teal'e YATIRIM YAPMA (2026-07-18)
+### 🎨 RENK KURALI — teal'e YATIRIM YAPMA
 **Marka rengi DEĞİŞECEK** (Mehmet: "yeşil olmayacak zaten"). Bu yüzden:
 - **Aksiyon/UI öğeleri (buton, seçili sekme, aktif menü, çip, avatar) markaya bağlı OLMAZ** →
   titanyum kullan: `linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%)`, metin `#0a0b0d`.
@@ -75,14 +87,9 @@ docs/                        — plan/denetim/şema notları + email-templates/ 
 - ⚠️ **"Renk tek değişkenden değişir" YANLIŞ:** `var(--teal)` dışında elle yazılmış
   ~47 `rgba(0,191,166,…)` + 5 `#00BFA6` + 2 `#00d4b8` var. Yeni kod bunlardan üretme.
 
-Eski hâli "tek primary renk #00BFA6" diyordu; bu kural o talimatla çelişip yeni ekranların
-sürekli yeşil çıkmasına sebep oluyordu (Mehmet 18.07'de yakaladı).
-
-### ⚠️ Yeni SAYFA/MODÜL eklerken ZORUNLU (panel + admin hızı — 2026-07-14, 07-18'de genişletildi)
-> Bu liste **`app/panel/**` VE `app/admin/**` için geçerli** (ve ileride eklenecek her kabuk için).
-> ⚠️ 07-18 dersi: kural yalnız "panel" diye yazılmıştı → admin paneli sonradan kurulunca kimse
-> uygulamadı, admin sayfa geçişleri aylarca yavaş kaldı (Mehmet yakaladı). Yeni bir kabuk
-> eklersen bu maddeleri ORAYA DA uygula ve buraya adını yaz.
+### ⚠️ Yeni SAYFA/MODÜL eklerken ZORUNLU (panel + admin hızı)
+> **`app/panel/**` VE `app/admin/**` için geçerli** (ve ileride eklenecek her kabuk için — yeni
+> kabuk eklersen bu maddeleri ORAYA DA uygula).
 1. **Her mutasyondan sonra `router.refresh()`** (insert/update/delete/upsert/rpc; yalnız BAŞARI yolunda, handler sonunda bir kez).
    Sebep: `next.config.ts`'te istemci önbelleği AÇIK (`staleTimes.dynamic: 30`). Sunucu verisi Client'a `initialX` prop'u olarak geçip `useState`'e tohumlandığı için, refresh çağrılmazsa kullanıcı sayfadan çıkıp 30sn içinde dönünce **BAYAT veri** görür ("eklediğim kayıt kayboldu", "bakiye güncellenmedi"). Next 16'da tek `refresh()` TÜM segment önbelleğini düşürür → çapraz sayfa etkisi de çözülür.
 2. **Server page'de sorgular `Promise.all` ile PARALEL.** Ardışık `await` = fazladan ağ turu. (Profil id'ye gerçekten bağımlı olan sorgu zorunlu istisnadır.)
@@ -96,11 +103,13 @@ sürekli yeşil çıkmasına sebep oluyordu (Mehmet 18.07'de yakaladı).
    **Neden ikisi de:** `next.config.ts`'teki `experimental.dynamicOnHover` bayrağı TEK BAŞINA
    HİÇBİR ŞEY YAPMAZ — Link tarafında opt-in ister. Next 16'da `<Link>` dinamik rotalarda yalnız
    `loading` sınırına kadar prefetch eder, **SAYFA VERİSİNİ GETİRMEZ** → tıklamada veri turu
-   sıfırdan başlar. Ölçüm (prod, 2026-07-14): ısıtılmamış rota **1554 ms + iskelet**, ısıtılmış
-   **14-26 ms**. `prefetch={true}` VIEWPORT'a bağlıdır (kapalı akordeondaki link hiç ısınmaz) ve
-   dokunmatikte hover yoktur → peşin `router.prefetch` şart.
+   sıfırdan başlar (ısıtılmamış ~1550 ms, ısıtılmış ~20 ms). `prefetch={true}` VIEWPORT'a bağlıdır
+   (kapalı akordeondaki link hiç ısınmaz) ve dokunmatikte hover yoktur → peşin `router.prefetch` şart.
    ⚠️ **Prefetch DEV'de kapalıdır** → etkiyi yalnız prod build'de ölçebilirsin.
 5. **Sayfa kendi auth guard'ını çağırsın** (`requireAdminPage()` / `requireStaffPage()`),
    layout guard'ına GÜVENME: Next 16'da layout istemci-taraflı gezinmede yeniden çalışmaz.
 
 > İş akışı (işe başla / işi bitir) + bekleyenler: `GOREVLER.md`, `DAILY_LOG.md`.
+> ⚠️ **DAILY_LOG haftalık:** proje `DAILY_LOG.md` yalnız BU HAFTA + kalıcı uyarıları tutar. Hafta
+> dolunca entriler proje DIŞINDAKİ arşive taşınır → `~/Developer/Paraner/daily-log/web/DAILY_LOG.md`.
+> Geçmişi okumak gerekince ORADAN oku. (Aynı sistem paraner-app'te: `daily-log/app/`.)
