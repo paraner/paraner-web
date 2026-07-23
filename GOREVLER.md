@@ -201,7 +201,17 @@
       Yerelde şifre sıfırlama akışı denenecekse `http://localhost:3000/sifre-sifirla` eklenmeli.
 - [x] ~~audit log'u panelde GÖSTER~~ — **BU MADDE BAYATMIŞ**: `/admin/denetim` ekranı zaten yazılmış
       (`app/admin/denetim/page.tsx` + `DenetimClient.tsx`). 2026-07-20'de fark edildi.
-- [ ] **Sonraki (kod):** müşterinin destek talepleri detay sayfasında · trial/abonelik analizi.
+- [x] ✅ **Müşteri detayında destek talepleri (2026-07-23)** — `/admin/musteriler/[id]` sayfasına
+      "Destek Talepleri" bölümü eklendi (Profiller ile Hesap işlemleri arasında): o kişinin açtığı
+      talepler (konu · talep no · son mesaj "X gün önce" · departman + durum rozeti), tıklayınca
+      `/admin/destek/[id]`. Salt OKUMA — yeni yetki/aksiyon yok, DB'ye dokunulmadı.
+      ⚠️ `support_tickets.user_id` = KİŞİ id'si (profil değil); indeks zaten vardı
+      (`support_tickets_user_idx`, faz0.sql:22). Son 20 talep, kırpılırsa ekranda söylüyor.
+      Etiketler tek kaynaktan (`TICKET_STATUS_META` · `DEPARTMENT_META`). Yerel prod + CANLI
+      Supabase'te doğrulandı (test hesabının 3 talebi doğru rozetlerle çizildi, ekran görüntüsüyle).
+      ⚠️ Bilinçli küçük eksik: talepten "geri" `/admin/destek`'e döner (müşteriye değil) — `backHref`
+      sabit; istenirse sonra "geri müşteriye" eklenir.
+- [ ] **Sonraki (kod):** trial/abonelik analizi (yukarıdaki maddenin ikinci yarısı — henüz yok).
 - [x] ✅ **`app.paraner.com/admin` KAPATILDI (2026-07-23, Mehmet kararı).** Karar: cross-host köprü
       KURMA — app host'undan admin'e otomatik yönlendirme yapma; admin'e girecek `admin.paraner.com`'a
       kendisi bassın. proxy.ts'e mevcut `admin.*+/panel → app.*` kuralının simetriği eklendi:

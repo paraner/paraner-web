@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Mail, Ban, Trash2, Star, ShieldOff , Pencil, AlertTriangle, AtSign} from "lucide-react";
+import { ArrowLeft, Mail, Ban, Trash2, Star, ShieldOff , Pencil, AlertTriangle, AtSign, LifeBuoy, ChevronRight } from "lucide-react";
 import { showToast } from "../../../components/toast";
 import { confirmDialog } from "../../../components/confirm";
 import {
@@ -16,6 +16,12 @@ import {
   type ActionResult,
 } from "../../../../lib/adminActions";
 import type { AdminPerson } from "../../../../lib/adminUsers";
+import {
+  TICKET_STATUS_META,
+  DEPARTMENT_META,
+  departmentLabel,
+  type Ticket,
+} from "../../../../lib/supportShared";
 import { profileLifecycle, lifecycleLabel, LIFECYCLE_META, relativeLabel } from "../../../../lib/lifecycle";
 import { tierLabel } from "../../../../lib/plans";
 import { TZ } from "../../../../lib/format";
@@ -42,10 +48,16 @@ function fmtDate(s: string | null) {
 export default function MusteriDetayClient({
   person,
   usage,
+  tickets,
+  ticketsTruncated,
   now,
 }: {
   person: AdminPerson;
   usage: ProfileUsage[];
+  /** Kişinin destek talepleri (en yeni mesaj üstte) — sayfayı çeken sunucudan gelir. */
+  tickets: Ticket[];
+  /** true = TICKET_LIMIT'i aştı, ekranda "daha var" denecek. */
+  ticketsTruncated: boolean;
   /** Liste sayfasıyla AYNI sebep: zaman sunucudan gelir → SSR ile hydrate aynı günü hesaplar
       (yoksa rozet "3 gün kaldı"dan "2 gün kaldı"ya atlar) ve liste ile detay aynı şeyi der. */
   now: number;
@@ -286,6 +298,66 @@ export default function MusteriDetayClient({
                 </div>
               );
             })}
+          </div>
+        )}
+      </div>
+
+      {/* --- Destek talepleri (2026-07-23) ---
+          NEDEN: agent bir müşteriye bakarken "bu kişi bize ne sormuş" bilgisi burada yoktu →
+          çıkıp /admin/destek'te e-postayla aratmak zorundaydı. Talepler artık kişinin
+          sayfasında. Salt OKUMA — yeni yetki/aksiyon yok, satır zaten var olan talep
+          ekranına götürüyor. */}
+      <div className="admin-panel" style={{ marginTop: 16 }}>
+        <div className="admin-panel-head">
+          <LifeBuoy size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} />
+          Destek Talepleri
+          {tickets.length > 0 && (
+            <span className="admin-td-dim" style={{ fontWeight: 400, marginLeft: 6 }}>
+              ({tickets.length}
+              {ticketsTruncated ? "+" : ""})
+            </span>
+          )}
+        </div>
+        {tickets.length === 0 ? (
+          <p className="admin-td-dim" style={{ fontSize: 13, margin: 0 }}>
+            Bu müşteri hiç destek talebi açmamış.
+          </p>
+        ) : (
+          <div className="admin-ticket-list">
+            {tickets.map((t) => {
+              const meta = TICKET_STATUS_META[t.status] ?? { label: t.status, badge: "gray" };
+              return (
+                <Link
+                  key={t.id}
+                  href={`/admin/destek/${t.id}`}
+                  className="admin-ticket-row"
+                >
+                  <div className="admin-ticket-main">
+                    <div className="admin-ticket-subject">{t.subject}</div>
+                    <div className="admin-ticket-meta">
+                      <span>#{t.id.slice(0, 8)}</span>
+                      <span>Son mesaj: {relativeLabel(t.last_message_at, now)}</span>
+                    </div>
+                  </div>
+                  <span className="admin-ticket-col">
+                    <span
+                      className={`badge ${DEPARTMENT_META[t.department]?.badge ?? "gray"}`}
+                    >
+                      {departmentLabel(t.department)}
+                    </span>
+                  </span>
+                  <span className="admin-ticket-col admin-ticket-col-durum">
+                    <span className={`badge ${meta.badge}`}>{meta.label}</span>
+                  </span>
+                  <ChevronRight size={16} className="admin-ticket-chevron" />
+                </Link>
+              );
+            })}
+            {ticketsTruncated && (
+              <p className="admin-td-dim" style={{ fontSize: 12, margin: "10px 4px 0" }}>
+                Yalnız en yeni {tickets.length} talep gösteriliyor — daha eski talepler var.
+              </p>
+            )}
           </div>
         )}
       </div>

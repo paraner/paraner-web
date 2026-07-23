@@ -16,6 +16,22 @@
 
 ---
 
+## 2026-07-23 (3) — müşteri detayına destek talepleri (salt okuma, DB'ye dokunmadan)
+
+Mehmet: sıradaki iş. Agent bir müşteriye bakarken "bu kişi bize ne sormuş" bilgisi yoktu →
+çıkıp `/admin/destek`'te e-postayla aratmak zorundaydı. `/admin/musteriler/[id]` sayfasına
+"Destek Talepleri" bölümü eklendi (Profiller ⇄ Hesap işlemleri arasında): konu · talep no ·
+son mesaj ("X gün önce") · departman + durum rozeti; tıklayınca `/admin/destek/[id]`.
+**Yeni özellik ama en düşük riskli türden:** salt OKUMA, yeni yetki/aksiyon yok, **DB'ye
+dokunulmadı** — indeks (`support_tickets_user_idx`, faz0.sql:22) zaten vardı, mobil etkilenmiyor
+(panel web'e özel). Etiketler tek kaynaktan (`TICKET_STATUS_META`/`DEPARTMENT_META`), CSS
+sınıfları destek listesinden yeniden kullanıldı (8'i de kaynaktan doğrulandı — uydurma yok).
+`support_tickets.user_id` = KİŞİ id'si (profil değil) kaynaktan teyit edildi. Son 20 talep,
+kırpılırsa ekranda söylüyor. Sayfanın iki sorgusu (kullanım + talepler) `Promise.all` ile paralel.
+Yerel prod + CANLI Supabase'te ekran görüntüsüyle doğrulandı: test hesabının 3 talebi doğru
+rozetlerle (Öneri/Açık · Teknik/Açık · Teknik/Çözüldü) çizildi.
+⚠️ Bilinçli küçük eksik: talepten "geri" `/admin/destek`'e döner (müşteriye değil), `backHref` sabit.
+
 ## 2026-07-23 (2) — DONMA çözüldü: suçlu, donmayı çözmek için yazdığım ısıtmanın kendisiymiş
 
 19.07'de bildirilen *"sekmeden çıkıp geri girince Destek'e basınca donuyor"* ilk kez **canlıda
