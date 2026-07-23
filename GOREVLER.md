@@ -1,8 +1,7 @@
 # GÖREVLER — paraner-web
 
-> **Sadece AÇIK görevler.** Tamamlananların anlatısı `DAILY_LOG.md` + git geçmişinde.
-> Bir madde bitince buradan SİL (DAILY_LOG'a yaz), burada `[x]` biriktirme.
-> 2026-07-23'te temizlendi: 74 tamamlanmış madde çıkarıldı, tarihçe git'te duruyor.
+> **Sadece AÇIK görevler.** Bir madde bitince buradan SİL (anlatısı `DAILY_LOG.md` + git'te),
+> burada `[x]` biriktirme.
 
 ## ⚠️ KALICI TUZAKLAR — kod/SQL'e dokunmadan ÖNCE oku
 > Bunlar "yapılacak" değil, "yanlış yaparsan sessizce kırılır" uyarıları. Tamamlanmış işlerden
@@ -50,21 +49,20 @@
       IP'leri görünmesi. ⚠️ `aspf=s` YAZMA (Resend hizalamasını kırar). Tam metinler dokümanda.
 
 ## 🛠️ ADMIN PANEL — açık maddeler
-- [ ] **trial/abonelik analizi** (`/admin/musteriler` detay) — henüz yok. Destek talepleri kısmı 07-23'te bitti.
+- [ ] **trial/abonelik analizi** (`/admin/musteriler` detay) — henüz yok.
 - [ ] **Denetim O6 — birim çelişkisi:** pano PROFİL sayıyor, segmentler KİŞİ sayıyor; "Premium profil"
       kartı seg=paid ile uyuşmuyor. Ya birim etiketi ekle ya kişi-bazlı hesaba geç (karar gerek).
-- [ ] 🟢 **UX cila — KALAN** (07-23'te kapananlar: satır klavye erişimi, boş seçili-segment çipi,
-      AI ay seçici pending, admin not-found kabuk içinde, **terminoloji birliği = "Müşteri"** Mehmet
-      kararı, **AdminPageHead** 7 sayfa başlığı tek bileşende). Kalanlar: boş durum 3 ayrı sınıf
-      birleştirme · ekip formu label/aria · "son admin" koruması (düz yönetici modeli).
-      *(07-23: `/admin/destek` filtre/arama zaten VARDI (denetim notu bayattı); eksik olan
-      SAYFALAMA eklendi — 25/sayfa, seçim sayfalar arası korunuyor, filtre değişince temizleniyor.)*
-- [ ] **Ölçek notu:** Dashboard "Toplam Üye" = distinct `auth_user_id` (PostgREST'te distinct count yok →
+- [ ] 🟢 **Boş durum sınıfları** — denetimde 3 ayrı sınıf; `.danger-zone` yanlış CSS sözleşmesiyle
+      (`.dz-title/.dz-desc/.dz-btn` bekliyor). Tek desene birleştir.
+- [ ] 🟢 **Ekip formu erişilebilirlik** — `<label>`/`aria-label` yok; giriş ekranının `adm-login-input`
+      sınıfı form alanı olarak kullanılıyor.
+- [ ] 🟢 **"Son admin" koruması** — düz yönetici modeli: admin'ler birbirinin (ve kendinin) rolünü
+      kaldırabiliyor, "son admin" koruması yok → panele girecek kimse kalmayabilir.
+- [ ] **Ölçek notu:** Dashboard "Toplam Müşteri" = distinct `auth_user_id` (PostgREST'te distinct count yok →
       kolon çekilip Set'leniyor, `.limit(10000)`). Binlerce profilde RPC gerekir → **DB şeması = önce sor**.
 - [ ] ⚡ **`listPeople()` ölçek borcu:** `/admin/destek` + `/admin/musteriler` `auth.users`'ı seri sayfalayıp
-      `profiles`+`user_devices` tam tablosunu çekiyor. 07-23'te 60 sn `unstable_cache` eklendi (rahatladı) ama
-      ölçek gelince asıl çözüm: taleplerden gelen `user_id` setiyle `.in(...)` daraltma. (Daraltma serileştirir
-      → küçük ölçekte kayıp, ölçek gelince yapılır.)
+      `profiles`+`user_devices` tam tablosunu çekiyor (60 sn cache var → bugün acıtmıyor). Ölçek gelince asıl
+      çözüm: taleplerden gelen `user_id` setiyle `.in(...)` daraltma (serileştirir → küçük ölçekte kayıp).
 
 ## 🎫 DESTEK — açık maddeler
 - [ ] ❓ **AÇIK KARAR (Mehmet):** silinen kişinin **e-posta snapshot'ı** talepte tutulsun mu? Şu an kimlik
@@ -72,8 +70,8 @@
       sızmış veriyi geri almak zor → bilinçli EKLENMEDİ. `docs/HESAP-SILME-VERI-SAKLAMA.md`.
 - [ ] **Gerçek destek ekibi hesapları** `user_roles`'e (şu an yalnız admin@paraner.com). ⚠️ Yeni agent'a
       departman ataması ŞART (fail-closed RLS: departmansız agent hiç talep göremez). Test: `sql/destek/agent-yetki-TEST.sql`.
-- [ ] **Mobil ek dosya paritesi** — web bitti; mobilde seçici+sıkıştırma HAZIR, yalnız bağlanacak + balonda
-      render. ⚠️ Mobil de YOL→`createSignedUrl` kuralına uymalı. ⚠️ `attachmentStore` profil geçişinde temizlenmiyor.
+- [ ] **Mobil ek dosya paritesi** — mobilde seçici+sıkıştırma HAZIR, yalnız bağlanacak + balonda render.
+      ⚠️ Mobil de YOL→`createSignedUrl` kuralına uymalı. ⚠️ `attachmentStore` profil geçişinde temizlenmiyor.
 - [ ] **İleride:** talebe not/atama (`assignee_id` kolonu duruyor, kullanılmıyor).
 - [ ] **Faz 1 — mobil push:** `withNoPushEntitlement` yüzünden remote push KAPALI → ücretli Apple hesabı + APNs (Mehmet kararı).
 - [ ] **Faz 2 (opsiyonel):** kullanıcı yeni mesajında agent'a bildirim · agent atama/öncelik/filtre · çanda "tümünü okundu".
@@ -109,7 +107,7 @@
 ## 🌐 SEO / PAZARLAMA (rakip denetimi 2026-07-13 · `docs/RAKIP-defteran.md`)
 - [ ] **Google'da yeni title** — Search Console → URL Denetimi → "Dizine eklenmeyi iste" (`/`, `/destek`,
       `/isletme`, `/bireysel`). *(Mehmet'in kişisel Google hesabındaki mülk.)*
-- [ ] **Genel mobil tarama:** ana sayfa + auth ekranlarında telefonda taşma/bozulma tek tek bak (auth+rozetler bitti, ana sayfa kaldı).
+- [ ] **Genel mobil tarama:** ana sayfada telefonda taşma/bozulma tek tek bak (auth ekranları elden geçti, ana sayfa kaldı).
 - [ ] **Panel tasarım turu** — Genel Bakış pilotu onaylandıysa diğer 33 modüle yay (İşlemler → Hesaplar → Faturalar).
 - [ ] **Mega-menüdeki alt sayfalar** (`/isletme/faturalar` …) — şu an `#çapa`lara gidiyor; `navData.ts`'te
       href değiştirmek yeterli. **Google sitelinks'i bunlar doğurur.**
