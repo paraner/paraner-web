@@ -93,6 +93,14 @@ export default function ParlaChat() {
     return () => { alive = false; };
   }, [open, loaded, scrollToEnd]);
 
+  /* Sayfa içeriğini sola kaydır (işlem detayı çekmecesiyle aynı davranış).
+     Kabuk (`app/panel/layout.tsx`) sunucu bileşeni → prop yerine body sınıfı: hiçbir sayfanın
+     kodu değişmez, sonradan eklenen sayfalar da kendiliğinden uyar. CSS: `body.parla-open`. */
+  useEffect(() => {
+    document.body.classList.toggle("parla-open", open);
+    return () => document.body.classList.remove("parla-open");
+  }, [open]);
+
   // Escape ile kapat
   useEffect(() => {
     if (!open) return;

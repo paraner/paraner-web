@@ -4705,9 +4705,11 @@ ul { list-style: none; }
    ═══════════════════════════════════════════════════════════════════════════ */
 .parla-btn.on { background: var(--card-2); border-color: var(--border-strong); color: var(--text); }
 
+/* Ölçüler `.tx-drawer` ile BİREBİR aynı (384px / top:83 / right:12 / bottom:12) —
+   kullanıcı hangi sayfada açarsa açsın tanıdık aynı çekmeceyi görsün. ⚠️ Biri değişirse ikisi de. */
 .parla-drawer {
   position: fixed; top: 83px; right: 12px; bottom: 12px;
-  width: 404px; max-width: calc(100vw - 24px);
+  width: 384px; max-width: calc(100vw - 24px);
   z-index: 92; display: flex; flex-direction: column;
   background: var(--surface-modal); border: 1px solid var(--border-strong);
   border-radius: 22px; overflow: hidden;
@@ -4716,6 +4718,18 @@ ul { list-style: none; }
 }
 @media (max-width: 720px) {
   .parla-drawer { left: 12px; right: 12px; width: auto; }
+}
+
+/* İÇERİK SOLA KAYAR — Parla açıkken sayfa çekmecenin altına girmez.
+   İşlemler'deki `.tx-area.shifted` ile AYNI davranış ve aynı ölçü (408 = 384 + 12 + 12),
+   ama TÜM panel sayfaları için: kabuğun tek ortak sarmalayıcısı `.panel-content`.
+   Sınıf body'ye ParlaChat tarafından basılır (kabuk sunucu bileşeni; prop geçirmek yerine
+   tek satır sınıf → hiçbir sayfanın kodu değişmez, yeni sayfalar da otomatik uyar).
+   ⚠️ Dar ekranda kaydırma YOK: yer kalmadığı için çekmece üstte durur (tx-drawer ile aynı eşik). */
+.panel-content { transition: padding-right 0.24s cubic-bezier(0.22, 1, 0.36, 1); }
+body.parla-open .panel-content { padding-right: 408px; }
+@media (max-width: 1040px) {
+  body.parla-open .panel-content { padding-right: 32px; }
 }
 
 .parla-head {
