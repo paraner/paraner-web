@@ -4809,6 +4809,11 @@ body.parla-open .panel-content { padding-right: 408px; }
   30% { opacity: 1; transform: translateY(-3px); }
 }
 
+/* Sohbet geçmişi yüklenirken — küçük ve soluk, dikkat çekmesin (bir anlık durum) */
+.parla-yukleniyor {
+  margin: auto; font-size: 12px; color: var(--text-faint); letter-spacing: 0.01em;
+}
+
 /* Boş durum + örnek istemler */
 .parla-empty { margin: auto; text-align: center; padding: 8px 6px; }
 .parla-empty-ic {
@@ -4829,7 +4834,9 @@ body.parla-open .panel-content { padding-right: 408px; }
 /* YAZMA ALANI — TEK KUTU (Mehmet, 24.07): kategori çipleri + yazı + düğmeler aynı
    çerçevenin içinde. Eskiden yazı alanının kendi kutusu, çiplerin ayrı bloğu vardı →
    iç içe iki kutu görünüyordu. Referans: sohbet uygulamalarının tek-kutu composer'ı. */
-.parla-composer-alan { padding: 10px 12px 12px; border-top: 1px solid var(--border); }
+/* Yazma alanının üstünde AYIRIM ÇİZGİSİ YOK (Mehmet, 24.07): tek kutunun kendi
+   kenarlığı zaten sınırı belli ediyor; ikinci çizgi gürültü yapıyordu. */
+.parla-composer-alan { padding: 10px 12px 12px; }
 .parla-composer {
   display: flex; flex-direction: column; gap: 8px;
   padding: 10px 10px 8px;

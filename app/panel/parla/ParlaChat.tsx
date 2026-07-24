@@ -437,7 +437,7 @@ export default function ParlaChat() {
           </header>
 
           <div className="parla-list" ref={listRef}>
-            {booting && <div className="parla-empty">Sohbet yükleniyor…</div>}
+            {booting && <div className="parla-yukleniyor">Sohbet yükleniyor…</div>}
 
             {!booting && msgs.length === 0 && (
               <div className="parla-empty">
