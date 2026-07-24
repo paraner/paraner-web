@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
 import LogoutButton from "../LogoutButton";
+import KategorilerBolumu from "./KategorilerBolumu";
 import { confirmDialog } from "../../components/confirm";
 import { showToast } from "../../components/toast";
 import { toCsv, downloadCsv, parseCsv } from "../../../lib/csv";
@@ -61,7 +62,7 @@ export type DeviceRow = {
      Veri & Yedekleme (dışa/içe aktarma — bireyselde de var) · Bildirimler ·
      Hesap & Güvenlik (kullanıcıya ait + tehlike bölgesi).
    Derin link: ?tab=veri (history.replaceState ile, sayfa yenilenmez). */
-type TabKey = "genel" | "fatura" | "veri" | "bildirimler" | "hesap";
+type TabKey = "genel" | "fatura" | "kategoriler" | "veri" | "bildirimler" | "hesap";
 
 export default function AyarlarClient({
   email,
@@ -85,6 +86,7 @@ export default function AyarlarClient({
     { key: "genel", label: "Hesap Bilgileri" },
     // Fatura yalnız işletmede; Veri & Yedekleme HERKESTE (bireysel de işlemlerini indirebilmeli)
     ...(isBusiness ? [{ key: "fatura" as TabKey, label: "Fatura" }] : []),
+    { key: "kategoriler", label: "Kategoriler" },
     { key: "veri", label: "Veri & Yedekleme" },
     { key: "bildirimler", label: "Bildirimler" },
     { key: "hesap", label: "Hesap & Güvenlik" },
@@ -205,6 +207,13 @@ export default function AyarlarClient({
           <InvoiceDesignSoon />
         </>
       )}
+
+      {tab === "kategoriler" &&
+        (active ? (
+          <KategorilerBolumu key={active.id} profileId={active.id} />
+        ) : (
+          <p className="panel-sub">Profil bulunamadı.</p>
+        ))}
 
       {tab === "veri" &&
         (active ? (
