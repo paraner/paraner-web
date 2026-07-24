@@ -35,3 +35,26 @@ export function useCloseOnOtherRightPanel(id: string, close: () => void) {
     return () => window.removeEventListener(EVT, onOpen);
   }, [id]);
 }
+
+/* ─── "Parla veri değiştirdi" duyurusu ────────────────────────────────────────
+   `router.refresh()` SUNUCU verisini tazeler; ama sayfaların kendi istemci-tarafı
+   listeleri (ör. özel kategoriler) ondan habersiz kalır. Parla bir kategori oluşturup
+   işlemi onunla kaydettiğinde İşlemler sayfası etiketi çözemiyor, ham kimlik
+   ("custom_ev_gideri") gösteriyordu (Mehmet, 24.07 canlı).
+   Parla değişiklikten sonra duyurur; ilgilenen sayfa kendi verisini yeniler. */
+const VERI_EVT = "paraner:veri-degisti";
+
+export function announceDataChanged() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(VERI_EVT));
+}
+
+export function useOnDataChanged(handler: () => void) {
+  const ref = useRef(handler);
+  ref.current = handler;
+  useEffect(() => {
+    const fn = () => ref.current();
+    window.addEventListener(VERI_EVT, fn);
+    return () => window.removeEventListener(VERI_EVT, fn);
+  }, []);
+}

@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Sparkles, X, ArrowUp, Plus, ImageIcon, Trash2, Check } from "lucide-react";
 import { createClient } from "../../../lib/supabase/client";
-import { announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
+import { announceDataChanged, announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
 import RichText, { parseBlocks } from "./RichText";
 import { confirmDialog } from "../../components/confirm";
 import { showToast } from "../../components/toast";
@@ -51,6 +51,8 @@ function bildir(action?: string | null) {
   if (!action) return;
   const baslik = ACTION_TOAST[action];
   if (baslik) showToast({ title: baslik, variant: "success" });
+  // Sayfalar kendi istemci listelerini (ör. özel kategoriler) tazelesin
+  announceDataChanged();
 }
 
 /* Belge (fiş/fatura/dekont) yükleme — sunucunun kabul ettiği türler (edge ALLOWED_IMAGE_MIME).

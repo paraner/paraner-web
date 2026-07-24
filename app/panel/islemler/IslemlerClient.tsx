@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
-import { announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
+import { announceRightPanel, useCloseOnOtherRightPanel, useOnDataChanged } from "../../../lib/rightPanel";
 import { useServerSynced } from "../../../lib/useServerSynced";
 import { formatCurrency, formatDate, TZ } from "../../../lib/format";
 import { todayStr, ymd } from "../../../lib/date";
@@ -187,6 +187,12 @@ export default function IslemlerClient({
     })();
     return () => { alive = false; };
   }, [profileId]);
+
+  /* Parla yeni bir kategori oluşturup işlemi onunla kaydedebilir → listeyi tazele,
+     yoksa etiket çözülemez ve satırda ham kimlik görünür. */
+  useOnDataChanged(() => {
+    fetchCustomCategories(profileId).then(setCustomCats).catch(() => {});
+  });
 
   // Kategori id → etiket+renk; önce özel kategoriler, sonra sabit katalog.
   const customById = new Map(customCats.map((c) => [c.id, c as Category]));
