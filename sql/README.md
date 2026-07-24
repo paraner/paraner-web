@@ -39,6 +39,18 @@ Sıra önemliydi, uygulanma sırası:
 | — | `destek-departman-DOGRULAMA.sql` | **Sadece OKUR** — 13 satır ✅/❌ | istediğin zaman |
 | — | `destek-departman-TEST.sql` | İkinci hesapla canlı test betiği (rol/departman atar, sonunda geri alır) | test için |
 
+## ai/ — AI asistan (Parla) kuralları
+
+| Dosya | Ne yapar | Durum |
+|---|---|---|
+| `ai-config-versions.sql` | `ai_config_versions` tablosu — AI'ın kural seti, sürümlü. Sürüm 1 = mobildeki kuralların birebir kopyası | ⏳ **çalıştırılmayı bekliyor** |
+
+> Neden: kurallar bugüne kadar mobil uygulamanın İÇİNDE (`paraner-app/lib/aiContext.ts`) gömülüydü →
+> değişiklik için App Store sürümü gerekiyordu. Tablo, kuralları admin panelinden yönetilebilir kılar;
+> edge function `ai-chat` aktif sürümü okur (60 sn önbellek). Plan: `docs/AI-ORTAK-BEYIN-PLANI.md`.
+> ⚠️ Tablo kurulmadan `ai-chat` beyin modu **çalışır ama asgari kural setiyle** (fail-soft) — yani
+> AI cevap verir, zengin kurallar devreye girmez. Sıra: önce bu SQL, sonra edge deploy.
+
 ## ⚠️ Bilinmesi gerekenler
 
 - **Repo'da SQL olması "çalıştırıldı" DEMEK DEĞİLDİR** (2026-07-22 dersi): `notif_delete`

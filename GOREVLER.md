@@ -36,6 +36,26 @@
       kazandıran dolandırıcılığa döner; aşamalı geçiş haftalar sürer, o gün başlamak geç kalır (aşağı bak).
 - [ ] İşletme hesabı eklemede **Stripe ödeme/trial kapısı** (şu an direkt açılıyor).
 
+## 🤖 AI ASİSTAN — TEK BEYİN (web + mobil ortak) · `docs/AI-ORTAK-BEYIN-PLANI.md`
+> Karar (2026-07-24): kurallar kodda değil **admin panelinde**; web kapsamı = mobil paritesi (fiş hariç).
+- [x] **Faz 1 kodu yazıldı** — `ai_config_versions` tablosu (SQL hazır) + edge function "beyin modu"
+      (`paraner-app/supabase/functions/ai-chat/brain/*`). Eski sözleşme bozulmadı → mobil kırılmaz.
+- [ ] 🔴 **SQL çalıştırılacak:** `sql/ai/ai-config-versions.sql` (Supabase SQL Editor) — **edge deploy'dan ÖNCE**.
+- [ ] 🔴 **Edge deploy:** `supabase functions deploy ai-chat` (kod repoda durmakla canlıya çıkmaz).
+- [ ] **Faz 2:** admin panelde "AI Kuralları" sayfası (düzenle · kaydet=yeni sürüm · geri al · önizleme).
+- [ ] **Faz 3:** web panelde Parla sohbeti (`chat_messages` zaten ortak → telefondaki konuşma webde devam eder).
+- [ ] **Faz 4:** mobil eski beyinden (`smartRouter.ts` + `aiContext.ts` + `aiRouter.ts`) koparılır.
+      ⚠️ **Bu faza kadar panelden yazılan kural YALNIZ WEB'i etkiler**, telefon eski kurallarla çalışır.
+- [ ] **KARAR BEKLİYOR — "tümünü sil" açılsın mı?** Mobil `smartRouter.ts`te sıra hatası: "evet tümünü sil"
+      cümlesi de "tümünü" içerdiği için onay dalına düşüyor → toplu silme **canlıda hiç çalışmamış**.
+      Sunucuda aynı (güvenli) davranış korundu; açmak geri dönüşü olmayan silmeyi etkinleştirir.
+- [ ] **KARAR BEKLİYOR — kategori kataloğu:** artık ÜÇ kopya (mobil + web + edge `brain/categories.ts`).
+      Ortak DB tablosuna taşınsın mı? (şema değişikliği)
+- [ ] 🐞 **Mobil hata (bulundu, düzeltilmedi):** mobil `chatStore.fetchDailyCount(profile.id)` sayacı
+      **profil id** ile okuyor, oysa edge function **auth kullanıcı id**'siyle yazıyor → mobildeki
+      "kalan hak" göstergesi hep 0 okuyor. Kota kontrolü sunucuda olduğu için güvenlik açığı DEĞİL,
+      yalnız arayüz yanlış. Faz 4'te sunucudan dönen `quota` alanı kullanılarak çözülür.
+
 ## 📧 E-POSTA KİMLİĞİ (DMARC) · `docs/DMARC-EPOSTA-KIMLIK.md`
 > Durum sağlam (6/6 mail DKIM+SPF geçiyor, taklit yok). Eksik tek şey politika: `p=none` = kamera var, kilit yok.
 - [x] ✅ **ÖN KOŞUL ÇÖZÜLDÜ (2026-07-24):** Supabase custom SMTP = Resend açık (`smtp.resend.com:465`,
