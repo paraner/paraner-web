@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Sparkles, X, ArrowUp } from "lucide-react";
+import { Sparkles, X, ArrowUp, Plus, ImageIcon } from "lucide-react";
 import { createClient } from "../../../lib/supabase/client";
 import { announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
 
@@ -27,6 +27,36 @@ const FN_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/ai-chat`;
 /** Sunucu bir şey değiştirdiyse panel verisi bayat kalmasın (panel kuralı: mutasyon → refresh). */
 const MUTATING_ACTIONS = ["transaction_added", "transaction_deleted", "goal_updated"];
 
+/* Belge (fiş/fatura/dekont) yükleme — sunucunun kabul ettiği türler (edge ALLOWED_IMAGE_MIME).
+   ⚠️ PDF sunucuda desteklenmiyor; kullanıcıya seçtirip sonra reddetmemek için listede yok. */
+const ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif";
+/* Fiş okuma için 1600px fazlasıyla yeterli (mobil `compressImage` ile aynı ölçü): tarayıcıda
+   küçültmek yüklemeyi hızlandırır, 8MB sınırına takılmayı ve gereksiz AI maliyetini önler. */
+const MAX_DIM = 1600;
+const JPEG_QUALITY = 0.7;
+
+/** Dosyayı tarayıcıda küçültüp base64'e çevirir (data URI öneki olmadan). */
+function fileToCompressedBase64(file: File): Promise<{ base64: string; preview: string }> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { URL.revokeObjectURL(url); reject(new Error("Görsel işlenemedi")); return; }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+      URL.revokeObjectURL(url);
+      resolve({ base64: dataUrl.split(",")[1] ?? "", preview: dataUrl });
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Görsel okunamadı")); };
+    img.src = url;
+  });
+}
+
 export default function ParlaChat() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -38,8 +68,11 @@ export default function ParlaChat() {
   const [loaded, setLoaded] = useState(false);
   const [quota, setQuota] = useState<{ used: number; limit: number; isPremium: boolean } | null>(null);
 
+  const [attached, setAttached] = useState<{ base64: string; preview: string; name: string } | null>(null);
+
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => setMounted(true), []);
 
@@ -109,12 +142,32 @@ export default function ParlaChat() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  async function onFilePicked(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // aynı dosya tekrar seçilebilsin
+    if (!file) return;
+    try {
+      const { base64, preview } = await fileToCompressedBase64(file);
+      setAttached({ base64, preview, name: file.name });
+      inputRef.current?.focus();
+    } catch {
+      setMsgs((m) => [...m, { id: `e-${Date.now()}`, role: "assistant", content: "⚠️ Dosya okunamadı. JPG veya PNG dene." }]);
+    }
+  }
+
   async function send() {
     const text = input.trim();
-    if (!text || loading) return;
+    // Görsel varsa metin şart değil (sadece fiş atılabilir).
+    if ((!text && !attached) || loading) return;
 
+    const gorsel = attached;
     setInput("");
-    setMsgs((m) => [...m, { id: `u-${Date.now()}`, role: "user", content: text }]);
+    setAttached(null);
+    setMsgs((m) => [...m, {
+      id: `u-${Date.now()}`,
+      role: "user",
+      content: gorsel ? (text ? `[Görsel eklendi]\n${text}` : "[Görsel eklendi]") : text,
+    }]);
     setLoading(true);
     scrollToEnd();
 
@@ -129,7 +182,12 @@ export default function ParlaChat() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ mode: "assistant", message: text, platform: "web" }),
+        body: JSON.stringify({
+          mode: "assistant",
+          message: text,
+          platform: "web",
+          ...(gorsel ? { image: gorsel.base64, imageMimeType: "image/jpeg" } : {}),
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -216,11 +274,22 @@ export default function ParlaChat() {
               </div>
             )}
 
-            {msgs.map((m) => (
-              <div key={m.id} className={`parla-msg ${m.role}`}>
-                {m.content}
-              </div>
-            ))}
+            {msgs.map((m) => {
+              /* "[Görsel eklendi]" işareti mobil ile ORTAK: görselin kendisi saklanmıyor,
+                 baloncukta rozet olarak gösteriliyor (iki tarafta da aynı görünsün). */
+              const gorselli = m.content.startsWith("[Görsel eklendi]");
+              const metin = gorselli
+                ? m.content.replace(/^\[Görsel eklendi\]\n?/, "")
+                : m.content;
+              return (
+                <div key={m.id} className={`parla-msg ${m.role}`}>
+                  {gorselli && (
+                    <span className="parla-img-tag"><ImageIcon size={12} /> Görsel</span>
+                  )}
+                  {metin}
+                </div>
+              );
+            })}
 
             {loading && (
               <div className="parla-msg assistant typing" aria-live="polite">
@@ -230,25 +299,61 @@ export default function ParlaChat() {
           </div>
 
           <div className="parla-composer">
-            <textarea
-              ref={inputRef}
-              className="parla-input"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={onKeyDown}
-              placeholder="Bir şey sor ya da işlem yaz…"
-              rows={1}
-              disabled={loading}
-            />
-            <button
-              type="button"
-              className="parla-send"
-              onClick={send}
-              disabled={loading || !input.trim()}
-              aria-label="Gönder"
-            >
-              <ArrowUp size={16} />
-            </button>
+            {attached && (
+              <div className="parla-attach">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={attached.preview} alt="" className="parla-attach-thumb" />
+                <span className="parla-attach-name">{attached.name}</span>
+                <button
+                  type="button"
+                  className="parla-attach-x"
+                  onClick={() => setAttached(null)}
+                  aria-label="Görseli kaldır"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            )}
+
+            <div className="parla-composer-row">
+              <input
+                ref={fileRef}
+                type="file"
+                accept={ACCEPT}
+                onChange={onFilePicked}
+                hidden
+              />
+              <button
+                type="button"
+                className="parla-plus"
+                onClick={() => fileRef.current?.click()}
+                disabled={loading}
+                aria-label="Fiş, fatura veya dekont yükle"
+                title="Fiş, fatura veya dekont yükle"
+              >
+                <Plus size={17} />
+              </button>
+
+              <textarea
+                ref={inputRef}
+                className="parla-input"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={onKeyDown}
+                placeholder={attached ? "İstersen not ekle…" : "Bir şey sor ya da işlem yaz…"}
+                rows={1}
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="parla-send"
+                onClick={send}
+                disabled={loading || (!input.trim() && !attached)}
+                aria-label="Gönder"
+              >
+                <ArrowUp size={16} />
+              </button>
+            </div>
           </div>
         </aside>,
         document.body,

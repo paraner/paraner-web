@@ -4801,11 +4801,51 @@ body.parla-open .panel-content { padding-right: 408px; }
 }
 .parla-hint:hover { border-color: var(--border-strong); color: var(--text); }
 
-/* Yazma alanı */
+/* Yazma alanı — üstte ek önizlemesi, altta [+] · metin · gönder */
 .parla-composer {
-  display: flex; align-items: flex-end; gap: 9px;
+  display: flex; flex-direction: column; gap: 9px;
   padding: 12px 14px 14px; border-top: 1px solid var(--border);
 }
+.parla-composer-row { display: flex; align-items: flex-end; gap: 9px; }
+
+/* Belge yükleme [+] — fiş/fatura/dekont */
+.parla-plus {
+  flex-shrink: 0; width: 36px; height: 36px; border-radius: 11px; cursor: pointer;
+  display: grid; place-items: center;
+  background: var(--card-2); border: 1px solid var(--border); color: var(--text-dim);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.parla-plus:hover:not(:disabled) { background: var(--card); color: var(--text); border-color: var(--border-strong); }
+.parla-plus:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Seçilen belgenin önizlemesi (gönderilmeden önce) */
+.parla-attach {
+  display: flex; align-items: center; gap: 9px; padding: 7px 9px;
+  background: var(--card-2); border: 1px solid var(--border); border-radius: 12px;
+}
+.parla-attach-thumb {
+  width: 34px; height: 34px; border-radius: 8px; object-fit: cover; flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.parla-attach-name {
+  flex: 1; min-width: 0; font-size: 12px; color: var(--text-dim);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.parla-attach-x {
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: 7px; cursor: pointer;
+  display: grid; place-items: center; border: none; background: none; color: var(--text-faint);
+  transition: background 0.15s, color 0.15s;
+}
+.parla-attach-x:hover { background: var(--card); color: var(--text); }
+
+/* Gönderilmiş mesajda "görsel vardı" rozeti (mobil ile aynı işaret) */
+/* `display:flex` (inline değil) → kendi satırında durur; baloncuk pre-wrap olduğu için
+   inline olsaydı metnin başına yapışırdı. */
+.parla-img-tag {
+  display: flex; align-items: center; gap: 5px; margin-bottom: 6px;
+  font-size: 11px; font-weight: 600; color: var(--text-faint);
+}
+.parla-img-tag svg { flex-shrink: 0; }
 .parla-input {
   flex: 1; min-width: 0; resize: none; max-height: 120px;
   padding: 10px 12px; border-radius: 12px; outline: none;
