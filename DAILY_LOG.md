@@ -30,4 +30,11 @@
 - **Terminoloji:** kayıt olmuş kişi = "Müşteri" (Profil ayrı kavram olarak korundu).
 - **DONMA çözüldü:** sekmeden dönünce Destek'e basınca donma — suçlu, donmayı çözmek için yazılmış
   `useRewarmPrefetch` toplu ısıtmasının kendisiymiş; kaldırıldı (şikâyet senaryosu 5859 → 1042 ms).
+- **Admin pano kişi-bazlı sayıyor (birim çelişkisi O6 kapandı):** kartlar (Toplam Müşteri/İşletme/
+  Bireysel/Ücretli/Denemesi bitiyor) `listPeopleCached` + `lib/lifecycle` ile sayıyor → `/admin/musteriler`
+  segmentleriyle birebir. "Premium profil" (is_premium, deneme dahil) → "Ücretli" (gerçek ödeyen). Canlıda
+  5/5 kart tıklanan liste satır sayısıyla eşleşti. `panoMetrikleri` kaldırıldı.
+- **Kararlar:** hesap silme = 30 gün yumuşak silme + geri dönüş (kod ödeme/lansman fazında,
+  `docs/HESAP-SILME-VERI-SAKLAMA.md`). Perf: ilk-tık gecikmesi soğuk başlangıç DEĞİL (sunucu ~150ms),
+  istemci-tarafı — en son test edilecek.
 - **Bakım:** hafıza dosyaları + CLAUDE.md sadeleştirildi; DAILY_LOG haftalık arşiv sistemine geçti.
