@@ -134,11 +134,20 @@ export default function ParlaChat() {
     (async () => {
       setBooting(true);
       const supabase = createClient();
-      const { data: profile } = await supabase
+      /* ⚠️ `maybeSingle()` KULLANMA (24.07 canlı hata): bir hesapta iki profil birden aktif
+         işaretliyse maybeSingle HATA döndürür → sohbet geçmişi hiç yüklenmez ("mesajlar
+         gitmiş" gibi görünür). Panelin geri kalanı aktif olanlardan İLKİNİ alıyor
+         (lib/supabase/profile.ts, created_at sırası) — burası da aynısını yapar. */
+      const { data: profiller } = await supabase
         .from("profiles")
-        .select("id")
-        .eq("is_active", true)
-        .maybeSingle();
+        .select("id, is_active, is_primary")
+        .order("created_at", { ascending: true })
+        .limit(20);
+
+      const profile =
+        (profiller ?? []).find((p) => p.is_active) ??
+        (profiller ?? []).find((p) => p.is_primary) ??
+        (profiller ?? [])[0];
 
       if (profile?.id) {
         if (alive) setProfileId(profile.id);
