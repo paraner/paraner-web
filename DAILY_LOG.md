@@ -38,6 +38,15 @@
   `docs/HESAP-SILME-VERI-SAKLAMA.md`). Perf: ilk-tık gecikmesi soğuk başlangıç DEĞİL (sunucu ~150ms),
   istemci-tarafı — en son test edilecek.
 - **Bakım:** hafıza dosyaları + CLAUDE.md sadeleştirildi; DAILY_LOG haftalık arşiv sistemine geçti.
+- **AI TEK BEYİN — Faz 1+3 (24.07):** AI'ın kuralları mobil uygulamanın içindeydi (değişiklik =
+  App Store sürümü). Artık kurallar DB'de (`ai_config_versions`, sürümlü) ve beyin sunucuda
+  (`ai-chat` edge, `mode:"assistant"` — profil çözme, kural okuma, işlem ekle/sil, sohbet kaydı).
+  Eski sözleşme dokunulmadan duruyor → mobil kırılmadı. Web'e Parla eklendi: üst bar ikonu +
+  sağdan yan panel (sektör deseni: veri üzerinde İŞLEM yapan asistan için baloncuk değil yan panel).
+  **Dersler:** ① `chat_messages`/`transactions` PROFİL id'siyle, `daily_ai_usage` AUTH id'siyle
+  yazılıyor — ikisi ayrı, karıştırma. ② Mobilde "evet tümünü sil" sıra hatası yüzünden hiç
+  silmiyormuş; sunucuda bilerek AÇILMADI (karar Mehmet'te). ③ İşlem silmede hesap bakiyesi geri
+  alınmalı (mobil+web+edge = üç ayrı kopya, üçü aynı kalmalı).
 - **Panel sol menü "Yakında" rozeti kaldırıldı (24.07):** pasif (`href:null`) 6 alt öğenin
   rozeti, menü daralırken etiketle birlikte gizlenmediği için dar rayda taşıp bozuk görüntü
   yapıyordu. Rozet + `.nav-soon-badge` stili silindi; satırlar soluk/tıklanamaz kaldı,

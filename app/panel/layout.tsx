@@ -9,6 +9,7 @@ import AccountStatusGuard from "./AccountStatusGuard";
 import ToastHost from "../components/ToastHost";
 import ConfirmProvider from "../components/ConfirmProvider";
 import NotificationBell from "../../components/NotificationBell";
+import ParlaChat from "./parla/ParlaChat";
 
 // Panel uygulamanın içi — tüm /panel sayfaları arama motorlarına kapalı
 export const metadata: Metadata = {
@@ -62,7 +63,9 @@ export default function PanelLayout({
       <div className="panel-main">
         <header className="panel-topbar">
           <div className="panel-topbar-actions">
-            {/* Yalnız bildirim (sağda). Ayarlar sol menüde; AI Sohbet butonu işlevsizdi → kaldırıldı. */}
+            {/* Parla (AI asistanı) + bildirim. Ayarlar sol menüde.
+                Parla her panel sayfasında üst barda → tek tık uzakta; sağdan yan panel açar. */}
+            <ParlaChat />
             <NotificationBell />
           </div>
         </header>

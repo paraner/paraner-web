@@ -40,10 +40,11 @@
 > Karar (2026-07-24): kurallar kodda değil **admin panelinde**; web kapsamı = mobil paritesi (fiş hariç).
 - [x] **Faz 1 kodu yazıldı** — `ai_config_versions` tablosu (SQL hazır) + edge function "beyin modu"
       (`paraner-app/supabase/functions/ai-chat/brain/*`). Eski sözleşme bozulmadı → mobil kırılmaz.
-- [ ] 🔴 **SQL çalıştırılacak:** `sql/ai/ai-config-versions.sql` (Supabase SQL Editor) — **edge deploy'dan ÖNCE**.
-- [ ] 🔴 **Edge deploy:** `supabase functions deploy ai-chat` (kod repoda durmakla canlıya çıkmaz).
+- [x] ✅ **SQL çalıştırıldı** (`sql/ai/ai-config-versions.sql`) + **edge deploy edildi** (2026-07-24).
+      Duman testi: fonksiyon ayakta, iki yol da 401 dönüyor (açılışta çökme yok).
 - [ ] **Faz 2:** admin panelde "AI Kuralları" sayfası (düzenle · kaydet=yeni sürüm · geri al · önizleme).
-- [ ] **Faz 3:** web panelde Parla sohbeti (`chat_messages` zaten ortak → telefondaki konuşma webde devam eder).
+- [x] **Faz 3 (ekran):** web panelde Parla — üst bar ikonu + sağdan yan panel (`app/panel/parla/`).
+      ⏳ **Canlı test bekliyor** (uçtan uca ilk gerçek deneme: kural okuma + işlem ekleme).
 - [ ] **Faz 4:** mobil eski beyinden (`smartRouter.ts` + `aiContext.ts` + `aiRouter.ts`) koparılır.
       ⚠️ **Bu faza kadar panelden yazılan kural YALNIZ WEB'i etkiler**, telefon eski kurallarla çalışır.
 - [ ] **KARAR BEKLİYOR — "tümünü sil" açılsın mı?** Mobil `smartRouter.ts`te sıra hatası: "evet tümünü sil"
