@@ -34,6 +34,12 @@ type BekleyenKategori = {
 
 const FN_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/ai-chat`;
 
+/* Benzersiz mesaj id — `Date.now()` tek başına yetmiyor: aynı milisaniyede iki mesaj
+   (çip onayı + yeni mesaj) aynı id alıp React'te tek key olarak çakışabilir (mobilde
+   canlı görüldü, 24.07). Monoton sayaç bunu kökten bitirir. */
+let _msgSayac = 0;
+const yeniId = (p: string) => `${p}${Date.now()}-${++_msgSayac}`;
+
 /** Sunucu bir şey değiştirdiyse panel verisi bayat kalmasın (panel kuralı: mutasyon → refresh). */
 const MUTATING_ACTIONS = ["transaction_added", "transaction_deleted", "goal_updated"];
 
@@ -206,7 +212,7 @@ export default function ParlaChat() {
       setAttached({ base64, preview, name: file.name });
       inputRef.current?.focus();
     } catch {
-      setMsgs((m) => [...m, { id: `e-${Date.now()}`, role: "assistant", content: "⚠️ Dosya okunamadı. JPG veya PNG dene." }]);
+      setMsgs((m) => [...m, { id: yeniId("e"), role: "assistant", content: "⚠️ Dosya okunamadı. JPG veya PNG dene." }]);
     }
   }
 
@@ -279,12 +285,12 @@ export default function ParlaChat() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Kaydedemedim, tekrar dener misin?");
 
-      setMsgs((m) => [...m, { id: `a-${Date.now()}`, role: "assistant", content: data.reply }]);
+      setMsgs((m) => [...m, { id: yeniId("a"), role: "assistant", content: data.reply }]);
       if (data.quota) setQuota(data.quota);
       if (data.action && MUTATING_ACTIONS.includes(data.action)) { bildir(data.action); router.refresh(); }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Bir hata oluştu.";
-      setMsgs((m) => [...m, { id: `e-${Date.now()}`, role: "assistant", content: `⚠️ ${msg}` }]);
+      setMsgs((m) => [...m, { id: yeniId("e"), role: "assistant", content: `⚠️ ${msg}` }]);
     } finally {
       setLoading(false);
       scrollToEnd();
@@ -304,7 +310,7 @@ export default function ParlaChat() {
     setInput("");
     setAttached(null);
     setMsgs((m) => [...m, {
-      id: `u-${Date.now()}`,
+      id: yeniId("u"),
       role: "user",
       content: gorsel ? (text ? `[Görsel eklendi]\n${text}` : "[Görsel eklendi]") : text,
     }]);
@@ -342,7 +348,7 @@ export default function ParlaChat() {
            {"t":"done", replace, action, quota}
            {"t":"error","message"}
          Baloncuk İLK parça gelince oluşturulur → "yazıyor" göstergesi o ana kadar durur. */
-      const id = `a-${Date.now()}`;
+      const id = yeniId("a");
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buf = "";
@@ -402,7 +408,7 @@ export default function ParlaChat() {
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Bir hata oluştu.";
-      setMsgs((m) => [...m, { id: `e-${Date.now()}`, role: "assistant", content: `⚠️ ${msg}` }]);
+      setMsgs((m) => [...m, { id: yeniId("e"), role: "assistant", content: `⚠️ ${msg}` }]);
     } finally {
       setLoading(false);
       scrollToEnd();
