@@ -1390,6 +1390,7 @@ ul { list-style: none; }
 .panel-nav {
   flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 2px;
   overflow-y: auto; overflow-x: hidden;
+  overscroll-behavior: contain; /* menü sonunda kaydırma dışarı zincirlenmesin */
   scrollbar-width: none; /* Firefox */
 }
 .panel-nav::-webkit-scrollbar { width: 0; height: 0; }
@@ -4774,6 +4775,10 @@ body.parla-open .panel-content { padding-right: 408px; }
   flex: 1; min-height: 0; overflow-y: auto;
   display: flex; flex-direction: column; gap: 10px;
   padding: 18px;
+  /* Liste sonuna gelince kaydırma DIŞARI taşmasın: yoksa macOS'ta belge esner ve
+     sabit duran her şey (menü, üst bar, panelin kendisi) oynuyormuş gibi görünür.
+     Aynı gerekçe `.panel-content` ve `.panel-nav` için de geçerli. */
+  overscroll-behavior: contain;
 }
 .parla-msg {
   max-width: 88%; padding: 10px 13px; border-radius: 14px;
