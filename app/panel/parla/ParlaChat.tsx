@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Sparkles, X, ArrowUp } from "lucide-react";
 import { createClient } from "../../../lib/supabase/client";
+import { announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PARLA — panel içi AI asistanı (sağdan açılan yan panel)
@@ -41,6 +42,15 @@ export default function ParlaChat() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => setMounted(true), []);
+
+  // Sağ kenarı paylaşan diğer panel (işlem/fatura detayı) açılırsa Parla kapansın.
+  const kapat = useCallback(() => setOpen(false), []);
+  useCloseOnOtherRightPanel("parla", kapat);
+
+  function ac() {
+    setOpen(true);
+    announceRightPanel("parla"); // açık detay çekmecesi varsa kapansın
+  }
 
   const scrollToEnd = useCallback(() => {
     requestAnimationFrame(() => {
@@ -153,7 +163,7 @@ export default function ParlaChat() {
       <button
         type="button"
         className={`topbar-icon-btn parla-btn${open ? " on" : ""}`}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => (open ? setOpen(false) : ac())}
         aria-label="Parla — yapay zeka asistanı"
         title="Parla — yapay zeka asistanı"
         aria-expanded={open}

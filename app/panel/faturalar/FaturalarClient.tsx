@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
+import { announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
 import { toCsv, downloadCsv } from "../../../lib/csv";
@@ -108,6 +109,8 @@ export default function FaturalarClient({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Invoice | null>(null); // sağ detay paneli
+  // Parla sohbeti açılırsa detay çekmecesi kapansın (ikisi aynı sağ kenarı paylaşıyor)
+  useCloseOnOtherRightPanel("fatura-detay", () => setSelected(null));
   const [busyId, setBusyId] = useState<string | null>(null); // ödendi işaretleme
 
   // Yazdırılabilir fatura önizlemesi (Aşama 1)
@@ -472,7 +475,10 @@ export default function FaturalarClient({
                     <div
                       key={inv.id}
                       className={`tx-row clickable${selected?.id === inv.id ? " active" : ""}`}
-                      onClick={() => setSelected(inv)}
+                      onClick={() => {
+                        setSelected(inv);
+                        announceRightPanel("fatura-detay"); // Parla açıksa kapansın
+                      }}
                     >
                       <div className="tx-main">
                         <span

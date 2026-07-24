@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
+import { announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
 import { formatCurrency, formatDate, TZ } from "../../../lib/format";
 import { todayStr, ymd } from "../../../lib/date";
 import {
@@ -144,6 +145,8 @@ export default function IslemlerClient({
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Tx | null>(null);
   const [selected, setSelected] = useState<Tx | null>(null); // sağ detay paneli
+  // Parla sohbeti açılırsa detay çekmecesi kapansın (ikisi aynı sağ kenarı paylaşıyor)
+  useCloseOnOtherRightPanel("tx-detay", () => setSelected(null));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -684,6 +687,7 @@ export default function IslemlerClient({
                     onClick={() => {
                       setError(null);
                       setSelected(t);
+                      announceRightPanel("tx-detay"); // Parla açıksa kapansın (sağ kenar tek panel)
                     }}
                   >
                     <div className="tx-main">
