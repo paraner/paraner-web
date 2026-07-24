@@ -51,17 +51,20 @@
 - [ ] **Faz 2:** admin panelde "AI Kuralları" sayfası (düzenle · kaydet=yeni sürüm · geri al · önizleme).
 - [x] **Faz 3 (ekran):** web panelde Parla — üst bar ikonu + sağdan yan panel (`app/panel/parla/`).
       ⏳ **Canlı test bekliyor** (uçtan uca ilk gerçek deneme: kural okuma + işlem ekleme).
-- [ ] **Faz 4:** mobil eski beyinden (`smartRouter.ts` + `aiContext.ts` + `aiRouter.ts`) koparılır.
-      ⚠️ **Bu faza kadar panelden yazılan kural YALNIZ WEB'i etkiler**, telefon eski kurallarla çalışır.
+- [x] ✅ **Faz 4 TAMAM (24.07): telefon ortak beyne bağlandı.** `chatStore` sunucuya soruyor;
+      `SUNUCU_BEYNI` anahtarı ile tek satırda geri dönülebilir. Eski dosyalar SİLİNMEDİ.
+      ⏳ **Cihaz testi bekliyor** (native build şart — OTA yok).
+- [x] **Beyin ortak klasöre taşındı:** `~/Developer/Paraner/parla/` (GitHub: paraner/parla, private).
 - [ ] **KARAR BEKLİYOR — "tümünü sil" açılsın mı?** Mobil `smartRouter.ts`te sıra hatası: "evet tümünü sil"
       cümlesi de "tümünü" içerdiği için onay dalına düşüyor → toplu silme **canlıda hiç çalışmamış**.
       Sunucuda aynı (güvenli) davranış korundu; açmak geri dönüşü olmayan silmeyi etkinleştirir.
-- [ ] **KARAR BEKLİYOR — kategori kataloğu:** artık ÜÇ kopya (mobil + web + edge `brain/categories.ts`).
-      **KARAR: DB tablosuna taşınacak** (24.07) — üç kopya yerine tek kaynak.
-- [ ] 🐞 **Mobil hata (bulundu, düzeltilmedi):** mobil `chatStore.fetchDailyCount(profile.id)` sayacı
-      **profil id** ile okuyor, oysa edge function **auth kullanıcı id**'siyle yazıyor → mobildeki
-      "kalan hak" göstergesi hep 0 okuyor. Kota kontrolü sunucuda olduğu için güvenlik açığı DEĞİL,
-      yalnız arayüz yanlış. Faz 4'te sunucudan dönen `quota` alanı kullanılarak çözülür.
+- [ ] 🔴 **SIRADAKİ İŞ — kategori kataloğu DB'ye** (karar verildi 24.07). Bugün ÜÇ kopya
+      (mobil `constants/categories.ts` + web `lib/categories.ts` + `parla/.../brain/categories.ts`).
+      Dokunacağı yer: web 7 dosya + mobil 15 dosya + yeni tablo + RLS. **Bonus:** mobildeki
+      ÖZEL kategoriler cihaz-yerel (AsyncStorage) → DB'ye taşınınca cihazlar arası senkron da çözülür.
+- [x] ✅ **Düzeltildi (Faz 4):** kalan-hak sayacı yanlış kimlikle okunuyordu (profil id ↔ auth id);
+      + butonu seçilen görseli hiç göndermiyordu; günlük limit sabitleri (5/30) iki yerde kopyaydı;
+      fiş tarama istemi mobilde ayrı kopyaydı → hepsi tek kaynağa bağlandı.
 
 ## 📧 E-POSTA KİMLİĞİ (DMARC) · `docs/DMARC-EPOSTA-KIMLIK.md`
 > Durum sağlam (6/6 mail DKIM+SPF geçiyor, taklit yok). Eksik tek şey politika: `p=none` = kamera var, kilit yok.

@@ -47,6 +47,15 @@
   yazılıyor — ikisi ayrı, karıştırma. ② Mobilde "evet tümünü sil" sıra hatası yüzünden hiç
   silmiyormuş; sunucuda bilerek AÇILMADI (karar Mehmet'te). ③ İşlem silmede hesap bakiyesi geri
   alınmalı (mobil+web+edge = üç ayrı kopya, üçü aynı kalmalı).
+- **TEK BEYİN TAMAMLANDI (24.07):** telefon de ortak sunucu beynine bağlandı → bir kuralı bir
+  yerden değiştirince web+mobil birlikte değişiyor. Beyin `paraner-app`ten çıkıp ortak klasöre
+  taşındı: `~/Developer/Paraner/parla/` (GitHub paraner/parla, private). Eski kopya SİLİNDİ.
+  **Denetimde bulunup kapatılan ayrışmalar:** ① kalan-hak sayacı yanlış kimlikle okunuyordu
+  (`daily_ai_usage` AUTH id, `chat_messages`/`transactions` PROFİL id — karıştırma!) ② sohbetteki
+  + butonu görseli hiç göndermiyordu ③ günlük limit 5/30 iki yerde kopyaydı ④ fiş tarama istemi
+  (~100 satır) mobilde ayrı kopyaydı → `mode:"receipt"` ile tek kaynağa bağlandı.
+  **Açık kalan tek ayrışma:** kategori kataloğu (3 kopya) — DB'ye taşınacak, sıradaki iş.
+  ⚠️ Mobil değişikliği CİHAZA BUILD ister (OTA yok).
 - **Panel sol menü "Yakında" rozeti kaldırıldı (24.07):** pasif (`href:null`) 6 alt öğenin
   rozeti, menü daralırken etiketle birlikte gizlenmediği için dar rayda taşıp bozuk görüntü
   yapıyordu. Rozet + `.nav-soon-badge` stili silindi; satırlar soluk/tıklanamaz kaldı,
