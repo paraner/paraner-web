@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Sparkles, X, ArrowUp, Plus, ImageIcon, Trash2, Check } from "lucide-react";
 import { createClient } from "../../../lib/supabase/client";
 import { announceDataChanged, announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
-import RichText, { parseBlocks } from "./RichText";
+import RichText, { parseBlocks, countWords } from "./RichText";
 import { confirmDialog } from "../../components/confirm";
 import { showToast } from "../../components/toast";
 
@@ -39,6 +39,16 @@ const FN_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/ai-chat`;
    canlı görüldü, 24.07). Monoton sayaç bunu kökten bitirir. */
 let _msgSayac = 0;
 const yeniId = (p: string) => `${p}${Date.now()}-${++_msgSayac}`;
+
+/* ─── DAKTİLO (cevap kelime kelime açılır) ───────────────────────────────────
+   ⚠️ NEDEN İSTEMCİDE (25.07, Mehmet: "webde daktilo yok, appteki gibi olmalı"):
+   sunucu YEREL katman cevaplarını (kategori sorusu, "işlem kaydedildi", özet) tek
+   parça gönderiyor — AI'ya hiç gitmediği için akışa bölecek bir şey yok. Akışa
+   güvenen web bunları "tak" diye basıyordu. Mobil (`app/ai-chat.tsx` StreamingMarkdown)
+   zaten istemcide açıyor; buradaki hız/sınırlar onunla BİREBİR aynı tutulmalı. */
+const DAKTILO_HEDEF_MS = 2400; // uzun cevap da yaklaşık bu sürede biter
+const DAKTILO_MIN_MS = 9;
+const DAKTILO_MAX_MS = 34;
 
 /** Sunucu bir şey değiştirdiyse panel verisi bayat kalmasın (panel kuralı: mutasyon → refresh). */
 const MUTATING_ACTIONS = ["transaction_added", "transaction_deleted", "goal_updated"];
@@ -109,6 +119,11 @@ export default function ParlaChat() {
      kendi başına değerlendirilir. */
   const [bekleyen, setBekleyen] = useState<BekleyenKategori | null>(null);
   const [yeniKategori, setYeniKategori] = useState<string | null>(null); // null = form kapalı
+
+  /* Yazılmakta olan asistan mesajı: `n` = şu ana kadar açılmış kelime sayısı,
+     `acik` = sunucudan hâlâ metin gelebilir (akış sürüyor) → kelimeler bitince
+     durur, yeni parça gelince devam eder. Geçmiş mesajlar daktiloya girmez. */
+  const [daktilo, setDaktilo] = useState<{ id: string; n: number; acik: boolean } | null>(null);
 
 
   const listRef = useRef<HTMLDivElement>(null);
@@ -195,6 +210,32 @@ export default function ParlaChat() {
     return map;
   }, [msgs]);
 
+  /* Daktilo saati — her adımda bir kelime açar. Hız mobil ile aynı: toplam ~2.4 sn
+     hedefi kelime sayısına bölünür, 9-34 ms arasına sıkıştırılır (kısa cevap fazla
+     yavaş, uzun cevap fazla hızlı olmasın). Metin akarken toplam büyüdüğü için her
+     adımda yeniden hesaplanır. */
+  useEffect(() => {
+    if (!daktilo) return;
+    const blocks = blocksById.get(daktilo.id);
+    const toplam = blocks ? countWords(blocks) : 0;
+
+    if (daktilo.n >= toplam) {
+      // Akış kapandıysa iş bitti → mesaj normal (tam) çizime döner.
+      if (!daktilo.acik) setDaktilo(null);
+      return; // akış sürüyorsa yeni kelimeleri bekle
+    }
+
+    const aralik = Math.max(
+      DAKTILO_MIN_MS,
+      Math.min(DAKTILO_MAX_MS, Math.round(DAKTILO_HEDEF_MS / Math.max(1, toplam))),
+    );
+    const t = setTimeout(() => {
+      setDaktilo((d) => (d && d.id === daktilo.id ? { ...d, n: d.n + 1 } : d));
+      scrollToEnd(); // yazı uzadıkça alta yapışık kal (akıştaki davranışın aynısı)
+    }, aralik);
+    return () => clearTimeout(t);
+  }, [daktilo, blocksById, scrollToEnd]);
+
   // Escape ile kapat
   useEffect(() => {
     if (!open) return;
@@ -232,6 +273,7 @@ export default function ParlaChat() {
 
     const yedek = msgs;
     setMsgs([]);
+    setDaktilo(null); // yazılmakta olan cevap varsa onunla birlikte gitsin
     // Bekleyen kategori sorusu da düşer — ait olduğu mesaj artık yok (mobil ile aynı)
     setBekleyen(null);
     setYeniKategori(null);
@@ -285,7 +327,11 @@ export default function ParlaChat() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Kaydedemedim, tekrar dener misin?");
 
-      setMsgs((m) => [...m, { id: yeniId("a"), role: "assistant", content: data.reply }]);
+      /* Çip onayının cevabı tek parça gelir (yerel katman) → daktiloyu burada başlat,
+         yoksa "kaydedildi" mesajı ekrana bir anda basılır (mobilde daktiloyla yazılıyor). */
+      const cevapId = yeniId("a");
+      setMsgs((m) => [...m, { id: cevapId, role: "assistant", content: data.reply }]);
+      setDaktilo({ id: cevapId, n: 0, acik: false });
       if (data.quota) setQuota(data.quota);
       if (data.action && MUTATING_ACTIONS.includes(data.action)) { bildir(data.action); router.refresh(); }
     } catch (err) {
@@ -304,6 +350,8 @@ export default function ParlaChat() {
     if ((!text && !attached) || loading) return;
 
     const gorsel = attached;
+    // Yarım kalmış daktilo varsa tamamlanmış say — eski cevap yazılırken yenisi başlamasın
+    setDaktilo(null);
     // Cevaplanmamış kategori sorusu varsa DÜŞER — o taslak kaydedilmez (karar: 24.07)
     setBekleyen(null);
     setYeniKategori(null);
@@ -368,6 +416,9 @@ export default function ParlaChat() {
             basladi = true;
             setLoading(false); // ilk kelime geldi → üç nokta kalksın
             setMsgs((m) => [...m, { id, role: "assistant", content: birikti }]);
+            /* Daktilo akışın ÜSTÜNDE çalışır: sunucu tek parça da gönderse (yerel katman
+               cevapları) kelime kelime açılır; parça parça gönderirse hız yine sabit kalır. */
+            setDaktilo({ id, n: 0, acik: true });
           } else {
             setMsgs((m) => m.map((x) => (x.id === id ? { ...x, content: birikti } : x)));
           }
@@ -380,6 +431,7 @@ export default function ParlaChat() {
               basladi = true;
               setLoading(false);
               setMsgs((m) => [...m, { id, role: "assistant", content: birikti }]);
+              setDaktilo({ id, n: 0, acik: true });
             } else {
               setMsgs((m) => m.map((x) => (x.id === id ? { ...x, content: birikti } : x)));
             }
@@ -411,6 +463,9 @@ export default function ParlaChat() {
       setMsgs((m) => [...m, { id: yeniId("e"), role: "assistant", content: `⚠️ ${msg}` }]);
     } finally {
       setLoading(false);
+      /* Akış kapandı: daktilo kalan kelimeleri yazıp kendi kendine bitirir. Burada
+         null'lamak metni ANINDA tamamlar (yazma efekti yarıda kesilirdi). */
+      setDaktilo((d) => (d ? { ...d, acik: false } : null));
       scrollToEnd();
       inputRef.current?.focus();
     }
@@ -506,7 +561,7 @@ export default function ParlaChat() {
                     <span className="parla-img-tag"><ImageIcon size={12} /> Görsel</span>
                   )}
                   {blocks
-                    ? <RichText blocks={blocks} reveal={null} />
+                    ? <RichText blocks={blocks} reveal={daktilo?.id === m.id ? daktilo.n : null} />
                     : metin}
                 </div>
               );
