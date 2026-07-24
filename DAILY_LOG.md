@@ -38,3 +38,8 @@
   `docs/HESAP-SILME-VERI-SAKLAMA.md`). Perf: ilk-tık gecikmesi soğuk başlangıç DEĞİL (sunucu ~150ms),
   istemci-tarafı — en son test edilecek.
 - **Bakım:** hafıza dosyaları + CLAUDE.md sadeleştirildi; DAILY_LOG haftalık arşiv sistemine geçti.
+- **Panel sol menü "Yakında" rozeti kaldırıldı (24.07):** pasif (`href:null`) 6 alt öğenin
+  rozeti, menü daralırken etiketle birlikte gizlenmediği için dar rayda taşıp bozuk görüntü
+  yapıyordu. Rozet + `.nav-soon-badge` stili silindi; satırlar soluk/tıklanamaz kaldı,
+  daraltılmışken ad balonda. **Ders:** daraltmada `display:none` olan tek şey `.nav-label` —
+  sol menüye satır-sonu öğe eklerken (rozet/sayaç/yıldız) daralma anını da düşün.
