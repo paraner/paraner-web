@@ -10,7 +10,12 @@
       görünmez — kelime ortaya çıkarken zaten kalın gelir. */
 
 type Seg = { text: string; bold: boolean };
-export type Block = { kind: "p" | "bullet"; segs: Seg[] };
+export type Block = { kind: "p" | "bullet" | "amount"; segs: Seg[]; positive?: boolean };
+
+/* Tutar satırı: "+5.000,00 ₺" / "−600,00 ₺". Sunucu işareti metnin İÇİNE koyuyor →
+   sohbet geçmişinden yeniden yüklenince de renkli kalır (gelir yeşil, gider kırmızı,
+   uygulamanın her yerindeki dille aynı). */
+const TUTAR_RE = /^([+\u2212-])\s?[\d.,]+/;
 
 /** `**kalın**` → parça listesi. Tek geçiş, kütüphanesiz. */
 function parseInline(line: string): Seg[] {
@@ -31,6 +36,8 @@ export function parseBlocks(content: string): Block[] {
   return content.split("\n").map((raw) => {
     const line = raw.trimEnd();
     // "* madde", "- madde", "• madde" → madde işaretli satır
+    const t = line.match(TUTAR_RE);
+    if (t) return { kind: "amount" as const, segs: parseInline(line), positive: t[1] === "+" };
     const m = line.match(/^\s*[*\-•]\s+(.*)$/);
     if (m) return { kind: "bullet" as const, segs: parseInline(m[1]) };
     return { kind: "p" as const, segs: parseInline(line) };
@@ -85,6 +92,9 @@ export default function RichText({ blocks, reveal }: { blocks: Block[]; reveal: 
         /* ⚠️ Madde satırında parçalar TEK bir sarmalayıcıya konur. Doğrudan flex'in altına
            konursa her parça (kalın başlık + kalan metin) AYRI SÜTUN olur → "İşlem Takibi:"
            daracık bir kolona sıkışır (Mehmet, 24.07). Sarmalayıcı sayesinde normal metin akışı. */
+        if (b.kind === "amount") {
+          return <div key={bi} className={`parla-tutar${b.positive ? " pos" : " neg"}`}>{kids}</div>;
+        }
         return b.kind === "bullet"
           ? (
             <div key={bi} className="parla-li">

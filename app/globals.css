@@ -4914,6 +4914,10 @@ body.parla-open .panel-content { padding-right: 408px; }
    `**yıldız**` üretebiliyor; ham göstermek yerine çiziyoruz (bkz. RichText.tsx). */
 .parla-msg strong { font-weight: 650; color: #fff; }
 .parla-p { min-height: 0.9em; }
+/* Tutar satırı — gelir yeşil, gider kırmızı (panelin her yerindeki dille aynı) */
+.parla-tutar { font-size: 17px; font-weight: 650; letter-spacing: -0.01em; margin-bottom: 2px; }
+.parla-tutar.pos { color: var(--teal); }
+.parla-tutar.neg { color: var(--danger); }
 .parla-li { display: flex; align-items: baseline; gap: 8px; }
 /* Madde metni tek parça akar (kalın başlık ayrı sütuna düşmesin) */
 .parla-li-body { flex: 1; min-width: 0; }
