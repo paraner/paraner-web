@@ -9,6 +9,7 @@ import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { announceRightPanel, useCloseOnOtherRightPanel, useOnDataChanged } from "../../../lib/rightPanel";
 import { useServerSynced } from "../../../lib/useServerSynced";
+import { useRealtimeRefresh } from "../../../lib/useRealtimeRefresh";
 import { formatCurrency, formatDate, TZ } from "../../../lib/format";
 import { todayStr, ymd } from "../../../lib/date";
 import {
@@ -149,6 +150,8 @@ export default function IslemlerClient({
      `router.refresh()` sunucuyu yeniden çalıştırıyor ama düz `useState` yeni prop'u
      görmezden geldiği için liste eski kalıyordu (24.07 canlı). Bkz. lib/useServerSynced. */
   const [list, setList] = useServerSynced<Tx[]>(initialTransactions);
+  // Telefondan/başka sekmeden eklenen işlem CANLI düşsün (parla/sql/islemler-realtime.sql)
+  useRealtimeRefresh("transactions", profileId);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Tx | null>(null);
   const [selected, setSelected] = useState<Tx | null>(null); // sağ detay paneli

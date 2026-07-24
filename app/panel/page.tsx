@@ -1,6 +1,7 @@
 import { createClient } from "../../lib/supabase/server";
 import { getActiveProfile } from "../../lib/supabase/profile";
 import OnboardingModal from "./OnboardingModal";
+import RealtimeRefresher from "./RealtimeRefresher";
 import { formatCurrency, formatDate, TZ } from "../../lib/format";
 import { ymd } from "../../lib/date";
 import { findCategory } from "../../lib/categories";
@@ -211,6 +212,8 @@ export default async function GenelBakisPage() {
 
   return (
     <>
+      {/* Telefondan/başka sekmeden eklenen işlem CANLI düşsün (görünmez dinleyici) */}
+      <RealtimeRefresher table="transactions" profileId={profile?.id ?? null} />
       <div className="ov-header">
         <h1>Genel Bakış</h1>
         <span className="ov-period">{monthLabel}</span>
