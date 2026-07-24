@@ -45,6 +45,7 @@ Sıra önemliydi, uygulanma sırası:
 |---|---|---|
 | `ai-config-versions.sql` | `ai_config_versions` tablosu — AI'ın kural seti, sürümlü. Sürüm 1 = mobildeki kuralların birebir kopyası | ✅ çalıştırıldı (24.07) |
 | `ai-config-v2-islem-protokolu.sql` | Sürüm 2 — AI'ın "kaydettim" deyip kaydetmemesi hatasını kapatır (aktif sürümü kopyalar, yalnız `closing`'i değiştirir) | ⏳ **çalıştırılmayı bekliyor** |
+| `ai-sohbet-saklama-90-gun.sql` | Sohbet geçmişi 90 günde bir temizlenir (pg_cron, gecelik). Gelir/gider kayıtlarına dokunmaz | ⏳ **çalıştırılmayı bekliyor** |
 
 > Neden: kurallar bugüne kadar mobil uygulamanın İÇİNDE (`paraner-app/lib/aiContext.ts`) gömülüydü →
 > değişiklik için App Store sürümü gerekiyordu. Tablo, kuralları admin panelinden yönetilebilir kılar;

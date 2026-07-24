@@ -42,6 +42,12 @@
       (`paraner-app/supabase/functions/ai-chat/brain/*`). Eski sözleşme bozulmadı → mobil kırılmaz.
 - [x] ✅ **SQL çalıştırıldı** (`sql/ai/ai-config-versions.sql`) + **edge deploy edildi** (2026-07-24).
       Duman testi: fonksiyon ayakta, iki yol da 401 dönüyor (açılışta çökme yok).
+- [x] **Parla web'de ÇALIŞIYOR** (canlı doğrulandı): sohbet + işlem ekleme + fiş okuma + gerçek akış
+      (streaming) + sohbeti temizle. Sohbet geçmişi mobil ile ortak.
+- [ ] 🔴 **Bekleyen 2 SQL:** `ai-config-v2-islem-protokolu.sql` + `ai-sohbet-saklama-90-gun.sql`.
+- [ ] **KARAR VERİLDİ (24.07):** tek sürekli sohbet (çoklu sohbet YOK) + 90 gün saklama.
+      Çoklu sohbet ancak kullanıcılar uzun analiz oturumları yaparsa değerlenir; o zaman
+      yeni tablo + mobil koordinasyonu gerekir.
 - [ ] **Faz 2:** admin panelde "AI Kuralları" sayfası (düzenle · kaydet=yeni sürüm · geri al · önizleme).
 - [x] **Faz 3 (ekran):** web panelde Parla — üst bar ikonu + sağdan yan panel (`app/panel/parla/`).
       ⏳ **Canlı test bekliyor** (uçtan uca ilk gerçek deneme: kural okuma + işlem ekleme).
