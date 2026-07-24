@@ -58,10 +58,13 @@
 - [ ] **KARAR BEKLİYOR — "tümünü sil" açılsın mı?** Mobil `smartRouter.ts`te sıra hatası: "evet tümünü sil"
       cümlesi de "tümünü" içerdiği için onay dalına düşüyor → toplu silme **canlıda hiç çalışmamış**.
       Sunucuda aynı (güvenli) davranış korundu; açmak geri dönüşü olmayan silmeyi etkinleştirir.
-- [ ] 🔴 **SIRADAKİ İŞ — kategori kataloğu DB'ye** (karar verildi 24.07). Bugün ÜÇ kopya
-      (mobil `constants/categories.ts` + web `lib/categories.ts` + `parla/.../brain/categories.ts`).
-      Dokunacağı yer: web 7 dosya + mobil 15 dosya + yeni tablo + RLS. **Bonus:** mobildeki
-      ÖZEL kategoriler cihaz-yerel (AsyncStorage) → DB'ye taşınınca cihazlar arası senkron da çözülür.
+- [x] ✅ **ÖZEL kategoriler ortak tabloda (24.07):** `user_categories`. Web + mobil + Parla aynı
+      listeyi okuyor; cihazdaki eskiler ilk açılışta bir kez taşınıyor (bayraklı).
+- [ ] **SABİT kategori kataloğu hâlâ üç kopya** (mobil + web + `brain/categories.ts`) — bu SALT
+      TEMİZLİK, kullanıcıya görünen etkisi yok. Yeni kategori eklerken üçünü birden güncelle.
+- [ ] 🔴 **Parla kategori sorusu MOBİLDE YOK:** sunucu soruyor ama telefonda çipler yok →
+      belirsiz yazımda ("250 kahve") işlem KAYDEDİLMİYOR. Telefonda net yazmak gerekiyor.
+      Web'deki `.parla-kat` çip arayüzünün mobil karşılığı yapılacak.
 - [x] ✅ **Düzeltildi (Faz 4):** kalan-hak sayacı yanlış kimlikle okunuyordu (profil id ↔ auth id);
       + butonu seçilen görseli hiç göndermiyordu; günlük limit sabitleri (5/30) iki yerde kopyaydı;
       fiş tarama istemi mobilde ayrı kopyaydı → hepsi tek kaynağa bağlandı.
