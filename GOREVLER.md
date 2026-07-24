@@ -37,6 +37,10 @@
 - [ ] İşletme hesabı eklemede **Stripe ödeme/trial kapısı** (şu an direkt açılıyor).
 
 ## 🤖 AI ASİSTAN — TEK BEYİN (web + mobil ortak) · `~/Developer/Paraner/parla/PLAN.md`
+> 🧪 **SONRAKİ OTURUMUN İLK İŞİ = UÇTAN UCA TEST** (Mehmet, 25.07 — "bir dahaki işe başlarken ilk bunu"):
+>   ① kategori sorma (gelir/gider, yeni kategori, renkler)  ② **fiş fotoğrafı okuma — TELEFONDA HİÇ
+>   DENENMEDİ**  ③ telefon↔web sohbet + kategori + işlem senkronu  ④ çoklu profil: yeni işletme hesabı
+>   aç → sohbetler/işlemler AYRI mı (tek-aktif-profil garantisi de burada test edilir).
 > Karar (2026-07-24): kurallar kodda değil **admin panelinde**; web kapsamı = mobil paritesi (fiş hariç).
 - [x] **Faz 1 kodu yazıldı** — `ai_config_versions` tablosu (SQL hazır) + edge function "beyin modu"
       (`paraner-app/supabase/functions/ai-chat/brain/*`). Eski sözleşme bozulmadı → mobil kırılmaz.
@@ -44,13 +48,14 @@
       Duman testi: fonksiyon ayakta, iki yol da 401 dönüyor (açılışta çökme yok).
 - [x] **Parla web'de ÇALIŞIYOR** (canlı doğrulandı): sohbet + işlem ekleme + fiş okuma + gerçek akış
       (streaming) + sohbeti temizle. Sohbet geçmişi mobil ile ortak.
-- [ ] 🔴 **Bekleyen 2 SQL:** `parla/sql/ai-config-v2-islem-protokolu.sql` + `parla/sql/ai-sohbet-saklama-90-gun.sql`.
+- [x] ✅ **Tüm Parla SQL'leri çalıştırıldı** (25.07 DOGRULAMA.sql ile teyit): kural v2, 90 gün saklama,
+      `user_categories`, çift-aktif-profil düzeltmesi + tek-aktif garantisi, `transactions` realtime.
 - [ ] **KARAR VERİLDİ (24.07):** tek sürekli sohbet (çoklu sohbet YOK) + 90 gün saklama.
       Çoklu sohbet ancak kullanıcılar uzun analiz oturumları yaparsa değerlenir; o zaman
       yeni tablo + mobil koordinasyonu gerekir.
-- [ ] **Faz 2:** admin panelde "AI Kuralları" sayfası (düzenle · kaydet=yeni sürüm · geri al · önizleme).
-- [x] **Faz 3 (ekran):** web panelde Parla — üst bar ikonu + sağdan yan panel (`app/panel/parla/`).
-      ⏳ **Canlı test bekliyor** (uçtan uca ilk gerçek deneme: kural okuma + işlem ekleme).
+- [ ] 🔜 **SIRADAKİ BÜYÜK İŞ — Faz 2:** admin panelde "AI Kuralları" sayfası (düzenle · kaydet=yeni
+      sürüm · geri al · önizleme). Kuralları koda dokunmadan Mehmet düzenleyebilsin diye.
+- [x] **Faz 3 (ekran):** web panelde Parla — çalışıyor (kategori sorma + yeni kategori + renkli tutar).
 - [x] ✅ **Faz 4 TAMAM (24.07): telefon ortak beyne bağlandı.** `chatStore` sunucuya soruyor;
       `SUNUCU_BEYNI` anahtarı ile tek satırda geri dönülebilir. Eski dosyalar SİLİNMEDİ.
       ⏳ **Cihaz testi bekliyor** (native build şart — OTA yok).
@@ -62,9 +67,11 @@
       listeyi okuyor; cihazdaki eskiler ilk açılışta bir kez taşınıyor (bayraklı).
 - [ ] **SABİT kategori kataloğu hâlâ üç kopya** (mobil + web + `brain/categories.ts`) — bu SALT
       TEMİZLİK, kullanıcıya görünen etkisi yok. Yeni kategori eklerken üçünü birden güncelle.
-- [ ] 🔴 **Parla kategori sorusu MOBİLDE YOK:** sunucu soruyor ama telefonda çipler yok →
-      belirsiz yazımda ("250 kahve") işlem KAYDEDİLMİYOR. Telefonda net yazmak gerekiyor.
-      Web'deki `.parla-kat` çip arayüzünün mobil karşılığı yapılacak.
+- [x] ✅ **Kategori sorma sistemi TAMAM (web + mobil):** belirsiz yazımda ("250 kahve") Parla soruyor,
+      kaydetmeden çip gösteriyor; yeni kategori oluşturulabiliyor (ortak tabloya). Tutar renkli
+      (gelir yeşil/gider kırmızı), onay metni türe göre ("giderin/gelirin kaydedildi").
+- [x] ✅ **İşlem CANLI senkron (25.07):** `transactions` realtime → telefon↔web çift yönlü, yenilemesiz
+      (~3 sn ilk bağlantı, sonrası hızlı). Maliyet notu: `parla/sql/islemler-realtime.sql` (sıcak tablo).
 - [x] ✅ **Düzeltildi (Faz 4):** kalan-hak sayacı yanlış kimlikle okunuyordu (profil id ↔ auth id);
       + butonu seçilen görseli hiç göndermiyordu; günlük limit sabitleri (5/30) iki yerde kopyaydı;
       fiş tarama istemi mobilde ayrı kopyaydı → hepsi tek kaynağa bağlandı.

@@ -20,6 +20,25 @@
 
 ## Bu hafta (2026-07-23 →)
 
+### 25.07 — Parla kategori sorma + canlı senkron (web+mobil+parla, hepsi canlı)
+- **Kategori sorma sistemi bitti:** belirsiz yazımda ("250 kahve") Parla kaydetmeden SORUYOR;
+  çipler yazma alanının üstünde (tek satır, yana kayar, kenar erimesi, kaydırma çubuğu). "+" ile
+  yeni kategori (ortak `user_categories` tablosuna). Net yazımda ("100 tl market") sormaz — hız korunur.
+- **Metin/renk cilası:** tutar satırı + özet renkli (gelir yeşil / gider kırmızı), sembol (₺) ile;
+  onay "Yemek **giderin** kaydedildi"; kategori seçilince yer tutucu başlık o kategorinin adı olur.
+  Metin Mehmet seçimi ("...eklersen paranın nereye gittiğini birlikte daha iyi analiz edebiliriz").
+- **İşlem CANLI senkron:** `transactions` realtime yayına eklendi → telefon↔web çift yönlü, yenilemesiz.
+  Debounce'lu `router.refresh()` / store fetch. İlk bağlantı ~3 sn, sonrası hızlı.
+- **Bulunan/kapatılan hatalar (canlı):** ① mesaj id'leri `Date.now()` ile çakışıp mesaj GİZLİYORDU
+  (aynı ms'de iki mesaj → tek React key) → monoton sayaç. ② sohbeti sil DB'yi bekliyordu → ekran önce
+  boşalıyor. ③ iki profil birden aktifti → Parla "Profil bulunamadı" → veri düzeltildi + tek-aktif
+  garantisi (kısmi tekil indeks). ④ `custom_<zaman>` ham kimlik görünüyordu → okunabilir slug + etiket çözümü.
+- **Mimari:** özel kategoriler cihaz-yerelden ortak DB tablosuna (web 7 + mobil 15 dosya, imzalar aynı
+  kaldı). "İptal" sheet düğmeleri kırmızı çerçeve (tek yerden, 25 ekran). Cam-içine-cam çizilmiyor
+  (araştırıldı) → gerçek kenarlık.
+
+
+
 - **Admin cila — COMMIT BEKLİYOR:** `/admin/musteriler/[id]` Tehlike Bölgesi artık `ayarlar`'ın
   `danger-zone` sözleşmesini kullanıyor (dz-info + dz-btn); `/admin/ekip` formu dropdown'larına
   ekran-okuyucu etiketleri (aria-labelledby + role=group).
