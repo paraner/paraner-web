@@ -36,15 +36,15 @@
       kazandıran dolandırıcılığa döner; aşamalı geçiş haftalar sürer, o gün başlamak geç kalır (aşağı bak).
 - [ ] İşletme hesabı eklemede **Stripe ödeme/trial kapısı** (şu an direkt açılıyor).
 
-## 🤖 AI ASİSTAN — TEK BEYİN (web + mobil ortak) · `docs/AI-ORTAK-BEYIN-PLANI.md`
+## 🤖 AI ASİSTAN — TEK BEYİN (web + mobil ortak) · `~/Developer/Paraner/parla/PLAN.md`
 > Karar (2026-07-24): kurallar kodda değil **admin panelinde**; web kapsamı = mobil paritesi (fiş hariç).
 - [x] **Faz 1 kodu yazıldı** — `ai_config_versions` tablosu (SQL hazır) + edge function "beyin modu"
       (`paraner-app/supabase/functions/ai-chat/brain/*`). Eski sözleşme bozulmadı → mobil kırılmaz.
-- [x] ✅ **SQL çalıştırıldı** (`sql/ai/ai-config-versions.sql`) + **edge deploy edildi** (2026-07-24).
+- [x] ✅ **SQL çalıştırıldı** (`parla/sql/ai-config-versions.sql`) + **edge deploy edildi** (2026-07-24).
       Duman testi: fonksiyon ayakta, iki yol da 401 dönüyor (açılışta çökme yok).
 - [x] **Parla web'de ÇALIŞIYOR** (canlı doğrulandı): sohbet + işlem ekleme + fiş okuma + gerçek akış
       (streaming) + sohbeti temizle. Sohbet geçmişi mobil ile ortak.
-- [ ] 🔴 **Bekleyen 2 SQL:** `ai-config-v2-islem-protokolu.sql` + `ai-sohbet-saklama-90-gun.sql`.
+- [ ] 🔴 **Bekleyen 2 SQL:** `parla/sql/ai-config-v2-islem-protokolu.sql` + `parla/sql/ai-sohbet-saklama-90-gun.sql`.
 - [ ] **KARAR VERİLDİ (24.07):** tek sürekli sohbet (çoklu sohbet YOK) + 90 gün saklama.
       Çoklu sohbet ancak kullanıcılar uzun analiz oturumları yaparsa değerlenir; o zaman
       yeni tablo + mobil koordinasyonu gerekir.
@@ -57,7 +57,7 @@
       cümlesi de "tümünü" içerdiği için onay dalına düşüyor → toplu silme **canlıda hiç çalışmamış**.
       Sunucuda aynı (güvenli) davranış korundu; açmak geri dönüşü olmayan silmeyi etkinleştirir.
 - [ ] **KARAR BEKLİYOR — kategori kataloğu:** artık ÜÇ kopya (mobil + web + edge `brain/categories.ts`).
-      Ortak DB tablosuna taşınsın mı? (şema değişikliği)
+      **KARAR: DB tablosuna taşınacak** (24.07) — üç kopya yerine tek kaynak.
 - [ ] 🐞 **Mobil hata (bulundu, düzeltilmedi):** mobil `chatStore.fetchDailyCount(profile.id)` sayacı
       **profil id** ile okuyor, oysa edge function **auth kullanıcı id**'siyle yazıyor → mobildeki
       "kalan hak" göstergesi hep 0 okuyor. Kota kontrolü sunucuda olduğu için güvenlik açığı DEĞİL,

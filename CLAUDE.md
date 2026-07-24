@@ -45,6 +45,13 @@ Bir yeri değiştirip diğerini atlamak = kullanıcının gördüğü tutarsızl
   hepsi `import "server-only"` ile başlar, ASLA client component'e sızmamalı.
   Detay: `docs/ADMIN-PANEL.md` · son denetim: `docs/DENETIM-ADMIN-2026-07-18.md`.
 
+### 🤖 PARLA (AI asistan) — BEYNİ BU REPODA DEĞİL
+Parla'nın *düşünen* tarafı (kurallar, işlem kaydetme, fiş okuma) ortak klasörde:
+**`~/Developer/Paraner/parla/`** — web ve mobil ikisi de oraya bağlanır.
+Bu repoda YALNIZ ekran var: `app/panel/parla/`. Parla'nın davranışı değişecekse
+`parla/README.md` oku, kodu orada değiştir, oradan deploy et. ⚠️ Buraya beynin kopyasını
+ÇIKARMA — iki beyin demek olur.
+
 **Backend:** Mobil uygulamayla AYNI Supabase (proje `oqhonmmbcqrkcaoijgnb`). `@supabase/ssr`, cookie domain `.paraner.com` (çapraz-subdomain oturum). Env: `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`. **DB şemasına dokunma** — mobil aynı şemayı kullanır; kolon/tablo gerekiyorsa önce sor.
 
 ```

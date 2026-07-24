@@ -39,19 +39,18 @@ Sıra önemliydi, uygulanma sırası:
 | — | `destek-departman-DOGRULAMA.sql` | **Sadece OKUR** — 13 satır ✅/❌ | istediğin zaman |
 | — | `destek-departman-TEST.sql` | İkinci hesapla canlı test betiği (rol/departman atar, sonunda geri alır) | test için |
 
-## ai/ — AI asistan (Parla) kuralları
+## ai/ — BURADA DEĞİL
 
-| Dosya | Ne yapar | Durum |
-|---|---|---|
-| `ai-config-versions.sql` | `ai_config_versions` tablosu — AI'ın kural seti, sürümlü. Sürüm 1 = mobildeki kuralların birebir kopyası | ✅ çalıştırıldı (24.07) |
-| `ai-config-v2-islem-protokolu.sql` | Sürüm 2 — AI'ın "kaydettim" deyip kaydetmemesi hatasını kapatır (aktif sürümü kopyalar, yalnız `closing`'i değiştirir) | ⏳ **çalıştırılmayı bekliyor** |
-| `ai-sohbet-saklama-90-gun.sql` | Sohbet geçmişi 90 günde bir temizlenir (pg_cron, gecelik). Gelir/gider kayıtlarına dokunmaz | ⏳ **çalıştırılmayı bekliyor** |
+Parla'ya (AI asistan) ait SQL dosyaları ortak klasöre taşındı:
+**`~/Developer/Paraner/parla/sql/`**
 
-> Neden: kurallar bugüne kadar mobil uygulamanın İÇİNDE (`paraner-app/lib/aiContext.ts`) gömülüydü →
-> değişiklik için App Store sürümü gerekiyordu. Tablo, kuralları admin panelinden yönetilebilir kılar;
-> edge function `ai-chat` aktif sürümü okur (60 sn önbellek). Plan: `docs/AI-ORTAK-BEYIN-PLANI.md`.
-> ⚠️ Tablo kurulmadan `ai-chat` beyin modu **çalışır ama asgari kural setiyle** (fail-soft) — yani
-> AI cevap verir, zengin kurallar devreye girmez. Sıra: önce bu SQL, sonra edge deploy.
+Sebep: Parla'nın beyni hem web hem mobil tarafından kullanılıyor; bir tarafın repo'sunda
+durması kafa karıştırıyordu. Artık "Parla'da bir şey değişecek" denince tek adres: `parla/`.
+Plan ve mimari: `~/Developer/Paraner/parla/PLAN.md`.
+
+> Not: `paraner-app/supabase/ai-*.sql` dosyaları (token maliyeti, kullanım sayacı) TARİHSEL
+> kayıt olarak yerinde bırakıldı — çalıştırılmış migration geçmişi taşınırsa iz kaybolur.
+> Yeni Parla SQL'leri `parla/sql/` altına yazılır.
 
 ## ⚠️ Bilinmesi gerekenler
 

@@ -14,7 +14,7 @@ import { showToast } from "../../components/toast";
    PARLA — panel içi AI asistanı (sağdan açılan yan panel)
 
    NEDEN YAN PANEL (baloncuk değil): Parla yalnız cevap vermiyor, İŞLEM DE EKLİYOR.
-   Sektör araştırması (docs/AI-ORTAK-BEYIN-PLANI.md): köşedeki yüzen baloncuk kullanıcıya
+   Sektör araştırması (~/Developer/Paraner/parla/PLAN.md): köşedeki yüzen baloncuk kullanıcıya
    "destek botu, bir şey yapmaz" hissi veriyor; yan panel "yardımcı/copilot" konumu veriyor.
    Ayrıca panel arkada görünür kalıyor → eklenen işlem listede anında görülebiliyor.
 
