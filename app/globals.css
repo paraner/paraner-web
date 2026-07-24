@@ -4877,6 +4877,8 @@ body.parla-open .panel-content { padding-right: 408px; }
 .parla-msg strong { font-weight: 650; color: #fff; }
 .parla-p { min-height: 0.9em; }
 .parla-li { display: flex; align-items: baseline; gap: 8px; }
+/* Madde metni tek parça akar (kalın başlık ayrı sütuna düşmesin) */
+.parla-li-body { flex: 1; min-width: 0; }
 .parla-dot {
   flex-shrink: 0; width: 4px; height: 4px; border-radius: 50%;
   background: var(--text-faint); transform: translateY(-2px);

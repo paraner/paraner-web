@@ -43,7 +43,8 @@ Sıra önemliydi, uygulanma sırası:
 
 | Dosya | Ne yapar | Durum |
 |---|---|---|
-| `ai-config-versions.sql` | `ai_config_versions` tablosu — AI'ın kural seti, sürümlü. Sürüm 1 = mobildeki kuralların birebir kopyası | ⏳ **çalıştırılmayı bekliyor** |
+| `ai-config-versions.sql` | `ai_config_versions` tablosu — AI'ın kural seti, sürümlü. Sürüm 1 = mobildeki kuralların birebir kopyası | ✅ çalıştırıldı (24.07) |
+| `ai-config-v2-islem-protokolu.sql` | Sürüm 2 — AI'ın "kaydettim" deyip kaydetmemesi hatasını kapatır (aktif sürümü kopyalar, yalnız `closing`'i değiştirir) | ⏳ **çalıştırılmayı bekliyor** |
 
 > Neden: kurallar bugüne kadar mobil uygulamanın İÇİNDE (`paraner-app/lib/aiContext.ts`) gömülüydü →
 > değişiklik için App Store sürümü gerekiyordu. Tablo, kuralları admin panelinden yönetilebilir kılar;

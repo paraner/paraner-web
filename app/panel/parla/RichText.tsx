@@ -82,8 +82,16 @@ export default function RichText({ blocks, reveal }: { blocks: Block[]; reveal: 
         }
 
         if (!kids.length) return null;
+        /* ⚠️ Madde satırında parçalar TEK bir sarmalayıcıya konur. Doğrudan flex'in altına
+           konursa her parça (kalın başlık + kalan metin) AYRI SÜTUN olur → "İşlem Takibi:"
+           daracık bir kolona sıkışır (Mehmet, 24.07). Sarmalayıcı sayesinde normal metin akışı. */
         return b.kind === "bullet"
-          ? <div key={bi} className="parla-li"><span className="parla-dot" />{kids}</div>
+          ? (
+            <div key={bi} className="parla-li">
+              <span className="parla-dot" />
+              <span className="parla-li-body">{kids}</span>
+            </div>
+          )
           : <div key={bi} className="parla-p">{kids}</div>;
       })}
     </>
