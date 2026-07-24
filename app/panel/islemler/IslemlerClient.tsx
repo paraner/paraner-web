@@ -25,8 +25,11 @@ import {
   type Category,
 } from "../../../lib/categories";
 import {
-  loadCustomCategories,
-  saveCustomCategories,
+  fetchCustomCategories,
+  migrateLocalCategories,
+  createCustomCategory,
+  updateCustomCategory,
+  deleteCustomCategory,
   uniqueCustomId,
   type CustomCategory,
 } from "../../../lib/customCategories";
@@ -172,10 +175,17 @@ export default function IslemlerClient({
   const [date, setDate] = useState(todayStr());
   const [accountId, setAccountId] = useState("");
 
-  // Özel kategoriler — mobil gibi yerelde (localStorage), profil bazında.
+  /* Özel kategoriler — ORTAK TABLODAN (telefon + web + Parla aynı listeyi görür).
+     İlk açılışta bu tarayıcıda kalmış eski yerel kategoriler bir kez tabloya taşınır. */
   const [customCats, setCustomCats] = useState<CustomCategory[]>([]);
   useEffect(() => {
-    setCustomCats(loadCustomCategories(profileId));
+    let alive = true;
+    (async () => {
+      await migrateLocalCategories(profileId);
+      const liste = await fetchCustomCategories(profileId);
+      if (alive) setCustomCats(liste);
+    })();
+    return () => { alive = false; };
   }, [profileId]);
 
   // Kategori id → etiket+renk; önce özel kategoriler, sonra sabit katalog.
@@ -189,27 +199,36 @@ export default function IslemlerClient({
     ...customCats.filter((c) => c.type === type),
   ];
 
+  /* CategoryPicker id'yi ANINDA bekliyor (senkron) → iyimser ekle, kaydı arkadan yap.
+     Kayıt tutmazsa geri al + söyle (sessiz "oldu" gösterme kuralı). */
   function handleCreateCustom(label: string, color: string, icon: string): string {
     const id = uniqueCustomId(label, customCats);
-    const next = [...customCats, { id, label, color, icon, type }];
-    setCustomCats(next);
-    saveCustomCategories(profileId, next);
+    const yeni: CustomCategory = { id, label, color, icon, type };
+    setCustomCats((o) => [...o, yeni]);
+    createCustomCategory(profileId, yeni).then((ok) => {
+      if (!ok) {
+        setCustomCats((o) => o.filter((c) => c.id !== id));
+        setError("Kategori kaydedilemedi. Tekrar dener misin?");
+      }
+    });
     return id;
   }
 
   function handleUpdateCustom(id: string, label: string, color: string, icon: string) {
-    const next = customCats.map((c) =>
-      c.id === id ? { ...c, label, color, icon } : c
-    );
-    setCustomCats(next);
-    saveCustomCategories(profileId, next);
+    const oncesi = customCats;
+    setCustomCats(customCats.map((c) => (c.id === id ? { ...c, label, color, icon } : c)));
+    updateCustomCategory(profileId, id, { label, color, icon }).then((ok) => {
+      if (!ok) { setCustomCats(oncesi); setError("Kategori güncellenemedi."); }
+    });
   }
 
   function handleDeleteCustom(id: string) {
-    const next = customCats.filter((c) => c.id !== id);
-    setCustomCats(next);
-    saveCustomCategories(profileId, next);
+    const oncesi = customCats;
+    setCustomCats(customCats.filter((c) => c.id !== id));
     if (category === id) setCategory(""); // seçili silindiyse temizle
+    deleteCustomCategory(profileId, id).then((ok) => {
+      if (!ok) { setCustomCats(oncesi); setError("Kategori silinemedi."); }
+    });
   }
 
   // Filtreler — anında, client-side
