@@ -3,14 +3,17 @@ import { Users, Building2, User, Star, Clock, LifeBuoy, ChevronRight, Activity, 
 import { createAdminClient, hasAdminKey } from "../../lib/supabase/admin";
 import { requireStaffPage } from "../../lib/adminGuard";
 import { TICKET_COLS, TICKET_STATUS_META, type Ticket } from "../../lib/supportShared";
-import { relativeLabel, TRIAL_ENDING_DAYS } from "../../lib/lifecycle";
-import { TRIAL_DAYS } from "../../lib/plans";
 import {
-  panoMetrikleri,
-  getActiveCounts,
-  getDeadProfileCount,
-  getModuleAdoption,
-} from "../../lib/adminMetrics";
+  relativeLabel,
+  relativeDays,
+  personLifecycle,
+  hasBusiness,
+  displayName,
+  TRIAL_ENDING_DAYS,
+  NEW_WITHIN_DAYS,
+} from "../../lib/lifecycle";
+import { listPeopleCached } from "../../lib/adminUsers";
+import { getActiveCounts, getDeadProfileCount, getModuleAdoption } from "../../lib/adminMetrics";
 import AdminKeyNotice from "./AdminKeyNotice";
 import AdminPageHead from "./AdminPageHead";
 
@@ -24,24 +27,18 @@ export default async function AdminDashboard() {
   if (!hasAdminKey()) return <AdminKeyNotice />;
   const admin = createAdminClient()!;
 
-  /* Müşteri (kişi) ≠ profil: bir kişi hem bireysel hem işletme profili açabilir. Kart/yüzdeler PROFİL
-     bazlı; "Toplam Müşteri" gerçek kişi sayısı olmalı. PostgREST'te distinct count yok → auth_user_id
-     kolonu çekilip benzersizleştiriliyor (tek uuid kolonu; büyürse RPC gerekir → DB şeması = önce sor). */
-  // Rol: agent Müşteriler'e giremez (requireAdminPage) → ona kart linki VERME, 404 yerdi.
-  // (role/isAdminRole yukarıda, guard ile birlikte alınıyor.)
-  /* ⚠️ AĞIR METRİKLER ÖNBELLEKLİ (2026-07-19) — ölçüm: /admin sıcakken bile 3,6 sn sürüyordu,
-     diğer admin sayfaları 350-400 ms. Sebep bu sayfanın 8 sorgusu; tek tek 300-850 ms (9 satırlık
-     tablolarda!) çünkü Free plan disk IO bütçesi tükenince throughput 5 MB/s'e düşüyor.
-     Bu sayılar KİŞİYE ÖZEL DEĞİL (service_role, global metrik) → 2 dakika önbelleklemek güvenli.
-     Kazanç çift yönlü: sayfa anında açılır VE DB'ye giden sorgu sayısı ~30 kat azalır (panel
-     açık kaldıkça her yenilemede baştan çalışmıyor) — disk IO uyarısının da bir parçası buydu.
-     ⚠️ DESTEK sorguları ÖNBELLEĞE ALINMADI: "bekleyen talep" panelin birinci işi, taze kalmalı. */
-  const [{ totalR, businessR, premiumR, recentR, ownersR }, ticketsR, openR, active, dead, adoption] =
-    await Promise.all([
-      /* ⚠️ Yalnız service_role sorguları önbellekli. Aşağıdaki üç metrik ÇEREZ tabanlı
-         istemci kullanıyor (RPC guard'ı auth.uid() istiyor) → önbelleğe ALINAMAZ,
-         alınırsa sayfa komple patlar (2026-07-19'da yaşandı). */
-      panoMetrikleri(),
+  /* ⚠️ Kartlar SEGMENTLERLE AYNI KAYNAKTAN sayılır (2026-07-24 kararı: "her yerde KİŞİ say").
+     Eskiden pano `panoMetrikleri` ile PROFİL sayıyordu ("Premium profil" = is_premium profil,
+     DENEME DAHİL), tıklanınca giden /admin/musteriler segmentleri ise KİŞİ sayıyordu
+     (personLifecycle) → kart 40 der, liste 6 açardı. Artık ikisi de listPeopleCached + lib/lifecycle
+     kullanıyor → kart değeri tıklanan listeyle BİREBİR eşleşir. (Müşteri = auth kullanıcısı; bir
+     kişinin birden çok profili olabilir.) service_role, 60 sn önbellekli, /admin/musteriler +
+     /admin/destek ile PAYLAŞIMLI. */
+  const { people, truncated, error: peopleErr } = await listPeopleCached();
+
+  /* ⚠️ Destek sorguları BİLEREK önbelleksiz: "bekleyen talep" panelin birinci işi, taze kalmalı.
+     active/dead/adoption yönetici-özel RPC'ler (agent'ta 0). */
+  const [ticketsR, openR, active, dead, adoption] = await Promise.all([
     admin
       .from("support_tickets")
       .select(TICKET_COLS)
@@ -49,71 +46,57 @@ export default async function AdminDashboard() {
       .order("last_message_at", { ascending: false })
       .limit(6),
     // Sayaç AYRI: yukarıdaki sorgu 6 ile sınırlı → tickets.length sayılsaydı 7 talepte "6" derdi.
-      admin
-        .from("support_tickets")
-        .select("*", { count: "exact", head: true })
-        .in("status", ["open", "answered"]),
-      isAdminRole ? getActiveCounts() : Promise.resolve({ dau: 0, wau: 0, mau: 0 }),
-      isAdminRole ? getDeadProfileCount() : Promise.resolve(0),
-      isAdminRole ? getModuleAdoption() : Promise.resolve(null),
-    ]);
+    admin
+      .from("support_tickets")
+      .select("*", { count: "exact", head: true })
+      .in("status", ["open", "answered"]),
+    isAdminRole ? getActiveCounts() : Promise.resolve({ dau: 0, wau: 0, mau: 0 }),
+    isAdminRole ? getDeadProfileCount() : Promise.resolve(0),
+    isAdminRole ? getModuleAdoption() : Promise.resolve(null),
+  ]);
 
-  /* ⚠️ Hataları GÖSTER, yutma: `count ?? 0` sessizce 0'a düşüyordu → kolon/izin hatasında
-     panelin ilk ekranı "Toplam Müşteri 0 · %0" der ve kimse sebebini bilmez.
-     ⚠️ ticketsR/openR de LİSTEDE olmalı (denetim 2026-07-18 / Y4): destek sorgusu 400 dönerse
-     tickets=[] + openCount=0 → kart "Bekleyen talep 0 · hepsi yanıtlandı" der ve müşteri
-     talepleri sessizce yanıtsız kalır. Panelin BİRİNCİ işi bu. */
-  const err = [totalR, businessR, premiumR, recentR, ownersR, ticketsR, openR].find((r) => r.error)
-    ?.error;
+  /* ⚠️ Hataları GÖSTER, yutma (denetim 2026-07-18 / Y4): destek sorgusu 400 dönerse tickets=[] +
+     openCount=0 → kart "Bekleyen talep 0 · hepsi yanıtlandı" der ve talepler sessizce yanıtsız kalır. */
+  const err = peopleErr ?? [ticketsR, openR].find((r) => r.error)?.error?.message;
   if (err) {
     return (
       <div>
         <h1 className="admin-h1">Genel Bakış</h1>
-        <p className="admin-sub">Metrikler yüklenemedi: {err.message}</p>
+        <p className="admin-sub">Metrikler yüklenemedi: {err}</p>
       </div>
     );
   }
 
-  const total = totalR.count ?? 0;
-  const business = businessR.count ?? 0;
-  const premium = premiumR.count ?? 0;
-  const recent = recentR.count ?? 0;
-  const owners = (ownersR.data ?? []) as {
-    auth_user_id: string | null;
-    profile_name: string | null;
-    name: string | null;
-    trial_plan: string | null;
-    trial_start_date: string | null;
-    is_premium: boolean | null;
-  }[];
-  const members = new Set(owners.map((r) => r.auth_user_id).filter(Boolean)).size;
-  /* Kırpıldıysa SÖYLE (O5): sayılar artık "en az" anlamına geliyor, kesin değil. */
-  const ownersTruncated = (ownersR.count ?? owners.length) > owners.length;
-  const individual = Math.max(0, total - business);
-  const free = Math.max(0, total - premium);
-  const pct = (n: number) => (total ? Math.round((n / total) * 100) : 0);
-  const plural = (n: number) => n.toLocaleString("tr-TR");
   const now = Date.now();
+  const plural = (n: number) => n.toLocaleString("tr-TR");
 
-  // Talep sahibinin adı: support_tickets.user_id = KİŞİ (auth.users.id) — profil id DEĞİL.
+  /* KİŞİ bazlı sayımlar — /admin/musteriler segmentleriyle (MusterilerClient.inSegment) BİREBİR. */
+  const total = people.length; // Toplam Müşteri (kişi)
+  const nProfiles = people.reduce((n, p) => n + p.profiles.length, 0); // alt bilgi: toplam profil
+  const business = people.filter(hasBusiness).length; // ?tur=business (≥1 işletme profili)
+  const individual = total - business; // ?tur=individual (hiç işletme profili yok)
+  const paid = people.filter((p) => personLifecycle(p, now).kind === "paid").length; // ?seg=paid
+  const recent = people.filter((p) => {
+    const d = relativeDays(p.created_at, now);
+    return d != null && d <= NEW_WITHIN_DAYS;
+  }).length; // ?seg=new (son 7 gün)
+  const endingSoon = people.filter((p) => {
+    const l = personLifecycle(p, now);
+    return l.kind === "trial" && l.days <= TRIAL_ENDING_DAYS;
+  }).length; // ?seg=ending
+
+  const pct = (n: number) => (total ? Math.round((n / total) * 100) : 0);
+
+  // Talep sahibinin adı: support_tickets.user_id = KİŞİ (auth.users.id). displayName "—" ise
+  // atla → kart #id fallback'ine düşer (nameByUser.get undefined döner).
   const nameByUser = new Map<string, string>();
-  for (const p of owners) {
-    const n = p.profile_name || p.name;
-    if (p.auth_user_id && n && !nameByUser.has(p.auth_user_id)) nameByUser.set(p.auth_user_id, n);
+  for (const p of people) {
+    const n = displayName(p);
+    if (n !== "—") nameByUser.set(p.id, n);
   }
   const tickets = (ticketsR.data ?? []) as Ticket[];
   const openCount = openR.count ?? 0;
   const isAdmin = isAdminRole;
-
-  /* Denemesi bitmek üzere olanlar — müşteri listesindeki "Denemesi bitiyor" segmentiyle
-     AYNI kural (lifecycle.ts): deneme başlamış sayılmak için trial_plan + trial_start_date
-     İKİSİ de dolu olmalı; kalan gün = TRIAL_DAYS - geçen gün. */
-  const endingSoon = owners.filter((p) => {
-    if (!p.trial_plan || !p.trial_start_date) return false;
-    const gecen = Math.floor((now - new Date(p.trial_start_date).getTime()) / 86400000);
-    const kalan = TRIAL_DAYS - gecen;
-    return kalan > 0 && kalan <= TRIAL_ENDING_DAYS;
-  }).length;
 
   /* AKSİYON PANOSU (Mehmet kararı): "bugün ne yapmalıyım" ekranı.
      Sıra bilinçli — aksiyon gerektirenler önde, envanter sayıları arkada.
@@ -144,9 +127,10 @@ export default async function AdminDashboard() {
           {
             label: "Ölü kayıt",
             value: dead,
-            sub: total
-              ? `%${Math.round((dead / total) * 100)} · hiç işlem girmemiş`
-              : "hiç işlem girmemiş",
+            // Bu metrik PROFİL bazlı (hiç işlem girmemiş profil) → % de profil üzerinden.
+            sub: nProfiles
+              ? `%${Math.round((dead / nProfiles) * 100)} · hiç işlem girmemiş profil`
+              : "hiç işlem girmemiş profil",
             icon: UserX,
             tone: "",
             /* Bilinçli olarak TIKLANAMAZ: eskiden filtresiz /admin/musteriler'e gidiyordu →
@@ -167,15 +151,18 @@ export default async function AdminDashboard() {
       : []),
     {
       label: "Toplam Müşteri",
-      value: members,
-      sub: `${plural(total)} profil · son 7 günde +${recent}`,
+      value: total,
+      sub: `${plural(nProfiles)} profil · son 7 günde +${recent}`,
       icon: Users,
       tone: "",
       href: isAdmin ? "/admin/musteriler" : undefined,
     },
-    { label: "İşletme profili", value: business, sub: `%${pct(business)}`, icon: Building2, tone: "biz", href: isAdmin ? "/admin/musteriler?tur=business" : undefined },
-    { label: "Bireysel profili", value: individual, sub: `%${pct(individual)}`, icon: User, tone: "ind", href: isAdmin ? "/admin/musteriler?tur=individual" : undefined },
-    { label: "Premium profil", value: premium, sub: `%${pct(premium)} · Free ${free}`, icon: Star, tone: "prem", href: isAdmin ? "/admin/musteriler?seg=paid" : undefined },
+    // Etiketler artık KİŞİ diyor (profil değil) → tıklanan segmentle birebir. %'ler kişi üzerinden.
+    { label: "İşletme", value: business, sub: `%${pct(business)}`, icon: Building2, tone: "biz", href: isAdmin ? "/admin/musteriler?tur=business" : undefined },
+    { label: "Bireysel", value: individual, sub: `%${pct(individual)}`, icon: User, tone: "ind", href: isAdmin ? "/admin/musteriler?tur=individual" : undefined },
+    // "Ücretli" = gerçek ödeyen (premium AMA denemesi yok) — ?seg=paid ile aynı. is_premium'a
+    // BAKMIYORUZ: o deneme dahil şişer; personLifecycle "paid" gerçek aboneyi verir.
+    { label: "Ücretli", value: paid, sub: `%${pct(paid)}`, icon: Star, tone: "prem", href: isAdmin ? "/admin/musteriler?seg=paid" : undefined },
   ];
 
 
@@ -184,13 +171,12 @@ export default async function AdminDashboard() {
     <div>
       <AdminPageHead
         title="Genel Bakış"
-        sub="Tüm müşteriler ve abonelik dağılımı. Bir müşteri birden fazla profil açabilir — dağılımlar profil bazlıdır."
+        sub="Tüm müşteriler ve abonelik dağılımı. Müşteri = kişi; bir kişi birden fazla profil açabilir. Kart sayıları KİŞİ bazlı — tıklanan listeyle birebir."
       />
-      {ownersTruncated && (
+      {truncated && (
         <p className="admin-sub" style={{ color: "var(--danger)", marginTop: -4 }}>
-          ⚠️ Profil listesi 10.000&apos;de kırpıldı ({(ownersR.count ?? 0).toLocaleString("tr-TR")}{" "}
-          profil var). &quot;Toplam Müşteri&quot; ve &quot;Denemesi bitiyor&quot; artık EKSİK sayıyor —
-          bu sayaçlar RPC&apos;ye taşınmalı.
+          ⚠️ Müşteri listesi 10.000&apos;de kırpıldı → kart sayaçları artık EKSİK sayıyor.
+          Bu sayaçlar ölçekte RPC&apos;ye taşınmalı (DB şeması = önce sor).
         </p>
       )}
 
@@ -305,17 +291,19 @@ export default async function AdminDashboard() {
 
       <div className="admin-panel" style={{ marginTop: 16 }}>
         <div className="admin-panel-head">
-          <Clock size={16} /> Abonelik dağılımı (profil bazlı)
+          <Clock size={16} /> Abonelik dağılımı (kişi bazlı)
         </div>
+        {/* Ücretli = gerçek ödeyen (deneme HARİÇ) → "Ücretli değil" denemede/ücretsiz/kurulumsuz
+            herkesi kapsar; ayrıntı segment çiplerinde (Denemede/Ücretsiz/Kurulum yapılmamış). */}
         <div className="admin-bar">
-          <div className="admin-bar-fill prem" style={{ width: `${pct(premium)}%` }} />
+          <div className="admin-bar-fill prem" style={{ width: `${pct(paid)}%` }} />
         </div>
         <div className="admin-bar-legend">
           <span>
-            <i className="dot prem" /> Premium {premium} (%{pct(premium)})
+            <i className="dot prem" /> Ücretli {paid} (%{pct(paid)})
           </span>
           <span>
-            <i className="dot free" /> Free {free} (%{pct(free)})
+            <i className="dot free" /> Ücretli değil {total - paid} (%{pct(total - paid)})
           </span>
         </div>
       </div>

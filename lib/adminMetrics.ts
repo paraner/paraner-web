@@ -1,5 +1,4 @@
 import "server-only";
-import { unstable_cache } from "next/cache";
 import { createAdminClient } from "./supabase/admin";
 import { createClient } from "./supabase/server";
 
@@ -87,53 +86,6 @@ export async function getModuleAdoption(): Promise<ModuleAdoption[] | null> {
     .sort((a, b) => b.kullanici - a.kullanici);
 }
 
-/* ── PANO METRİKLERİ — ÖNBELLEKLİ (2026-07-19) ─────────────────────────────
-   ⚠️ NEDEN: ölçüm sonucu /admin sıcakken bile 3,6 sn sürüyordu (diğer admin sayfaları
-   350-400 ms). Sebep bu sayfanın 8 ağır sorgusu; tek tek 300-850 ms — 9 satırlık
-   tablolarda! Çünkü Free plan disk IO bütçesi tükenince throughput 5 MB/s tabanına
-   düşüyor ve her sorgu yavaşlıyor.
-   Bu sayılar service_role ile okunan GLOBAL metrikler — kişiye özel DEĞİL, dolayısıyla
-   önbelleklemek güvenli (oturum/rol bilgisi önbelleğe girmiyor; `admin` parametresi yalnız
-   yöneticiye özel RPC'leri atlamak için).
-   🔴 2026-07-19 HATA + DÜZELTME: ilk sürüm getActiveCounts/getDeadProfileCount/
-   getModuleAdoption'ı da buraya almıştı ve /admin KOMPLE PATLADI. Sebep: o üç fonksiyon
-   ÇEREZ tabanlı istemci kullanıyor (RPC'lerin `assert_admin` guard'ı için `auth.uid()`
-   gerekiyor) — `unstable_cache` içinde cookie okumak YASAK.
-   Kural: önbelleğe YALNIZCA service_role (oturumdan bağımsız) sorgular girer.
-   ⚠️ Destek sorguları BİLEREK dışarıda: "bekleyen talep" panelin birinci işi, taze kalmalı. */
-export const panoMetrikleri = unstable_cache(
-  async () => {
-    const admin = createAdminClient();
-    if (!admin) throw new Error("Sunucu anahtarı eksik");
-    const since = new Date(Date.now() - 7 * 86400000).toISOString();
-
-    const [totalR, businessR, premiumR, recentR, ownersR] = await Promise.all([
-      admin.from("profiles").select("*", { count: "exact", head: true }),
-      admin.from("profiles").select("*", { count: "exact", head: true }).eq("profile_type", "business"),
-      admin.from("profiles").select("*", { count: "exact", head: true }).eq("is_premium", true),
-      admin.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", since),
-      admin
-        .from("profiles")
-        .select("auth_user_id, profile_name, name, trial_plan, trial_start_date, is_premium", {
-          count: "exact",
-        })
-        .limit(10000),
-    ]);
-
-    /* Supabase yanıt nesneleri (PostgrestResponse) doğrudan önbelleğe konamaz — sadeleştir.
-       Hata METNİ korunuyor: çağıran tarafta "yutma, göster" kuralı bozulmasın. */
-    const sade = (r: { count: number | null; error: { message: string } | null }) => ({
-      count: r.count,
-      error: r.error ? { message: r.error.message } : null,
-    });
-    return {
-      totalR: sade(totalR),
-      businessR: sade(businessR),
-      premiumR: sade(premiumR),
-      recentR: sade(recentR),
-      ownersR: { ...sade(ownersR), data: ownersR.data ?? [] },
-    };
-  },
-  ["admin-pano-metrikleri"],
-  { revalidate: 120, tags: ["admin-pano"] },
-);
+/* NOT (2026-07-24): eski `panoMetrikleri` (profil-bazlı sayaçlar) KALDIRILDI. Pano artık kişi-bazlı
+   sayıyor ve /admin/musteriler ile AYNI kaynağı (`listPeopleCached` + lib/lifecycle) kullanıyor →
+   kartlar tıklanan segment listesiyle birebir eşleşiyor (birim çelişkisi kararı, GOREVLER O6). */
