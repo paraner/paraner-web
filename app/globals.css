@@ -4906,3 +4906,7 @@ body.parla-open .panel-content { padding-right: 408px; }
   flex-shrink: 0; width: 4px; height: 4px; border-radius: 50%;
   background: var(--text-faint); transform: translateY(-2px);
 }
+
+/* Parla başlık aksiyonları (temizle + kapat) */
+.parla-head-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.parla-close:disabled { opacity: 0.4; cursor: not-allowed; }

@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Sparkles, X, ArrowUp, Plus, ImageIcon } from "lucide-react";
+import { Sparkles, X, ArrowUp, Plus, ImageIcon, Trash2 } from "lucide-react";
 import { createClient } from "../../../lib/supabase/client";
 import { announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
 import RichText, { parseBlocks } from "./RichText";
+import { confirmDialog } from "../../components/confirm";
+import { showToast } from "../../components/toast";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PARLA — panel içi AI asistanı (sağdan açılan yan panel)
@@ -70,6 +72,7 @@ export default function ParlaChat() {
   const [quota, setQuota] = useState<{ used: number; limit: number; isPremium: boolean } | null>(null);
 
   const [attached, setAttached] = useState<{ base64: string; preview: string; name: string } | null>(null);
+  const [profileId, setProfileId] = useState<string | null>(null); // sohbet temizlemede gerekli
 
 
   const listRef = useRef<HTMLDivElement>(null);
@@ -110,6 +113,7 @@ export default function ParlaChat() {
         .maybeSingle();
 
       if (profile?.id) {
+        if (alive) setProfileId(profile.id);
         const { data } = await supabase
           .from("chat_messages")
           .select("id, role, content")
@@ -165,6 +169,41 @@ export default function ParlaChat() {
     } catch {
       setMsgs((m) => [...m, { id: `e-${Date.now()}`, role: "assistant", content: "⚠️ Dosya okunamadı. JPG veya PNG dene." }]);
     }
+  }
+
+  /* Sohbeti temizle — mobildeki ⋯ > "Sohbeti Sil" ile AYNI iş (aynı tablo, aynı profil).
+     ⚠️ Sohbet ORTAK: burada temizlenince telefondaki geçmiş de gider. Onay metninde söylüyoruz.
+     ⚠️ `.select()` şart: PostgREST'te RLS 0 satır etkilese bile DELETE hata dönmez → sessiz
+     "temizlendi" yalanı olmasın (bildirim çanında öğrenilen ders). */
+  async function temizle() {
+    if (!profileId || loading || !msgs.length) return;
+    const ok = await confirmDialog({
+      title: "Sohbet temizlensin mi?",
+      message: "Parla ile yaptığın tüm yazışma silinir ve geri alınamaz. Telefondaki sohbet de temizlenir. Kaydettiğin gelir/giderler SİLİNMEZ.",
+      confirmLabel: "Temizle",
+      danger: true,
+    });
+    if (!ok) return;
+
+    const yedek = msgs;
+    setMsgs([]);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .delete()
+      .eq("user_id", profileId)
+      .select("id");
+
+    if (error || !data || data.length === 0) {
+      setMsgs(yedek); // geri al ve söyle
+      showToast({
+        title: "Temizlenemedi",
+        message: error?.message ?? "Kayıtlara erişilemedi (yetki).",
+        variant: "error",
+      });
+      return;
+    }
+    showToast({ title: "Sohbet temizlendi", variant: "success" });
   }
 
   async function send() {
@@ -317,9 +356,23 @@ export default function ParlaChat() {
                 </div>
               </div>
             </div>
-            <button type="button" className="parla-close" onClick={() => setOpen(false)} aria-label="Kapat">
-              <X size={16} />
-            </button>
+            <div className="parla-head-actions">
+              {msgs.length > 0 && (
+                <button
+                  type="button"
+                  className="parla-close"
+                  onClick={temizle}
+                  disabled={loading}
+                  aria-label="Sohbeti temizle"
+                  title="Sohbeti temizle"
+                >
+                  <Trash2 size={15} />
+                </button>
+              )}
+              <button type="button" className="parla-close" onClick={() => setOpen(false)} aria-label="Kapat">
+                <X size={16} />
+              </button>
+            </div>
           </header>
 
           <div className="parla-list" ref={listRef}>
