@@ -120,3 +120,52 @@ O noktada "hepsini sil" seçeneği hukuken kapanır: vergi mevzuatı saklamayı 
       ⚠️ ama FK `SET NULL` yapılınca bu hata **tamamen ortadan kalkar**, yani şimdi yazılacak
       metin sonra silinir. Karar verilmeden dokunma.
 - [ ] Araştırmanın eksik ayağı: **Türk vergi mevzuatı saklama süreleri** + KVKK destek yazışması görüşü.
+
+---
+
+## 5. HESAP SİLME YAŞAM DÖNGÜSÜ — soft delete + geri dönüş süresi (2026-07-24)
+
+> Mehmet'in sorusu: "kullanıcı hesabını silince hemen mi silinsin, yoksa Stripe gibi bir süre
+> geri dönebilsin mi?" Bölüm 1-4 **destek talebine** odaklıydı; bu bölüm **hesabın kendisine**.
+
+### Bugünkü durum (kanıt: `lib/adminActions.ts` deleteUserAccount + panel ayarlar deleteAccount + mobil edge)
+Hesap **anında ve kalıcı** siliniyor — geri dönüş YOK. "Görüşmek üzere" maili gidiyor. Kullanıcı
+yanlışlıkla silerse ya da fikir değiştirirse kurtarma imkânı yok.
+
+### Sektör standardı (araştırma 2026-07-24, kaynaklar aşağıda)
+Neredeyse tüm SaaS aynı deseni kullanıyor: **yumuşak silme + geri dönüş penceresi.**
+- **`deleted_at` zaman damgası** (boolean değil — silme anını da yakalar). Kullanıcı işaretlenir,
+  girişi engellenir, verisi DURUR.
+- **Geri dönüş penceresi 30 gün yaygın** (aralık 30-180; GitLab 7→30'a çıkardı). Pencere içinde
+  kullanıcı "Hesabımı geri getir" ile kurtarır.
+- **Gece cron'u** penceresi dolan hesapları KALICI siler.
+- **Bilgilendirme mailleri:** silme planlandı + hatırlatma + kesin tarih (süre değil tarih yaz).
+- Sonuç: "yanlışlıkla sildim" şikâyetleri ~0'a düşer, gizlilik mevzuatına da uyumlu kalır.
+
+**Apple App Store 5.1.1(v):** uygulama-içi hesap silme ZORUNLU; geri dönüş penceresi **ne yasak ne
+zorunlu** (24 saat–30 gün yaygın). Ama sonunda kişisel veri GERÇEKTEN silinmeli (sadece "dondur" yetmez).
+
+**Stripe / finansal:** müşteri silinse de **işlem/fatura kayıtları yasal zorunlulukla saklanır**
+(AML/vergi). Kişisel veri "redaction" ile görünmez yapılır, kayıt kalır. → Ödeme gelince fatura/
+muhasebe verisi ayrı tabloda ayrı saklama süresiyle tutulacak (Bölüm 3 sonu ile aynı sonuç).
+
+### Önerilen politika (Mehmet onayına)
+1. **Kullanıcı kendi silince:** anında yok etme YOK → `deleted_at` işaretle, girişi engelle, veriyi
+   sakla. Pencere içinde giriş denerse "Hesabın silinecek — geri getirmek ister misin?" → tek tık kurtarma.
+2. **Pencere = 30 gün** (Mehmet kararı 2026-07-24 — sektör standardı, Apple/Google + GDPR "1 ay" uyumlu).
+3. **Pencere dolunca:** gece cron'u KALICI siler (Bölüm 3 deseni: destek talebi kimliği kopar, içerik kalır).
+4. **Biz/admin silince:** ayrı akış — kötüye kullanım/talep temizliği anında olabilir (Hesap silme v2:
+   farklı mail zaten GOREVLER'de).
+5. **Ödeme gelince:** finansal kayıt ayrı saklama (yukarı).
+
+⚠️ **Bu BÜYÜK bir özellik** — dokunduğu yerler: DB (`deleted_at` + login guard) · **web + mobil auth
+akışı** (silinmiş hesapta giriş → kurtarma ekranı) · **cron** (kalıcı silme) · **edge/mail** (planlandı/
+hatırlatma/kurtarma). Etki haritası çıkmadan kodlanmaz. **Muhtemelen ödeme/lansman fazıyla birlikte.**
+
+**Kaynaklar:** [Userlist grace-period email](https://userlist.com/blog/account-removal-emails/) ·
+[soft vs hard delete](https://dev.to/akarshan/the-delete-button-dilemma-when-to-soft-delete-vs-hard-delete-3a0i) ·
+[GitLab 7→30 gün](https://gitlab.com/groups/gitlab-org/-/epics/17375) ·
+[Apple 5.1.1(v)](https://developer.apple.com/news/?id=12m75xbj) ·
+[Apple deletion req](https://developer.apple.com/news/upcoming-requirements/?id=06302022b) ·
+[Stripe deletion](https://docs.stripe.com/privacy/deletion-requests) ·
+[Stripe delete customer API](https://docs.stripe.com/api/customers/delete).

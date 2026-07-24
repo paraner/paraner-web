@@ -50,8 +50,10 @@
 
 ## 🛠️ ADMIN PANEL — açık maddeler
 - [ ] **trial/abonelik analizi** (`/admin/musteriler` detay) — henüz yok.
-- [ ] **Denetim O6 — birim çelişkisi:** pano PROFİL sayıyor, segmentler KİŞİ sayıyor; "Premium profil"
-      kartı seg=paid ile uyuşmuyor. Ya birim etiketi ekle ya kişi-bazlı hesaba geç (karar gerek).
+- [ ] **Denetim O6 — birim çelişkisi: KARAR = HER YERDE KİŞİ SAY (2026-07-24).** Pano kartları PROFİL
+      sayıyor, segmentler KİŞİ → "Premium" kartı 40 der, liste 6 açar. Kartları kişi-bazlı sayıma geçir
+      (şema gerekmez, kod işi). ⚠️ "Premium" = deneme dahil `is_premium=true`; `paid` segmenti gerçek
+      ödeyen → ikisi ayrı kalmalı, sadece BİRİM (profil→kişi) düzeltilecek.
 - [ ] **Ölçek notu:** Dashboard "Toplam Müşteri" = distinct `auth_user_id` (PostgREST'te distinct count yok →
       kolon çekilip Set'leniyor, `.limit(10000)`). Binlerce profilde RPC gerekir → **DB şeması = önce sor**.
 - [ ] ⚡ **`listPeople()` ölçek borcu:** `/admin/destek` + `/admin/musteriler` `auth.users`'ı seri sayfalayıp
@@ -59,9 +61,10 @@
       çözüm: taleplerden gelen `user_id` setiyle `.in(...)` daraltma (serileştirir → küçük ölçekte kayıp).
 
 ## 🎫 DESTEK — açık maddeler
-- [ ] ❓ **AÇIK KARAR (Mehmet):** silinen kişinin **e-posta snapshot'ı** talepte tutulsun mu? Şu an kimlik
-      tamamen kopuyor (KVKK uyumlu taraf); anlaşmazlıkta "kimdi bu" cevapsız. Sonradan kolon eklemek kolay,
-      sızmış veriyi geri almak zor → bilinçli EKLENMEDİ. `docs/HESAP-SILME-VERI-SAKLAMA.md`.
+- [ ] **Hesap silme yaşam döngüsü — KARAR VERİLDİ (2026-07-24), kod ödeme/lansman fazında:** yumuşak
+      silme (`deleted_at`) + **30 gün geri dönüş penceresi** + cron kalıcı silme. Kalıcı silmede talep
+      kimliği kopar/içerik kalır (e-posta snapshot TUTULMAZ). Dokunacağı yerler: DB + web+mobil auth
+      (silinmiş hesapta giriş→kurtarma) + cron + mail. Politika+kaynaklar: `docs/HESAP-SILME-VERI-SAKLAMA.md`.
 - [ ] **Gerçek destek ekibi hesapları** `user_roles`'e (şu an yalnız admin@paraner.com). ⚠️ Yeni agent'a
       departman ataması ŞART (fail-closed RLS: departmansız agent hiç talep göremez). Test: `sql/destek/agent-yetki-TEST.sql`.
 - [ ] **Mobil ek dosya paritesi** — mobilde seçici+sıkıştırma HAZIR, yalnız bağlanacak + balonda render.
