@@ -10,6 +10,7 @@ import ToastHost from "../components/ToastHost";
 import ConfirmProvider from "../components/ConfirmProvider";
 import NotificationBell from "../../components/NotificationBell";
 import ParlaChat from "./parla/ParlaChat";
+import ContentScrollReset from "./ContentScrollReset";
 
 // Panel uygulamanın içi — tüm /panel sayfaları arama motorlarına kapalı
 export const metadata: Metadata = {
@@ -69,7 +70,11 @@ export default function PanelLayout({
             <NotificationBell />
           </div>
         </header>
-        <div className="panel-content">{children}</div>
+        <div className="panel-content">
+          {/* Kaydırma iç kutuda → sayfa değişince başa sar */}
+          <ContentScrollReset />
+          {children}
+        </div>
       </div>
     </div>
   );

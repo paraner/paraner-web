@@ -1301,9 +1301,18 @@ ul { list-style: none; }
 /* ═══════════════════════════════════════════════
    PANEL (app.paraner.com) — sol menü + içerik
    ═══════════════════════════════════════════════ */
+/* UYGULAMA KABUĞU — yalnız içerik alanı kayar.
+   Eskiden sayfanın tamamı (body) kayıyordu; sol menü ve üst bar `position: sticky` ile
+   yerinde tutuluyordu. Sticky normalde doğru çalışıyor (ölçüldü) AMA macOS'ta lastik
+   kaydırmada (en üstte/altta zorlayınca) sayfa esner ve sticky öğeler de onunla birlikte
+   oynar — Mehmet'in gördüğü buydu (24.07). Kaydırmayı içeri alınca menü/üst bar kaydırma
+   kutusunun DIŞINDA kalır; hiçbir koşulda kımıldayamaz.
+   ⚠️ Sonuç: sayfa kaydırması artık `window` değil `.panel-content` → yeni sayfaya geçince
+   başa sarma işini ContentScrollReset yapar. */
 .panel-shell {
   display: flex;
-  min-height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 .panel-sidebar {
   position: sticky; top: 12px; align-self: flex-start;
@@ -1795,14 +1804,15 @@ ul { list-style: none; }
 .notif-row-time { font-size: 11px; color: var(--text-faint, var(--text-dim)); margin-top: 5px; }
 .notif-row-chevron { color: var(--text-dim); flex-shrink: 0; margin-top: 8px; }
 
-.panel-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.panel-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; overflow: hidden; }
 /* ⚠️ Yüksekliği (16+38+16+1 = 71px) İKİ yer daha kullanıyor: .tx-drawer üst konumu ve
    yükleniyor göstergesinin optik ortalaması → tek kaynak olsun diye değişken. */
 :root { --panel-topbar-h: 71px; }
 .panel-topbar {
   display: flex; align-items: center; justify-content: flex-end; gap: 16px;
   padding: 16px 28px; border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 10;
+  /* sticky DEĞİL: kaydırma kutusunun dışında, zaten sabit (bkz. .panel-shell notu) */
+  flex-shrink: 0; z-index: 10;
   background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(12px);
 }
 .panel-logout {
@@ -1812,7 +1822,12 @@ ul { list-style: none; }
 }
 .panel-logout:hover { background: var(--card-2); border-color: var(--border-strong); }
 .panel-logout:disabled { opacity: 0.55; cursor: not-allowed; }
-.panel-content { padding: 28px 32px; width: 100%; }
+.panel-content {
+  padding: 28px 32px; width: 100%;
+  flex: 1; min-height: 0; overflow-y: auto;
+  /* Lastik kaydırma dışarı taşmasın (kabuğu esnetmesin) */
+  overscroll-behavior: contain;
+}
 /* Sayfa başlığı — TÜM panel modülleri (PageHead) + Genel Bakış aynı ölçek: 24/600 */
 .panel-h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
 .panel-sub { color: var(--text-dim); font-size: 13px; margin-top: 3px; margin-bottom: 22px; }
@@ -1918,7 +1933,10 @@ ul { list-style: none; }
 }
 
 @media (max-width: 760px) {
-  .panel-shell { flex-direction: column; }
+  /* Dar ekranda menü üstte yatay şerit → kabuk yeniden normal sayfa gibi kaysın */
+  .panel-shell { flex-direction: column; height: auto; min-height: 100dvh; overflow: visible; }
+  .panel-main { height: auto; overflow: visible; }
+  .panel-content { overflow: visible; min-height: 0; }
   .panel-sidebar,
   .panel-sidebar.collapsed {
     position: static; height: auto; width: 100%; padding: 14px;
