@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Sparkles, X, ArrowUp, Plus, ImageIcon } from "lucide-react";
 import { createClient } from "../../../lib/supabase/client";
 import { announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
-import RichText, { parseBlocks, countWords } from "./RichText";
+import RichText, { parseBlocks } from "./RichText";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PARLA — panel içi AI asistanı (sağdan açılan yan panel)
@@ -71,10 +71,6 @@ export default function ParlaChat() {
 
   const [attached, setAttached] = useState<{ base64: string; preview: string; name: string } | null>(null);
 
-  /* DAKTİLO: yalnız BU oturumda yeni gelen cevap kelime kelime yazılır.
-     Geçmiş mesajlar (paneli tekrar açınca) yeniden yazılmaz — mobilde tam bu hata yaşanmıştı
-     (eski cevaplar her açılışta baştan "yazılıyordu"). */
-  const [typing, setTyping] = useState<{ id: string; shown: number; total: number } | null>(null);
 
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -140,20 +136,6 @@ export default function ParlaChat() {
     return () => document.body.classList.remove("parla-open");
   }, [open]);
 
-  /* Daktilo adımı: her kelime için bir zamanlayıcı. Hız, cevabın uzunluğuna göre ayarlanır
-     (uzun cevap da makul sürede biter) ama okunamayacak kadar hızlanmaz/yavaşlamaz. */
-  useEffect(() => {
-    if (!typing) return;
-    if (typing.shown >= typing.total) { setTyping(null); return; }
-    const delay = Math.min(38, Math.max(12, Math.round(1400 / typing.total)));
-    const t = setTimeout(() => {
-      setTyping((p) => (p ? { ...p, shown: p.shown + 1 } : p));
-      const el = listRef.current;
-      if (el) el.scrollTop = el.scrollHeight; // yazarken alt kenarı takip et
-    }, delay);
-    return () => clearTimeout(t);
-  }, [typing]);
-
   /* Biçimlendirme çözümü mesaj listesi değişince yapılır — her tuş vuruşunda değil
      (input state'i de bu bileşende; memo olmasa 50 mesaj her harfte yeniden ayrıştırılırdı). */
   const blocksById = useMemo(() => {
@@ -191,7 +173,6 @@ export default function ParlaChat() {
     if ((!text && !attached) || loading) return;
 
     const gorsel = attached;
-    setTyping(null); // önceki cevap hâlâ yazılıyorsa tamamına atla (yeni tur temiz başlasın)
     setInput("");
     setAttached(null);
     setMsgs((m) => [...m, {
@@ -217,24 +198,78 @@ export default function ParlaChat() {
           mode: "assistant",
           message: text,
           platform: "web",
+          stream: true, // cevap üretildikçe aksın (bekleyip tek parça alma)
           ...(gorsel ? { image: gorsel.base64, imageMimeType: "image/jpeg" } : {}),
         }),
       });
 
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
+      if (!res.ok || !res.body) {
         // 429 = günlük hak doldu; sunucu kullanıcıya gösterilecek metni kendisi yolluyor.
-        throw new Error(data?.error || "Şu an yanıt veremiyorum, lütfen tekrar dene.");
+        const hata = await res.json().catch(() => ({}));
+        throw new Error(hata?.error || "Şu an yanıt veremiyorum, lütfen tekrar dene.");
       }
 
+      /* Sunucu satır başına bir JSON gönderiyor (NDJSON):
+           {"t":"delta","v":"..."}  → baloncuğa ekle
+           {"t":"done", replace, action, quota}
+           {"t":"error","message"}
+         Baloncuk İLK parça gelince oluşturulur → "yazıyor" göstergesi o ana kadar durur. */
       const id = `a-${Date.now()}`;
-      setMsgs((m) => [...m, { id, role: "assistant", content: data.reply }]);
-      setTyping({ id, shown: 0, total: countWords(parseBlocks(data.reply)) });
-      if (data.quota) setQuota(data.quota);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      let basladi = false;
+      let birikti = "";
 
-      // İşlem eklendi/silindi ise açık sayfanın verisi bayat kalmasın.
-      if (data.action && MUTATING_ACTIONS.includes(data.action)) router.refresh();
+      const isle = (satir: string) => {
+        if (!satir.trim()) return;
+        let e: { t?: string; v?: string; replace?: string | null; action?: string; message?: string;
+                quota?: { used: number; limit: number; isPremium: boolean } };
+        try { e = JSON.parse(satir); } catch { return; }
+
+        if (e.t === "delta" && typeof e.v === "string") {
+          birikti += e.v;
+          if (!basladi) {
+            basladi = true;
+            setLoading(false); // ilk kelime geldi → üç nokta kalksın
+            setMsgs((m) => [...m, { id, role: "assistant", content: birikti }]);
+          } else {
+            setMsgs((m) => m.map((x) => (x.id === id ? { ...x, content: birikti } : x)));
+          }
+          scrollToEnd();
+        } else if (e.t === "done") {
+          // Sunucu işlem kaydettiyse son söz onun: ekrandaki metin gerçek sonuçla değişir.
+          if (typeof e.replace === "string") {
+            birikti = e.replace;
+            if (!basladi) {
+              basladi = true;
+              setLoading(false);
+              setMsgs((m) => [...m, { id, role: "assistant", content: birikti }]);
+            } else {
+              setMsgs((m) => m.map((x) => (x.id === id ? { ...x, content: birikti } : x)));
+            }
+          }
+          if (e.quota) setQuota(e.quota);
+          if (e.action && MUTATING_ACTIONS.includes(e.action)) router.refresh();
+        } else if (e.t === "error") {
+          throw new Error(e.message || "Bir hata oluştu.");
+        }
+      };
+
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const satirlar = buf.split("\n");
+        buf = satirlar.pop() ?? ""; // yarım satır tamponda kalsın
+        for (const s of satirlar) isle(s);
+      }
+      isle(buf);
+
+      // Akış hiç metin getirmediyse kullanıcı boş ekrana bakmasın
+      if (!basladi) {
+        setMsgs((m) => [...m, { id, role: "assistant", content: "⚠️ Şu an yanıt veremedim, tekrar dener misin?" }]);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Bir hata oluştu.";
       setMsgs((m) => [...m, { id: `e-${Date.now()}`, role: "assistant", content: `⚠️ ${msg}` }]);
@@ -321,7 +356,7 @@ export default function ParlaChat() {
                     <span className="parla-img-tag"><ImageIcon size={12} /> Görsel</span>
                   )}
                   {blocks
-                    ? <RichText blocks={blocks} reveal={typing?.id === m.id ? typing.shown : null} />
+                    ? <RichText blocks={blocks} reveal={null} />
                     : metin}
                 </div>
               );
