@@ -285,10 +285,12 @@ export default function Sidebar({
             <NavPending />
           </NavLink>
         ) : (
-          <div className="nav-subitem soon">
+          /* "Yakında" rozeti KALDIRILDI (2026-07-24): daraltma animasyonu sırasında etiket
+             anında gizlenirken rozet gizlenmiyordu → dar rayda taşıp bozuk görüntü çıkıyordu.
+             Pasif olduğu soluk renk + tıklanamazlıkla zaten belli. */
+          <div className="nav-subitem soon" title={collapsed ? item.label : undefined}>
             <span className="nav-subicon">{item.icon}</span>
             <span className="nav-label">{item.label}</span>
-            <span className="nav-soon-badge">Yakında</span>
           </div>
         )}
         <button

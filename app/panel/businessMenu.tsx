@@ -1,6 +1,6 @@
 // İşletme sol menüsü — mobil (paraner-app/constants/businessMenu.ts) ile birebir
 // tutarlı 8 bölüm. Web'de sayfası olan alt öğeler `href` ile bağlı; henüz olmayanlar
-// `href: null` → "Yakında" (pasif). İkonlar Lucide.
+// `href: null` → pasif satır (soluk, tıklanamaz; rozet YOK). İkonlar Lucide.
 import {
   FileText, Wallet, Users, Briefcase, Package, BarChart3, Landmark,
   Repeat, ScanLine, Files,
@@ -13,7 +13,7 @@ import type { ReactNode } from "react";
 export interface BusinessMenuItem {
   label: string;
   icon: ReactNode;
-  href: string | null; // null → henüz web'de yok (Yakında)
+  href: string | null; // null → henüz web'de yok (pasif satır)
 }
 
 export interface BusinessMenuSection {
