@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Sparkles, X, ArrowUp, Plus, ImageIcon } from "lucide-react";
 import { createClient } from "../../../lib/supabase/client";
 import { announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
+import RichText, { parseBlocks, countWords } from "./RichText";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PARLA — panel içi AI asistanı (sağdan açılan yan panel)
@@ -69,6 +70,11 @@ export default function ParlaChat() {
   const [quota, setQuota] = useState<{ used: number; limit: number; isPremium: boolean } | null>(null);
 
   const [attached, setAttached] = useState<{ base64: string; preview: string; name: string } | null>(null);
+
+  /* DAKTİLO: yalnız BU oturumda yeni gelen cevap kelime kelime yazılır.
+     Geçmiş mesajlar (paneli tekrar açınca) yeniden yazılmaz — mobilde tam bu hata yaşanmıştı
+     (eski cevaplar her açılışta baştan "yazılıyordu"). */
+  const [typing, setTyping] = useState<{ id: string; shown: number; total: number } | null>(null);
 
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -134,6 +140,30 @@ export default function ParlaChat() {
     return () => document.body.classList.remove("parla-open");
   }, [open]);
 
+  /* Daktilo adımı: her kelime için bir zamanlayıcı. Hız, cevabın uzunluğuna göre ayarlanır
+     (uzun cevap da makul sürede biter) ama okunamayacak kadar hızlanmaz/yavaşlamaz. */
+  useEffect(() => {
+    if (!typing) return;
+    if (typing.shown >= typing.total) { setTyping(null); return; }
+    const delay = Math.min(38, Math.max(12, Math.round(1400 / typing.total)));
+    const t = setTimeout(() => {
+      setTyping((p) => (p ? { ...p, shown: p.shown + 1 } : p));
+      const el = listRef.current;
+      if (el) el.scrollTop = el.scrollHeight; // yazarken alt kenarı takip et
+    }, delay);
+    return () => clearTimeout(t);
+  }, [typing]);
+
+  /* Biçimlendirme çözümü mesaj listesi değişince yapılır — her tuş vuruşunda değil
+     (input state'i de bu bileşende; memo olmasa 50 mesaj her harfte yeniden ayrıştırılırdı). */
+  const blocksById = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof parseBlocks>>();
+    for (const m of msgs) {
+      if (m.role === "assistant") map.set(m.id, parseBlocks(m.content));
+    }
+    return map;
+  }, [msgs]);
+
   // Escape ile kapat
   useEffect(() => {
     if (!open) return;
@@ -161,6 +191,7 @@ export default function ParlaChat() {
     if ((!text && !attached) || loading) return;
 
     const gorsel = attached;
+    setTyping(null); // önceki cevap hâlâ yazılıyorsa tamamına atla (yeni tur temiz başlasın)
     setInput("");
     setAttached(null);
     setMsgs((m) => [...m, {
@@ -197,7 +228,9 @@ export default function ParlaChat() {
         throw new Error(data?.error || "Şu an yanıt veremiyorum, lütfen tekrar dene.");
       }
 
-      setMsgs((m) => [...m, { id: `a-${Date.now()}`, role: "assistant", content: data.reply }]);
+      const id = `a-${Date.now()}`;
+      setMsgs((m) => [...m, { id, role: "assistant", content: data.reply }]);
+      setTyping({ id, shown: 0, total: countWords(parseBlocks(data.reply)) });
       if (data.quota) setQuota(data.quota);
 
       // İşlem eklendi/silindi ise açık sayfanın verisi bayat kalmasın.
@@ -281,12 +314,15 @@ export default function ParlaChat() {
               const metin = gorselli
                 ? m.content.replace(/^\[Görsel eklendi\]\n?/, "")
                 : m.content;
+              const blocks = blocksById.get(m.id);
               return (
                 <div key={m.id} className={`parla-msg ${m.role}`}>
                   {gorselli && (
                     <span className="parla-img-tag"><ImageIcon size={12} /> Görsel</span>
                   )}
-                  {metin}
+                  {blocks
+                    ? <RichText blocks={blocks} reveal={typing?.id === m.id ? typing.shown : null} />
+                    : metin}
                 </div>
               );
             })}

@@ -4861,3 +4861,23 @@ body.parla-open .panel-content { padding-right: 408px; }
   transition: opacity 0.15s;
 }
 .parla-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* İnce kaydırma çubuğu — varsayılan (Chrome ~15px) kalın ve kaba duruyordu (Mehmet, 24.07).
+   Tüm sitede geçerli: pazarlama + panel + admin aynı dili konuşsun.
+   ⚠️ Kaldırmıyoruz, İNCELTİYORUZ: görünmez yapmak "kaydırılabilir mi?" bilgisini yok eder. */
+* { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.18) transparent; }
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+::-webkit-scrollbar-corner { background: transparent; }
+
+/* Parla cevabının biçimi — hafif markdown (kalın + madde). Model kurallara rağmen
+   `**yıldız**` üretebiliyor; ham göstermek yerine çiziyoruz (bkz. RichText.tsx). */
+.parla-msg strong { font-weight: 650; color: #fff; }
+.parla-p { min-height: 0.9em; }
+.parla-li { display: flex; align-items: baseline; gap: 8px; }
+.parla-dot {
+  flex-shrink: 0; width: 4px; height: 4px; border-radius: 50%;
+  background: var(--text-faint); transform: translateY(-2px);
+}
