@@ -37,6 +37,22 @@ const FN_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/ai-chat`;
 /** Sunucu bir şey değiştirdiyse panel verisi bayat kalmasın (panel kuralı: mutasyon → refresh). */
 const MUTATING_ACTIONS = ["transaction_added", "transaction_deleted", "goal_updated"];
 
+/* Kayıt olduğunda üst bardan kısa bildirim.
+   NEDEN sohbetteki cevap yetmiyor: sohbet balonu "Parla ne dedi"yi söyler; bildirim
+   "PANELDEKİ VERİN değişti"i söyler. Kullanıcının gözü çoğu zaman arkadaki sayfada
+   oluyor (Mehmet, 24.07: "eklemedi sandım"). */
+const ACTION_TOAST: Record<string, string> = {
+  transaction_added: "İşlem kaydedildi",
+  transaction_deleted: "İşlem silindi",
+  goal_updated: "Birikim hedefi güncellendi",
+};
+
+function bildir(action?: string | null) {
+  if (!action) return;
+  const baslik = ACTION_TOAST[action];
+  if (baslik) showToast({ title: baslik, variant: "success" });
+}
+
 /* Belge (fiş/fatura/dekont) yükleme — sunucunun kabul ettiği türler (edge ALLOWED_IMAGE_MIME).
    ⚠️ PDF sunucuda desteklenmiyor; kullanıcıya seçtirip sonra reddetmemek için listede yok. */
 const ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif";
@@ -251,7 +267,7 @@ export default function ParlaChat() {
 
       setMsgs((m) => [...m, { id: `a-${Date.now()}`, role: "assistant", content: data.reply }]);
       if (data.quota) setQuota(data.quota);
-      if (data.action && MUTATING_ACTIONS.includes(data.action)) router.refresh();
+      if (data.action && MUTATING_ACTIONS.includes(data.action)) { bildir(data.action); router.refresh(); }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Bir hata oluştu.";
       setMsgs((m) => [...m, { id: `e-${Date.now()}`, role: "assistant", content: `⚠️ ${msg}` }]);
@@ -350,7 +366,7 @@ export default function ParlaChat() {
           }
           if (e.quota) setQuota(e.quota);
           if (e.pendingCategory) setBekleyen(e.pendingCategory);
-          if (e.action && MUTATING_ACTIONS.includes(e.action)) router.refresh();
+          if (e.action && MUTATING_ACTIONS.includes(e.action)) { bildir(e.action); router.refresh(); }
         } else if (e.t === "error") {
           throw new Error(e.message || "Bir hata oluştu.");
         }

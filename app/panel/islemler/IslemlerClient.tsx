@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
+import { useServerSynced } from "../../../lib/useServerSynced";
 import { formatCurrency, formatDate, TZ } from "../../../lib/format";
 import { todayStr, ymd } from "../../../lib/date";
 import {
@@ -141,7 +142,10 @@ export default function IslemlerClient({
 }) {
   const supabase = createClient();
   const router = useRouter();
-  const [list, setList] = useState<Tx[]>(initialTransactions);
+  /* ⚠️ useState DEĞİL: Parla (ya da başka bir sekme/telefon) işlem eklediğinde
+     `router.refresh()` sunucuyu yeniden çalıştırıyor ama düz `useState` yeni prop'u
+     görmezden geldiği için liste eski kalıyordu (24.07 canlı). Bkz. lib/useServerSynced. */
+  const [list, setList] = useServerSynced<Tx[]>(initialTransactions);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Tx | null>(null);
   const [selected, setSelected] = useState<Tx | null>(null); // sağ detay paneli
