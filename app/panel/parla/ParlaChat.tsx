@@ -483,72 +483,69 @@ export default function ParlaChat() {
             )}
           </div>
 
-          <div className="parla-composer">
+          <div className="parla-composer-alan"><div className="parla-composer">
             {/* KATEGORİ SORUSU — yazma alanının üstünde, aynı kutunun içinde.
                 İşlem henüz kaydedilmedi; çipe dokununca kaydediliyor. */}
             {bekleyen && (
               <div className="parla-kat">
                 {yeniKategori === null ? (
-                  <>
-                    <div className="parla-kat-baslik">Hangi kategoriye ekleyeyim?</div>
-                    <div className="parla-kat-cipler">
-                      {bekleyen.options.map((o) => (
-                        <button
-                          key={o.slug}
-                          type="button"
-                          className={`parla-kat-cip${o.custom ? " ozel" : ""}`}
-                          onClick={() => kategoriSec({ category: o.slug })}
-                          disabled={loading}
-                        >
-                          {o.color && <span className="parla-kat-nokta" style={{ background: o.color }} />}
-                          {o.label}
-                        </button>
-                      ))}
+                  /* Tek satır, YANA kayar (alta sarmaz) — uzun liste ekranı şişirmesin. */
+                  <div className="parla-kat-cipler">
+                    {bekleyen.options.map((o) => (
                       <button
+                        key={o.slug}
                         type="button"
-                        className="parla-kat-cip yeni"
-                        onClick={() => setYeniKategori("")}
+                        className="parla-kat-cip"
+                        onClick={() => kategoriSec({ category: o.slug })}
                         disabled={loading}
                       >
-                        <Plus size={13} /> Yeni
+                        {o.color && <span className="parla-kat-nokta" style={{ background: o.color }} />}
+                        {o.label}
                       </button>
-                    </div>
-                  </>
+                    ))}
+                    <button
+                      type="button"
+                      className="parla-kat-cip yeni"
+                      onClick={() => setYeniKategori("")}
+                      disabled={loading}
+                      aria-label="Yeni kategori oluştur"
+                      title="Yeni kategori oluştur"
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </div>
                 ) : (
-                  <>
-                    <div className="parla-kat-baslik">Yeni kategori adı</div>
-                    <div className="parla-kat-yeni">
-                      <input
-                        className="parla-kat-input"
-                        value={yeniKategori}
-                        onChange={(e) => setYeniKategori(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") { e.preventDefault(); if (yeniKategori.trim()) kategoriSec({ label: yeniKategori.trim() }); }
-                          if (e.key === "Escape") setYeniKategori(null);
-                        }}
-                        placeholder="Örn. Evcil Hayvan"
-                        maxLength={40}
-                        autoFocus
-                      />
-                      <button
-                        type="button"
-                        className="parla-kat-ok"
-                        onClick={() => yeniKategori.trim() && kategoriSec({ label: yeniKategori.trim() })}
-                        disabled={loading || !yeniKategori.trim()}
-                        aria-label="Oluştur ve kaydet"
-                      >
-                        <Check size={15} />
-                      </button>
-                      <button
-                        type="button"
-                        className="parla-kat-vazgec"
-                        onClick={() => setYeniKategori(null)}
-                        aria-label="Vazgeç"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  </>
+                  <div className="parla-kat-yeni">
+                    <input
+                      className="parla-kat-input"
+                      value={yeniKategori}
+                      onChange={(e) => setYeniKategori(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { e.preventDefault(); if (yeniKategori.trim()) kategoriSec({ label: yeniKategori.trim() }); }
+                        if (e.key === "Escape") setYeniKategori(null);
+                      }}
+                      placeholder="Yeni kategori adı"
+                      maxLength={40}
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      className="parla-kat-ok"
+                      onClick={() => yeniKategori.trim() && kategoriSec({ label: yeniKategori.trim() })}
+                      disabled={loading || !yeniKategori.trim()}
+                      aria-label="Oluştur ve kaydet"
+                    >
+                      <Check size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      className="parla-kat-vazgec"
+                      onClick={() => setYeniKategori(null)}
+                      aria-label="Vazgeç"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -569,14 +566,19 @@ export default function ParlaChat() {
               </div>
             )}
 
-            <div className="parla-composer-row">
-              <input
-                ref={fileRef}
-                type="file"
-                accept={ACCEPT}
-                onChange={onFilePicked}
-                hidden
-              />
+            {/* Tek kutu: yazı alanı üstte, düğmeler altta (Mehmet'in ilettiği örnek düzen) */}
+            <textarea
+              ref={inputRef}
+              className="parla-input"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={onKeyDown}
+              placeholder={attached ? "İstersen not ekle…" : "Bir şey sor ya da işlem yaz…"}
+              rows={1}
+              disabled={loading}
+            />
+            <div className="parla-composer-alt">
+              <input ref={fileRef} type="file" accept={ACCEPT} onChange={onFilePicked} hidden />
               <button
                 type="button"
                 className="parla-plus"
@@ -585,19 +587,8 @@ export default function ParlaChat() {
                 aria-label="Fiş, fatura veya dekont yükle"
                 title="Fiş, fatura veya dekont yükle"
               >
-                <Plus size={17} />
+                <Plus size={16} />
               </button>
-
-              <textarea
-                ref={inputRef}
-                className="parla-input"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={onKeyDown}
-                placeholder={attached ? "İstersen not ekle…" : "Bir şey sor ya da işlem yaz…"}
-                rows={1}
-                disabled={loading}
-              />
               <button
                 type="button"
                 className="parla-send"
@@ -608,6 +599,7 @@ export default function ParlaChat() {
                 <ArrowUp size={16} />
               </button>
             </div>
+          </div>
           </div>
         </aside>,
         document.body,

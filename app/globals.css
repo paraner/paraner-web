@@ -1809,6 +1809,8 @@ ul { list-style: none; }
 /* ⚠️ Yüksekliği (16+38+16+1 = 71px) İKİ yer daha kullanıyor: .tx-drawer üst konumu ve
    yükleniyor göstergesinin optik ortalaması → tek kaynak olsun diye değişken. */
 :root { --panel-topbar-h: 71px; }
+/* Parla köşe dili — TEK yerden: kutu ve içindeki tüm öğeler bu ikisini kullanır. */
+:root { --parla-radius: 18px; --parla-radius-sm: 11px; }
 .panel-topbar {
   display: flex; align-items: center; justify-content: flex-end; gap: 16px;
   padding: 16px 28px; border-bottom: 1px solid var(--border);
@@ -4818,22 +4820,30 @@ body.parla-open .panel-content { padding-right: 408px; }
 .parla-empty-sub { font-size: 12.5px; color: var(--text-dim); margin-top: 5px; line-height: 1.5; }
 .parla-hints { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin-top: 16px; }
 .parla-hint {
-  font-size: 12px; padding: 7px 11px; border-radius: 999px; cursor: pointer;
+  font-size: 12px; padding: 7px 11px; border-radius: var(--parla-radius-sm); cursor: pointer;
   background: var(--card); border: 1px solid var(--border); color: var(--text-dim);
   transition: border-color 0.15s, color 0.15s;
 }
 .parla-hint:hover { border-color: var(--border-strong); color: var(--text); }
 
-/* Yazma alanı — üstte ek önizlemesi, altta [+] · metin · gönder */
+/* YAZMA ALANI — TEK KUTU (Mehmet, 24.07): kategori çipleri + yazı + düğmeler aynı
+   çerçevenin içinde. Eskiden yazı alanının kendi kutusu, çiplerin ayrı bloğu vardı →
+   iç içe iki kutu görünüyordu. Referans: sohbet uygulamalarının tek-kutu composer'ı. */
+.parla-composer-alan { padding: 10px 12px 12px; border-top: 1px solid var(--border); }
 .parla-composer {
-  display: flex; flex-direction: column; gap: 9px;
-  padding: 12px 14px 14px; border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 10px 10px 8px;
+  background: var(--card-2); border: 1px solid var(--border);
+  border-radius: var(--parla-radius);
+  transition: border-color 0.15s;
 }
-.parla-composer-row { display: flex; align-items: flex-end; gap: 9px; }
+.parla-composer:focus-within { border-color: var(--focus-ring); }
+/* Alt sıra: solda belge ekle, sağda gönder */
+.parla-composer-alt { display: flex; align-items: center; justify-content: space-between; }
 
 /* Belge yükleme [+] — fiş/fatura/dekont */
 .parla-plus {
-  flex-shrink: 0; width: 36px; height: 36px; border-radius: 11px; cursor: pointer;
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: var(--parla-radius-sm); cursor: pointer;
   display: grid; place-items: center;
   background: var(--card-2); border: 1px solid var(--border); color: var(--text-dim);
   transition: background 0.15s, color 0.15s, border-color 0.15s;
@@ -4870,15 +4880,13 @@ body.parla-open .panel-content { padding-right: 408px; }
 }
 .parla-img-tag svg { flex-shrink: 0; }
 .parla-input {
-  flex: 1; min-width: 0; resize: none; max-height: 120px;
-  padding: 10px 12px; border-radius: 12px; outline: none;
-  font-family: inherit; font-size: 13.5px; line-height: 1.5;
-  background: var(--card-2); border: 1px solid var(--border); color: var(--text);
+  width: 100%; resize: none; max-height: 120px; min-height: 34px;
+  padding: 4px 4px 0; border: none; outline: none; background: none;
+  font-family: inherit; font-size: 13.5px; line-height: 1.5; color: var(--text);
 }
-.parla-input:focus { border-color: var(--focus-ring); }
 .parla-input::placeholder { color: var(--text-faint); }
 .parla-send {
-  flex-shrink: 0; width: 36px; height: 36px; border-radius: 11px; border: none;
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: var(--parla-radius-sm); border: none;
   display: grid; place-items: center; cursor: pointer; color: #0a0b0d;
   background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
   transition: opacity 0.15s;
@@ -4913,32 +4921,43 @@ body.parla-open .panel-content { padding-right: 408px; }
 
 /* Parla — kategori sorusu (yazma alanının üstünde, aynı kutunun içinde).
    İşlem bu noktada HENÜZ KAYDEDİLMEDİ: çipe dokunulunca kaydedilir. */
-.parla-kat { display: flex; flex-direction: column; gap: 7px; }
-.parla-kat-baslik { font-size: 11.5px; font-weight: 600; color: var(--text-dim); }
-.parla-kat-cipler { display: flex; flex-wrap: wrap; gap: 6px; max-height: 108px; overflow-y: auto; overscroll-behavior: contain; }
+.parla-kat { display: flex; flex-direction: column; }
+/* TEK SATIR, YANA KAYAR (alta sarmaz) — kutu büyüyüp ekranı yemesin */
+.parla-kat-cipler {
+  display: flex; flex-wrap: nowrap; gap: 6px;
+  overflow-x: auto; overscroll-behavior: contain;
+  scrollbar-width: none; padding-bottom: 2px;
+}
+.parla-kat-cipler::-webkit-scrollbar { height: 0; }
 .parla-kat-cip {
+  flex-shrink: 0;
   display: inline-flex; align-items: center; gap: 6px;
-  font-size: 12px; padding: 6px 11px; border-radius: 999px; cursor: pointer;
-  background: var(--card-2); border: 1px solid var(--border); color: var(--text);
+  font-size: 12px; padding: 6px 11px; cursor: pointer;
+  /* ⚠️ Köşe yarıçapı yazma kutusuyla AYNI değişkenden — pill/kutu karışıklığı olmasın
+     (Mehmet: "eşit olsun, düzensizlik istemiyorum") */
+  border-radius: var(--parla-radius-sm);
+  background: var(--card); border: 1px solid var(--border); color: var(--text);
   transition: border-color 0.15s, background 0.15s;
+  white-space: nowrap;
 }
 .parla-kat-cip:hover:not(:disabled) { border-color: var(--border-strong); background: var(--card); }
 .parla-kat-cip:disabled { opacity: 0.5; cursor: not-allowed; }
 .parla-kat-nokta { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-/* "Yeni" çipi titanyum — aksiyon öğesi (marka rengine bağlanmaz) */
+/* "Yeni kategori" — yalnız + ikonu (etiket yazmaya gerek yok, satır kısalsın) */
 .parla-kat-cip.yeni {
+  padding: 6px 9px;
   background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
-  border-color: transparent; color: #0a0b0d; font-weight: 600;
+  border-color: transparent; color: #0a0b0d;
 }
 .parla-kat-yeni { display: flex; align-items: center; gap: 6px; }
 .parla-kat-input {
-  flex: 1; min-width: 0; padding: 8px 11px; border-radius: 10px; outline: none;
+  flex: 1; min-width: 0; padding: 8px 11px; border-radius: var(--parla-radius-sm); outline: none;
   font-family: inherit; font-size: 13px;
   background: var(--card-2); border: 1px solid var(--border); color: var(--text);
 }
 .parla-kat-input:focus { border-color: var(--focus-ring); }
 .parla-kat-ok, .parla-kat-vazgec {
-  flex-shrink: 0; width: 32px; height: 32px; border-radius: 9px; cursor: pointer;
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: var(--parla-radius-sm); cursor: pointer;
   display: grid; place-items: center; border: 1px solid var(--border); background: var(--card-2); color: var(--text);
 }
 .parla-kat-ok { background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%); border-color: transparent; color: #0a0b0d; }
