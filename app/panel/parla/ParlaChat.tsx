@@ -226,6 +226,9 @@ export default function ParlaChat() {
 
     const yedek = msgs;
     setMsgs([]);
+    // Bekleyen kategori sorusu da düşer — ait olduğu mesaj artık yok (mobil ile aynı)
+    setBekleyen(null);
+    setYeniKategori(null);
     const supabase = createClient();
     const { data, error } = await supabase
       .from("chat_messages")
