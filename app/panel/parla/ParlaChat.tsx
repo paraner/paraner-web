@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Sparkles, X, ArrowUp, Plus, ImageIcon, Trash2, Check } from "lucide-react";
@@ -49,6 +49,9 @@ const yeniId = (p: string) => `${p}${Date.now()}-${++_msgSayac}`;
 const DAKTILO_HEDEF_MS = 2400; // uzun cevap da yaklaşık bu sürede biter
 const DAKTILO_MIN_MS = 9;
 const DAKTILO_MAX_MS = 34;
+
+/** Snap'te mesajın tepeden bırakacağı nefes payı (px). */
+const SNAP_PAY = 6;
 
 /** Sunucu bir şey değiştirdiyse panel verisi bayat kalmasın (panel kuralı: mutasyon → refresh). */
 const MUTATING_ACTIONS = ["transaction_added", "transaction_deleted", "goal_updated"];
@@ -125,10 +128,17 @@ export default function ParlaChat() {
      durur, yeni parça gelince devam eder. Geçmiş mesajlar daktiloya girmez. */
   const [daktilo, setDaktilo] = useState<{ id: string; n: number; acik: boolean } | null>(null);
 
+  /* Listenin altındaki GEÇİCİ boşluk (bkz. `snapUygula`). Cevap yazıldıkça küçülür →
+     toplam yükseklik sabit kalır, ekran hiç oynamaz. */
+  const [bosluk, setBosluk] = useState(0);
 
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const anchorRef = useRef<HTMLDivElement | null>(null);  // son kullanıcı mesajı (tepeye oturan)
+  const boslukRef = useRef<HTMLDivElement | null>(null);
+  const turAcikRef = useRef(false);   // gönderim turu sürüyor mu (boşluk yönetilsin mi)
+  const kaydirildiRef = useRef(false); // bu turda anchor tepeye kaydırıldı mı
 
   useEffect(() => setMounted(true), []);
 
@@ -147,6 +157,56 @@ export default function ParlaChat() {
       if (el) el.scrollTop = el.scrollHeight;
     });
   }, []);
+
+  /* ─── SNAP — gönderilen mesaj tepeye, cevap altındaki boşluğa yazılır ─────────
+     ⚠️ NEDEN BÖYLE (Mehmet, 25.07 — mobilde de aynı ders, `app/ai-chat.tsx` applySnap):
+     eskiden her yeni kelimede liste DİBE kaydırılıyordu. Metin uzadıkça (satır sarması,
+     boş satır, tutar satırı) yükseklik değişiyor, ekran aşağı-yukarı zıplıyordu.
+     ChatGPT/mobil deseni: gönderim anında kullanıcının mesajı listenin TEPESİNE kaydırılır
+     ve altına GEÇİCİ boşluk konur; cevap o boşluğu yiyerek yazılır → içerik yüksekliği
+     sabit kalır, kaydırma olmaz. Cevap boşluktan uzunsa boşluk 0'a iner, metin doğal akar. */
+  const snapUygula = useCallback((kaydir: boolean) => {
+    const liste = listRef.current;
+    const anchor = anchorRef.current;
+    if (!liste || !anchor) return;
+    const listeUst = liste.getBoundingClientRect().top;
+    const anchorY = anchor.getBoundingClientRect().top - listeUst + liste.scrollTop;
+    // Boşluk hesabın içine girmemeli, yoksa kendi kendini besler.
+    const mevcutBosluk = boslukRef.current?.offsetHeight ?? 0;
+    const alt = Math.max(0, liste.scrollHeight - mevcutBosluk - anchorY); // anchor + cevap
+    setBosluk(Math.max(0, liste.clientHeight - alt - SNAP_PAY * 2));
+    if (!kaydir) return;
+    requestAnimationFrame(() => {
+      const el = listRef.current;
+      const a = anchorRef.current;
+      if (!el || !a) return;
+      const y = a.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop;
+      el.scrollTo({ top: Math.max(0, y - SNAP_PAY), behavior: "smooth" });
+    });
+  }, []);
+
+  /* Panel kapanınca snap boşluğu askıda kalmasın — tekrar açılınca sohbetin altında
+     sebepsiz boşluk olarak görünürdü. */
+  useEffect(() => {
+    if (open) return;
+    turAcikRef.current = false;
+    setBosluk(0);
+  }, [open]);
+
+  /** Yeni bir gönderim turu başlat (mesaj yolla / kategori çipine dokun). */
+  const turBaslat = useCallback(() => {
+    turAcikRef.current = true;
+    kaydirildiRef.current = false;
+  }, []);
+
+  /* Tur boyunca: mesaj eklendikçe ve daktilo kelime açtıkça boşluğu yeniden ölç.
+     İlk ölçümde (kullanıcı mesajı eklendiğinde) bir kez anchor'a kaydırılır. */
+  useLayoutEffect(() => {
+    if (!turAcikRef.current || !anchorRef.current) return;
+    const kaydir = !kaydirildiRef.current;
+    if (kaydir) kaydirildiRef.current = true;
+    snapUygula(kaydir);
+  }, [msgs, daktilo, snapUygula]);
 
   /* Geçmiş SADECE panel ilk açıldığında yüklenir — her sayfa yüklemesinde sorgu atmayalım.
      Sohbet `chat_messages` tablosunda ve PROFİL bazlı → telefonda başlayan konuşma burada
@@ -210,6 +270,12 @@ export default function ParlaChat() {
     return map;
   }, [msgs]);
 
+  /** Snap'in çapası: en son kullanıcı mesajı (cevap onun altına yazılır). */
+  const anchorId = useMemo(() => {
+    for (let i = msgs.length - 1; i >= 0; i--) if (msgs[i].role === "user") return msgs[i].id;
+    return null;
+  }, [msgs]);
+
   /* Daktilo saati — her adımda bir kelime açar. Hız mobil ile aynı: toplam ~2.4 sn
      hedefi kelime sayısına bölünür, 9-34 ms arasına sıkıştırılır (kısa cevap fazla
      yavaş, uzun cevap fazla hızlı olmasın). Metin akarken toplam büyüdüğü için her
@@ -220,8 +286,8 @@ export default function ParlaChat() {
     const toplam = blocks ? countWords(blocks) : 0;
 
     if (daktilo.n >= toplam) {
-      // Akış kapandıysa iş bitti → mesaj normal (tam) çizime döner.
-      if (!daktilo.acik) setDaktilo(null);
+      // Akış kapandıysa iş bitti → mesaj normal (tam) çizime döner, tur da kapanır.
+      if (!daktilo.acik) { setDaktilo(null); turAcikRef.current = false; }
       return; // akış sürüyorsa yeni kelimeleri bekle
     }
 
@@ -231,10 +297,10 @@ export default function ParlaChat() {
     );
     const t = setTimeout(() => {
       setDaktilo((d) => (d && d.id === daktilo.id ? { ...d, n: d.n + 1 } : d));
-      scrollToEnd(); // yazı uzadıkça alta yapışık kal (akıştaki davranışın aynısı)
+      // Kaydırma YOK — yazı, snap'in açtığı boşluğa doğru büyür (yukarıdaki not).
     }, aralik);
     return () => clearTimeout(t);
-  }, [daktilo, blocksById, scrollToEnd]);
+  }, [daktilo, blocksById]);
 
   // Escape ile kapat
   useEffect(() => {
@@ -274,6 +340,8 @@ export default function ParlaChat() {
     const yedek = msgs;
     setMsgs([]);
     setDaktilo(null); // yazılmakta olan cevap varsa onunla birlikte gitsin
+    turAcikRef.current = false;
+    setBosluk(0); // askıda kalan snap boşluğu boş sohbette dev boşluk gibi durmasın
     // Bekleyen kategori sorusu da düşer — ait olduğu mesaj artık yok (mobil ile aynı)
     setBekleyen(null);
     setYeniKategori(null);
@@ -303,7 +371,9 @@ export default function ParlaChat() {
     setBekleyen(null);
     setYeniKategori(null);
     setLoading(true);
-    scrollToEnd();
+    /* Çip onayı da bir gönderim turudur (mobilde de öyle): onay metni daktiloyla yazılır
+       ve soruyu doğuran kullanıcı mesajı tepeye oturur. */
+    turBaslat();
 
     try {
       const supabase = createClient();
@@ -337,9 +407,9 @@ export default function ParlaChat() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Bir hata oluştu.";
       setMsgs((m) => [...m, { id: yeniId("e"), role: "assistant", content: `⚠️ ${msg}` }]);
+      turAcikRef.current = false; // hata metni daktilosuz basılır → tur burada biter
     } finally {
       setLoading(false);
-      scrollToEnd();
       inputRef.current?.focus();
     }
   }
@@ -363,7 +433,7 @@ export default function ParlaChat() {
       content: gorsel ? (text ? `[Görsel eklendi]\n${text}` : "[Görsel eklendi]") : text,
     }]);
     setLoading(true);
-    scrollToEnd();
+    turBaslat(); // mesaj tepeye otursun, cevap altındaki boşluğa yazılsın
 
     try {
       const supabase = createClient();
@@ -422,7 +492,7 @@ export default function ParlaChat() {
           } else {
             setMsgs((m) => m.map((x) => (x.id === id ? { ...x, content: birikti } : x)));
           }
-          scrollToEnd();
+          // Kaydırma YOK: metin snap boşluğuna doğru büyür (bkz. snapUygula notu).
         } else if (e.t === "done") {
           // Sunucu işlem kaydettiyse son söz onun: ekrandaki metin gerçek sonuçla değişir.
           if (typeof e.replace === "string") {
@@ -457,16 +527,17 @@ export default function ParlaChat() {
       // Akış hiç metin getirmediyse kullanıcı boş ekrana bakmasın
       if (!basladi) {
         setMsgs((m) => [...m, { id, role: "assistant", content: "⚠️ Şu an yanıt veremedim, tekrar dener misin?" }]);
+        turAcikRef.current = false; // daktilo yok → turu burada kapat
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Bir hata oluştu.";
       setMsgs((m) => [...m, { id: yeniId("e"), role: "assistant", content: `⚠️ ${msg}` }]);
+      turAcikRef.current = false;
     } finally {
       setLoading(false);
       /* Akış kapandı: daktilo kalan kelimeleri yazıp kendi kendine bitirir. Burada
          null'lamak metni ANINDA tamamlar (yazma efekti yarıda kesilirdi). */
       setDaktilo((d) => (d ? { ...d, acik: false } : null));
-      scrollToEnd();
       inputRef.current?.focus();
     }
   }
@@ -556,7 +627,11 @@ export default function ParlaChat() {
                 : m.content;
               const blocks = blocksById.get(m.id);
               return (
-                <div key={m.id} className={`parla-msg ${m.role}`}>
+                <div
+                  key={m.id}
+                  className={`parla-msg ${m.role}`}
+                  ref={m.id === anchorId ? anchorRef : undefined}
+                >
                   {gorselli && (
                     <span className="parla-img-tag"><ImageIcon size={12} /> Görsel</span>
                   )}
@@ -571,6 +646,11 @@ export default function ParlaChat() {
               <div className="parla-msg assistant typing" aria-live="polite">
                 <span /><span /><span />
               </div>
+            )}
+
+            {/* Snap boşluğu — cevap yazıldıkça küçülür, içerik yüksekliği sabit kalır. */}
+            {bosluk > 0 && (
+              <div ref={boslukRef} aria-hidden style={{ height: bosluk, flexShrink: 0 }} />
             )}
           </div>
 

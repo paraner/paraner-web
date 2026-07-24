@@ -52,7 +52,10 @@ function parseInline(line: string): Seg[] {
 }
 
 export function parseBlocks(content: string): Block[] {
-  return content.split("\n").map((raw) => {
+  /* Sondaki boş satırlar ATILIR: kelime taşımadıkları için daktilo sırasında hiç
+     çizilmezler, yazma bitip tam metne geçilince birden yükseklik eklerler → metin
+     "sonradan oturur" (Mehmet, 25.07). Görünürde hiçbir şey kaybetmiyoruz. */
+  return content.replace(/\s+$/, "").split("\n").map((raw) => {
     const line = raw.trimEnd();
     // "* madde", "- madde", "• madde" → madde işaretli satır
     const t = line.match(TUTAR_RE);
@@ -118,7 +121,12 @@ export default function RichText({ blocks, reveal }: { blocks: Block[]; reveal: 
           }
         }
 
-        if (!kids.length) return null;
+        /* Boş satır: kelime taşımaz ama BOŞLUK taşır. Sırası geldiğinde (yani üstündeki
+           kelimeler açılmışken) çizilmeli — atlanırsa metin yazarken sıkışık durur,
+           bitince araya boşluk girip aşağı kayar. Mobilde de aynı ders (MarkdownText). */
+        if (!kids.length) {
+          return reveal === null ? null : <div key={bi} className="parla-p" />;
+        }
         /* ⚠️ Madde satırında parçalar TEK bir sarmalayıcıya konur. Doğrudan flex'in altına
            konursa her parça (kalın başlık + kalan metin) AYRI SÜTUN olur → "İşlem Takibi:"
            daracık bir kolona sıkışır (Mehmet, 24.07). Sarmalayıcı sayesinde normal metin akışı. */
