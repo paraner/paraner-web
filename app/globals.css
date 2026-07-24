@@ -4910,3 +4910,37 @@ body.parla-open .panel-content { padding-right: 408px; }
 /* Parla başlık aksiyonları (temizle + kapat) */
 .parla-head-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
 .parla-close:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Parla — kategori sorusu (yazma alanının üstünde, aynı kutunun içinde).
+   İşlem bu noktada HENÜZ KAYDEDİLMEDİ: çipe dokunulunca kaydedilir. */
+.parla-kat { display: flex; flex-direction: column; gap: 7px; }
+.parla-kat-baslik { font-size: 11.5px; font-weight: 600; color: var(--text-dim); }
+.parla-kat-cipler { display: flex; flex-wrap: wrap; gap: 6px; max-height: 108px; overflow-y: auto; overscroll-behavior: contain; }
+.parla-kat-cip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; padding: 6px 11px; border-radius: 999px; cursor: pointer;
+  background: var(--card-2); border: 1px solid var(--border); color: var(--text);
+  transition: border-color 0.15s, background 0.15s;
+}
+.parla-kat-cip:hover:not(:disabled) { border-color: var(--border-strong); background: var(--card); }
+.parla-kat-cip:disabled { opacity: 0.5; cursor: not-allowed; }
+.parla-kat-nokta { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+/* "Yeni" çipi titanyum — aksiyon öğesi (marka rengine bağlanmaz) */
+.parla-kat-cip.yeni {
+  background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
+  border-color: transparent; color: #0a0b0d; font-weight: 600;
+}
+.parla-kat-yeni { display: flex; align-items: center; gap: 6px; }
+.parla-kat-input {
+  flex: 1; min-width: 0; padding: 8px 11px; border-radius: 10px; outline: none;
+  font-family: inherit; font-size: 13px;
+  background: var(--card-2); border: 1px solid var(--border); color: var(--text);
+}
+.parla-kat-input:focus { border-color: var(--focus-ring); }
+.parla-kat-ok, .parla-kat-vazgec {
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: 9px; cursor: pointer;
+  display: grid; place-items: center; border: 1px solid var(--border); background: var(--card-2); color: var(--text);
+}
+.parla-kat-ok { background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%); border-color: transparent; color: #0a0b0d; }
+.parla-kat-ok:disabled { opacity: 0.4; cursor: not-allowed; }
+.parla-kat-vazgec:hover { color: var(--text); border-color: var(--border-strong); }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Sparkles, X, ArrowUp, Plus, ImageIcon, Trash2 } from "lucide-react";
+import { Sparkles, X, ArrowUp, Plus, ImageIcon, Trash2, Check } from "lucide-react";
 import { createClient } from "../../../lib/supabase/client";
 import { announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
 import RichText, { parseBlocks } from "./RichText";
@@ -24,6 +24,13 @@ import { showToast } from "../../components/toast";
    ═══════════════════════════════════════════════════════════════════════════ */
 
 type Msg = { id: string; role: "user" | "assistant"; content: string };
+
+/** Sunucu "hangi kategoriye ekleyeyim?" dediğinde gelen taslak — işlem HENÜZ kaydedilmedi. */
+type Secenek = { slug: string; label: string; icon?: string | null; color?: string | null; custom?: boolean };
+type BekleyenKategori = {
+  tx: { type: string; amount: number; title: string; date: string; currency?: string | null };
+  options: Secenek[];
+};
 
 const FN_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/ai-chat`;
 
@@ -73,6 +80,11 @@ export default function ParlaChat() {
 
   const [attached, setAttached] = useState<{ base64: string; preview: string; name: string } | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null); // sohbet temizlemede gerekli
+  /* Kategori sorusu — yazma alanının ÜSTÜNDE çipler olarak durur. Kullanıcı cevaplamadan
+     yeni bir mesaj yazarsa DÜŞER (Mehmet kararı): eski taslak kaydedilmez, yeni mesaj
+     kendi başına değerlendirilir. */
+  const [bekleyen, setBekleyen] = useState<BekleyenKategori | null>(null);
+  const [yeniKategori, setYeniKategori] = useState<string | null>(null); // null = form kapalı
 
 
   const listRef = useRef<HTMLDivElement>(null);
@@ -206,12 +218,59 @@ export default function ParlaChat() {
     showToast({ title: "Sohbet temizlendi", variant: "success" });
   }
 
+  /** Çipe dokunuldu (ya da yeni kategori adı girildi) → işlem ŞİMDİ kaydedilir. */
+  async function kategoriSec(secim: { category?: string; label?: string }) {
+    if (!bekleyen || loading) return;
+    const taslak = bekleyen;
+    setBekleyen(null);
+    setYeniKategori(null);
+    setLoading(true);
+    scrollToEnd();
+
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Oturum bulunamadı. Sayfayı yenileyip tekrar dene.");
+
+      const res = await fetch(FN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({
+          mode: "assistant",
+          platform: "web",
+          confirm: {
+            tx: taslak.tx,
+            ...(secim.category ? { category: secim.category } : {}),
+            ...(secim.label ? { newCategory: { label: secim.label } } : {}),
+          },
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Kaydedemedim, tekrar dener misin?");
+
+      setMsgs((m) => [...m, { id: `a-${Date.now()}`, role: "assistant", content: data.reply }]);
+      if (data.quota) setQuota(data.quota);
+      if (data.action && MUTATING_ACTIONS.includes(data.action)) router.refresh();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Bir hata oluştu.";
+      setMsgs((m) => [...m, { id: `e-${Date.now()}`, role: "assistant", content: `⚠️ ${msg}` }]);
+    } finally {
+      setLoading(false);
+      scrollToEnd();
+      inputRef.current?.focus();
+    }
+  }
+
   async function send() {
     const text = input.trim();
     // Görsel varsa metin şart değil (sadece fiş atılabilir).
     if ((!text && !attached) || loading) return;
 
     const gorsel = attached;
+    // Cevaplanmamış kategori sorusu varsa DÜŞER — o taslak kaydedilmez (karar: 24.07)
+    setBekleyen(null);
+    setYeniKategori(null);
     setInput("");
     setAttached(null);
     setMsgs((m) => [...m, {
@@ -263,6 +322,7 @@ export default function ParlaChat() {
       const isle = (satir: string) => {
         if (!satir.trim()) return;
         let e: { t?: string; v?: string; replace?: string | null; action?: string; message?: string;
+                pendingCategory?: BekleyenKategori | null;
                 quota?: { used: number; limit: number; isPremium: boolean } };
         try { e = JSON.parse(satir); } catch { return; }
 
@@ -289,6 +349,7 @@ export default function ParlaChat() {
             }
           }
           if (e.quota) setQuota(e.quota);
+          if (e.pendingCategory) setBekleyen(e.pendingCategory);
           if (e.action && MUTATING_ACTIONS.includes(e.action)) router.refresh();
         } else if (e.t === "error") {
           throw new Error(e.message || "Bir hata oluştu.");
@@ -423,6 +484,75 @@ export default function ParlaChat() {
           </div>
 
           <div className="parla-composer">
+            {/* KATEGORİ SORUSU — yazma alanının üstünde, aynı kutunun içinde.
+                İşlem henüz kaydedilmedi; çipe dokununca kaydediliyor. */}
+            {bekleyen && (
+              <div className="parla-kat">
+                {yeniKategori === null ? (
+                  <>
+                    <div className="parla-kat-baslik">Hangi kategoriye ekleyeyim?</div>
+                    <div className="parla-kat-cipler">
+                      {bekleyen.options.map((o) => (
+                        <button
+                          key={o.slug}
+                          type="button"
+                          className={`parla-kat-cip${o.custom ? " ozel" : ""}`}
+                          onClick={() => kategoriSec({ category: o.slug })}
+                          disabled={loading}
+                        >
+                          {o.color && <span className="parla-kat-nokta" style={{ background: o.color }} />}
+                          {o.label}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        className="parla-kat-cip yeni"
+                        onClick={() => setYeniKategori("")}
+                        disabled={loading}
+                      >
+                        <Plus size={13} /> Yeni
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="parla-kat-baslik">Yeni kategori adı</div>
+                    <div className="parla-kat-yeni">
+                      <input
+                        className="parla-kat-input"
+                        value={yeniKategori}
+                        onChange={(e) => setYeniKategori(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") { e.preventDefault(); if (yeniKategori.trim()) kategoriSec({ label: yeniKategori.trim() }); }
+                          if (e.key === "Escape") setYeniKategori(null);
+                        }}
+                        placeholder="Örn. Evcil Hayvan"
+                        maxLength={40}
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        className="parla-kat-ok"
+                        onClick={() => yeniKategori.trim() && kategoriSec({ label: yeniKategori.trim() })}
+                        disabled={loading || !yeniKategori.trim()}
+                        aria-label="Oluştur ve kaydet"
+                      >
+                        <Check size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        className="parla-kat-vazgec"
+                        onClick={() => setYeniKategori(null)}
+                        aria-label="Vazgeç"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
             {attached && (
               <div className="parla-attach">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
