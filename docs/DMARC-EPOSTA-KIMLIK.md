@@ -38,9 +38,20 @@ Yani **giden gerçek trafiğimizin tamamı doğrulanıyor.** Sahte gönderim kay
 |---|---|---|---|
 | 6 edge function (`support-reply-notify`, `support-new-ticket-notify`, `staff-invite-notify`, `login-alert`, `send-welcome-email`, `send-farewell-email`) | `Paraner <merhaba@paraner.com>` | Resend → SES | ✅ geçiyor (raporla kanıtlı) |
 | Google Workspace (Mehmet'in yazışması) | `admin@paraner.com` vb. | Gmail | ✅ SPF + DKIM kurulu |
-| **Supabase Auth** — `signInWithOtp` (kayıt/giriş kodu), `resetPasswordForEmail`, `inviteUserByEmail` | **BİLİNMİYOR** | Supabase SMTP ayarı | ❓ **AÇIK SORU** |
+| **Supabase Auth** — `signInWithOtp` (kayıt/giriş kodu), `resetPasswordForEmail`, `inviteUserByEmail` | `Paraner <noreply@paraner.com>` | **Resend custom SMTP** (`smtp.resend.com:465`) | ✅ **çözüldü** (aşağı) |
 
-### 🔴 Sıkılaştırmadan önce cevaplanacak TEK soru
+### ✅ ÇÖZÜLDÜ (2026-07-24, Mehmet'in ekran görüntüsü)
+
+**Supabase → Authentication → Emails → SMTP Settings: özel SMTP AÇIK.**
+`Enable custom SMTP = ON` · Host `smtp.resend.com` · Port `465` · Username `resend` ·
+Sender `noreply@paraner.com` (ad "Paraner"). Yani auth mailleri (kayıt OTP'si, şifre sıfırlama,
+davet) Supabase'in kendi sunucusundan DEĞİL **Resend üzerinden** çıkıyor → paraner.com adına
+`resend._domainkey` ile DKIM imzalanıyor, DMARC hizalaması geçiyor.
+**Sonuç: sıkılaştırma (p=quarantine/reject) bu mailleri SPAM'e düşürmez — birinci senaryo, güvenli.**
+ℹ️ Not: gönderen `noreply@paraner.com` (edge fonksiyonları `merhaba@paraner.com` kullanıyor);
+ikisi de `@paraner.com` + Resend → aynı DKIM selektörü, ikisi de hizalı. Yeni sender ayrıca DNS/DKIM istemez.
+
+<details><summary>Eski açık soru (arşiv)</summary>
 
 **Supabase → Authentication → Emails/SMTP Settings'te özel SMTP (Resend) tanımlı mı?**
 
@@ -55,6 +66,8 @@ Yani **giden gerçek trafiğimizin tamamı doğrulanıyor.** Sahte gönderim kay
 Bu yüzden panel ekran görüntüsü / gelen kutusundaki bir OTP mailinin "gönderen" satırı görülmeden
 politika değiştirilmeyecek.
 
+</details>
+
 ## 4) Kademeli sıkılaştırma planı
 
 **Aşama 0 — ŞİMDİ (yapıldı/yapılacak, risksiz)**
@@ -62,7 +75,7 @@ politika değiştirilmeyecek.
 - Gmail'de filtre: `noreply-dmarc-support@google.com` → **"DMARC" etiketi + gelen kutusunu atla**.
   Raporlar birikmeye devam eder (veri kaybı yok), gelen kutusu temizlenir.
   ⚠️ Raporları SİLME — Aşama 1 kararı bu birikime bakılarak verilecek.
-- Supabase SMTP sorusunun cevabı alınır.
+- ✅ Supabase SMTP sorusu CEVAPLANDI (2026-07-24): Resend custom SMTP açık → sıkılaştırma güvenli.
 
 **Aşama 1 — 2-3 hafta rapor biriktikten VE Supabase sorusu cevaplandıktan sonra**
 ```

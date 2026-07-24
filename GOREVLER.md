@@ -38,10 +38,9 @@
 
 ## 📧 E-POSTA KİMLİĞİ (DMARC) · `docs/DMARC-EPOSTA-KIMLIK.md`
 > Durum sağlam (6/6 mail DKIM+SPF geçiyor, taklit yok). Eksik tek şey politika: `p=none` = kamera var, kilit yok.
-- [ ] 🔴 **ÖN KOŞUL — Mehmet, 1 ekran görüntüsü:** Supabase → Authentication → Emails/SMTP'de özel SMTP
-      (Resend) tanımlı mı? `signInWithOtp`/`resetPasswordForEmail`/`inviteUserByEmail` mailleri bu ayardan
-      çıkıyor, repoda kaydı YOK. Supabase sunucusundan çıkıyorsa, politika sıkılaşınca kayıt OTP'si + şifre
-      sıfırlama sessizce spam'e düşer ("kayıt olamıyorum" şikâyeti).
+- [x] ✅ **ÖN KOŞUL ÇÖZÜLDÜ (2026-07-24):** Supabase custom SMTP = Resend açık (`smtp.resend.com:465`,
+      `noreply@paraner.com`). Auth mailleri Resend'den → DKIM hizalı → sıkılaştırma bu mailleri spam'e
+      DÜŞÜRMEZ. Artık tek bekleyen: 2-3 haftalık DMARC rapor birikimi (aşağıdaki Aşama 1).
 - [ ] **Gmail filtresi (Mehmet):** `noreply-dmarc-support@google.com` → "DMARC" etiketi. ⚠️ Raporları SİLME
       — karar bu birikime bakılarak verilecek.
 - [ ] ⏳ **Aşama 1** (2-3 hafta rapor + Supabase cevabı sonrası): `p=quarantine; sp=quarantine`.
