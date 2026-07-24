@@ -9,13 +9,32 @@
       `StreamingText` deseni). Biçimlendirme ÖNCE çözüldüğü için akış sırasında ham yıldız
       görünmez — kelime ortaya çıkarken zaten kalın gelir. */
 
-type Seg = { text: string; bold: boolean };
+type Seg = { text: string; bold: boolean; tone?: "pos" | "neg" };
+
+/* Satır İÇİNDEKİ işaretli tutar: "+5.930,00 ₺", "−1.580,00 CHF".
+   Etiketi normal renkte bırakıp yalnız rakamı renklendiriyoruz — üç satırı birden
+   boyamak ağır duruyordu. */
+const INLINE_TUTAR = /([+\u2212-]\s?\d[\d.,]*\s?(?:₺|\$|€|£|¥|₽|₼|₹|₩|₴|zł|R\$|[A-Z]{3}))/;
 export type Block = { kind: "p" | "bullet" | "amount"; segs: Seg[]; positive?: boolean };
 
 /* Tutar satırı: "+5.000,00 ₺" / "−600,00 ₺". Sunucu işareti metnin İÇİNE koyuyor →
    sohbet geçmişinden yeniden yüklenince de renkli kalır (gelir yeşil, gider kırmızı,
    uygulamanın her yerindeki dille aynı). */
 const TUTAR_RE = /^([+\u2212-])\s?[\d.,]+/;
+
+/** Düz metni işaretli tutarlara göre böler (tutar parçaları renklenir). */
+function tutarBol(text: string, bold: boolean): Seg[] {
+  const out: Seg[] = [];
+  for (const parca of text.split(INLINE_TUTAR)) {
+    if (!parca) continue;
+    if (INLINE_TUTAR.test(parca) && /^[+\u2212-]/.test(parca)) {
+      out.push({ text: parca, bold, tone: parca.startsWith("+") ? "pos" : "neg" });
+    } else {
+      out.push({ text: parca, bold });
+    }
+  }
+  return out;
+}
 
 /** `**kalın**` → parça listesi. Tek geçiş, kütüphanesiz. */
 function parseInline(line: string): Seg[] {
@@ -24,11 +43,11 @@ function parseInline(line: string): Seg[] {
   let last = 0;
   let m: RegExpExecArray | null;
   while ((m = re.exec(line)) !== null) {
-    if (m.index > last) segs.push({ text: line.slice(last, m.index), bold: false });
-    segs.push({ text: m[1], bold: true });
+    if (m.index > last) segs.push(...tutarBol(line.slice(last, m.index), false));
+    segs.push(...tutarBol(m[1], true));
     last = m.index + m[0].length;
   }
-  if (last < line.length) segs.push({ text: line.slice(last), bold: false });
+  if (last < line.length) segs.push(...tutarBol(line.slice(last), false));
   return segs.length ? segs : [{ text: line, bold: false }];
 }
 
@@ -71,8 +90,13 @@ export default function RichText({ blocks, reveal }: { blocks: Block[]; reveal: 
           const seg = b.segs[si];
           if (reveal !== null && shown >= reveal) break;
 
+          const sinif = seg.tone ? `parla-num ${seg.tone}` : undefined;
           if (reveal === null) {
-            kids.push(seg.bold ? <strong key={si}>{seg.text}</strong> : <span key={si}>{seg.text}</span>);
+            kids.push(
+              seg.bold
+                ? <strong key={si} className={sinif}>{seg.text}</strong>
+                : <span key={si} className={sinif}>{seg.text}</span>,
+            );
             continue;
           }
 
@@ -85,7 +109,13 @@ export default function RichText({ blocks, reveal }: { blocks: Block[]; reveal: 
             out += p;
             shown++;
           }
-          if (out) kids.push(seg.bold ? <strong key={si}>{out}</strong> : <span key={si}>{out}</span>);
+          if (out) {
+            kids.push(
+              seg.bold
+                ? <strong key={si} className={sinif}>{out}</strong>
+                : <span key={si} className={sinif}>{out}</span>,
+            );
+          }
         }
 
         if (!kids.length) return null;

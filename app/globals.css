@@ -4917,6 +4917,10 @@ body.parla-open .panel-content { padding-right: 408px; }
 /* Tutar satırı — gelir yeşil, gider kırmızı (panelin her yerindeki dille aynı) */
 .parla-tutar { font-size: 17px; font-weight: 650; letter-spacing: -0.01em; margin-bottom: 2px; }
 .parla-tutar.pos { color: var(--teal); }
+/* Satır içi tutar (özet maddeleri) — etiket normal, yalnız rakam renkli */
+.parla-num { font-weight: 600; }
+.parla-num.pos { color: var(--teal); }
+.parla-num.neg { color: var(--danger); }
 .parla-tutar.neg { color: var(--danger); }
 .parla-li { display: flex; align-items: baseline; gap: 8px; }
 /* Madde metni tek parça akar (kalın başlık ayrı sütuna düşmesin) */
