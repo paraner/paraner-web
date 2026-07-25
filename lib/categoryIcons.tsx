@@ -10,7 +10,7 @@ import {
   Leaf, Flower2, Globe, Droplet, Sun, Moon, Cloud, Snowflake, CloudRain,
   CloudLightning, ShoppingBag, Banknote, Gem, Key, Lock, Shield, Ribbon, Trophy,
   Users, User, PersonStanding, Accessibility, Hand, CarFront, Rocket, Sparkles,
-  Lightbulb, Tag, ArrowRightLeft, Smartphone, Dumbbell,
+  Lightbulb, Tag, ArrowRightLeft, Smartphone, Dumbbell, MoreHorizontal,
   type LucideIcon,
 } from "lucide-react";
 
@@ -38,6 +38,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   trophy: Trophy, people: Users, person: User, body: PersonStanding,
   accessibility: Accessibility, "hand-left": Hand, "car-sport": CarFront,
   rocket: Rocket, sparkles: Sparkles, bulb: Lightbulb, barbell: Dumbbell,
+  // "Diğer" kategorisi (mobil ile aynı ad) — eşlenmezse etiketsiz Tag ikonu çizilirdi
+  "ellipsis-horizontal": MoreHorizontal,
 };
 
 // Özel kategori oluştururken seçilebilir ikonlar (mobil ile aynı sıralama)

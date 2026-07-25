@@ -18,6 +18,12 @@ export const CATEGORIES: Category[] = [
   { id: "abonelik", label: "Abonelik", icon: "card", color: "#0EA5E9" },
   { id: "egitim", label: "Eğitim", icon: "school", color: "#8B5CF6" },
   { id: "duzenli", label: "Düzenli Ödemeler", icon: "repeat", color: "#1A6BFA" },
+  /* ⚠️ "diger" GERÇEK bir kategori kimliği: Parla, kategorisi belirsiz bir harcamayı bu
+     kimlikle kaydediyor (`parla/.../brain/categories.ts`). Katalogda olmadığı için web ve
+     mobil ekranda küçük harfle ham "diger" yazıyordu (Mehmet, 25.07 canlı). Listede olması
+     ayrıca ŞART: yoksa Parla'nın eklediği bir işlem düzenlenirken kategori kutusu boş
+     görünüyor ve kaydedince kategori kayboluyordu. */
+  { id: "diger", label: "Diğer", icon: "ellipsis-horizontal", color: "#888780" },
 ];
 
 export const INCOME_CATEGORIES: Category[] = [

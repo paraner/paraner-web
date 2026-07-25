@@ -186,10 +186,15 @@ export default async function GenelBakisPage() {
   // ⚠️ Kategori adı/rengi ÖZEL kategorilerle birlikte çözülür (yoksa ham kimlik görünür)
   const kat = (id: string | null) => findCategory(id, ozelKategoriler);
   const donutSegs: DonutSeg[] = catTop.map(([id, v]) => ({ label: kat(id).label, value: v, color: kat(id).color }));
-  if (catRest > 0) donutSegs.push({ label: "Diğer", value: catRest, color: "#64748B" });
+  /* İlk 5 dışındaki kategorilerin toplamı. Adı "Diğer" DEĞİL: "Diğer" artık gerçek bir
+     kategori (Parla onunla kaydediyor) → grafikte iki ayrı "Diğer" satırı çıkıyordu. */
+  const REST_LABEL = "Diğer kategoriler";
+  if (catRest > 0) donutSegs.push({ label: REST_LABEL, value: catRest, color: "#64748B" });
   const catLegend = [
     ...catTop.map(([id, v]) => ({ cat: kat(id), value: v })),
-    ...(catRest > 0 ? [{ cat: kat(null), value: catRest }] : []),
+    ...(catRest > 0
+      ? [{ cat: { id: "", label: REST_LABEL, icon: "ellipsis-horizontal", color: "#64748B" }, value: catRest }]
+      : []),
   ];
 
   // ── Son işlemler ──
