@@ -1371,19 +1371,53 @@ ul { list-style: none; }
 /* Daraltılmış: wordmark gizli, temiz P görünür */
 .panel-sidebar.collapsed .panel-brand .brand-full { display: none; }
 .panel-sidebar.collapsed .panel-brand .brand-mini { display: block; }
-.panel-sidebar.collapsed .panel-nav-item { padding: 10px; gap: 0; }
+
 .panel-sidebar.collapsed .sidebar-toggle svg { transform: rotate(180deg); }
 /* Daraltılmışken çerçeve avatarı yatayda sıkıca sarsın; dikey boşluk açık
    durumla AYNI (9px) → buton yüksekliği değişmez, açılırken dikey kayma olmaz */
-.panel-sidebar.collapsed .profile-switch-btn {
-  width: fit-content; margin: 0 auto; padding: 9px; border-radius: 13px;
-  /* ⚠️ `gap: 0` ŞART: gizlenen yazı+ok artık `display:none` DEĞİL (yumuşak solma için
-     opacity/genişlik ile gizleniyor) → sıfır genişlikte olsalar bile aralarındaki
-     2×11px BOŞLUK sayılmaya devam ediyordu; buton dar rayın dışına taşıyordu
-     (Mehmet, 25.07 canlı — ilk düzeltmede gözden kaçtı, sebep esneme değil boşlukmuş).
-     Aynı tuzak `.panel-nav-item`te de var, orada zaten `gap: 0` yazılı. */
-  gap: 0;
+/* ⚠️ Ölçü/boşluk artık "DARALTILMIŞ RAY: TEK ÖLÇÜ SİSTEMİ" bloğunda (yukarıda).
+   Buraya ayrı ölçü YAZMA — iki yerden ayarlanan kutu, ray hizasını yine bozar.
+   Not: `gap: 0` orada ŞART; gizlenen yazı `display:none` değil (yumuşak solma) →
+   sıfır genişlikte bile aradaki boşluk sayılıyor ve buton raydan taşıyordu. */
+
+/* ─── DARALTILMIŞ RAY: TEK ÖLÇÜ SİSTEMİ ──────────────────────────────────────
+   ⚠️ NEDEN (Mehmet, 25.07 canlı: "alttakilerle tutarsız, düzgün değil"): ray dört
+   ayrı kutu boyu barındırıyordu — profil 48px (üstelik TEK çerçeveli öğe), bölüm
+   başlığı 44, ana menü 38, favori 36. Açık menüde etiketler hizayı taşıdığı için
+   fark edilmiyor; daralınca ortada sadece kutular kalıyor ve düzensizlik ortaya
+   çıkıyor. Artık HEPSİ 44×44, aynı yarıçap, ortalı; boyut/ritim tek yerden.
+   Yeni bir ray satırı eklersen bu listeye de ekle. */
+.panel-sidebar.collapsed .profile-switch-btn,
+.panel-sidebar.collapsed .panel-nav-item,
+.panel-sidebar.collapsed .nav-section-head,
+.panel-sidebar.collapsed .nav-fav-group .nav-subitem {
+  width: 44px; height: 44px; min-width: 44px; padding: 0; margin: 0 auto;
+  border-radius: 12px; gap: 0; justify-content: center; align-items: center;
+  /* `flex: none` ŞART: favori satırı `.nav-subitem` normalde `flex: 1` — esneyip
+     44px'i geçer ve yine hizadan çıkardı. */
+  flex: none;
 }
+/* Profil, dar rayda diğer satırlarla aynı dili konuşur: çerçeve/zemin yok, sadece
+   titanyum avatar. (Açık menüde kart görünümü korunuyor — orada bilgi taşıyor.) */
+.panel-sidebar.collapsed .profile-switch-btn { background: none; border-color: transparent; }
+.panel-sidebar.collapsed .profile-switch-btn:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.05); border-color: transparent;
+}
+/* İkon ağırlıkları da eşitlendi: çizgi ikonlar 20px, renkli kutucuklar 28px */
+.panel-sidebar.collapsed .panel-nav-item svg,
+.panel-sidebar.collapsed .nav-footer .panel-nav-item svg { width: 20px; height: 20px; }
+.panel-sidebar.collapsed .nav-fav-group .nav-subicon svg { width: 20px; height: 20px; }
+.panel-sidebar.collapsed .nav-section-icon { width: 28px; height: 28px; }
+/* Dikey ritim: satır arası ve gruplar arası tek ölçü (açıkken 2px/16px kalıyor) */
+.panel-sidebar.collapsed .panel-nav,
+.panel-sidebar.collapsed .nav-group,
+.panel-sidebar.collapsed .nav-footer,
+.panel-sidebar.collapsed .nav-section-items { gap: 4px; }
+.panel-sidebar.collapsed .nav-group { margin-bottom: 12px; }
+.panel-sidebar.collapsed .profile-switch { margin-bottom: 12px; }
+.panel-sidebar.collapsed .nav-fav-group { padding-bottom: 10px; margin-bottom: 10px; }
+/* Favori satırı: kutu artık `.nav-subitem`te → sarmalayıcı zemini çift çerçeve yapmasın */
+.panel-sidebar.collapsed .nav-fav-group .nav-subitem-row { background: none; box-shadow: none; }
 
 /* Daralt / genişlet — sağ kenara yarı taşmış yuvarlak yüzen buton (Notion/Linear deseni) */
 .sidebar-toggle {
@@ -1729,7 +1763,7 @@ ul { list-style: none; }
    Hover'la AÇILAN MENÜ yapılmadı — bilinçli: dokunmatikte hover yok, el titremesinde menü
    kaçıyor, WCAG önemli içerik için tıklama öneriyor. Tek tık > iki adım. */
 .panel-sidebar.collapsed .nav-fav-group .nav-subitem-row { justify-content: center; }
-.panel-sidebar.collapsed .nav-fav-group .nav-subitem { justify-content: center; padding: 10px; gap: 0; }
+/* Ölçü tek yerde: 'DARALTILMIŞ RAY' bloğu (bu satır oradan yönetiliyor) */
 /* Yıldız (favoriden çıkar) düğmesi dar rayda sığmıyor → yalnız açıkken görünür.
    Favoriden çıkarmak nadir bir iş; menüyü açıp yapılır. */
 .panel-sidebar.collapsed .nav-fav-group .nav-fav-btn { display: none; }
@@ -1739,7 +1773,7 @@ ul { list-style: none; }
 }
 
 /* Daraltılmışken bölüm başlıkları sadece ikon, chevron gizli */
-.panel-sidebar.collapsed .nav-section-head { justify-content: center; padding: 8px; }
+/* Ölçü tek yerde: 'DARALTILMIŞ RAY' bloğu */
 .panel-sidebar.collapsed .nav-section-chev { display: none; }
 
 /* ─── Üst bar aksiyon ikonları (AI sohbet · bildirim · ayarlar) ─── */
