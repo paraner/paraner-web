@@ -1,5 +1,6 @@
 import { createClient } from "../../../lib/supabase/server";
 import { getActiveProfile } from "../../../lib/supabase/profile";
+import { getCustomCategories } from "../../../lib/customCategoriesServer";
 import ButcelerClient, { type Budget } from "./ButcelerClient";
 
 export default async function ButcelerPage() {
@@ -18,7 +19,7 @@ export default async function ButcelerPage() {
   const last = new Date(y, m + 1, 0);
   const end = `${last.getFullYear()}-${pad(last.getMonth() + 1)}-${pad(last.getDate())}`;
 
-  const [{ data: budgets }, { data: tx }] = await Promise.all([
+  const [{ data: budgets }, { data: tx }, ozelKategoriler] = await Promise.all([
     supabase
       .from("category_budgets")
       .select("id, category, monthly_limit")
@@ -34,6 +35,7 @@ export default async function ButcelerPage() {
       .gte("date", start)
       .lte("date", end)
       .limit(2000),
+    getCustomCategories(profile.id),
   ]);
 
   // Bu ay kategori bazında harcama (kategori id'sine göre)
@@ -49,6 +51,7 @@ export default async function ButcelerPage() {
       currency={profile.currency ?? "TRY"}
       budgets={(budgets as Budget[]) ?? []}
       spent={spent}
+      customCategories={ozelKategoriler}
     />
   );
 }

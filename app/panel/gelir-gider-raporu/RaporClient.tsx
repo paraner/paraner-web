@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { formatCurrency } from "../../../lib/format";
 import { findCategory } from "../../../lib/categories";
+import type { CustomCategory } from "../../../lib/customCategoriesShared";
 import { toCsv, downloadCsv } from "../../../lib/csv";
 import PageHead from "../../../components/ui/PageHead";
 
@@ -31,9 +32,12 @@ function startOf(period: Period) {
 export default function RaporClient({
   currency,
   transactions,
+  /* Kullanıcının kendi kategorileri — CSV'ye de bu adlar yazılır (ham kimlik değil). */
+  customCategories = [],
 }: {
   currency: string;
   transactions: Tx[];
+  customCategories?: CustomCategory[];
 }) {
   const [period, setPeriod] = useState<Period>("month");
 
@@ -66,8 +70,8 @@ export default function RaporClient({
   function exportCsv() {
     const rows = [
       ["Tür", "Kategori", "Tutar"],
-      ...income.map((x) => ["Gelir", findCategory(x.cat).label, String(x.total)]),
-      ...expense.map((x) => ["Gider", findCategory(x.cat).label, String(x.total)]),
+      ...income.map((x) => ["Gelir", findCategory(x.cat, customCategories).label, String(x.total)]),
+      ...expense.map((x) => ["Gider", findCategory(x.cat, customCategories).label, String(x.total)]),
     ];
     downloadCsv(`gelir-gider-${period}.csv`, toCsv(rows));
   }
@@ -95,7 +99,7 @@ export default function RaporClient({
           <div className="rapor-empty">Kayıt yok</div>
         ) : (
           rows.map((x) => {
-            const cat = findCategory(x.cat);
+            const cat = findCategory(x.cat, customCategories);
             const pct = total > 0 ? (x.total / total) * 100 : 0;
             return (
               <div key={x.cat} className="rapor-row">

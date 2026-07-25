@@ -47,8 +47,19 @@ const OTHER: Category = { id: "", label: "Diğer", icon: "tag", color: "#888780"
 
 // Kategori id'sinden etiket+renk bulur. Bulamazsa "Diğer".
 // Eski kayıtlar bazen label ile kaydedilmiş olabilir → label ile de eşleştirir.
-export function findCategory(categoryId: string | null | undefined): Category {
+/* `custom` verilirse kullanıcının KENDİ kategorileri de çözülür (`user_categories`).
+   ⚠️ NEDEN OPSİYONEL PARAMETRE (Mehmet, 25.07 canlı): özel kategoriler veritabanında,
+   bu dosya ise saf katalog (sunucu+istemci ortak, sorgu yapamaz). Kategori gösteren her
+   ekran listeyi kendi yükleyip buraya VERMELİ — vermezse ham kimlik ekrana düşer
+   ("custom_1784911989778"). Sunucuda `lib/customCategoriesServer.getCustomCategories`,
+   istemcide `lib/customCategories.fetchCustomCategories`. */
+export function findCategory(
+  categoryId: string | null | undefined,
+  custom?: readonly Category[],
+): Category {
   if (!categoryId) return OTHER;
+  const ozel = custom?.find((c) => c.id === categoryId);
+  if (ozel) return ozel;
   if (TRANSFER[categoryId]) return TRANSFER[categoryId];
   const all = [...CATEGORIES, ...INCOME_CATEGORIES];
   const byId = all.find((c) => c.id === categoryId);

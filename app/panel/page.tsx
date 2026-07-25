@@ -5,6 +5,7 @@ import RealtimeRefresher from "./RealtimeRefresher";
 import { formatCurrency, formatDate, TZ } from "../../lib/format";
 import { ymd } from "../../lib/date";
 import { findCategory } from "../../lib/categories";
+import { type CustomCategory, getCustomCategories } from "../../lib/customCategoriesServer";
 import { CategoryIcon } from "../../lib/categoryIcons";
 import Sparkline from "../../components/ui/Sparkline";
 import LineChart, { type LinePoint } from "../../components/ui/LineChart";
@@ -88,9 +89,11 @@ export default async function GenelBakisPage() {
     currency: string; balance: string;
   }[] = [];
   let tx6: TxRow[] = [];
+  // Kullanıcının kendi kategorileri — kategori adı/rengi bunlarsız ham kimlik olarak çıkar
+  let ozelKategoriler: CustomCategory[] = [];
 
   if (profile?.id) {
-    const [{ data: acc }, { data: tx }] = await Promise.all([
+    const [{ data: acc }, { data: tx }, ozel] = await Promise.all([
       supabase
         .from("bank_accounts")
         .select("id, name, type, bank_name, iban, account_no, card_theme, currency, balance")
@@ -103,9 +106,11 @@ export default async function GenelBakisPage() {
         .gte("date", sixStart)
         .order("date", { ascending: false })
         .order("created_at", { ascending: false }),
+      getCustomCategories(profile.id),
     ]);
     accounts = acc ?? [];
     tx6 = (tx as TxRow[]) ?? [];
+    ozelKategoriler = ozel;
   }
 
   const isMain = (t: TxRow) => (t.currency || currency) === currency;
@@ -178,11 +183,13 @@ export default async function GenelBakisPage() {
   const TOP = 5;
   const catTop = catSorted.slice(0, TOP);
   const catRest = catSorted.slice(TOP).reduce((s, [, v]) => s + v, 0);
-  const donutSegs: DonutSeg[] = catTop.map(([id, v]) => ({ label: findCategory(id).label, value: v, color: findCategory(id).color }));
+  // ⚠️ Kategori adı/rengi ÖZEL kategorilerle birlikte çözülür (yoksa ham kimlik görünür)
+  const kat = (id: string | null) => findCategory(id, ozelKategoriler);
+  const donutSegs: DonutSeg[] = catTop.map(([id, v]) => ({ label: kat(id).label, value: v, color: kat(id).color }));
   if (catRest > 0) donutSegs.push({ label: "Diğer", value: catRest, color: "#64748B" });
   const catLegend = [
-    ...catTop.map(([id, v]) => ({ cat: findCategory(id), value: v })),
-    ...(catRest > 0 ? [{ cat: findCategory(null), value: catRest }] : []),
+    ...catTop.map(([id, v]) => ({ cat: kat(id), value: v })),
+    ...(catRest > 0 ? [{ cat: kat(null), value: catRest }] : []),
   ];
 
   // ── Son işlemler ──
@@ -336,7 +343,7 @@ export default async function GenelBakisPage() {
                 const isExpense = t.type === "expense";
                 const sign = isIncome ? "+" : isExpense ? "−" : "";
                 const cls = isIncome ? "pos" : isExpense ? "neg" : "";
-                const cat = findCategory(t.category);
+                const cat = kat(t.category);
                 const acc = accName(t.bank_account_id);
                 const tm = timeStr(t.created_at);
                 return (

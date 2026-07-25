@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { formatCurrency } from "../../../lib/format";
 import { findCategory } from "../../../lib/categories";
+import type { CustomCategory } from "../../../lib/customCategoriesShared";
 import PageHead from "../../../components/ui/PageHead";
 
 export type Tx = {
@@ -30,9 +31,13 @@ function startOf(period: Period) {
 export default function KarZararClient({
   currency,
   transactions,
+  /* Kullanıcının kendi kategorileri — verilmezse özel kategoriler ham kimlik olarak
+     görünür ("custom_1784911989778"). Sunucu sayfası yükleyip geçer. */
+  customCategories = [],
 }: {
   currency: string;
   transactions: Tx[];
+  customCategories?: CustomCategory[];
 }) {
   const [period, setPeriod] = useState<Period>("month");
 
@@ -101,7 +106,7 @@ export default function KarZararClient({
           <div className="section-title">En Yüksek Gider Kalemleri</div>
           <div className="tx-list">
             {topExpenses.map((x) => {
-              const cat = findCategory(x.cat);
+              const cat = findCategory(x.cat, customCategories);
               return (
                 <div key={x.cat} className="tx-row">
                   <div className="tx-main">

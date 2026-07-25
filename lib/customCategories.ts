@@ -12,28 +12,21 @@
  */
 
 import { createClient } from "./supabase/client";
-import type { Category } from "./categories";
+import {
+  CUSTOM_CAT_COLS,
+  type CustomCatRow,
+  type CustomCategory,
+  rowToCustomCategory,
+} from "./customCategoriesShared";
 
-export type CustomCategory = Category & { type: "income" | "expense" };
-
-type Satir = { slug: string; label: string; icon: string | null; color: string | null; kind: string };
-
-function satirdanKategori(r: Satir): CustomCategory {
-  return {
-    id: r.slug,
-    label: r.label,
-    color: r.color ?? "#888780",
-    icon: r.icon ?? "tag",
-    type: r.kind === "income" ? "income" : "expense",
-  };
-}
+export type { CustomCategory };
 
 /** Profilin özel kategorileri (ortak tablodan). */
 export async function fetchCustomCategories(profileId: string): Promise<CustomCategory[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("user_categories")
-    .select("slug, label, icon, color, kind")
+    .select(CUSTOM_CAT_COLS)
     .eq("user_id", profileId)
     .order("created_at", { ascending: true })
     .limit(200);
@@ -42,7 +35,7 @@ export async function fetchCustomCategories(profileId: string): Promise<CustomCa
     console.warn("[customCategories] okunamadi:", error.message);
     return [];
   }
-  return (data ?? []).map((r) => satirdanKategori(r as Satir));
+  return (data ?? []).map((r) => rowToCustomCategory(r as unknown as CustomCatRow));
 }
 
 /** Yeni kategori. ⚠️ `.select()` şart: RLS 0 satır etkilerse PostgREST hata DÖNDÜRMEZ. */

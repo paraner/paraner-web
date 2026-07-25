@@ -9,6 +9,7 @@ import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, parseAmount } from "../../../lib/format";
 import { CATEGORIES, findCategory } from "../../../lib/categories";
+import type { CustomCategory } from "../../../lib/customCategoriesShared";
 import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
@@ -25,11 +26,15 @@ export default function ButcelerClient({
   currency,
   budgets: initial,
   spent,
+  customCategories = [],
 }: {
   profileId: string;
   currency: string;
   budgets: Budget[];
   spent: Record<string, number>;
+  /* Kullanıcının kendi kategorileri — bütçe seçicisi sabit kataloğu kullanır ama
+     ESKİ/mobil kaynaklı bütçelerde özel kategori kimliği olabilir → adı çözülsün. */
+  customCategories?: CustomCategory[];
 }) {
   const supabase = createClient();
   const router = useRouter();
@@ -111,7 +116,7 @@ export default function ButcelerClient({
   }
 
   async function handleDelete(b: Budget) {
-    if (!(await confirmDialog({ message: `${findCategory(b.category).label} bütçesi silinsin mi?`, danger: true }))) return;
+    if (!(await confirmDialog({ message: `${findCategory(b.category, customCategories).label} bütçesi silinsin mi?`, danger: true }))) return;
     const { error } = await supabase.from("category_budgets").delete().eq("id", b.id);
     if (error) return;
     setList((prev) => prev.filter((x) => x.id !== b.id));
@@ -152,7 +157,7 @@ export default function ButcelerClient({
       ) : (
         <div className="budget-list">
           {list.map((b) => {
-            const cat = findCategory(b.category);
+            const cat = findCategory(b.category, customCategories);
             const lim = Number(b.monthly_limit) || 0;
             const sp = spent[b.category] || 0;
             const pct = lim > 0 ? Math.min(100, (sp / lim) * 100) : 0;
@@ -209,7 +214,7 @@ export default function ButcelerClient({
 
             <Field label="Kategori">
               {editing ? (
-                <input type="text" value={findCategory(category).label} disabled />
+                <input type="text" value={findCategory(category, customCategories).label} disabled />
               ) : (
                 <select value={category} onChange={(e) => setCategory(e.target.value)}>
                   {available.map((c) => (

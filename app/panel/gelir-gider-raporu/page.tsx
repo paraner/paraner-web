@@ -1,5 +1,6 @@
 import { createClient } from "../../../lib/supabase/server";
 import { getActiveProfile } from "../../../lib/supabase/profile";
+import { getCustomCategories } from "../../../lib/customCategoriesServer";
 import RaporClient, { type Tx } from "./RaporClient";
 
 export default async function GelirGiderRaporuPage() {
@@ -15,18 +16,22 @@ export default async function GelirGiderRaporuPage() {
   const pad = (n: number) => String(n).padStart(2, "0");
   const startStr = `${start.getFullYear()}-${pad(start.getMonth() + 1)}-01`;
 
-  const { data: tx } = await supabase
-    .from("transactions")
-    .select("amount, type, category, currency, date")
-    .eq("user_id", profile.id)
-    .neq("type", "transfer")
-    .gte("date", startStr)
-    .limit(8000);
+  const [{ data: tx }, ozelKategoriler] = await Promise.all([
+    supabase
+      .from("transactions")
+      .select("amount, type, category, currency, date")
+      .eq("user_id", profile.id)
+      .neq("type", "transfer")
+      .gte("date", startStr)
+      .limit(8000),
+    getCustomCategories(profile.id),
+  ]);
 
   return (
     <RaporClient
       currency={profile.currency ?? "TRY"}
       transactions={(tx as Tx[]) ?? []}
+      customCategories={ozelKategoriler}
     />
   );
 }
