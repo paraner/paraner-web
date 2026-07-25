@@ -4969,8 +4969,18 @@ body.parla-open .panel-content { padding-right: 408px; }
   display: flex; flex-wrap: nowrap; gap: 6px;
   overflow-x: auto; overscroll-behavior: contain;
   scrollbar-width: none; padding-bottom: 2px;
+  /* Sürüklerken çip yazıları seçilmesin (fareyle kaydırma) */
+  user-select: none; -webkit-user-select: none;
 }
 .parla-kat-cipler::-webkit-scrollbar { height: 0; }
+/* MASAÜSTÜ: ince kaydırma çubuğu — çubuk hiç görünmeyince kullanıcı rayın kaydığını
+   anlamıyordu (Mehmet, 25.07: "scroll edilemiyor"). Dokunmatikte gizli kalır. */
+@media (hover: hover) and (pointer: fine) {
+  .parla-kat-cipler { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+  .parla-kat-cipler::-webkit-scrollbar { height: 4px; }
+  .parla-kat-cipler::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+  .parla-kat-cipler::-webkit-scrollbar-track { background: transparent; }
+}
 .parla-kat-cip {
   flex-shrink: 0;
   display: inline-flex; align-items: center; gap: 6px;

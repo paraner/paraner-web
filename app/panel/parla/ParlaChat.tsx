@@ -7,6 +7,7 @@ import { Sparkles, X, ArrowUp, Plus, ImageIcon, Trash2, Check } from "lucide-rea
 import { createClient } from "../../../lib/supabase/client";
 import { announceDataChanged, announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
 import RichText, { parseBlocks, countWords } from "./RichText";
+import { getCurrencySymbol } from "../../../lib/currencies";
 import { confirmDialog } from "../../components/confirm";
 import { showToast } from "../../components/toast";
 
@@ -52,6 +53,26 @@ const DAKTILO_MAX_MS = 34;
 
 /** Snap'te mesajın tepeden bırakacağı nefes payı (px). */
 const SNAP_PAY = 6;
+
+/* Cevaplanmamış kategori sorusu hatırlatması.
+   ⚠️ DAVRANIŞ DEĞİŞTİ (Mehmet, 25.07): eskiden kullanıcı çip seçmeden başka bir şey
+   yazınca taslak SESSİZCE düşüyordu — "ne oldu ona?" sorusu doğuyordu. Artık taslak
+   DURUYOR: Parla önce yeni soruyu cevaplıyor, cevabı bitince tek bir hatırlatma
+   yazıyor ve çipler yerinde kalıyor. İşlem hâlâ KAYDEDİLMİŞ DEĞİL — çipe dokununca
+   kaydedilir (kayıt anı değişmedi).
+   ⚠️ Tutar işaretli + sembollü yazılmalı, yoksa renklenmez (bkz. RichText INLINE_TUTAR). */
+function hatirlatmaMetni(bekleyen: BekleyenKategori): string {
+  const tx = bekleyen.tx;
+  const gelir = tx.type === "income";
+  const miktar = Number(tx.amount).toLocaleString("tr-TR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  const tutar = `${gelir ? "+" : "−"}${miktar} ${getCurrencySymbol(tx.currency || "TRY")}`;
+  return `Bu arada ${tutar} tutarını hangi kategoriye yazacağını belirtmedin. Aşağıdan seçersen ${
+    gelir ? "gelir" : "gider"
+  } olarak kaydedeyim.`;
+}
 
 /** Sunucu bir şey değiştirdiyse panel verisi bayat kalmasın (panel kuralı: mutasyon → refresh). */
 const MUTATING_ACTIONS = ["transaction_added", "transaction_deleted", "goal_updated"];
@@ -128,6 +149,11 @@ export default function ParlaChat() {
      durur, yeni parça gelince devam eder. Geçmiş mesajlar daktiloya girmez. */
   const [daktilo, setDaktilo] = useState<{ id: string; n: number; acik: boolean } | null>(null);
 
+  /* Cevabın ARDINDAN yazılacak hatırlatma (bkz. `hatirlatmaMetni`). Cevap daktiloyla
+     yazılırken araya girmesin diye kuyruğa alınır, yazma bitince basılır. */
+  const [hatirlatma, setHatirlatma] = useState<string | null>(null);
+  const hatirlatilanRef = useRef<BekleyenKategori | null>(null); // aynı taslak için tek kez
+
   /* Listenin altındaki GEÇİCİ boşluk (bkz. `snapUygula`). Cevap yazıldıkça küçülür →
      toplam yükseklik sabit kalır, ekran hiç oynamaz. */
   const [bosluk, setBosluk] = useState(0);
@@ -136,6 +162,7 @@ export default function ParlaChat() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const anchorRef = useRef<HTMLDivElement | null>(null);  // son kullanıcı mesajı (tepeye oturan)
+  const ciplerRef = useRef<HTMLDivElement | null>(null);  // kategori çipi rayı (yatay kayar)
   const boslukRef = useRef<HTMLDivElement | null>(null);
   const turAcikRef = useRef(false);   // gönderim turu sürüyor mu (boşluk yönetilsin mi)
   const kaydirildiRef = useRef(false); // bu turda anchor tepeye kaydırıldı mı
@@ -252,6 +279,55 @@ export default function ParlaChat() {
     return () => { alive = false; };
   }, [open, loaded, scrollToEnd]);
 
+  /* ─── Kategori çipi rayı: YATAY kaydırma ────────────────────────────────────
+     ⚠️ NEDEN GEREKLİ (Mehmet, 25.07 canlı: "çiplere scroll edilemiyor, app'deki gibi
+     olmalı"): ray zaten `overflow-x: auto` ama masaüstünde fare tekerleği DİKEY kaydırır
+     → satır kıpırdamıyor, üstüne kaydırma çubuğu da gizli olduğu için kayabildiği hiç
+     belli olmuyordu. Telefonda parmakla sürüklüyorsun; webde karşılığı yoktu.
+     ① tekerlek yatay çevrilir  ② FARE ile sürüklenir (dokunmatikte doğal kaydırma kalır).
+     ⚠️ Tekerlek dinleyicisi native ve `passive:false` — React'in onWheel'i pasif ekleniyor,
+     `preventDefault` işlemiyor (arkadaki sohbet listesi kayardı). */
+  useEffect(() => {
+    const el = ciplerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (el.scrollWidth <= el.clientWidth) return; // taşma yoksa karışma
+      const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (!d) return;
+      el.scrollLeft += d;
+      e.preventDefault();
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [bekleyen, yeniKategori]);
+
+  /* Fare ile sürükleyerek kaydırma. `tasindi` bayrağı şart: sürükleme bitince gelen
+     tıklama yutulmazsa parmağın kalktığı çip seçilip işlem kaydedilirdi. */
+  const surukle = useRef<{ x: number; sol: number; tasindi: boolean } | null>(null);
+
+  function rayPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.pointerType !== "mouse") return; // dokunmatik: iOS/Android kendi kaydırması daha iyi
+    const el = ciplerRef.current;
+    if (!el) return;
+    surukle.current = { x: e.clientX, sol: el.scrollLeft, tasindi: false };
+  }
+
+  function rayPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    const el = ciplerRef.current;
+    const s = surukle.current;
+    if (!el || !s) return;
+    const dx = e.clientX - s.x;
+    if (!s.tasindi && Math.abs(dx) > 4) s.tasindi = true; // titremeyi sürükleme sayma
+    if (s.tasindi) el.scrollLeft = s.sol - dx;
+  }
+
+  function rayClickCapture(e: React.MouseEvent<HTMLDivElement>) {
+    if (!surukle.current?.tasindi) return;
+    e.preventDefault();
+    e.stopPropagation();
+    surukle.current = null;
+  }
+
   /* Sayfa içeriğini sola kaydır (işlem detayı çekmecesiyle aynı davranış).
      Kabuk (`app/panel/layout.tsx`) sunucu bileşeni → prop yerine body sınıfı: hiçbir sayfanın
      kodu değişmez, sonradan eklenen sayfalar da kendiliğinden uyar. CSS: `body.parla-open`. */
@@ -287,7 +363,8 @@ export default function ParlaChat() {
 
     if (daktilo.n >= toplam) {
       // Akış kapandıysa iş bitti → mesaj normal (tam) çizime döner, tur da kapanır.
-      if (!daktilo.acik) { setDaktilo(null); turAcikRef.current = false; }
+      // Kuyrukta hatırlatma varsa tur AÇIK kalır (o da aynı turun parçası, yeri hesaplansın).
+      if (!daktilo.acik) { setDaktilo(null); if (!hatirlatma) turAcikRef.current = false; }
       return; // akış sürüyorsa yeni kelimeleri bekle
     }
 
@@ -300,7 +377,19 @@ export default function ParlaChat() {
       // Kaydırma YOK — yazı, snap'in açtığı boşluğa doğru büyür (yukarıdaki not).
     }, aralik);
     return () => clearTimeout(t);
-  }, [daktilo, blocksById]);
+  }, [daktilo, blocksById, hatirlatma]);
+
+  /* Kuyruktaki hatırlatma, asıl cevabın yazması BİTİNCE yazılır (araya girip cevabı
+     bölmesin). Kendisi de daktiloyla yazılır — her cevap aynı dilde.
+     ⚠️ Bu mesaj sunucuda saklanmaz (taslak da istemcide): sayfa yenilenirse hatırlatma
+     ve çipler birlikte gider — ikisi zaten aynı geçici duruma ait. */
+  useEffect(() => {
+    if (!hatirlatma || daktilo || loading) return;
+    const id = yeniId("a");
+    setMsgs((m) => [...m, { id, role: "assistant", content: hatirlatma }]);
+    setDaktilo({ id, n: 0, acik: false });
+    setHatirlatma(null);
+  }, [hatirlatma, daktilo, loading]);
 
   // Escape ile kapat
   useEffect(() => {
@@ -345,6 +434,8 @@ export default function ParlaChat() {
     // Bekleyen kategori sorusu da düşer — ait olduğu mesaj artık yok (mobil ile aynı)
     setBekleyen(null);
     setYeniKategori(null);
+    setHatirlatma(null); // kuyruktaki hatırlatma boş sohbete düşmesin
+    hatirlatilanRef.current = null;
     const supabase = createClient();
     const { data, error } = await supabase
       .from("chat_messages")
@@ -422,9 +513,10 @@ export default function ParlaChat() {
     const gorsel = attached;
     // Yarım kalmış daktilo varsa tamamlanmış say — eski cevap yazılırken yenisi başlamasın
     setDaktilo(null);
-    // Cevaplanmamış kategori sorusu varsa DÜŞER — o taslak kaydedilmez (karar: 24.07)
-    setBekleyen(null);
-    setYeniKategori(null);
+    /* Cevaplanmamış kategori sorusu DÜŞMEZ (25.07 kararı): taslak duruyor, çipler yerinde
+       kalıyor; cevap bitince bir kez hatırlatılıyor. İşlem hâlâ kaydedilmiş değil. */
+    const bekleyenOnce = bekleyen;
+    setYeniKategori(null); // yeni-kategori formu açıksa kapansın (çipler kalır)
     setInput("");
     setAttached(null);
     setMsgs((m) => [...m, {
@@ -472,6 +564,7 @@ export default function ParlaChat() {
       let buf = "";
       let basladi = false;
       let birikti = "";
+      let yeniSoru = false; // bu cevapta YENİ bir kategori sorusu geldi mi?
 
       const isle = (satir: string) => {
         if (!satir.trim()) return;
@@ -507,7 +600,8 @@ export default function ParlaChat() {
             }
           }
           if (e.quota) setQuota(e.quota);
-          if (e.pendingCategory) setBekleyen(e.pendingCategory);
+          // Yeni bir kategori sorusu geldiyse ESKİ taslağın yerini alır (tek taslak taşınır)
+          if (e.pendingCategory) { setBekleyen(e.pendingCategory); yeniSoru = true; }
           if (e.action && MUTATING_ACTIONS.includes(e.action)) { bildir(e.action); router.refresh(); }
         } else if (e.t === "error") {
           throw new Error(e.message || "Bir hata oluştu.");
@@ -528,6 +622,13 @@ export default function ParlaChat() {
       if (!basladi) {
         setMsgs((m) => [...m, { id, role: "assistant", content: "⚠️ Şu an yanıt veremedim, tekrar dener misin?" }]);
         turAcikRef.current = false; // daktilo yok → turu burada kapat
+      }
+
+      /* Cevaplanmamış taslak duruyorsa (ve cevap kendi sorusunu getirmediyse) tek kez
+         hatırlat. Kuyruğa alınıyor: asıl cevabın daktilosu bitince yazılacak. */
+      if (bekleyenOnce && !yeniSoru && hatirlatilanRef.current !== bekleyenOnce) {
+        hatirlatilanRef.current = bekleyenOnce;
+        setHatirlatma(hatirlatmaMetni(bekleyenOnce));
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Bir hata oluştu.";
@@ -660,8 +761,17 @@ export default function ParlaChat() {
             {bekleyen && (
               <div className="parla-kat">
                 {yeniKategori === null ? (
-                  /* Tek satır, YANA kayar (alta sarmaz) — uzun liste ekranı şişirmesin. */
-                  <div className="parla-kat-cipler">
+                  /* Tek satır, YANA kayar (alta sarmaz) — uzun liste ekranı şişirmesin.
+                     Kaydırma: tekerlek + fareyle sürükleme (yukarıdaki nota bak). */
+                  <div
+                    className="parla-kat-cipler"
+                    ref={ciplerRef}
+                    onPointerDown={rayPointerDown}
+                    onPointerMove={rayPointerMove}
+                    onPointerUp={() => { if (surukle.current && !surukle.current.tasindi) surukle.current = null; }}
+                    onPointerLeave={() => { if (surukle.current && !surukle.current.tasindi) surukle.current = null; }}
+                    onClickCapture={rayClickCapture}
+                  >
                     {bekleyen.options.map((o) => (
                       <button
                         key={o.slug}
