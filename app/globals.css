@@ -1350,9 +1350,9 @@ ul { list-style: none; }
 .panel-sidebar.collapsed .profile-switch-info,
 .panel-sidebar.collapsed .profile-switch-chev,
 .panel-sidebar.collapsed .nav-group-label {
-  opacity: 0; width: 0; padding: 0; margin: 0; border: 0;
+  opacity: 0; width: 0; height: 0; padding: 0; margin: 0; border: 0;
   visibility: hidden; transition: opacity 0.12s ease, visibility 0s linear 0.12s;
-  overflow: hidden;
+  overflow: hidden; white-space: nowrap;
   /* ⚠️ `flex: 0 0 0` ŞART: `.profile-switch-info` normalde `flex: 1` — `width: 0` tek
      başına büyümeyi durdurmuyor, esneme kutuyu gene şişiriyordu. Eski `display: none`
      öğeyi tamamen kaldırdığı için bu görünmüyordu; profil kutusu daraltılmış rayın
@@ -1377,6 +1377,12 @@ ul { list-style: none; }
    durumla AYNI (9px) → buton yüksekliği değişmez, açılırken dikey kayma olmaz */
 .panel-sidebar.collapsed .profile-switch-btn {
   width: fit-content; margin: 0 auto; padding: 9px; border-radius: 13px;
+  /* ⚠️ `gap: 0` ŞART: gizlenen yazı+ok artık `display:none` DEĞİL (yumuşak solma için
+     opacity/genişlik ile gizleniyor) → sıfır genişlikte olsalar bile aralarındaki
+     2×11px BOŞLUK sayılmaya devam ediyordu; buton dar rayın dışına taşıyordu
+     (Mehmet, 25.07 canlı — ilk düzeltmede gözden kaçtı, sebep esneme değil boşlukmuş).
+     Aynı tuzak `.panel-nav-item`te de var, orada zaten `gap: 0` yazılı. */
+  gap: 0;
 }
 
 /* Daralt / genişlet — sağ kenara yarı taşmış yuvarlak yüzen buton (Notion/Linear deseni) */
