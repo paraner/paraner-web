@@ -1924,9 +1924,34 @@ ul { list-style: none; }
 .tx-amount { font-size: 14px; font-weight: 600; white-space: nowrap; }
 .tx-amount.pos { color: var(--teal); }
 .tx-amount.neg { color: var(--danger); }
+/* Kısa bilgi kutusu ("Profil bulunamadı.", "Bu filtrede kayıt yok.") — tek satırlık
+   durumlar burada kalır. Kullanıcının İLK gördüğü boş ekranlar için `.empty-state`. */
 .panel-empty {
   background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 36px; text-align: center; color: var(--text-dim); font-size: 14px;
+}
+
+/* ─── Boş durum (EmptyState) ───
+   Kesik çizgi bilinçli: "burada içerik olacak, ama henüz yok" demenin standart dili;
+   dolu kartlarla (düz kenarlık) karışmaz. Renk NÖTR — marka rengi değişecek. */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 10px; padding: 54px 28px;
+  background: var(--card); border: 1px dashed var(--border-strong); border-radius: var(--radius);
+}
+.empty-state-ic {
+  display: grid; place-items: center; width: 46px; height: 46px; margin-bottom: 2px;
+  border-radius: 14px; color: var(--text-dim);
+  background: var(--card-2); border: 1px solid var(--border);
+}
+.empty-state-ic svg { width: 21px; height: 21px; }
+.empty-state-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.empty-state-hint {
+  margin: 0; max-width: 380px; font-size: 13.5px; line-height: 1.55; color: var(--text-dim);
+}
+.empty-state-action { margin-top: 8px; }
+@media (max-width: 760px) {
+  .empty-state { padding: 40px 18px; }
 }
 
 /* Yükleniyor iskeleti (loading.tsx) — shimmer */

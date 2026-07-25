@@ -11,12 +11,13 @@ import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
 import { toCsv, downloadCsv } from "../../../lib/csv";
 import PageHead from "../../../components/ui/PageHead";
+import EmptyState from "../../../components/ui/EmptyState";
 import AddButton from "../../../components/AddButton";
 import SaveButton from "../../../components/SaveButton";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
-import { X, Search, Download, Check, Printer } from "lucide-react";
+import { X, Search, Download, Check, Printer, FileText } from "lucide-react";
 import InvoicePrint, {
   type PrintSeller,
   type PrintItem,
@@ -370,7 +371,12 @@ export default function FaturalarClient({
       />
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz fatura yok. Sağ üstten ilk faturanı oluştur.</div>
+        <EmptyState
+          icon={<FileText />}
+          title="Henüz fatura yok"
+          hint="Faturanı oluştur; tahsilat durumu, KDV toplamın ve vadesi geçenler bu ekranda takip edilir."
+          action={<AddButton onClick={openNew}>İlk Faturanı Oluştur</AddButton>}
+        />
       ) : (
         <>
           <div className="total-banner">

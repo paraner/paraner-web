@@ -12,12 +12,13 @@ import { todayStr } from "../../../lib/date";
 import { CARD_THEMES, getCardTheme } from "../../../lib/cardThemes";
 import { CURRENCIES, getCurrencySymbol } from "../../../lib/currencies";
 import PageHead from "../../../components/ui/PageHead";
+import EmptyState from "../../../components/ui/EmptyState";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import DatePicker from "../../../components/ui/DatePicker";
 import AccountCard from "../../../components/ui/AccountCard";
 import { EditIcon, TrashIcon } from "../../../components/icons";
-import { ArrowRightLeft, HelpCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRightLeft, HelpCircle, ChevronLeft, ChevronRight, CreditCard } from "lucide-react";
 
 type AccountType = "bank" | "cash" | "pos";
 
@@ -423,7 +424,12 @@ export default function HesaplarClient({
       )}
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz hesap yok. Sağ üstten ilk hesabını ekle.</div>
+        <EmptyState
+          icon={<CreditCard />}
+          title="Henüz hesap yok"
+          hint="Banka ya da nakit hesabını ekle; işlemlerini hesaba bağladığında bakiyen kendiliğinden güncellenir."
+          action={<AddButton onClick={openNew}>İlk Hesabını Ekle</AddButton>}
+        />
       ) : (
         <div className="acc-grid">
           {list.map((a) => (

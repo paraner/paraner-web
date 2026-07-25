@@ -35,6 +35,7 @@ import {
   type CustomCategory,
 } from "../../../lib/customCategories";
 import PageHead from "../../../components/ui/PageHead";
+import EmptyState from "../../../components/ui/EmptyState";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import DatePicker from "../../../components/ui/DatePicker";
@@ -53,6 +54,7 @@ import {
   Paperclip,
   Upload,
   FileText,
+  ArrowRightLeft,
 } from "lucide-react";
 
 export type Tx = {
@@ -617,9 +619,12 @@ export default function IslemlerClient({
       />
 
       {!hasAny ? (
-        <div className="panel-empty">
-          Henüz işlem yok. Sağ üstten ilk işlemini ekle.
-        </div>
+        <EmptyState
+          icon={<ArrowRightLeft />}
+          title="Henüz işlem yok"
+          hint="Gelir ve giderlerini buraya kaydettikçe kategori dağılımın, aylık özetin ve raporların kendiliğinden oluşur."
+          action={<AddButton onClick={openAdd}>İlk İşlemini Ekle</AddButton>}
+        />
       ) : (
         <>
           <div className="filter-row">
