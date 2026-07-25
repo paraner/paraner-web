@@ -23,6 +23,7 @@ import {
   User,
   Building2,
   LifeBuoy,
+  Menu,
 } from "lucide-react";
 import { BUSINESS_SECTIONS, type BusinessMenuItem } from "./businessMenu";
 import LogoutButton from "./LogoutButton";
@@ -123,9 +124,30 @@ export default function Sidebar({
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [favs, setFavs] = useState<string[]>([]);
   const [navFade, setNavFade] = useState({ top: false, bottom: false });
+  // TELEFON: menü çekmecesi açık mı (masaüstünde kullanılmaz — menü zaten ekranda)
+  const [mobilAcik, setMobilAcik] = useState(false);
   const switchRef = useRef<HTMLDivElement>(null);
   const asideRef = useRef<HTMLElement>(null);
   const navRef = useRef<HTMLElement>(null);
+
+  /* Çekmece durumu gövde sınıfında: kaydırma kilidi, karartma ve kayma animasyonu
+     CSS'te tek yerden yönetiliyor (bkz. `body.panel-menu-open`). */
+  useEffect(() => {
+    document.body.classList.toggle("panel-menu-open", mobilAcik);
+    return () => document.body.classList.remove("panel-menu-open");
+  }, [mobilAcik]);
+
+  // Sayfa değişince çekmece kapansın (bağlantıya basıldığında zaten kapanıyor;
+  // bu, geri/ileri tuşu gibi diğer yolları da kapatır).
+  useEffect(() => { setMobilAcik(false); }, [pathname]);
+
+  // Esc ile kapat (klavyeli tablet/masaüstü dar pencere)
+  useEffect(() => {
+    if (!mobilAcik) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMobilAcik(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobilAcik]);
 
   // Hesap seçici: boş bir yere tıklayınca ya da Esc'e basınca kapansın
   useEffect(() => {
@@ -459,10 +481,29 @@ export default function Sidebar({
 
   return (
     <>
+    {/* TELEFON: menü düğmesi + karartma. Masaüstünde ikisi de CSS ile gizli.
+        ⚠️ Düğme üst barda DURUYOR ama bu bileşende: menünün açık/kapalı durumu burada,
+        üst bar ise sunucu bileşeni (`layout.tsx`) — durumu oraya taşımak yerine düğmeyi
+        buraya koyup CSS ile üst bara oturtmak tek kaynak bırakıyor. */}
+    <button
+      type="button"
+      className="panel-menu-btn"
+      onClick={() => setMobilAcik(true)}
+      aria-label="Menüyü aç"
+      aria-expanded={mobilAcik}
+    >
+      <Menu />
+    </button>
+    <div className="panel-menu-backdrop" onClick={() => setMobilAcik(false)} aria-hidden />
     <aside
       ref={asideRef}
       className={`panel-sidebar${showCollapsed ? " collapsed" : ""}${dragging ? " dragging" : ""}`}
       style={dragWidth !== null ? { width: `${dragWidth}px` } : undefined}
+      /* Çekmecede bir bağlantıya dokununca kapansın (her linke ayrı onClick yerine
+         tek yerden — yeni menü satırı eklendiğinde unutulacak bir şey kalmıyor). */
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest("a")) setMobilAcik(false);
+      }}
     >
       <div className="panel-brand">
         {/* Açık: tam PARANER wordmark · Daraltılmış: aynı wordmark'tan kırpılmış temiz P.

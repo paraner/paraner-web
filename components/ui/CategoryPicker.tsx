@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import { ChevronDown, Check, Plus, X, Pencil, Trash2 } from "lucide-react";
 import type { Category } from "../../lib/categories";
 import { CategoryIcon, AVAILABLE_ICONS } from "../../lib/categoryIcons";
+import { confirmDialog } from "../../app/components/confirm";
 
 // Renk paleti — mobil AVAILABLE_COLORS ile birebir
 const COLORS = [
@@ -115,8 +116,19 @@ export default function CategoryPicker({
     setCreating(true);
   }
 
-  function handleDelete(c: Category) {
-    if (!confirm(`"${c.label}" kategorisi silinsin mi?`)) return;
+  /* ⚠️ Native `confirm()` DEĞİL (panelde kalan son yerdi): tarayıcının kutusu tasarımın
+     dışında duruyor ve ne silineceğini/sonucunu anlatamıyor. Ayarlar > Kategoriler ile
+     AYNI metin — aynı iş iki yerden yapılıyor, iki farklı uyarı görmek güven kırıyor. */
+  async function handleDelete(c: Category) {
+    const ok = await confirmDialog({
+      title: `"${c.label}" silinsin mi?`,
+      message:
+        "Kategori telefondan da silinir. Bu kategoriye kayıtlı gelir/giderlerin SİLİNMEZ; " +
+        'listelerde "Diğer" olarak görünür.',
+      confirmLabel: "Sil",
+      danger: true,
+    });
+    if (!ok) return;
     onDelete?.(c.id);
     closeMenu();
   }

@@ -1335,11 +1335,30 @@ ul { list-style: none; }
 /* Sürüklenirken genişlik parmağı birebir takip etsin (geçiş yok) */
 .panel-sidebar.dragging { transition: none; }
 .panel-sidebar.dragging .sidebar-toggle { cursor: grabbing; }
-/* Daraltılmışken: etiketleri gizle, ikonları ortala */
+/* Daraltılmışken: etiketleri gizle, ikonları ortala.
+   ⚠️ `display:none` ANINDA kesiyordu: panel 0.26s'de yumuşacık daralırken yazılar ilk
+   karede "pat" diye kayboluyordu (Mehmet: sidebar aç/kapa fade). Artık yazı ÖNCE solup
+   genişliği sıfırlanıyor, panelin daralmasıyla aynı ritimde. Kapanışta `visibility`
+   gecikmeli kapanır → ekran okuyucu ve tıklama hedefi de yazı görünmezken kapalı olur. */
+.panel-sidebar .nav-label,
+.panel-sidebar .profile-switch-info,
+.panel-sidebar .profile-switch-chev,
+.panel-sidebar .nav-group-label {
+  transition: opacity 0.16s ease 0.06s;
+}
 .panel-sidebar.collapsed .nav-label,
 .panel-sidebar.collapsed .profile-switch-info,
 .panel-sidebar.collapsed .profile-switch-chev,
-.panel-sidebar.collapsed .nav-group-label { display: none; }
+.panel-sidebar.collapsed .nav-group-label {
+  opacity: 0; width: 0; padding: 0; margin: 0; border: 0;
+  visibility: hidden; transition: opacity 0.12s ease, visibility 0s linear 0.12s;
+  overflow: hidden;
+}
+/* Sürüklerken (parmak/fare paneli boyutlandırıyor) gecikme olmasın — anında takip etsin */
+.panel-sidebar.dragging .nav-label,
+.panel-sidebar.dragging .profile-switch-info,
+.panel-sidebar.dragging .profile-switch-chev,
+.panel-sidebar.dragging .nav-group-label { transition: none; }
 .panel-sidebar.collapsed .panel-brand,
 .panel-sidebar.collapsed .panel-nav-item,
 .panel-sidebar.collapsed .profile-switch-btn { justify-content: center; }
@@ -1600,7 +1619,11 @@ ul { list-style: none; }
 .panel-sidebar.collapsed .profile-switch-menu {
   left: calc(100% + 14px); right: auto; top: 0; min-width: 230px;
 }
-.panel-sidebar.collapsed .profile-switch-menu .profile-switch-info { display: flex; }
+/* ⚠️ Gizleme `display:none` DEĞİL, opacity+visibility (yumuşak daralma) → flyout'taki
+   isimleri geri açarken üçünü de sıfırlamak gerekir, yalnız `display` yetmez. */
+.panel-sidebar.collapsed .profile-switch-menu .profile-switch-info {
+  display: flex; opacity: 1; visibility: visible; width: auto; overflow: visible;
+}
 
 /* ─── Menü grupları ─── */
 .nav-group { display: flex; flex-direction: column; gap: 2px; margin-bottom: 16px; }
@@ -1935,25 +1958,74 @@ ul { list-style: none; }
   .skel::after { animation: none; }
 }
 
+/* ─── TELEFON: menü ÇEKMECE ───────────────────────────────────────────────────
+   ⚠️ NEYDİ (25.07'ye kadar): dar ekranda sol menü "üstte yatay şerit" oluyordu —
+   30+ satırlık menünün TAMAMI her sayfanın tepesine sarıyordu. İçeriği aşağı itiyor,
+   sayfa nerede başlıyor belli olmuyordu. Artık standart çekmece: soldan kayarak
+   girer, arkası kararır, dışına/bir bağlantıya dokununca kapanır. */
 @media (max-width: 760px) {
-  /* Dar ekranda menü üstte yatay şerit → kabuk yeniden normal sayfa gibi kaysın */
   .panel-shell { flex-direction: column; height: auto; min-height: 100dvh; overflow: visible; }
   .panel-main { height: auto; overflow: visible; }
   .panel-content { overflow: visible; min-height: 0; }
+
   .panel-sidebar,
   .panel-sidebar.collapsed {
-    position: static; height: auto; width: 100%; padding: 14px;
-    margin: 0; border-radius: 0; box-shadow: none;
-    flex-direction: row; flex-wrap: wrap; align-items: center;
-    border: none; border-bottom: 1px solid var(--border);
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 60;
+    width: min(84vw, 320px); height: 100dvh; max-height: 100dvh;
+    margin: 0; padding: 18px 14px;
+    border-radius: 0 20px 20px 0; border: none; border-right: 1px solid var(--border);
+    flex-direction: column; flex-wrap: nowrap; align-items: stretch;
+    overflow-y: auto; overscroll-behavior: contain;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  /* Mobilde her zaman açık göster (daraltma kapalı) */
+  body.panel-menu-open .panel-sidebar { transform: none; }
+  /* Çekmecede daraltma yok — etiketler hep açık */
   .panel-sidebar.collapsed .nav-label,
-  .panel-sidebar.collapsed .profile-switch-info { display: inline; }
-  .panel-nav { flex-direction: row; flex-wrap: wrap; }
+  .panel-sidebar.collapsed .nav-group-label,
+  .panel-sidebar.collapsed .profile-switch-info,
+  .panel-sidebar.collapsed .profile-switch-chev {
+    opacity: 1; visibility: visible; width: auto; overflow: visible;
+  }
+  .panel-sidebar.collapsed .nav-label { display: inline; }
+  .panel-sidebar.collapsed .profile-switch-info { display: flex; }
+  .panel-sidebar.collapsed .panel-nav-item,
+  .panel-sidebar.collapsed .profile-switch-btn { justify-content: flex-start; }
+  .panel-sidebar.collapsed .panel-brand .brand-full { display: block; }
+  .panel-sidebar.collapsed .panel-brand .brand-mini { display: none; }
+  .panel-nav { flex-direction: column; flex-wrap: nowrap; }
   .sidebar-toggle { display: none; }
+
+  /* Düğme üst barın SOL üstüne oturur (sabit): üst bar sunucu bileşeni, düğme ise
+     menünün durumunu tutan istemci bileşeninde — DOM'da kardeş, ekranda üst barda. */
+  .panel-menu-btn { display: inline-flex; position: fixed; top: 12px; left: 12px; z-index: 61; }
+  body.panel-menu-open .panel-menu-btn { opacity: 0; pointer-events: none; }
+  .panel-menu-backdrop { display: block; }
+  .panel-topbar { padding: 12px 16px 12px 62px; } /* soldaki düğmenin yeri */
+
   .kpi-grid { grid-template-columns: 1fr; }
 }
+
+/* Hamburger — YALNIZ telefonda (masaüstünde menü zaten ekranda) */
+.panel-menu-btn {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 10px;
+  background: transparent; border: 1px solid transparent; color: var(--text);
+  cursor: pointer;
+}
+.panel-menu-btn:hover { background: var(--card-2); border-color: var(--border); }
+.panel-menu-btn svg { width: 21px; height: 21px; }
+/* Çekmece açıkken arka planı karart — dokununca kapanır */
+.panel-menu-backdrop {
+  display: none;
+  position: fixed; inset: 0; z-index: 55;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.28s ease;
+}
+body.panel-menu-open .panel-menu-backdrop { opacity: 1; pointer-events: auto; }
+body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
 
 /* Panel sayfa başlığı + aksiyon */
 .panel-page-head {
