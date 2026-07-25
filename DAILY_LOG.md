@@ -20,6 +20,37 @@
 
 ## Bu hafta (2026-07-23 →)
 
+### 25.07 (2. oturum) — Parla cilası + kategori adları + test hesabı sıfırlandı
+- **Daktilo webde HİÇ çalışmıyormuş:** motor (`RichText reveal`) yazılmış ama bağlanmamıştı,
+  her mesaj tek seferde basılıyordu. Bağlandı, hız mobil ile aynı (~2,4 sn hedef, 9-34 ms/kelime).
+- **Yazarken metin zıplaması çözüldü:** ① her kelimede dibe kaydırma kaldırıldı → mobildeki
+  **snap** deseni (gönderilen mesaj tepeye, cevap altındaki geçici boşluğa yazılır, ekran
+  oynamaz) ② boş satırlar daktilo sırasında çizilmiyordu, bitince eklenip metni kaydırıyordu.
+- **Tutar renkleri her yerde:** özet/gelir/silme cevapları "13.746,45 TL" yazıyordu — işaretsiz
+  ve "TL" son ekli olduğu için iki istemcinin de renk deseni tutmuyordu. Tek kaynak:
+  `context.ts giderYaz/gelirYaz/netYaz`. Hedef/birikim NÖTR kaldı (işaret yok).
+- **Ham kategori kimliği ekrandan gitti:** ① beyinde `katAdi()` (özel kategoriler
+  `user_categories`'ten; karşılıksız kimlik "Kategorisiz") ② webde `findCategory(id, custom?)`
+  → Genel Bakış, Kâr-Zarar, Gelir-Gider Raporu (CSV dahil), Bütçeler artık özel kategorileri
+  okuyor (sunucuda, `lib/customCategoriesServer`, istek başına tek sorgu) ③ `diger` gerçek
+  kategori olarak web+mobil kataloğuna eklendi — YOKLUĞU ayrıca Parla'nın eklediği işlemi
+  düzenlerken kategori kutusunu BOŞ gösteriyordu. Genel Bakış'ta ilk-5-dışı toplam artık
+  "Diğer kategoriler" (iki ayrı "Diğer" satırı çıkıyordu).
+- **Ayarlar > Kategoriler** (yeni): kategori yönetimi yalnız "İşlem Ekle" modalının içindeydi,
+  Mehmet silme yerini bulamadı. ⚠️ Bu sekme GEÇİCİ — yeri değişecek (GOREVLER).
+- **Kategori çipleri kaydırılabiliyor:** ray zaten `overflow-x:auto` idi ama masaüstünde
+  tekerlek dikey kaydırır + çubuk gizliydi → kaydırılamıyor sanılıyordu. Tekerlek yatay
+  çevrildi (native listener, `passive:false` — React onWheel pasif, preventDefault etmiyor),
+  fareyle sürükleme eklendi (sürükleme sonrası tıklama yutuluyor), masaüstünde ince çubuk.
+- **Cevaplanmamış kategori sorusu düşmüyor:** taslak duruyor, Parla önce yeni soruyu
+  cevaplıyor, daktilo bitince BİR KEZ hatırlatıyor. İşlem hâlâ yalnız çipe dokununca kaydedilir.
+- **Test hesabı sıfırlandı** (Mehmet onayı): admin@paraner.com iki profilinden 27 işlem +
+  1 fatura + 1 özel kategori + 2 Parla mesajı silindi. Profiller/ayarlar/giriş duruyor.
+- **iPhone 11'e (MGZR) yeni build kuruldu** — ilk açılışta iOS "geliştirici profiline güven"
+  istiyor (Ayarlar > Genel > VPN ve Cihaz Yönetimi).
+- **AI NİYET HATASI bulundu, ERTELENDİ** (ayrıntı + seçenekler GOREVLER'de): "…iptal edeceksin"
+  cümlesi yeni gider olarak kaydediliyor. Mehmet: AI'ı sonra yeniden şekillendireceğiz.
+
 ### 25.07 — Parla kategori sorma + canlı senkron (web+mobil+parla, hepsi canlı)
 - **Kategori sorma sistemi bitti:** belirsiz yazımda ("250 kahve") Parla kaydetmeden SORUYOR;
   çipler yazma alanının üstünde (tek satır, yana kayar, kenar erimesi, kaydırma çubuğu). "+" ile

@@ -60,6 +60,17 @@
       `SUNUCU_BEYNI` anahtarı ile tek satırda geri dönülebilir. Eski dosyalar SİLİNMEDİ.
       ⏳ **Cihaz testi bekliyor** (native build şart — OTA yok).
 - [x] **Beyin ortak klasöre taşındı:** `~/Developer/Paraner/parla/` (GitHub: paraner/parla, private).
+- [ ] 🔴 **NİYET HATASI — ERTELENDİ (25.07, Mehmet: "AI'ı sonra yeniden şekillendiririz"):**
+      `routeMessage` sırası ekleme→hedef→silme. "150 tl gider yazdığım şeyi iotal edeceksin"
+      cümlesinde ekleme katmanı önce eşleşip **YENİ gider taslağı** açıyor; silme kelimeleri de
+      harfi harfine aranıyor ("iotal" tuş hatası kaçıyor) → AI'ya düşüyor, AI'ın silme yetkisi
+      olmadığı için kullanıcıya "son işlemi sil de" diyor (döngü).
+      **Seçenekler:** (A) hızlı yama = ekleme katmanına "iptal/sil/yanlış yazdım" kilidi +
+      silmeyi öne al + yazım toleransı. (B) asıl çözüm = AI'a araç (function calling) ver,
+      niyeti AI belirlesin; her mesaj AI'ya gider (kota/ücret) ve silmede ONAY adımı ŞART.
+- [ ] **Mobil parite (Parla, web'de var mobilde yok):** ① cevaplanmamış kategori sorusu
+      düşmüyor, cevaptan sonra bir kez hatırlatılıyor ② çip rayı fareyle/tekerlekle kaydırma
+      (mobilde zaten parmakla kayıyor — orada yalnız ① gerekli).
 - [ ] **KARAR BEKLİYOR — "tümünü sil" açılsın mı?** Mobil `smartRouter.ts`te sıra hatası: "evet tümünü sil"
       cümlesi de "tümünü" içerdiği için onay dalına düşüyor → toplu silme **canlıda hiç çalışmamış**.
       Sunucuda aynı (güvenli) davranış korundu; açmak geri dönüşü olmayan silmeyi etkinleştirir.
@@ -129,6 +140,9 @@
 ## 🎨 TASARIM / MARKA — açık maddeler
 > ⚠️ Marka rengi DEĞİŞECEK (teal/yeşil kalmayacak) → teal'e tasarım yatırımı yapma. Aksiyon/UI öğeleri
 > titanyum, anlam taşıyan renkler (gelir yeşili, danger, warning) kalır. Detay: CLAUDE.md renk kuralı.
+- [ ] **Kategoriler ekranının YERİ değişecek (Mehmet, 25.07):** şu an `Ayarlar > Kategoriler`
+      sekmesinde; "burada kalmayacak, ileride yerini değiştireceğiz". Bileşen hazır ve bağımsız
+      (`app/panel/ayarlar/KategorilerBolumu.tsx`, tek prop `profileId`) → taşımak = bir satır.
 - [ ] **Buton yenileme Adım 3** — nötr `btn-ghost` ikincil butonlar (duzenli-fatura "İlerlet", stok/veresiye
       "Hareket", duzenli-odemeler "Onayla", gelir-gider "CSV İndir"). Kalan teal `.btn-primary`'ler marka rengi netleşince toplu.
 - [ ] Her sayfanın tek tek **tasarım/UX cilası** (sıradaki faz).
