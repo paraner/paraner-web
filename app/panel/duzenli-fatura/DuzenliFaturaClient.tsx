@@ -1,5 +1,6 @@
 "use client";
 import AddButton from "../../../components/AddButton";
+import EmptyState from "../../../components/ui/EmptyState";
 import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
@@ -14,6 +15,7 @@ import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
+import { Repeat } from "lucide-react";
 
 export type RecurringInvoice = {
   id: string;
@@ -277,7 +279,12 @@ export default function DuzenliFaturaClient({
       />
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz düzenli fatura yok. Sağ üstten ekle.</div>
+        <EmptyState
+          icon={<Repeat />}
+          title="Henüz düzenli fatura yok"
+          hint="Her ay kestiğin faturaları bir kez tanımla; vakti gelince hatırlatılsın, elle uğraşma."
+          action={<AddButton onClick={openNew}>Düzenli Fatura Ekle</AddButton>}
+        />
       ) : (
         <div className="tx-list">
           {list.map((r) => {

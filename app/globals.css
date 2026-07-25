@@ -1353,6 +1353,11 @@ ul { list-style: none; }
   opacity: 0; width: 0; padding: 0; margin: 0; border: 0;
   visibility: hidden; transition: opacity 0.12s ease, visibility 0s linear 0.12s;
   overflow: hidden;
+  /* ⚠️ `flex: 0 0 0` ŞART: `.profile-switch-info` normalde `flex: 1` — `width: 0` tek
+     başına büyümeyi durdurmuyor, esneme kutuyu gene şişiriyordu. Eski `display: none`
+     öğeyi tamamen kaldırdığı için bu görünmüyordu; profil kutusu daraltılmış rayın
+     dışına TAŞTI (Mehmet, 25.07 canlı). */
+  flex: 0 0 0;
 }
 /* Sürüklerken (parmak/fare paneli boyutlandırıyor) gecikme olmasın — anında takip etsin */
 .panel-sidebar.dragging .nav-label,
@@ -1983,6 +1988,30 @@ ul { list-style: none; }
   .skel::after { animation: none; }
 }
 
+/* Hamburger — YALNIZ telefonda (masaüstünde menü zaten ekranda).
+   ⚠️ SIRA ÖNEMLİ: bu "display:none" tabanı, aşağıdaki @media bloğundan ÖNCE durmalı.
+   Medya sorgusu ÖZGÜLLÜK EKLEMEZ → sonra yazılırsa telefonda da gizler; düğme canlıda
+   hiç görünmedi (Mehmet, 25.07). Yeni "yalnız mobil" öğede aynı tuzağa dikkat. */
+.panel-menu-btn {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 10px;
+  background: transparent; border: 1px solid transparent; color: var(--text);
+  cursor: pointer;
+}
+.panel-menu-btn:hover { background: var(--card-2); border-color: var(--border); }
+.panel-menu-btn svg { width: 21px; height: 21px; }
+/* Çekmece açıkken arka planı karart — dokununca kapanır */
+.panel-menu-backdrop {
+  display: none;
+  position: fixed; inset: 0; z-index: 55;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.28s ease;
+}
+body.panel-menu-open .panel-menu-backdrop { opacity: 1; pointer-events: auto; }
+body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
+
 /* ─── TELEFON: menü ÇEKMECE ───────────────────────────────────────────────────
    ⚠️ NEYDİ (25.07'ye kadar): dar ekranda sol menü "üstte yatay şerit" oluyordu —
    30+ satırlık menünün TAMAMI her sayfanın tepesine sarıyordu. İçeriği aşağı itiyor,
@@ -2031,26 +2060,6 @@ ul { list-style: none; }
   .kpi-grid { grid-template-columns: 1fr; }
 }
 
-/* Hamburger — YALNIZ telefonda (masaüstünde menü zaten ekranda) */
-.panel-menu-btn {
-  display: none;
-  align-items: center; justify-content: center;
-  width: 38px; height: 38px; border-radius: 10px;
-  background: transparent; border: 1px solid transparent; color: var(--text);
-  cursor: pointer;
-}
-.panel-menu-btn:hover { background: var(--card-2); border-color: var(--border); }
-.panel-menu-btn svg { width: 21px; height: 21px; }
-/* Çekmece açıkken arka planı karart — dokununca kapanır */
-.panel-menu-backdrop {
-  display: none;
-  position: fixed; inset: 0; z-index: 55;
-  background: rgba(0, 0, 0, 0.55);
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.28s ease;
-}
-body.panel-menu-open .panel-menu-backdrop { opacity: 1; pointer-events: auto; }
-body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
 
 /* Panel sayfa başlığı + aksiyon */
 .panel-page-head {

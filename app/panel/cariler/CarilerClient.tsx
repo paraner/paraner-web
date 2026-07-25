@@ -1,5 +1,6 @@
 "use client";
 import AddButton from "../../../components/AddButton";
+import EmptyState from "../../../components/ui/EmptyState";
 import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
@@ -12,6 +13,7 @@ import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
+import { Users } from "lucide-react";
 
 export type Cari = {
   id: string;
@@ -111,7 +113,12 @@ export default function CarilerClient({
       />
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz cari yok. Sağ üstten ilk carini ekle.</div>
+        <EmptyState
+          icon={<Users />}
+          title="Henüz cari hesabın yok"
+          hint="Müşteri ve tedarikçilerinin bakiyesini takip et: kim ne kadar borçlu, kime ne kadar borçlusun."
+          action={<AddButton onClick={openNew}>İlk Cariyi Ekle</AddButton>}
+        />
       ) : (
         <div className="card-grid">
           {list.map((c) => {

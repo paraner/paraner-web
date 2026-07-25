@@ -1,5 +1,6 @@
 "use client";
 import AddButton from "../../../components/AddButton";
+import EmptyState from "../../../components/ui/EmptyState";
 import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
@@ -13,6 +14,7 @@ import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
+import { FileCheck } from "lucide-react";
 
 export type CheckNote = {
   id: string;
@@ -208,7 +210,12 @@ export default function CekSenetClient({
       )}
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz çek/senet kaydı yok. Sağ üstten ekle.</div>
+        <EmptyState
+          icon={<FileCheck />}
+          title="Henüz çek/senet kaydın yok"
+          hint="Aldığın ve verdiğin çek/senetleri vadesiyle kaydet; hangisi ne zaman ödenecek şaşırma."
+          action={<AddButton onClick={openNew}>İlk Kaydı Ekle</AddButton>}
+        />
       ) : (
         <div className="tx-list">
           {list.map((x) => {

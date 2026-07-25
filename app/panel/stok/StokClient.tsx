@@ -6,10 +6,13 @@ import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
+import Link from "next/link";
 import PageHead from "../../../components/ui/PageHead";
+import EmptyState from "../../../components/ui/EmptyState";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import SaveButton from "../../../components/SaveButton";
+import { Boxes } from "lucide-react";
 
 export type StokProduct = {
   id: string;
@@ -174,9 +177,12 @@ export default function StokClient({
       <PageHead title="Stok Takibi" sub="Ürün stokları ve hareketleri" />
 
       {products.length === 0 ? (
-        <div className="panel-empty">
-          Stoklu ürün yok. Önce Ürün Kataloğu&apos;ndan ürün ekle.
-        </div>
+        <EmptyState
+          icon={<Boxes />}
+          title="Takip edilecek stok yok"
+          hint="Stok, ürün kataloğundan gelir: önce ürünü ekleyip stok takibini açman gerekiyor."
+          action={<Link href="/panel/urunler" className="btn btn-ghost btn-sm">Ürün Kataloğuna Git</Link>}
+        />
       ) : (
         <>
           <div className="total-banner">

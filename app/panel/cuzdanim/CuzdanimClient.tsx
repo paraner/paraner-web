@@ -19,10 +19,11 @@ import {
 } from "../../../lib/assets";
 import { getCurrencyRate, type MarketData } from "../../../lib/market";
 import PageHead from "../../../components/ui/PageHead";
+import EmptyState from "../../../components/ui/EmptyState";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
-import { Plus, TrendingDown, RefreshCw, ChevronDown, Check } from "lucide-react";
+import { Plus, TrendingDown, RefreshCw, ChevronDown, Check, PiggyBank } from "lucide-react";
 
 export type Asset = {
   id: string;
@@ -446,9 +447,12 @@ export default function CuzdanimClient({
       </div>
 
       {list.length === 0 ? (
-        <div className="panel-empty">
-          Henüz varlık yok. <strong>Varlık Ekle</strong> ile başla.
-        </div>
+        <EmptyState
+          icon={<PiggyBank />}
+          title="Henüz varlığın yok"
+          hint="Altın, döviz ve birikimlerini ekle; güncel kurla değerini ve kâr/zararını burada gör."
+          action={<AddButton onClick={openAdd}>İlk Varlığını Ekle</AddButton>}
+        />
       ) : (
         <div className="wallet-layout">
           {/* Dağılım donut'u */}

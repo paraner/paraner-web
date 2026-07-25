@@ -1,5 +1,6 @@
 "use client";
 import AddButton from "../../../components/AddButton";
+import EmptyState from "../../../components/ui/EmptyState";
 import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
@@ -14,6 +15,7 @@ import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
+import { Repeat } from "lucide-react";
 
 export type Recurring = {
   id: string;
@@ -227,7 +229,12 @@ export default function DuzenliClient({
       )}
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz düzenli ödeme yok. Sağ üstten ekle.</div>
+        <EmptyState
+          icon={<Repeat />}
+          title="Henüz düzenli ödeme yok"
+          hint="Kira, abonelik, kredi taksiti gibi her ay tekrarlayan ödemeleri bir kez tanımla, unutma."
+          action={<AddButton onClick={openNew}>Düzenli Ödeme Ekle</AddButton>}
+        />
       ) : (
         <div className="tx-list">
           {list.map((r) => {

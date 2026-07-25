@@ -1,5 +1,6 @@
 "use client";
 import AddButton from "../../../components/AddButton";
+import EmptyState from "../../../components/ui/EmptyState";
 import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
@@ -12,6 +13,7 @@ import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
+import { Scale } from "lucide-react";
 
 export type Debt = {
   id: string;
@@ -142,7 +144,12 @@ export default function BorcAlacakClient({
       </div>
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz kayıt yok. Sağ üstten borç/alacak ekle.</div>
+        <EmptyState
+          icon={<Scale />}
+          title="Henüz borç/alacak kaydın yok"
+          hint="Kime borcun var, kimden alacağın var — vadesiyle birlikte tek listede dursun."
+          action={<AddButton onClick={openNew}>İlk Kaydı Ekle</AddButton>}
+        />
       ) : (
         <>
           <div className="chip-seg" style={{ marginBottom: 14 }}>

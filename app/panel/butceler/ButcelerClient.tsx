@@ -1,5 +1,6 @@
 "use client";
 import AddButton from "../../../components/AddButton";
+import EmptyState from "../../../components/ui/EmptyState";
 import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
@@ -14,6 +15,7 @@ import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
+import { Target } from "lucide-react";
 
 export type Budget = {
   id: string;
@@ -153,7 +155,12 @@ export default function ButcelerClient({
       )}
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz bütçe yok. Sağ üstten kategori bütçesi ekle.</div>
+        <EmptyState
+          icon={<Target />}
+          title="Henüz bütçe yok"
+          hint="Bir kategoriye aylık sınır koy; harcaman sınıra yaklaşınca burada uyarı görürsün."
+          action={<AddButton onClick={openNew}>İlk Bütçeni Ekle</AddButton>}
+        />
       ) : (
         <div className="budget-list">
           {list.map((b) => {

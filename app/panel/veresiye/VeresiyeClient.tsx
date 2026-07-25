@@ -1,5 +1,6 @@
 "use client";
 import AddButton from "../../../components/AddButton";
+import EmptyState from "../../../components/ui/EmptyState";
 import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
@@ -13,6 +14,7 @@ import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
+import { Users } from "lucide-react";
 
 export type CreditCustomer = {
   id: string;
@@ -181,7 +183,12 @@ export default function VeresiyeClient({
       )}
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz veresiye müşterisi yok. Sağ üstten ekle.</div>
+        <EmptyState
+          icon={<Users />}
+          title="Henüz veresiye müşterin yok"
+          hint="Veresiye defterini buraya taşı: kimin ne kadar borcu var, ne zaman ödedi — tek ekranda takip et."
+          action={<AddButton onClick={openNewCustomer}>İlk Müşteriyi Ekle</AddButton>}
+        />
       ) : (
         <div className="tx-list">
           {list.map((c) => {

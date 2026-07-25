@@ -11,9 +11,11 @@ import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
 import PageHead from "../../../components/ui/PageHead";
+import EmptyState from "../../../components/ui/EmptyState";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
+import { Receipt } from "lucide-react";
 
 export type EmployeeRef = { id: string; name: string };
 export type Expense = {
@@ -113,10 +115,12 @@ export default function HarcamalarClient({
     return (
       <>
         <PageHead title="Harcama Kayıtları" sub="Çalışan harcamaları" />
-        <div className="panel-empty">
-          Önce <Link href="/panel/calisanlar" className="link-teal">çalışan ekle</Link>, sonra
-          harcama girebilirsin.
-        </div>
+        <EmptyState
+          icon={<Receipt />}
+          title="Önce çalışan eklemelisin"
+          hint="Harcama kaydı bir çalışana bağlanır; çalışanını ekledikten sonra buradan harcama girebilirsin."
+          action={<Link href="/panel/calisanlar" className="btn btn-ghost btn-sm">Çalışanlara Git</Link>}
+        />
       </>
     );
   }
@@ -145,7 +149,12 @@ export default function HarcamalarClient({
       </div>
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz harcama kaydı yok.</div>
+        <EmptyState
+          icon={<Receipt />}
+          title="Henüz harcama kaydı yok"
+          hint="Çalışanlarının işle ilgili harcamalarını kaydet; kime ne kadar ödeme yapıldığını gör."
+          action={<AddButton onClick={openNew}>Harcama Ekle</AddButton>}
+        />
       ) : (
         <div className="tx-list">
           {list.map((x) => (

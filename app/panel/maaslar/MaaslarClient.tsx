@@ -9,11 +9,13 @@ import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency, formatDate, parseAmount } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
 import PageHead from "../../../components/ui/PageHead";
+import EmptyState from "../../../components/ui/EmptyState";
 import AddButton from "../../../components/AddButton";
 import SaveButton from "../../../components/SaveButton";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
+import { Wallet } from "lucide-react";
 
 export type EmployeeRef = { id: string; name: string };
 export type SalaryPayment = {
@@ -113,10 +115,12 @@ export default function MaaslarClient({
     return (
       <>
         <PageHead title="Maaş Ödemeleri" sub="Çalışan maaş kayıtları" />
-        <div className="panel-empty">
-          Önce <Link href="/panel/calisanlar" className="link-teal">çalışan ekle</Link>, sonra maaş
-          ödemesi girebilirsin.
-        </div>
+        <EmptyState
+          icon={<Wallet />}
+          title="Önce çalışan eklemelisin"
+          hint="Maaş ödemesi bir çalışana bağlanır; çalışanını ekledikten sonra buradan ödeme girebilirsin."
+          action={<Link href="/panel/calisanlar" className="btn btn-ghost btn-sm">Çalışanlara Git</Link>}
+        />
       </>
     );
   }
@@ -143,7 +147,12 @@ export default function MaaslarClient({
       </div>
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz maaş ödemesi yok.</div>
+        <EmptyState
+          icon={<Wallet />}
+          title="Henüz maaş ödemesi yok"
+          hint="Ödediğin maaşları kaydet; toplam maliyetini ve kimin ne zaman ödendiğini takip et."
+          action={<AddButton onClick={openNew}>Maaş Ödemesi Ekle</AddButton>}
+        />
       ) : (
         <div className="tx-list">
           {list.map((p) => (

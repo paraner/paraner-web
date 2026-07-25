@@ -11,9 +11,11 @@ import { createClient } from "../../../lib/supabase/client";
 import { formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
 import PageHead from "../../../components/ui/PageHead";
+import EmptyState from "../../../components/ui/EmptyState";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
+import { CalendarDays } from "lucide-react";
 
 export type EmployeeRef = { id: string; name: string };
 export type Leave = {
@@ -152,10 +154,12 @@ export default function IzinlerClient({
     return (
       <>
         <PageHead title="İzin & Devamsızlık" sub="Çalışan izin kayıtları" />
-        <div className="panel-empty">
-          Önce <Link href="/panel/calisanlar" className="link-teal">çalışan ekle</Link>, sonra izin
-          girebilirsin.
-        </div>
+        <EmptyState
+          icon={<CalendarDays />}
+          title="Önce çalışan eklemelisin"
+          hint="İzin kaydı bir çalışana bağlanır; çalışanını ekledikten sonra buradan izin girebilirsin."
+          action={<Link href="/panel/calisanlar" className="btn btn-ghost btn-sm">Çalışanlara Git</Link>}
+        />
       </>
     );
   }
@@ -184,7 +188,12 @@ export default function IzinlerClient({
       </div>
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz izin kaydı yok.</div>
+        <EmptyState
+          icon={<CalendarDays />}
+          title="Henüz izin kaydı yok"
+          hint="Yıllık izin, rapor ve devamsızlıkları kaydet; kimin ne kadar izni kaldığını şaşırma."
+          action={<AddButton onClick={openNew}>İzin Ekle</AddButton>}
+        />
       ) : (
         <div className="tx-list">
           {list.map((l) => {

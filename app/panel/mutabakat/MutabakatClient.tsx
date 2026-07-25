@@ -9,10 +9,12 @@ import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
 import PageHead from "../../../components/ui/PageHead";
 import AddButton from "../../../components/AddButton";
+import EmptyState from "../../../components/ui/EmptyState";
 import SaveButton from "../../../components/SaveButton";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
+import { ClipboardCheck } from "lucide-react";
 
 export type AccountRef = { id: string; name: string };
 export type Reconciliation = {
@@ -172,7 +174,12 @@ export default function MutabakatClient({
       />
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz mutabakat yok. Sağ üstten oluştur.</div>
+        <EmptyState
+          icon={<ClipboardCheck />}
+          title="Henüz mutabakat yok"
+          hint="Cari hesabınla karşı tarafın kayıtlarını karşılaştır; fark varsa nereden geldiğini gör."
+          action={<AddButton onClick={openNew}>Mutabakat Oluştur</AddButton>}
+        />
       ) : (
         <div className="tx-list">
           {list.map((r) => {

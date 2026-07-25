@@ -9,10 +9,12 @@ import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
 import PageHead from "../../../components/ui/PageHead";
 import AddButton from "../../../components/AddButton";
+import EmptyState from "../../../components/ui/EmptyState";
 import SaveButton from "../../../components/SaveButton";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
+import { FileText } from "lucide-react";
 
 export type Quote = {
   id: string;
@@ -209,7 +211,12 @@ export default function TekliflerClient({
       )}
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz teklif yok. Sağ üstten oluştur.</div>
+        <EmptyState
+          icon={<FileText />}
+          title="Henüz teklif yok"
+          hint="Müşterine fiyat teklifi hazırla; kabul edilirse aynı bilgilerle faturaya dönüşsün."
+          action={<AddButton onClick={openNew}>İlk Teklifi Oluştur</AddButton>}
+        />
       ) : (
         <div className="tx-list">
           {list.map((q) => {

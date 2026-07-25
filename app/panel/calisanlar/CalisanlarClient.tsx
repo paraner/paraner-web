@@ -1,5 +1,6 @@
 "use client";
 import AddButton from "../../../components/AddButton";
+import EmptyState from "../../../components/ui/EmptyState";
 import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
@@ -11,6 +12,7 @@ import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
+import { Briefcase } from "lucide-react";
 
 export type Employee = {
   id: string;
@@ -137,7 +139,12 @@ export default function CalisanlarClient({
       )}
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz çalışan yok. Sağ üstten ilk çalışanı ekle.</div>
+        <EmptyState
+          icon={<Briefcase />}
+          title="Henüz çalışan yok"
+          hint="Çalışanını ekle; maaş ödemelerini ve izinlerini aynı yerden takip et."
+          action={<AddButton onClick={openNew}>İlk Çalışanı Ekle</AddButton>}
+        />
       ) : (
         <div className="tx-list">
           {list.map((emp) => (

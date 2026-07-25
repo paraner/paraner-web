@@ -9,10 +9,11 @@ import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
 import { formatCurrency } from "../../../lib/format";
 import PageHead from "../../../components/ui/PageHead";
+import EmptyState from "../../../components/ui/EmptyState";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
-import { Search } from "lucide-react";
+import { Search, Package } from "lucide-react";
 
 export type Product = {
   id: string;
@@ -219,9 +220,12 @@ export default function UrunlerClient({
       )}
 
       {list.length === 0 ? (
-        <div className="panel-empty">
-          Henüz ürün/hizmet yok. Sağ üstten ilkini ekle.
-        </div>
+        <EmptyState
+          icon={<Package />}
+          title="Henüz ürün/hizmet yok"
+          hint="Sattığın ürün ve hizmetleri bir kez tanımla; fatura keserken fiyat ve KDV'siyle hazır gelsin."
+          action={<AddButton onClick={openNew}>İlk Ürünü Ekle</AddButton>}
+        />
       ) : (
         <>
           <div className="filter-row">

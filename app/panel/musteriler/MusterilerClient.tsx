@@ -1,5 +1,6 @@
 "use client";
 import AddButton from "../../../components/AddButton";
+import EmptyState from "../../../components/ui/EmptyState";
 import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
@@ -11,7 +12,7 @@ import PageHead from "../../../components/ui/PageHead";
 import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
-import { Search } from "lucide-react";
+import { Search, Users } from "lucide-react";
 
 export type Contact = {
   id: string;
@@ -186,7 +187,12 @@ export default function MusterilerClient({
       )}
 
       {list.length === 0 ? (
-        <div className="panel-empty">Henüz kart yok. Sağ üstten müşteri/tedarikçi ekle.</div>
+        <EmptyState
+          icon={<Users />}
+          title="Henüz müşteri/tedarikçi kartın yok"
+          hint="Kartı bir kez oluştur; fatura keserken, tahsilat girerken ve raporlarda hazır gelsin."
+          action={<AddButton onClick={openNew}>İlk Kartı Ekle</AddButton>}
+        />
       ) : (
         <>
           <div className="filter-row">
