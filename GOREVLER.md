@@ -31,7 +31,16 @@
 ## 💳 ÖDEME ENTEGRASYONU GELİNCE (tek yerde topla — çok yeri kırar)
 - [ ] 🔴 **Trial cron ödeyeni de düşürür:** `trial-expire-cron.sql` satın alımda `trial_plan`
       temizlenmeli YA DA cron'a "aboneliği yok" koşulu. `lib/lifecycle.ts` "paid" ayrımı gerçek abonelikten okumalı.
-- [ ] **Max planları** web'e mobil ile BİRLİKTE geri eklenir (şu an ikisinde de yok, mobil paritesi).
+- [ ] 🔴 **Abonelik alanlarını İSTEMCİ yazıyor** (web `AbonelikBolumu` + mobil `premium.tsx`, ikisi de
+      `profiles` tablosuna doğrudan) → kullanıcı teoride kendine `is_premium: true` yazabilir. Bugün
+      satılacak bir şey olmadığı için zararsız; **ödeme günü** `is_premium/subscription_tier/trial_*`
+      alanları RLS ile kilitlenip YALNIZ sunucu/webhook tarafından yazılmalı.
+- [ ] **Panel > Ayarlar > Abonelik'teki "Ödeme yakında" düğmeleri** gerçek ödemeye bağlanacak
+      (denemesi olmayan planlar bugün satılamıyor). Sağlayıcı kararı da bu maddede: iyzico/PayTR/Stripe.
+- [ ] ⚠️ **Web pazarlama sayfası Max planlarını GÖSTERMİYOR** (mobil ve panel > Abonelik gösteriyor).
+      `app/page.tsx` PLANS + `app/layout.tsx` AggregateOffer yalnız Free/Pro/İşletme Pro içeriyor →
+      müşteri telefonda ₺890 Max görüyor, sitede yok. Karar: ya siteye eklenir ya mobilden kaldırılır.
+      *(Buradaki eski "Max planları ikisinde de yok" notu YANLIŞTI — mobil `app/premium.tsx`'te duruyor.)*
 - [ ] **DMARC sıkılaştırma o gün TAKILI olmalı** — "faturanız/kartınız" taklidi ödeme gelince para
       kazandıran dolandırıcılığa döner; aşamalı geçiş haftalar sürer, o gün başlamak geç kalır (aşağı bak).
 - [ ] İşletme hesabı eklemede **Stripe ödeme/trial kapısı** (şu an direkt açılıyor).
@@ -136,6 +145,24 @@
       adresi yazacak? O adrese mail gitmiyor. Web akışı provider-bağımsız (Apple kullanıcısı da "Şifre Belirle"
       görüyor) ama gizli-mail girişi doğrulanacak. Web + mobil ortak soru.
 - [ ] Web kayıt akışı: ek onboarding adımları gözden geçirilecek (OTP + OnboardingModal var).
+
+## 🔝 ÜST BAR (panel header) — 3 adımlık iş, sırayla (Mehmet, 26.07)
+> Üst bar bugüne kadar neredeyse boştu (yalnız Parla + zil). Sıra bozulmasın diye tek tek.
+- [x] ✅ **① Ayarlar > Abonelik sekmesi** (27.07) — plan/deneme durumu + planlar + deneme başlatma.
+- [ ] **② Panel geneli arama** (üst barın soluna, ⌘K). Kapsam kararlaştırıldı:
+      **Katman 1** anında/bedava = 34 modül + Ayarlar sekmeleri + kategoriler + Türkçe eş anlamlılar
+      (sözlük mobil `app/app-search.tsx` SYNONYMS'ta HAZIR, oradan alınacak).
+      **Katman 2** veri = işlem · fatura · teklif · cari · ürün · çalışan · hesap · düzenli ödeme ·
+      borç · çek-senet · veresiye · varlık; ad/açıklama/belge no **ve TUTAR** aranır.
+      ⚠️ 2 harften sonra + gecikmeli + `.limit()` (her harfte 12 tabloya sorgu atmasın).
+      ⚠️ Yalnız AKTİF profilin verisi; admin/destek verisi asla.
+- [ ] **③ Üst barda deneme/plan rozeti + "dinamik ada"** — rozet: deneme sürüyorsa "Deneme · 9 gün"
+      (son 2 gün sarı), ücretsizse "Ücretsiz plan"; **tıklayınca → Ayarlar > Abonelik** (② bittiğinde
+      hedef hazır). × ile o oturumluk gizlenir, yeni girişte döner (sessionStorage — mobildeki
+      KALICI kapatmaya (`trial_notified_day5`) DOKUNMAZ, o ayrı).
+      Ekle düğmesi yerine **Apple'ın Dinamik Ada'sı gibi**: üstüne gelince açılır (Gelir/Gider ekle,
+      Fatura, Teklif, Müşteri, Ürün), uzaklaşınca kapanır. Tıklanınca ilgili modül açılır ve o
+      modülün MEVCUT ekleme formu kendiliğinden açılır (ikinci bir form kopyası YAZILMAYACAK).
 
 ## 🎨 TASARIM / MARKA — açık maddeler
 > ⚠️ Marka rengi DEĞİŞECEK (teal/yeşil kalmayacak) → teal'e tasarım yatırımı yapma. Aksiyon/UI öğeleri

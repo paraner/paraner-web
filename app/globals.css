@@ -2958,6 +2958,90 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
 .fg-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
 .fg-actions .sb { width: auto; min-width: 150px; }
 
+/* ─── Ayarlar > Abonelik ───
+   ⚠️ Seçili plan TİTANYUM ile işaretlenir, marka rengiyle DEĞİL (marka rengi değişecek —
+   CLAUDE.md renk kuralı). Burada anlam taşıyan tek renk tasarruf satırının yeşili değil,
+   o da nötr bırakıldı; yalnız durum rozetleri (.badge) anlam rengi taşır. */
+.sub-status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 34px; }
+.ss-item { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ss-k { font-size: 13px; color: var(--text-dim); }
+.ss-v { font-size: 14px; font-weight: 600; }
+.sub-note {
+  font-size: 12px; color: var(--text-dim); line-height: 1.55;
+  margin: 14px 0 0; padding-top: 14px; border-top: 1px solid var(--border);
+  max-width: 640px;
+}
+
+.plan-grid {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+.plan-card {
+  appearance: none; cursor: pointer; font-family: inherit; text-align: left;
+  position: relative; display: flex; flex-direction: column;
+  background: var(--card-2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px 16px 18px; color: var(--text);
+  transition: border-color 0.15s, background 0.15s;
+}
+.plan-card:hover { border-color: var(--border-strong); }
+/* Seçili: titanyum çerçeve + hafif aydınlanma */
+.plan-card.sel {
+  border-color: rgba(238, 240, 242, 0.55);
+  background: rgba(255, 255, 255, 0.045);
+}
+.pc-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-right: 26px; }
+.pc-name { font-size: 14px; font-weight: 600; }
+.pc-badge {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.03em;
+  padding: 3px 8px; border-radius: 7px;
+  background: rgba(255, 255, 255, 0.09); color: var(--text-dim); white-space: nowrap;
+}
+.plan-card.onerilen .pc-badge {
+  background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
+  color: #0a0b0d;
+}
+.pc-price { display: flex; align-items: flex-start; gap: 2px; margin-top: 12px; }
+.pc-cur { font-size: 14px; font-weight: 700; margin-top: 4px; }
+.pc-amount { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
+.pc-period { font-size: 12px; color: var(--text-dim); margin-top: 12px; }
+.pc-total { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.pc-save { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+/* `margin-top: auto` → özellik listeleri kartların ALTINA hizalanır. Yıllık kartta iki
+   fazladan satır (toplam + tasarruf) olduğu için üstten hizalayınca listeler kaymış duruyordu. */
+.pc-features { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 7px; }
+.plan-card .pc-features { margin-top: auto; padding-top: 14px; }
+.pc-features li {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 12.5px; color: var(--text-dim); line-height: 1.4;
+}
+.pc-features svg { flex-shrink: 0; margin-top: 1px; opacity: 0.75; }
+.pc-current {
+  margin-top: 14px; align-self: flex-start;
+  font-size: 11px; font-weight: 600; color: var(--text-dim);
+  border: 1px solid var(--border); border-radius: 7px; padding: 3px 9px;
+}
+/* Seçim göstergesi — kartın sağ üstünde daire */
+.pc-radio {
+  position: absolute; top: 16px; right: 16px;
+  width: 17px; height: 17px; border-radius: 50%;
+  border: 1.5px solid var(--border-strong); transition: border-color 0.15s, background 0.15s;
+}
+.plan-card.sel .pc-radio {
+  border-color: transparent;
+  background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%);
+  box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.55);
+}
+.plan-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-top: 20px;
+}
+.plan-fine { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin: 0; max-width: 560px; }
+.plan-foot .btn { flex-shrink: 0; }
+@media (max-width: 560px) {
+  .plan-foot { flex-direction: column; align-items: stretch; }
+  .plan-foot .btn { width: 100%; }
+}
+
 /* Logo / avatar yükleme */
 .logo-drop {
   display: flex; align-items: center; gap: 18px; flex-wrap: wrap;

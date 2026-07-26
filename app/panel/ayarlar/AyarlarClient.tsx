@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
 import LogoutButton from "../LogoutButton";
 import KategorilerBolumu from "./KategorilerBolumu";
+import AbonelikBolumu, { type AbonelikDurum } from "./AbonelikBolumu";
 import { confirmDialog } from "../../components/confirm";
 import { showToast } from "../../components/toast";
 import { toCsv, downloadCsv, parseCsv } from "../../../lib/csv";
@@ -43,6 +44,11 @@ export type Profile = {
   website: string | null;
   mersis_no: string | null;
   trade_registry_no: string | null;
+  // Abonelik (yalnız bu sayfada çekilir) — durum SUNUCUDA hesaplanır, bkz. page.tsx
+  is_premium?: boolean | null;
+  subscription_tier?: string | null;
+  trial_start_date?: string | null;
+  trial_plan?: string | null;
 };
 
 export type DeviceRow = {
@@ -62,19 +68,29 @@ export type DeviceRow = {
      Veri & Yedekleme (dışa/içe aktarma — bireyselde de var) · Bildirimler ·
      Hesap & Güvenlik (kullanıcıya ait + tehlike bölgesi).
    Derin link: ?tab=veri (history.replaceState ile, sayfa yenilenmez). */
-type TabKey = "genel" | "fatura" | "kategoriler" | "veri" | "bildirimler" | "hesap";
+type TabKey =
+  | "genel"
+  | "fatura"
+  | "kategoriler"
+  | "abonelik"
+  | "veri"
+  | "bildirimler"
+  | "hesap";
 
 export default function AyarlarClient({
   email,
   profiles,
   devices,
   hasPassword,
+  abonelik,
 }: {
   email: string;
   profiles: Profile[];
   devices: DeviceRow[];
   /** Kullanıcının şifresi var mı (auth user_metadata.has_password) → "Şifre Belirle" / "Şifre Değiştir" */
   hasPassword: boolean;
+  /** Aktif profilin abonelik durumu — sunucuda hesaplanır (istemcinin saatine güvenilmez). */
+  abonelik: AbonelikDurum | null;
 }) {
   const supabase = createClient();
   const router = useRouter();
@@ -87,6 +103,7 @@ export default function AyarlarClient({
     // Fatura yalnız işletmede; Veri & Yedekleme HERKESTE (bireysel de işlemlerini indirebilmeli)
     ...(isBusiness ? [{ key: "fatura" as TabKey, label: "Fatura" }] : []),
     { key: "kategoriler", label: "Kategoriler" },
+    { key: "abonelik", label: "Abonelik" },
     { key: "veri", label: "Veri & Yedekleme" },
     { key: "bildirimler", label: "Bildirimler" },
     { key: "hesap", label: "Hesap & Güvenlik" },
@@ -211,6 +228,18 @@ export default function AyarlarClient({
       {tab === "kategoriler" &&
         (active ? (
           <KategorilerBolumu key={active.id} profileId={active.id} />
+        ) : (
+          <p className="panel-sub">Profil bulunamadı.</p>
+        ))}
+
+      {tab === "abonelik" &&
+        (active && abonelik ? (
+          <AbonelikBolumu
+            key={active.id}
+            profileId={active.id}
+            profileType={active.profile_type}
+            durum={abonelik}
+          />
         ) : (
           <p className="panel-sub">Profil bulunamadı.</p>
         ))}

@@ -20,6 +20,30 @@
 
 ## Bu hafta (2026-07-23 →)
 
+### 27.07 — Ayarlar > Abonelik sekmesi (üst bar işinin 1. adımı)
+- **Panel kullanıcıya planını HİÇ söylemiyordu:** ne hangi plandasın, ne denemen kaç gün sonra
+  bitiyor — bu bilgi yalnız telefonda vardı (`components/TrialBanner.tsx`). Webde plan sayfası
+  da yoktu. `Ayarlar > Abonelik` eklendi: mevcut plan + durum rozeti + kalan gün + bitiş tarihi,
+  altında profil türüne göre plan kartları (işletme profiline bireysel plan gösterilmez).
+- **Fiyatlar KOPYALANMADI, kaynaktan alındı:** `lib/plans.ts`'e katalog eklendi, mobil
+  `app/premium.tsx`'ten birebir. Fiyat değişince güncellenecek 4 yer o dosyanın başında yazılı.
+- **Deneme başlatma GERÇEKTEN çalışıyor:** hiç deneme kullanmamış + 14 günlük denemesi olan plan
+  (`individual_pro_monthly` / `business_pro_monthly`) → düğme "14 Gün Ücretsiz Başlat" ve profile
+  mobil `startTrial` ile AYNI alanları yazar (`trial_notified_day5/7` sıfırlama dahil — sıfırlanmazsa
+  mobil uyarıyı hiç göstermez). Diğer her durumda düğme **"Ödeme yakında"** ve kapalı:
+  çalışmayan "Satın al" göstermek olmayan söz vermektir.
+- **Ders — deneme matematiği İSTEMCİDE hesaplanmaz:** `Date.now()` cihazın saatidir, saati geri
+  alan kullanıcıya "denemen bitmedi" derdi. Durum sunucuda, admin panelinin kullandığı AYNI
+  `profileLifecycle` ile hesaplanıp prop olarak iniyor. Bitiş tarihi de `formatDate` ile DEĞİL
+  `formatDayMonth` ile basılıyor (ilki ISO'yu ham böler = UTC → gece yarısında bir gün kayardı).
+- **Bulunan çelişki (GOREVLER'e yazıldı):** GOREVLER "Max planları ikisinde de yok" diyordu ama
+  mobilde duruyor; asıl fark **web pazarlama sayfası** Max'i hiç göstermiyor (Google'a giden fiyat
+  şeması dahil) → müşteri telefonda ₺890 görüp sitede göremiyor. Karar Mehmet'te.
+- **Doğrulama:** yerel prod build + test hesabı oturumuyla gerçek tarayıcıda açıldı (masaüstü +
+  telefon boyu). İşletme profilinde doğru 3 plan, doğru fiyat, "Deneme · 2 gün · 28 Tem 2026";
+  başka kart seçilince düğme/ince yazı doğru değişiyor. ⚠️ **Deneme BAŞLATMA yolu canlıda
+  denenmedi** (izin gerekti) — kod yolu yazıldı, göz testi Mehmet'te.
+
 ### 26.07 — telefon çekmecesi opak + 30 sayfa canlı tarama
 - **Çekmece arkası şeffaftı (Mehmet ekran görüntüsü):** telefonda soldan açılan menü,
   masaüstündeki buzlu cam zeminini (%50 saydam) aynen kullanıyordu → menü sayfanın
