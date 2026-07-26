@@ -36,7 +36,8 @@
   emoji) → `EmptyState`'e bağlandı. Kendi kaydını tutmayan modül olduğu için aksiyon
   "ilk kaydı ekle" değil **"Faturalara git"** (nötr `btn-ghost`, teal değil).
   ⚠️ Test hesabı BOŞ → yalnız boş hâller denetlendi; dolu ekran hataları bu turda görünmez.
-- **Tarama aracı (kalıcı, `scratchpad/`):** oturum, şifre/e-posta olmadan açılıyor —
+- **Tarama aracı KALICI:** `~/Developer/Paraner/tools/panel-tarama/` (repo DIŞINDA — web repo'su
+  herkese açık; kullanımı + tuzaklar oradaki `README.md`'de). Oturum şifre/e-posta olmadan açılıyor —
   service_role ile `admin/generate_link` → `verify` (token_hash) → çerezi projenin kendi
   `@supabase/ssr` sürümü üretiyor (biçim tahmin edilmiyor, chunk'lı 2 çerez).
   ⚠️ Jetonu ASLA ekrana basma (bir kez basıldı, o oturum `logout?scope=local` ile kapatıldı).
