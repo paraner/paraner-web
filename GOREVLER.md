@@ -145,8 +145,8 @@
       (`app/panel/ayarlar/KategorilerBolumu.tsx`, tek prop `profileId`) → taşımak = bir satır.
 - [ ] **Buton yenileme Adım 3** — nötr `btn-ghost` ikincil butonlar (duzenli-fatura "İlerlet", stok/veresiye
       "Hareket", duzenli-odemeler "Onayla", gelir-gider "CSV İndir"). Kalan teal `.btn-primary`'ler marka rengi netleşince toplu.
-- [ ] Her sayfanın tek tek **tasarım/UX cilası** (sıradaki faz).
-- [ ] Sidebar aç/kapa fade; native `confirm()` yerine özel onay diyaloğu + başarı toast; gerçek mobil menü (drawer).
+- [ ] Her sayfanın tek tek **tasarım/UX cilası** (sıradaki faz). Sıradakiler: ① Genel Bakış'ın
+      kendi boş kutuları hâlâ eski dilde ② modüller arası liste satırı/kart kenarı ölçü farkları.
 - [ ] LineChart'a Shopify gibi kesik "önceki dönem" karşılaştırma çizgisi.
 - [ ] **Toast sistemini iyileştir** (Sonner-tarzı çalışıyor; Mehmet daha iyi görünüm/UX araştıracak).
 

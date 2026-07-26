@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { Clock } from "lucide-react";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import PageHead from "../../../components/ui/PageHead";
+import EmptyState from "../../../components/ui/EmptyState";
 
 export type AgingInvoice = {
   id: string;
@@ -57,7 +60,18 @@ export default function VadeClient({
       <PageHead title="Vade Takibi" sub="Ödenmemiş faturaların yaşlandırması" />
 
       {invoices.length === 0 ? (
-        <div className="panel-empty">Ödenmemiş fatura yok. 🎉</div>
+        /* Vade kendi kaydını TUTMAZ, faturalardan türer → "ilk kaydı ekle" yerine
+           faturalara yönlendiriyoruz (aksiyon boş ekranda hep tıklanabilir bir şey olsun). */
+        <EmptyState
+          icon={<Clock />}
+          title="Ödenmemiş fatura yok"
+          hint="Vadesi geçen alacak ve borçların burada yaşlandırma gruplarıyla listelenir. Fatura kestikçe otomatik dolar."
+          action={
+            <Link href="/panel/faturalar" className="btn btn-ghost btn-sm">
+              Faturalara git
+            </Link>
+          }
+        />
       ) : (
         <>
           <div className="total-banner">

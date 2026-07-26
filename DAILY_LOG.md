@@ -20,6 +20,29 @@
 
 ## Bu hafta (2026-07-23 →)
 
+### 26.07 — telefon çekmecesi opak + 30 sayfa canlı tarama
+- **Çekmece arkası şeffaftı (Mehmet ekran görüntüsü):** telefonda soldan açılan menü,
+  masaüstündeki buzlu cam zeminini (%50 saydam) aynen kullanıyordu → menü sayfanın
+  ÜSTÜNDE durduğu için arkadaki başlık/kartlar yazıların içinden okunuyordu. Telefonda
+  zemin **opak** yapıldı (`@media max-width:760px` içinde), karartma 0.55→0.66 + 3px
+  bulanıklık. Masaüstündeki cam DOKUNULMADI (orada menü sayfanın yanında, arkası siyah).
+  **Ders:** cam efekti "yanında duran" panelde doğru, "üstünde duran" katmanda değil —
+  yeni bir overlay/çekmece eklerken zemini opak seç.
+  ⚠️ Opak zeminle birlikte `backdrop-filter` telefonda kapatıldı (görsel etkisi kalmamıştı,
+  boşuna GPU yakıyordu).
+- **30 panel sayfası canlıda tek tek gezildi** (gerçek tarayıcı + test hesabı oturumu):
+  konsol hatası 0, kırık istek 0, çöken/açılmayan sayfa 0; hepsi 1-3 sn.
+  **Tek gerçek kusur: Vade Takibi** boş-ekran turundan atlanmıştı (eski düz kutu +
+  emoji) → `EmptyState`'e bağlandı. Kendi kaydını tutmayan modül olduğu için aksiyon
+  "ilk kaydı ekle" değil **"Faturalara git"** (nötr `btn-ghost`, teal değil).
+  ⚠️ Test hesabı BOŞ → yalnız boş hâller denetlendi; dolu ekran hataları bu turda görünmez.
+- **Tarama aracı (kalıcı, `scratchpad/`):** oturum, şifre/e-posta olmadan açılıyor —
+  service_role ile `admin/generate_link` → `verify` (token_hash) → çerezi projenin kendi
+  `@supabase/ssr` sürümü üretiyor (biçim tahmin edilmiyor, chunk'lı 2 çerez).
+  ⚠️ Jetonu ASLA ekrana basma (bir kez basıldı, o oturum `logout?scope=local` ile kapatıldı).
+  ⚠️ `\bNaN\b` gibi regex denetimleri Türkçe metinde yanlış alarm verir ("Alı**nan**" —
+  JS kelime sınırı 'ı'yı harf saymıyor).
+
 ### 25.07 (2. oturum) — Parla cilası + kategori adları + test hesabı sıfırlandı
 - **Daktilo webde HİÇ çalışmıyormuş:** motor (`RichText reveal`) yazılmış ama bağlanmamıştı,
   her mesaj tek seferde basılıyordu. Bağlandı, hız mobil ile aynı (~2,4 sn hedef, 9-34 ms/kelime).

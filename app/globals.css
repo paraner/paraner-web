@@ -2041,11 +2041,15 @@ ul { list-style: none; }
 }
 .panel-menu-btn:hover { background: var(--card-2); border-color: var(--border); }
 .panel-menu-btn svg { width: 21px; height: 21px; }
-/* Çekmece açıkken arka planı karart — dokununca kapanır */
+/* Çekmece açıkken arka planı karart — dokununca kapanır.
+   Karartma + hafif bulanıklık: çekmece kendi başına opak olsa da, açık kalan sağ şeritte
+   sayfanın "arkada duran katman" gibi okunmasını sağlar. */
 .panel-menu-backdrop {
   display: none;
   position: fixed; inset: 0; z-index: 55;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.66);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   opacity: 0; pointer-events: none;
   transition: opacity 0.28s ease;
 }
@@ -2072,6 +2076,17 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
     overflow-y: auto; overscroll-behavior: contain;
     transform: translateX(-100%);
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    /* ⚠️ ÇEKMECE OPAK OLMALI — masaüstündeki "buzlu cam" (%50 saydam) burada ÇALIŞMAZ:
+       menü sayfanın ÜSTÜNDE durduğu için arkadaki başlık/kartlar menü yazılarının içinden
+       okunuyordu (Mehmet, 26.07 ekran görüntüsü). Masaüstünde panel sayfanın YANINDA,
+       arkasında yalnız siyah zemin var → orada cam doğru, burada değil.
+       Renkler masaüstündeki camın siyah üstünde verdiği tonun opak karşılığı (aynı dil). */
+    background: linear-gradient(180deg, #1b1f24 0%, #14171c 55%, #0c0e12 100%);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.75);
+    /* Zemin opak olduğu için cam bulanıklığının görsel etkisi kalmadı; telefonda
+       boşuna GPU yakmasın diye kapatıldı. */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
   body.panel-menu-open .panel-sidebar { transform: none; }
   /* Çekmecede daraltma yok — etiketler hep açık */
