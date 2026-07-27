@@ -16,7 +16,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Search, CornerDownLeft } from "lucide-react";
+import { Search, CornerDownLeft, X } from "lucide-react";
 import { createClient } from "../../lib/supabase/client";
 import { fetchCustomCategories, type CustomCategory } from "../../lib/customCategories";
 import { BUSINESS_SECTIONS } from "./businessMenu";
@@ -167,6 +167,22 @@ export default function PanelSearch({
     window.addEventListener("resize", olc);
     return () => window.removeEventListener("resize", olc);
   }, [acik, olc]);
+
+  /* AÇILIŞ/KAPANIŞ — kapanışta liste bir anda YOK OLMASIN diye ayrı bir "kapanıyor"
+     evresi var: `acik` false olunca DOM'dan hemen silmiyoruz, çıkış animasyonu bitene
+     kadar (KAPANIS_MS) tutuyoruz. React tek başına bunu yapmaz; unmount anında animasyon
+     çalışmaz. Süre CSS'teki `psOut` ile aynı olmalı. */
+  const KAPANIS_MS = 120;
+  const [gorunur, setGorunur] = useState(false);
+  useEffect(() => {
+    if (acik) {
+      setGorunur(true);
+      return;
+    }
+    if (!gorunur) return;
+    const t = setTimeout(() => setGorunur(false), KAPANIS_MS);
+    return () => clearTimeout(t);
+  }, [acik, gorunur]);
 
   const katalog = useMemo(() => sayfaKatalogu(isletmeMi), [isletmeMi]);
 
@@ -333,15 +349,35 @@ export default function PanelSearch({
           autoComplete="off"
           spellCheck={false}
         />
-        {araniyor ? <span className="ps-spin" aria-label="Aranıyor" /> : <kbd className="ps-kbd">⌘K</kbd>}
+        {araniyor ? (
+          <span className="ps-spin" aria-label="Aranıyor" />
+        ) : terim ? (
+          <button
+            type="button"
+            className="ps-clear"
+            aria-label="Aramayı temizle"
+            onClick={() => {
+              setTerim("");
+              inputRef.current?.focus();
+            }}
+          >
+            <X aria-hidden="true" />
+          </button>
+        ) : (
+          <kbd className="ps-kbd">⌘K</kbd>
+        )}
       </div>
 
-      {mounted && acik && konum && createPortal(
-        <div className="ps-overlay" onMouseDown={() => setAcik(false)} role="presentation">
+      {mounted && gorunur && konum && createPortal(
+        <div
+          className={`ps-overlay${acik ? "" : " kapaniyor"}`}
+          onMouseDown={() => setAcik(false)}
+          role="presentation"
+        >
           {/* Liste kutuya ÇİVİLİ: konum/genişlik kutunun ölçüsünden gelir (portal body'de
               olduğu için CSS ile hizalanamaz, ölçüp yazıyoruz). */}
           <div
-            className="ps-panel"
+            className={`ps-panel${acik ? "" : " kapaniyor"}`}
             role="listbox"
             aria-label="Arama sonuçları"
             style={{ left: konum.left, top: konum.top, width: konum.width }}

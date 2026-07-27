@@ -38,6 +38,15 @@
   ekrandaki yeri ÖLÇÜLÜP yazılıyor (`getBoundingClientRect`, resize'da yeniden). Telefonda
   ortalama yok (solda hamburger, sağda 2 ikon) ve liste kutuya değil EKRANA göre genişler.
   Karartma 0.55 → 0.30: açılır liste modal değil, ağır karartma fazla kaçıyordu.
+- **Cila (Mehmet: "daha profesyonel gözüksün, açılışı kapanışı"):** kutu 360→460px;
+  açılışta liste yukarıdan aşağı açılıyor (190ms, expo-out eğrisi: hızlı başlar yumuşak
+  oturur), kapanışta 120ms solarak çıkıyor. ⚠️ **React unmount anında animasyon ÇALIŞMAZ** →
+  ayrı bir "kapanıyor" evresi tutuluyor (`gorunur` state, `KAPANIS_MS` CSS ile aynı olmalı).
+  Ölçüldü: 4ms sınıf → 12ms `psOut` başlıyor → 128ms DOM'dan siliniyor.
+  Ayrıca: odakta titanyum halka, yazı varken × (temizle) düğmesi, iki katmanlı gölge,
+  `prefers-reduced-motion` açıksa yalnız solma.
+  ⚠️ **Ölçüm tuzağı:** puppeteer'da `click` + 50ms bekleme, CDP gecikmesi yüzünden 120ms'yi
+  aşıyor → "animasyon çalışmıyor" gibi görünüyor. Doğrusu: tarayıcı İÇİNDE MutationObserver.
 - **Ders (İKİNCİ KEZ) — üstte duran katmanın zemini OPAK olmalı:** kutuya `var(--card)`
   verdim, o %4 beyaz yani saydam → arkadaki grafik yazıların içinden okundu. Telefon
   çekmecesinde (26.07) aynı hata. `.ps-panel` artık düz `#0c0d0f`.

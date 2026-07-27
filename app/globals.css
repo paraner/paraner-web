@@ -1893,15 +1893,27 @@ ul { list-style: none; }
 .panel-topbar { position: relative; }
 .ps-box {
   display: flex; align-items: center; gap: 9px;
-  width: 360px; padding: 8px 12px; border-radius: 11px;
+  width: min(460px, 40vw); padding: 9px 12px; border-radius: 11px;
   background: rgba(255, 255, 255, 0.045); border: 1px solid var(--border);
   color: var(--text-dim); font-size: 13.5px;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
   position: absolute; left: 50%; transform: translateX(-50%);
 }
-.ps-box:hover { border-color: var(--border-strong); }
-.ps-box:focus-within { border-color: var(--focus-ring); background: var(--card-2); }
+.ps-box:hover { border-color: var(--border-strong); background: rgba(255, 255, 255, 0.06); }
+/* Odakta titanyum halka (marka rengi DEĞİL — renk değişecek) */
+.ps-box:focus-within {
+  border-color: rgba(238, 240, 242, 0.42);
+  background: var(--card-2);
+  box-shadow: 0 0 0 3px rgba(238, 240, 242, 0.07);
+}
 .ps-box > svg { width: 16px; height: 16px; flex-shrink: 0; }
+.ps-clear {
+  appearance: none; background: none; border: none; cursor: pointer; padding: 2px;
+  display: flex; color: var(--text-dim); border-radius: 5px; flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+.ps-clear:hover { color: var(--text); background: rgba(255, 255, 255, 0.08); }
+.ps-clear svg { width: 14px; height: 14px; }
 .ps-kbd {
   font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-dim);
   border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px;
@@ -1911,17 +1923,47 @@ ul { list-style: none; }
 /* Karartma yalnız "dışarı tıklayınca kapat" içindir + arkayı hafifçe geri çeker.
    Liste artık ekranın ortasında bir PENCERE değil, kutunun altına açılan bir liste →
    ağır modal karartması (0.55) bu kurguda fazla kaçıyordu. */
-.ps-overlay { position: fixed; inset: 0; z-index: 110; background: rgba(0, 0, 0, 0.3); }
+.ps-overlay {
+  position: fixed; inset: 0; z-index: 110; background: rgba(0, 0, 0, 0.3);
+  animation: psFadeIn 160ms ease-out;
+}
+.ps-overlay.kapaniyor { animation: psFadeOut 120ms ease-in forwards; }
+
+/* Açılış/kapanış — SaaS deseni (Linear/Vercel): liste yukarıdan aşağı "açılır",
+   hafifçe büyür ve solar. Zıplama olmasın diye çıkış girişten KISA ve daha sert
+   yavaşlar. ⚠️ Çıkış süresi bileşendeki KAPANIS_MS ile aynı olmalı (120ms). */
+@keyframes psFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes psFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes psIn {
+  from { opacity: 0; transform: translateY(-7px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes psOut {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(-5px) scale(0.99); }
+}
 .ps-panel {
   position: fixed; /* left/top/width JS'ten: kutunun ölçüsüne çivili */
   max-height: min(62vh, 520px);
   display: flex; flex-direction: column; overflow: hidden;
+  transform-origin: top center;
+  /* cubic-bezier(0.16,1,0.3,1) = "expo out": hızlı başlar, yumuşak oturur */
+  animation: psIn 190ms cubic-bezier(0.16, 1, 0.3, 1);
   /* ⚠️ OPAK — `var(--card)` DEĞİL: o %4 beyaz, yani saydam. Sayfanın ÜSTÜNDE duran bir
      katmanda saydam zemin = arkadaki grafik/kartlar yazının içinden okunur (aynı hata
      telefon menü çekmecesinde de yaşandı, DAILY_LOG 26.07). Kural: yanında duran panel
      cam olabilir, üstünde duran katman OLAMAZ. */
   background: #0c0d0f; border: 1px solid var(--border-strong);
-  border-radius: 16px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  border-radius: 14px;
+  /* İki katmanlı gölge: yakın (kenarı ayırır) + uzak (yüzer hissi) */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 18px 44px rgba(0, 0, 0, 0.55);
+}
+.ps-panel.kapaniyor { animation: psOut 120ms ease-in forwards; }
+
+/* Hareketi azalt tercihi açıksa yalnız solma kalsın (kayma/büyüme yok) */
+@media (prefers-reduced-motion: reduce) {
+  .ps-panel { animation: psFadeIn 120ms ease-out; }
+  .ps-panel.kapaniyor { animation: psFadeOut 100ms ease-in forwards; }
 }
 .ps-input {
   flex: 1; background: none; border: none; outline: none;
@@ -1945,8 +1987,10 @@ ul { list-style: none; }
   appearance: none; cursor: pointer; font-family: inherit; width: 100%;
   display: flex; align-items: center; gap: 12px; text-align: left;
   padding: 9px 10px; border: none; border-radius: 9px; background: none; color: var(--text);
+  transition: background 0.12s ease;
 }
 .ps-row.on { background: rgba(255, 255, 255, 0.07); }
+.ps-row:active { background: rgba(255, 255, 255, 0.11); }
 .ps-row-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .ps-row-title { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ps-row-sub { font-size: 11.5px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
