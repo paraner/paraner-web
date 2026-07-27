@@ -1846,7 +1846,8 @@ ul { list-style: none; }
 .panel-sidebar.collapsed .nav-section-chev { display: none; }
 
 /* ─── Üst bar aksiyon ikonları (AI sohbet · bildirim · ayarlar) ─── */
-.panel-topbar-actions { display: flex; align-items: center; gap: 6px; }
+/* Sağdaki küme sağa yaslanır — arama kutusu solda akışta durduğu için (bkz. `.ps-box`) */
+.panel-topbar-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
 /* ⚠️ Üst bardaki ÜÇ öğe (arama kutusu · Parla · bildirim) TEK dil konuşur: aynı zemin,
    aynı çerçeve, aynı köşe, aynı hover. Eskiden ikonlar `transparent` çerçeveliydi →
    dururken kutusu görünmüyor, yalnız üzerine gelince beliriyordu; arama kutusunun yanında
@@ -1883,8 +1884,10 @@ ul { list-style: none; }
   color: var(--danger);
 }
 .plan-rozet.acil:hover { border-color: rgba(226, 75, 74, 0.8); background: rgba(226, 75, 74, 0.19); }
-/* Rozet SOLDA dursun (üst bar `flex-end` hizalı; arama kutusu mutlak konumla ortada) */
-.plan-rozet { margin-right: auto; }
+/* Rozet arama kutusunun HEMEN SAĞINDA. (Arama kutusu 28.07'de sola alındı → rozetin eski
+   yeri olan sol boşluk kalmadı; sağdaki küme `margin-left: auto` ile ayrıldığı için rozet
+   aradaki esnek boşlukta durur.) */
+.plan-rozet { flex-shrink: 0; }
 /* Üç metinden hangisi görünecek — ölçülmüş eşikler (bkz. PlanRozeti.tsx notu):
    ≥1250px soldaki boşluk uzun cümleye yetiyor, altında orta metne düşülüyor. */
 .pr-orta, .pr-kisa { display: none; }
@@ -1893,16 +1896,32 @@ ul { list-style: none; }
   .pr-orta { display: inline; }
 }
 
-/* ─── Üst bar: hızlı ekleme "dinamik ada" ───
+/* ─── Üst bar: hızlı işlem "dinamik ada" ───
    Düğme yerinde durur; panel ondan doğuyormuş gibi SAĞ ÜST köşeden büyüyerek açılır.
    ⚠️ Panel DOM'dan silinmiyor (unmount anında animasyon çalışmaz) → kapalıyken
    `visibility: hidden` + `pointer-events: none` ile tamamen erişim dışı. */
 .di { position: relative; display: inline-flex; }
-.di-btn svg { transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
+/* Düğme YAZILI: "＋ Hızlı İşlem" (Mehmet, 28.07 — önceden yalnız + ikonuydu).
+   Ölçüler üst barın öteki öğeleriyle (arama kutusu, Parla, bildirim) AYNI dil:
+   40px yükseklik, 11px köşe, aynı zemin/çerçeve/hover. */
+.di-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 40px; padding: 0 13px 0 11px; border-radius: 11px;
+  background: rgba(255, 255, 255, 0.045); border: 1px solid var(--border);
+  color: var(--text-dim); font-family: inherit; font-size: 13.5px; font-weight: 600;
+  white-space: nowrap; cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.di-btn:hover { background: rgba(255, 255, 255, 0.06); border-color: var(--border-strong); color: var(--text); }
+.di-btn svg { width: 17px; height: 17px; flex-shrink: 0; transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
 .di.acik .di-btn { background: var(--card-2); border-color: var(--border-strong); color: var(--text); }
 .di.acik .di-btn svg { transform: rotate(135deg); } /* + → × */
 .di-panel {
-  position: absolute; top: calc(100% + 8px); right: 0; z-index: 120;
+  /* ⚠️ `fixed` + JS'ten gelen top/right: panel `body`ye portal ediliyor (bkz.
+     HizliEkle.tsx notu) — üst barın yığın bağlamında kalsaydı Parla çekmecesinin
+     (92) ALTINDA çiziliyordu. z-index bildirim menüsüyle (300) aynı hizada, modalın
+     (1000) ve toast'ın (9999) altında. */
+  position: fixed; z-index: 310;
   min-width: 210px; padding: 6px;
   background: #0c0d0f; border: 1px solid var(--border-strong); border-radius: 14px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 18px 44px rgba(0, 0, 0, 0.55);
@@ -1913,7 +1932,7 @@ ul { list-style: none; }
   transition: opacity 0.18s ease, transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
     visibility 0s linear 0.24s;
 }
-.di.acik .di-panel {
+.di-panel.acik {
   opacity: 1; visibility: visible; pointer-events: auto;
   transform: none; transition-delay: 0s;
 }
@@ -1928,7 +1947,7 @@ ul { list-style: none; }
   opacity: 0; transform: translateY(-4px);
   transition: opacity 0.2s ease, transform 0.2s ease, background 0.12s ease;
 }
-.di.acik .di-row { opacity: 1; transform: none; }
+.di-panel.acik .di-row { opacity: 1; transform: none; }
 .di-row:hover { background: rgba(255, 255, 255, 0.07); }
 .di-ic { display: flex; color: var(--text-dim); flex-shrink: 0; }
 .di-ic svg { width: 16px; height: 16px; }
@@ -2033,16 +2052,17 @@ ul { list-style: none; }
 /* Parla köşe dili — TEK yerden: kutu ve içindeki tüm öğeler bu ikisini kullanır. */
 :root { --parla-radius: 18px; --parla-radius-sm: 11px; }
 .panel-topbar {
-  display: flex; align-items: center; justify-content: flex-end; gap: 16px;
+  display: flex; align-items: center; justify-content: flex-start; gap: 16px;
   padding: 16px 28px; border-bottom: 1px solid var(--border);
   /* sticky DEĞİL: kaydırma kutusunun dışında, zaten sabit (bkz. .panel-shell notu) */
   flex-shrink: 0; z-index: 10;
   background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(12px);
 }
 /* ─── Panel geneli arama (üst bar) ───
-   Kutu üst barın TAM ORTASINDA (Mehmet, 27.07: "solda kalmış"). Ortalama `position:absolute`
-   ile: üst bar `flex-end` hizalı ve sağdaki ikonların genişliği değişken (bildirim sayısı,
-   Parla) — akış içinde ortalamak kutuyu ikonların genişliğine göre KAYDIRIRDI. */
+   ⚠️ Kutu SOLDA (Mehmet, 28.07: "arama inputunu sola al, ortada değil").
+   Öncesinde `position: absolute; left: 50%` ile tam ortadaydı; artık AKIŞTA duruyor,
+   üst barın ilk öğesi. Sağdaki küme (`.panel-topbar-actions`) `margin-left: auto` ile
+   sağa yaslanır → ortadaki boşluk esnek, ikonların genişliği değişse de kutu kımıldamaz. */
 .panel-topbar { position: relative; }
 .ps-box {
   display: flex; align-items: center; gap: 9px;
@@ -2050,7 +2070,7 @@ ul { list-style: none; }
   background: rgba(255, 255, 255, 0.045); border: 1px solid var(--border);
   color: var(--text-dim); font-size: 13.5px;
   transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
-  position: absolute; left: 50%; transform: translateX(-50%);
+  flex-shrink: 0;
 }
 .ps-box:hover { border-color: var(--border-strong); background: rgba(255, 255, 255, 0.06); }
 /* Odakta titanyum halka (marka rengi DEĞİL — renk değişecek) */
@@ -2166,14 +2186,16 @@ ul { list-style: none; }
   padding: 1px 5px; margin-right: 3px; background: rgba(255, 255, 255, 0.05);
 }
 
-/* Telefon: ortalama YOK (solda hamburger, sağda 2 ikon var — ortada mutlak konum
-   onların üstüne binerdi). Kutu akışta kalır, kalan yeri doldurur; kısayol rozeti gizli. */
+/* Telefon: kutu sabit genişlik yerine kalan yeri doldurur (solda hamburger, sağda
+   düğmeler var). Kısayol rozeti gizli — orada klavye yok. */
 @media (max-width: 760px) {
   .ps-box {
-    position: static; transform: none;
-    width: auto; flex: 1; min-width: 0; margin-right: 10px;
+    width: auto; flex: 1 1 auto; min-width: 0; margin-right: 10px;
   }
   .ps-kbd { display: none; }
+  /* Telefonda "Hızlı İşlem" yazısı üst barı taşırır → yalnız ikon (40x40 kare) */
+  .di-btn { width: 40px; padding: 0; justify-content: center; gap: 0; }
+  .di-btn-txt { display: none; }
   .ps-panel { max-height: 66vh; }
   .ps-foot { display: none; } /* telefonda klavye kısayolu yok */
 }

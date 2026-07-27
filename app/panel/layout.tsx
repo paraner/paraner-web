@@ -105,12 +105,12 @@ export default function PanelLayout({
       </Suspense>
       <div className="panel-main">
         <header className="panel-topbar">
-          {/* Plan/deneme rozeti — SOLDA (bkz. TopbarBadge notu) */}
-          <Suspense fallback={null}>
-            <TopbarBadge />
-          </Suspense>
+          {/* Sıra ÖNEMLİ: arama kutusu en solda (Mehmet, 28.07), rozet hemen sağında. */}
           <Suspense fallback={null}>
             <TopbarSearch />
+          </Suspense>
+          <Suspense fallback={null}>
+            <TopbarBadge />
           </Suspense>
           <div className="panel-topbar-actions">
             {/* Hızlı ekleme adası (profil verisi beklerken kabuk boyanmasın) */}
