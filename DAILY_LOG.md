@@ -30,6 +30,14 @@
   `amount.eq.2583` hiçbir şey bulmuyordu (canlıda ölçüldü). Kuruş yazılmadıysa `[n, n+1)`
   ARALIĞI aranıyor (PostgREST `or()` içinde `and()` destekliyor). Sayısal kolonda `ilike`
   mümkün değil → kısmi tutar araması için DB fonksiyonu gerekirdi.
+- **Yerleşim düzeltmesi (Mehmet, aynı gün):** kutu solda kalmıştı ve sonuçlar ekranın
+  ortasında AYRI bir pencere gibi açılıyordu (kutuyla görsel bağı yoktu). Şimdi: kutu üst
+  barın tam ortasında, liste tam ALTINDA ve AYNI genişlikte. ⚠️ Ortalama `position:absolute`
+  ile yapıldı — akış içinde ortalasaydık sağdaki ikonların genişliği (bildirim/Parla)
+  kutuyu kaydırırdı. Liste `body`'ye portallandığı için CSS ile hizalanamıyor: kutunun
+  ekrandaki yeri ÖLÇÜLÜP yazılıyor (`getBoundingClientRect`, resize'da yeniden). Telefonda
+  ortalama yok (solda hamburger, sağda 2 ikon) ve liste kutuya değil EKRANA göre genişler.
+  Karartma 0.55 → 0.30: açılır liste modal değil, ağır karartma fazla kaçıyordu.
 - **Ders (İKİNCİ KEZ) — üstte duran katmanın zemini OPAK olmalı:** kutuya `var(--card)`
   verdim, o %4 beyaz yani saydam → arkadaki grafik yazıların içinden okundu. Telefon
   çekmecesinde (26.07) aynı hata. `.ps-panel` artık düz `#0c0d0f`.

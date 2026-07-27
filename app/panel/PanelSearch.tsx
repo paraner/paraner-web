@@ -143,6 +143,30 @@ export default function PanelSearch({
   const ozelKatAlindi = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listeRef = useRef<HTMLDivElement>(null);
+  const kutuRef = useRef<HTMLDivElement>(null);
+  const [konum, setKonum] = useState<{ left: number; top: number; width: number } | null>(null);
+
+  /* Listeyi kutunun altına çivile. Portal `body`'de olduğu için hizalama CSS ile
+     yapılamıyor → kutunun ekrandaki yeri ölçülüp yazılıyor.
+     Telefonda kutu daraldığı için liste kutuya değil EKRANA göre genişler (yoksa
+     sonuçlar 200px'lik bir şeride sıkışırdı). */
+  const olc = useCallback(() => {
+    const r = kutuRef.current?.getBoundingClientRect();
+    if (!r) return;
+    const dar = window.innerWidth <= 760;
+    setKonum(
+      dar
+        ? { left: 12, top: r.bottom + 8, width: window.innerWidth - 24 }
+        : { left: r.left, top: r.bottom + 8, width: r.width }
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!acik) return;
+    olc();
+    window.addEventListener("resize", olc);
+    return () => window.removeEventListener("resize", olc);
+  }, [acik, olc]);
 
   const katalog = useMemo(() => sayfaKatalogu(isletmeMi), [isletmeMi]);
 
@@ -155,11 +179,16 @@ export default function PanelSearch({
         const yaziAlani =
           h instanceof HTMLElement &&
           (h.tagName === "INPUT" || h.tagName === "TEXTAREA" || h.isContentEditable);
-        if (yaziAlani && !acik) return;
+        if (yaziAlani && h !== inputRef.current) return;
         e.preventDefault();
-        setAcik((a) => !a);
+        inputRef.current?.focus();
+        inputRef.current?.select();
+        setAcik(true);
       }
-      if (e.key === "Escape") setAcik(false);
+      if (e.key === "Escape") {
+        setAcik(false);
+        inputRef.current?.blur();
+      }
     };
     window.addEventListener("keydown", f);
     return () => window.removeEventListener("keydown", f);
@@ -175,9 +204,7 @@ export default function PanelSearch({
         ozelKatAlindi.current = true;
         fetchCustomCategories(profilId).then(setOzelKat).catch(() => {});
       }
-      // Odak bir kare sonra: açılış animasyonu sırasında odak kaymasın
-      const t = setTimeout(() => inputRef.current?.focus(), 30);
-      return () => clearTimeout(t);
+      return;
     }
     setTerim("");
     setVeri([]);
@@ -285,40 +312,41 @@ export default function PanelSearch({
 
   return (
     <>
-      <button type="button" className="ps-trigger" onClick={() => setAcik(true)}>
+      {/* Kutunun KENDİSİ gerçek input — ayrı bir "tetikleyici düğme + pencere içinde ikinci
+          input" kurgusu yoktu artık: kullanıcı ortadaki kutuya yazar, liste tam ALTINDA açılır. */}
+      <div className="ps-box" ref={kutuRef}>
         <Search aria-hidden="true" />
-        <span className="ps-trigger-label">Ara</span>
-        <kbd className="ps-kbd">⌘K</kbd>
-      </button>
+        <input
+          ref={inputRef}
+          className="ps-input"
+          value={terim}
+          onChange={(e) => {
+            setTerim(e.target.value);
+            setImlec(0);
+            if (!acik) setAcik(true);
+          }}
+          onFocus={() => setAcik(true)}
+          onKeyDown={tus}
+          placeholder="Ara"
+          aria-label="Panelde ara"
+          aria-expanded={acik}
+          autoComplete="off"
+          spellCheck={false}
+        />
+        {araniyor ? <span className="ps-spin" aria-label="Aranıyor" /> : <kbd className="ps-kbd">⌘K</kbd>}
+      </div>
 
-      {mounted && acik && createPortal(
+      {mounted && acik && konum && createPortal(
         <div className="ps-overlay" onMouseDown={() => setAcik(false)} role="presentation">
+          {/* Liste kutuya ÇİVİLİ: konum/genişlik kutunun ölçüsünden gelir (portal body'de
+              olduğu için CSS ile hizalanamaz, ölçüp yazıyoruz). */}
           <div
             className="ps-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Panelde ara"
+            role="listbox"
+            aria-label="Arama sonuçları"
+            style={{ left: konum.left, top: konum.top, width: konum.width }}
             onMouseDown={(e) => e.stopPropagation()}
           >
-            <div className="ps-input-row">
-              <Search aria-hidden="true" />
-              <input
-                ref={inputRef}
-                className="ps-input"
-                value={terim}
-                onChange={(e) => {
-                  setTerim(e.target.value);
-                  setImlec(0);
-                }}
-                onKeyDown={tus}
-                placeholder="Sayfa, işlem, cari, fatura ara…"
-                aria-label="Panelde ara"
-                autoComplete="off"
-                spellCheck={false}
-              />
-              {araniyor && <span className="ps-spin" aria-label="Aranıyor" />}
-            </div>
-
             <div className="ps-results" ref={listeRef}>
               {sayfaSonuc.length > 0 && (
                 <div className="ps-group">

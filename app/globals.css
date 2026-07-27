@@ -1887,35 +1887,34 @@ ul { list-style: none; }
   background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(12px);
 }
 /* ─── Panel geneli arama (üst bar) ───
-   Tetikleyici üst barın SOLUNDA durur: `margin-right: auto` ile. (Üst bar `flex-end`
-   hizalı — arama yokken (profilsiz kullanıcı) ikonlar yine sağda kalsın diye
-   `space-between` YAPILMADI.) */
-.ps-trigger {
-  appearance: none; cursor: text; font-family: inherit;
-  display: flex; align-items: center; gap: 9px; margin-right: auto;
-  min-width: 260px; max-width: 380px; flex: 1;
-  padding: 8px 12px; border-radius: 11px;
+   Kutu üst barın TAM ORTASINDA (Mehmet, 27.07: "solda kalmış"). Ortalama `position:absolute`
+   ile: üst bar `flex-end` hizalı ve sağdaki ikonların genişliği değişken (bildirim sayısı,
+   Parla) — akış içinde ortalamak kutuyu ikonların genişliğine göre KAYDIRIRDI. */
+.panel-topbar { position: relative; }
+.ps-box {
+  display: flex; align-items: center; gap: 9px;
+  width: 360px; padding: 8px 12px; border-radius: 11px;
   background: rgba(255, 255, 255, 0.045); border: 1px solid var(--border);
   color: var(--text-dim); font-size: 13.5px;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
+  position: absolute; left: 50%; transform: translateX(-50%);
 }
-.ps-trigger:hover { border-color: var(--border-strong); background: var(--card-2); color: var(--text); }
-.ps-trigger svg { width: 16px; height: 16px; flex-shrink: 0; }
-.ps-trigger-label { flex: 1; text-align: left; }
+.ps-box:hover { border-color: var(--border-strong); }
+.ps-box:focus-within { border-color: var(--focus-ring); background: var(--card-2); }
+.ps-box > svg { width: 16px; height: 16px; flex-shrink: 0; }
 .ps-kbd {
   font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-dim);
   border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px;
   background: rgba(255, 255, 255, 0.05);
 }
 
-.ps-overlay {
-  position: fixed; inset: 0; z-index: 110;
-  background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(3px);
-  display: flex; align-items: flex-start; justify-content: center;
-  padding: 12vh 20px 20px;
-}
+/* Karartma yalnız "dışarı tıklayınca kapat" içindir + arkayı hafifçe geri çeker.
+   Liste artık ekranın ortasında bir PENCERE değil, kutunun altına açılan bir liste →
+   ağır modal karartması (0.55) bu kurguda fazla kaçıyordu. */
+.ps-overlay { position: fixed; inset: 0; z-index: 110; background: rgba(0, 0, 0, 0.3); }
 .ps-panel {
-  width: 100%; max-width: 620px; max-height: 68vh;
+  position: fixed; /* left/top/width JS'ten: kutunun ölçüsüne çivili */
+  max-height: min(62vh, 520px);
   display: flex; flex-direction: column; overflow: hidden;
   /* ⚠️ OPAK — `var(--card)` DEĞİL: o %4 beyaz, yani saydam. Sayfanın ÜSTÜNDE duran bir
      katmanda saydam zemin = arkadaki grafik/kartlar yazının içinden okunur (aynı hata
@@ -1924,14 +1923,9 @@ ul { list-style: none; }
   background: #0c0d0f; border: 1px solid var(--border-strong);
   border-radius: 16px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
 }
-.ps-input-row {
-  display: flex; align-items: center; gap: 11px;
-  padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
-}
-.ps-input-row > svg { width: 18px; height: 18px; color: var(--text-dim); flex-shrink: 0; }
 .ps-input {
   flex: 1; background: none; border: none; outline: none;
-  color: var(--text); font-family: inherit; font-size: 15px; min-width: 0;
+  color: var(--text); font-family: inherit; font-size: 13.5px; min-width: 0;
 }
 .ps-input::placeholder { color: var(--text-dim); }
 .ps-spin {
@@ -1973,12 +1967,15 @@ ul { list-style: none; }
   padding: 1px 5px; margin-right: 3px; background: rgba(255, 255, 255, 0.05);
 }
 
-/* Telefon: kutu ikona iner (üst barda hamburger + 2 ikon zaten var, yer yok) */
+/* Telefon: ortalama YOK (solda hamburger, sağda 2 ikon var — ortada mutlak konum
+   onların üstüne binerdi). Kutu akışta kalır, kalan yeri doldurur; kısayol rozeti gizli. */
 @media (max-width: 760px) {
-  .ps-trigger { min-width: 0; max-width: none; flex: 0 0 auto; padding: 8px; }
-  .ps-trigger-label, .ps-kbd { display: none; }
-  .ps-overlay { padding: 8vh 12px 12px; }
-  .ps-panel { max-height: 76vh; }
+  .ps-box {
+    position: static; transform: none;
+    width: auto; flex: 1; min-width: 0; margin-right: 10px;
+  }
+  .ps-kbd { display: none; }
+  .ps-panel { max-height: 66vh; }
   .ps-foot { display: none; } /* telefonda klavye kısayolu yok */
 }
 
