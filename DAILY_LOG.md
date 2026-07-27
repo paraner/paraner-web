@@ -38,6 +38,11 @@
   ekrandaki yeri ÖLÇÜLÜP yazılıyor (`getBoundingClientRect`, resize'da yeniden). Telefonda
   ortalama yok (solda hamburger, sağda 2 ikon) ve liste kutuya değil EKRANA göre genişler.
   Karartma 0.55 → 0.30: açılır liste modal değil, ağır karartma fazla kaçıyordu.
+- **Üst bar tek dil konuşuyor (Mehmet, 27.07):** Parla ve bildirim düğmelerinin çerçevesi
+  `transparent`'tı → dururken kutusu görünmüyor, yalnız üzerine gelince beliriyordu; yeni
+  arama kutusunun yanında yarım kalmış duruyordu. Üçü de artık AYNI: zemin %4,5 beyaz,
+  çerçeve `--border`, köşe 11px, hover'da `--border-strong`. **Yükseklik de eşitlendi**
+  (kutu 43 / ikonlar 38'di → üçü 40px): yan yana duran öğelerin boyu tutmalı.
 - **Cila (Mehmet: "daha profesyonel gözüksün, açılışı kapanışı"):** kutu 360→460px;
   açılışta liste yukarıdan aşağı açılıyor (190ms, expo-out eğrisi: hızlı başlar yumuşak
   oturur), kapanışta 120ms solarak çıkıyor. ⚠️ **React unmount anında animasyon ÇALIŞMAZ** →
