@@ -47,63 +47,55 @@ export default function PlanRozeti({
 
   if (durum.tur === "trial") {
     if (durum.kalanGun > GOSTERIM_ESIGI) return null;
-    const acil = durum.kalanGun <= ACIL_ESIGI;
+    const g = durum.kalanGun;
     return (
       <Rozet
-        acil={acil}
-        uzun={`Deneme · ${durum.kalanGun} gün`}
-        kisa={`${durum.kalanGun} gün`}
-        ipucu={`Deneme sürenin bitmesine ${durum.kalanGun} gün kaldı`}
+        acil={g <= ACIL_ESIGI}
+        tam={`Denemenin bitmesine ${g} gün kaldı`}
+        orta={`Denemene ${g} gün kaldı`}
+        kisa={`${g} gün`}
       />
     );
   }
 
   // Buradan sonrası: ücretsiz ya da denemesi bitmiş (zombie dahil — kullanıcı için aynı şey)
   if (isletmeMi) {
-    const bitti = durum.denemeKullanildi;
-    return (
-      <Rozet
-        acil
-        uzun={bitti ? "Denemen bitti · Plan seç" : "Planını seç"}
-        kisa="Plan seç"
-        ipucu={
-          bitti
-            ? "Deneme süren doldu — devam etmek için bir plan seç"
-            : "İşletme hesabında ücretsiz plan yok — bir plan seç"
-        }
-      />
+    return durum.denemeKullanildi ? (
+      <Rozet acil tam="Denemen bitti · Plan seç" orta="Denemen bitti" kisa="Plan seç" />
+    ) : (
+      <Rozet acil tam="Planını seç" orta="Planını seç" kisa="Plan seç" />
     );
   }
 
   return (
-    <Rozet
-      uzun="Daha fazla özellik için yükselt"
-      kisa="Yükselt"
-      ipucu="Daha fazla özellik için planını yükselt"
-    />
+    <Rozet tam="Daha fazla özellik için yükselt" orta="Planını yükselt" kisa="Yükselt" />
   );
 }
 
-/* Telefonda üst barda yer yok (hamburger + arama + 2 ikon) → aynı rozet KISA metinle
-   çiziliyor; hangisinin görüneceğine CSS karar veriyor (iki ayrı bileşen yok). */
+/* ÜÇ METİN, TEK BİLEŞEN — hangisinin görüneceğine CSS karar verir.
+   ⚠️ Neden üç: rozet üst barın SOLUNDA, arama kutusu ORTADA sabit. Ölçüldü (27.07):
+   soldaki boşluk 1147px ekranda 176px, 1280'de 242px, 1440'ta 322px. Uzun cümle 226px →
+   1280'den itibaren sığıyor, altında taşar ve arama kutusuna girer. Metni ekrana göre
+   kısaltmak, arama kutusunu daraltmaktan iyi (Mehmet: "daraltmana gerek yok"). */
 function Rozet({
-  uzun,
+  tam,
+  orta,
   kisa,
-  ipucu,
   acil = false,
 }: {
-  uzun: string;
+  tam: string;
+  orta: string;
   kisa: string;
-  ipucu: string;
   acil?: boolean;
 }) {
   return (
     <Link
       href="/panel/ayarlar?tab=abonelik"
       className={`plan-rozet${acil ? " acil" : ""}`}
-      title={ipucu}
+      title={tam}
     >
-      <span className="pr-uzun">{uzun}</span>
+      <span className="pr-tam">{tam}</span>
+      <span className="pr-orta">{orta}</span>
       <span className="pr-kisa">{kisa}</span>
     </Link>
   );

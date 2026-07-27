@@ -1814,8 +1814,15 @@ ul { list-style: none; }
   color: var(--danger);
 }
 .plan-rozet.acil:hover { border-color: rgba(226, 75, 74, 0.8); background: rgba(226, 75, 74, 0.19); }
-/* Uzun metin masaüstünde, kısa metin telefonda (tek bileşen, iki yazı) */
-.pr-kisa { display: none; }
+/* Rozet SOLDA dursun (üst bar `flex-end` hizalı; arama kutusu mutlak konumla ortada) */
+.plan-rozet { margin-right: auto; }
+/* Üç metinden hangisi görünecek — ölçülmüş eşikler (bkz. PlanRozeti.tsx notu):
+   ≥1250px soldaki boşluk uzun cümleye yetiyor, altında orta metne düşülüyor. */
+.pr-orta, .pr-kisa { display: none; }
+@media (max-width: 1249px) {
+  .pr-tam { display: none; }
+  .pr-orta { display: inline; }
+}
 
 /* ─── Üst bar: hızlı ekleme "dinamik ada" ───
    Düğme yerinde durur; panel ondan doğuyormuş gibi SAĞ ÜST köşeden büyüyerek açılır.
@@ -1860,8 +1867,8 @@ ul { list-style: none; }
 /* Telefon: rozet KALIR ama kısa metinle (uzun hâli üst barı taşırırdı).
    Arama kutusu `flex: 1` + `min-width: 0` olduğu için kalan yere göre kendini daraltır. */
 @media (max-width: 760px) {
-  .plan-rozet { padding: 0 10px; font-size: 12px; flex-shrink: 0; }
-  .pr-uzun { display: none; }
+  .plan-rozet { padding: 0 10px; font-size: 12px; flex-shrink: 0; margin-right: 10px; }
+  .pr-tam, .pr-orta { display: none; }
   .pr-kisa { display: inline; }
 }
 

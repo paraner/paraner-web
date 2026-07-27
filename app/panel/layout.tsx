@@ -60,14 +60,18 @@ async function TopbarActions() {
   const profiles = await getProfiles();
   const active = profiles.find((p) => p.is_active) ?? profiles[0] ?? null;
   if (!active) return null;
+  return <HizliEkle isletmeMi={active.profile_type === "business"} />;
+}
+
+/* Rozet üst barın SOLUNDA (arama kutusu ortada sabit, sağdaki küme dolu; sol taraf boştu).
+   Ölçüldü: solda 1280px ekranda 242px yer var, uzun cümle 226px → sığıyor. Sağda ancak
+   1512px'ten sonra sığıyordu. */
+async function TopbarBadge() {
+  const profiles = await getProfiles();
+  const active = profiles.find((p) => p.is_active) ?? profiles[0] ?? null;
+  if (!active) return null;
   return (
-    <>
-      <PlanRozeti
-        durum={aboneDurumu(active)}
-        isletmeMi={active.profile_type === "business"}
-      />
-      <HizliEkle isletmeMi={active.profile_type === "business"} />
-    </>
+    <PlanRozeti durum={aboneDurumu(active)} isletmeMi={active.profile_type === "business"} />
   );
 }
 
@@ -94,11 +98,15 @@ export default function PanelLayout({
       </Suspense>
       <div className="panel-main">
         <header className="panel-topbar">
+          {/* Plan/deneme rozeti — SOLDA (bkz. TopbarBadge notu) */}
+          <Suspense fallback={null}>
+            <TopbarBadge />
+          </Suspense>
           <Suspense fallback={null}>
             <TopbarSearch />
           </Suspense>
           <div className="panel-topbar-actions">
-            {/* Plan rozeti + hızlı ekleme adası (profil verisi beklerken kabuk boyanmasın) */}
+            {/* Hızlı ekleme adası (profil verisi beklerken kabuk boyanmasın) */}
             <Suspense fallback={null}>
               <TopbarActions />
             </Suspense>

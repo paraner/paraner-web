@@ -35,12 +35,18 @@
 
 ### 27.07 (3) — Plan rozeti + hızlı ekleme "dinamik adası" (üst bar işinin 3. adımı)
 - **Rozet KURALLARI (Mehmet, 27.07 — hesap türüne göre):** ücretlide HİÇ YOK · denemede
-  kalan **7 günden az**sa "Deneme · N gün", **son 3 günde KIRMIZI** · bireysel ücretsiz/
+  kalan **7 günden az**sa "Denemenin bitmesine N gün kaldı", **son 3 günde KIRMIZI** · bireysel ücretsiz/
   bitmişte "Daha fazla özellik için yükselt" · işletme bitmişte "Denemen bitti · Plan seç",
   hiç deneme yoksa "Planını seç". ⚠️ İşletmeye ASLA "Ücretsiz plan" yazılmaz — işletmede
   ücretsiz plan yok (mobil plan-detail.tsx:103 ile aynı gerçek), denemesi biten işletme
   DB'de `individual_free`'e düşse bile. Telefonda kısa metin ("1 gün", "Yükselt", "Plan seç")
-  — tek bileşen, hangisinin görüneceğine CSS karar veriyor. 13 durumun HEPSİ gerçek bileşen
+  — tek bileşen, ÜÇ metin, hangisinin görüneceğine CSS karar veriyor.
+  ⚠️ **Rozet üst barın SOLUNDA** (27.07, Mehmet: "arama kutusunu daraltmana gerek yok"):
+  arama kutusu ortada SABİT, sağdaki küme dolu → uzun cümle sağda kutuya çarpıyordu.
+  Ölçüldü: soldaki boşluk 1147px'te 176px · 1280'de 242px · 1440'ta 322px; uzun cümle 226px
+  → soldan 1280'den itibaren sığıyor (sağdan ancak 1512'den sonra sığıyordu). Metin ekrana
+  göre kısalıyor: ≥1250 tam cümle · 761-1249 "Denemene N gün kaldı" · ≤760 "N gün".
+  Beş ekran genişliğinde çarpışma/taşma testi yapıldı, hepsi temiz. 13 durumun HEPSİ gerçek bileşen
   çizdirilerek doğrulandı (geçici test sayfası, ölçümden sonra silindi).
   ⚠️ **Bugün hiçbir özellik KİLİTLİ DEĞİL** (web'de tek gate yok, denetlendi) → "daha fazla
   özellik" bir SÖZ; ödeme + kilitler gelince gerçek olur.
