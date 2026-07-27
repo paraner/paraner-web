@@ -20,6 +20,30 @@
 
 ## Bu hafta (2026-07-23 →)
 
+### 27.07 (3) — Plan rozeti + hızlı ekleme "dinamik adası" (üst bar işinin 3. adımı)
+- **Rozet:** üst barda "Deneme · 9 gün" (son 2 gün AMBER), ücretsizde "Ücretsiz plan",
+  ücretlide HİÇ YOK (satacak şey yok). Tıklayınca Ayarlar > Abonelik. × ile gizlenir —
+  `sessionStorage`, yani yeni sekmede/girişte geri gelir. ⚠️ Bu × mobildeki KALICI
+  kapatmadan (`trial_notified_day5` DB alanı) AYRIDIR, DB'ye hiçbir şey yazmaz.
+- **Ada:** fareyle üzerine gelince açılır, ayrılınca kapanır (140ms tolerans: düğmeden
+  panele geçerken kapanmasın). Satırlar sırayla beliriyor, + işareti ×'e dönüyor.
+- **Formların kopyası ÇIKARILMADI:** her satır `/panel/islemler?ekle=gider` gibi gidiyor,
+  modül kendi formunu açıyor (`lib/useEkleTohumu`). Parametre işlendikten sonra URL'den
+  siliniyor (yoksa yenileyince form tekrar açılır). 6 modül bağlandı: işlemler (gelir/gider
+  önceden seçili), faturalar, teklifler, müşteriler, ürünler, hesaplar.
+- **⚠️ DOKUNMATİK — ÜÇ AYRI TUZAK, üçü de ölçülerek bulundu:**
+  ① `pointerType === "touch"` kontrolü İŞE YARAMIYOR: dokunmatikte tarayıcının ürettiği
+  sahte `pointerenter` kendini **"mouse"** diye tanıtıyor. Doğru ayrım cihazın YETENEĞİ:
+  `matchMedia("(hover: hover)")` — hover'ı yoksa hover dinleyicisi hiç bağlanmaz.
+  ② Düz `onFocus={ac}` menüyü telefonda açıp KAPATIYOR: parmak değince düğme odaklanıyor
+  (açılıyor), hemen ardından click gelip kapatıyor. Çözüm: `:focus-visible` (yalnız klavye).
+  ③ Sonuç: telefonda 1. dokunuş açar, 2. kapatır; masaüstünde hover açar/kapatır.
+- **Abonelik verisi paylaşılan sorguya alındı** (`getProfiles` select'i): rozet HER sayfada
+  göründüğü için zaten her istekte lazım → ayrı sorgu açmak fazladan ağ turu olurdu.
+  Ayarlar sayfasındaki kopya alanlar kaldırıldı (tek kaynak `lib/abonelik.ts`).
+- **Doğrulama:** 30 panel sayfası yeniden tarandı (0 hata), masaüstü + telefon davranışları
+  tek tek ölçüldü, "Gider ekle" → form GİDER seçili açılıyor (ekran görüntüsüyle teyit).
+
 ### 27.07 (2) — Panel geneli arama (üst bar işinin 2. adımı)
 - **Üst bara arama kutusu** (⌘K ile de açılır): ① **sayfalar** — sol menünün KENDİSİNDEN
   türetilir (`BUSINESS_SECTIONS`), yani yeni modül eklenince aramaya elle satır eklemek

@@ -17,6 +17,13 @@ export type ActiveProfile = {
   onboarding_completed?: boolean | null;
   account_type?: string | null;
   name?: string | null;
+  /* Abonelik — üst bardaki plan/deneme rozeti için (bkz. profile.ts select notu).
+     ⚠️ Gerçek durum bunlardan HESAPLANIR (`lib/lifecycle`), `is_premium`'a tek başına
+     güvenilmez: denemeyi bitirme işini yalnız mobil istemci yapıyor. */
+  is_premium?: boolean | null;
+  subscription_tier?: string | null;
+  trial_start_date?: string | null;
+  trial_plan?: string | null;
 };
 
 // Profil tipine göre gösterilecek avatar/logo URL'si.

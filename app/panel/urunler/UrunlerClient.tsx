@@ -15,6 +15,7 @@ import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
 import { Search, Package } from "lucide-react";
 import { useAramaTohumu } from "../../../lib/useAramaTohumu";
+import { useEkleTohumu } from "../../../lib/useEkleTohumu";
 
 export type Product = {
   id: string;
@@ -89,6 +90,9 @@ export default function UrunlerClient({
   const productCount = list.filter((p) => p.type !== "service").length;
   const serviceCount = list.filter((p) => p.type === "service").length;
   const lowCount = list.filter(isLow).length;
+
+  // Üst bardaki hızlı ekleme adasından gelindiyse formu aç (?ekle=…)
+  useEkleTohumu(() => openNew());
 
   function openNew() {
     setEditing(null);

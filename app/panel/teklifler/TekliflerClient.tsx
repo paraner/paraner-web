@@ -15,6 +15,7 @@ import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
 import { FileText } from "lucide-react";
+import { useEkleTohumu } from "../../../lib/useEkleTohumu";
 
 export type Quote = {
   id: string;
@@ -73,6 +74,9 @@ export default function TekliflerClient({
     0
   );
   const grand = subtotal + vatTotal;
+
+  // Üst bardaki hızlı ekleme adasından gelindiyse formu aç (?ekle=…)
+  useEkleTohumu(() => openNew());
 
   function openNew() {
     setCustomer("");

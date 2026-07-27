@@ -13,7 +13,11 @@ export const getProfiles = cache(async (): Promise<ActiveProfile[]> => {
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, currency, profile_name, profile_type, invoice_prefix, invoice_next_number, is_active, is_primary, avatar_url, company_logo_url, onboarding_completed, account_type, name"
+      /* ⚠️ Bu select TÜM panel sayfalarında çalışıyor → kolon eklemek herkese yüktür.
+         Abonelik alanları (is_premium…trial_plan) BİLEREK burada: üst bardaki plan/deneme
+         rozeti her sayfada görünüyor, yani zaten her istekte lazım. Ayrı sorgu açmak
+         fazladan ağ turu olurdu; 4 küçük kolon aynı sorguya bedava biniyor. */
+      "id, currency, profile_name, profile_type, invoice_prefix, invoice_next_number, is_active, is_primary, avatar_url, company_logo_url, onboarding_completed, account_type, name, is_premium, subscription_tier, trial_start_date, trial_plan"
     )
     .order("created_at", { ascending: true });
   return (data as ActiveProfile[]) ?? [];

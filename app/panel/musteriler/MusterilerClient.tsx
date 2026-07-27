@@ -14,6 +14,7 @@ import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
 import { Search, Users } from "lucide-react";
 import { useAramaTohumu } from "../../../lib/useAramaTohumu";
+import { useEkleTohumu } from "../../../lib/useEkleTohumu";
 
 export type Contact = {
   id: string;
@@ -72,6 +73,9 @@ export default function MusterilerClient({
 
   const customerCount = list.filter((c) => c.type === "customer").length;
   const supplierCount = list.filter((c) => c.type === "supplier").length;
+
+  // Üst bardaki hızlı ekleme adasından gelindiyse formu aç (?ekle=…)
+  useEkleTohumu(() => openNew());
 
   function openNew() {
     setEditing(null);

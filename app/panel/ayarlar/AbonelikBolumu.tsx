@@ -35,20 +35,8 @@ import {
 // geçen bitişlerde tarih bir gün geri görünürdü. formatDayMonth saat dilimini sabit uygular.
 import { formatDayMonth } from "../../../lib/format";
 import { showToast } from "../../components/toast";
+import type { AbonelikDurum } from "../../../lib/abonelik";
 import { useSubmitLock } from "../../../lib/useSubmitLock";
-
-/** Sunucuda hesaplanır (bkz. ayarlar/page.tsx `aboneDurumu`) — istemcinin saatine güvenilmez. */
-export type AbonelikDurum = {
-  /** trial: deneme sürüyor · zombie: deneme bitmiş ama premium açık kalmış ·
-      paid: gerçek/manuel abonelik · free: ücretsiz */
-  tur: "trial" | "zombie" | "paid" | "free";
-  /** trial: kalan gün · zombie: bitişin üstünden geçen gün */
-  kalanGun: number;
-  tier: string | null;
-  /** Denemenin bittiği/biteceği gün (ISO) — sabit tarih, istemcide biçimlendirmesi güvenli. */
-  bitisIso: string | null;
-  denemeKullanildi: boolean;
-};
 
 const DURUM_ROZET: Record<AbonelikDurum["tur"], { etiket: string; sinif: string }> = {
   trial: { etiket: "Deneme", sinif: "blue" },

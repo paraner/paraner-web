@@ -12,6 +12,9 @@ import NotificationBell from "../../components/NotificationBell";
 import ParlaChat from "./parla/ParlaChat";
 import ContentScrollReset from "./ContentScrollReset";
 import PanelSearch from "./PanelSearch";
+import HizliEkle from "./HizliEkle";
+import PlanRozeti from "./PlanRozeti";
+import { aboneDurumu } from "../../lib/abonelik";
 
 // Panel uygulamanın içi — tüm /panel sayfaları arama motorlarına kapalı
 export const metadata: Metadata = {
@@ -51,6 +54,20 @@ async function TopbarSearch() {
   return <PanelSearch profilId={active.id} isletmeMi={active.profile_type === "business"} />;
 }
 
+/* Sağdaki küme de profile bağlı (hızlı ekleme listesi profil türüne göre, rozet aboneliğe
+   göre) → aynı Suspense deseni. getProfiles cache'li: sidebar + arama ile AYNI sorgu. */
+async function TopbarActions() {
+  const profiles = await getProfiles();
+  const active = profiles.find((p) => p.is_active) ?? profiles[0] ?? null;
+  if (!active) return null;
+  return (
+    <>
+      <PlanRozeti durum={aboneDurumu(active)} />
+      <HizliEkle isletmeMi={active.profile_type === "business"} />
+    </>
+  );
+}
+
 // Layout artık SENKRON (top-level await yok) → kabuk ilk byte'ta stream edilir.
 export default function PanelLayout({
   children,
@@ -78,6 +95,10 @@ export default function PanelLayout({
             <TopbarSearch />
           </Suspense>
           <div className="panel-topbar-actions">
+            {/* Plan rozeti + hızlı ekleme adası (profil verisi beklerken kabuk boyanmasın) */}
+            <Suspense fallback={null}>
+              <TopbarActions />
+            </Suspense>
             {/* Parla (AI asistanı) + bildirim. Ayarlar sol menüde.
                 Parla her panel sayfasında üst barda → tek tık uzakta; sağdan yan panel açar. */}
             <ParlaChat />

@@ -19,6 +19,7 @@ import DatePicker from "../../../components/ui/DatePicker";
 import AccountCard from "../../../components/ui/AccountCard";
 import { EditIcon, TrashIcon } from "../../../components/icons";
 import { ArrowRightLeft, HelpCircle, ChevronLeft, ChevronRight, CreditCard } from "lucide-react";
+import { useEkleTohumu } from "../../../lib/useEkleTohumu";
 
 type AccountType = "bank" | "cash" | "pos";
 
@@ -300,6 +301,9 @@ export default function HesaplarClient({
       submitLock.release();
     }
   }
+
+  // Üst bardaki hızlı ekleme adasından gelindiyse formu aç (?ekle=…)
+  useEkleTohumu(() => openNew());
 
   function openNew() {
     setEditing(null);

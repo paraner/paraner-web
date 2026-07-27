@@ -1,43 +1,7 @@
 import { createClient } from "../../../lib/supabase/server";
 import { getProfiles } from "../../../lib/supabase/profile";
-import { profileLifecycle } from "../../../lib/lifecycle";
-import { TRIAL_DAYS } from "../../../lib/plans";
 import AyarlarClient, { type Profile, type DeviceRow } from "./AyarlarClient";
-import type { AbonelikDurum } from "./AbonelikBolumu";
-
-const GUN = 86400000;
-
-/* Abonelik durumu SUNUCUDA hesaplanır — istemcide `Date.now()` cihazın saatidir; saati
-   geri alan kullanıcıya "denemen daha bitmedi" gösterirdi. Hesap mantığı admin panelinin
-   kullandığı `profileLifecycle` ile AYNI fonksiyondan gelir (iki ayrı deneme matematiği
-   olmasın diye). ⚠️ Nihai kararı DB'deki `get_trial_status` RPC'si verir; ikisi de aynı
-   TRIAL_DAYS'i kullandığı sürece sonuç aynıdır. */
-function aboneDurumu(p: Profile): AbonelikDurum {
-  const dongu = profileLifecycle({
-    id: p.id,
-    profile_name: p.profile_name,
-    name: p.name,
-    profile_type: p.profile_type,
-    is_premium: p.is_premium ?? null,
-    subscription_tier: p.subscription_tier ?? null,
-    currency: p.currency,
-    created_at: null,
-    trial_plan: p.trial_plan ?? null,
-    trial_start_date: p.trial_start_date ?? null,
-  });
-  return {
-    tur: dongu.kind === "no_profile" ? "free" : dongu.kind,
-    kalanGun: dongu.days,
-    tier: p.subscription_tier ?? null,
-    // Deneme bitişi = başlangıç + 14 gün. Sabit bir tarih olduğu için istemcide
-    // biçimlendirilmesi güvenli (saat manipülasyonundan etkilenmez).
-    bitisIso: p.trial_start_date
-      ? new Date(new Date(p.trial_start_date).getTime() + TRIAL_DAYS * GUN).toISOString()
-      : null,
-    // "Hiç deneme kullanmamış mı" — mobil lib/trial.ts:43 ile AYNI guard (ikisi de dolu olmalı).
-    denemeKullanildi: Boolean(p.trial_plan && p.trial_start_date),
-  };
-}
+import { aboneDurumu } from "../../../lib/abonelik";
 
 export default async function AyarlarPage() {
   const supabase = await createClient();
@@ -62,9 +26,10 @@ export default async function AyarlarPage() {
     supabase
       .from("profiles")
       .select(
-        // Abonelik alanları (is_premium…trial_plan) BU sorguya eklendi — ayrı bir sorgu
-        // açmak fazladan ağ turu olurdu; bunlar zaten yalnız Ayarlar'da lazım.
-        "id, name, phone, company_name, tax_number, tax_office, company_address, company_email, iban, website, mersis_no, trade_registry_no, is_premium, subscription_tier, trial_start_date, trial_plan"
+        // Abonelik alanları BURADA DEĞİL: üst bardaki rozet yüzünden artık paylaşılan
+        // getProfiles() select'inde geliyor (lib/supabase/profile.ts) → burada tekrarı
+        // gereksiz. İki yerde tutulursa biri güncellenip öteki unutulur.
+        "id, name, phone, company_name, tax_number, tax_office, company_address, company_email, iban, website, mersis_no, trade_registry_no"
       ),
   ]);
 

@@ -1794,6 +1794,76 @@ ul { list-style: none; }
 .topbar-icon-btn.active { background: var(--card-2); border-color: var(--border-strong); color: var(--text); }
 .topbar-icon-btn svg { width: 19px; height: 19px; }
 
+/* ─── Üst bar: plan / deneme rozeti ───
+   Ücretli kullanıcıda hiç render edilmez (bileşen null döner). */
+.plan-rozet {
+  display: inline-flex; align-items: center; gap: 2px; height: 40px;
+  padding: 0 4px 0 12px; border-radius: 11px;
+  background: rgba(255, 255, 255, 0.045); border: 1px solid var(--border);
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.plan-rozet:hover { border-color: var(--border-strong); background: rgba(255, 255, 255, 0.06); }
+.plan-rozet .pr-link {
+  font-size: 12.5px; font-weight: 600; color: var(--text-dim);
+  text-decoration: none; white-space: nowrap; transition: color 0.15s;
+}
+.plan-rozet:hover .pr-link { color: var(--text); }
+/* Son 2 gün: ANLAM taşıyan renk (uyarı) → marka rengi değişse de kalır */
+.plan-rozet.uyari { border-color: rgba(186, 117, 23, 0.5); background: rgba(186, 117, 23, 0.12); }
+.plan-rozet.uyari .pr-link { color: var(--warning); }
+.pr-kapat {
+  appearance: none; background: none; border: none; cursor: pointer;
+  display: flex; padding: 5px; margin-left: 2px; border-radius: 6px;
+  color: var(--text-dim); transition: color 0.15s, background 0.15s;
+}
+.pr-kapat:hover { color: var(--text); background: rgba(255, 255, 255, 0.09); }
+.pr-kapat svg { width: 13px; height: 13px; }
+
+/* ─── Üst bar: hızlı ekleme "dinamik ada" ───
+   Düğme yerinde durur; panel ondan doğuyormuş gibi SAĞ ÜST köşeden büyüyerek açılır.
+   ⚠️ Panel DOM'dan silinmiyor (unmount anında animasyon çalışmaz) → kapalıyken
+   `visibility: hidden` + `pointer-events: none` ile tamamen erişim dışı. */
+.di { position: relative; display: inline-flex; }
+.di-btn svg { transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
+.di.acik .di-btn { background: var(--card-2); border-color: var(--border-strong); color: var(--text); }
+.di.acik .di-btn svg { transform: rotate(135deg); } /* + → × */
+.di-panel {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 120;
+  min-width: 210px; padding: 6px;
+  background: #0c0d0f; border: 1px solid var(--border-strong); border-radius: 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 18px 44px rgba(0, 0, 0, 0.55);
+  display: flex; flex-direction: column; gap: 2px;
+  transform-origin: top right;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transform: translateY(-6px) scale(0.94);
+  transition: opacity 0.18s ease, transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 0.24s;
+}
+.di.acik .di-panel {
+  opacity: 1; visibility: visible; pointer-events: auto;
+  transform: none; transition-delay: 0s;
+}
+/* Düğme ile panel arasındaki 8px boşlukta fare "dışarı" sayılmasın (menü kapanmasın) */
+.di-panel::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }
+.di-row {
+  appearance: none; cursor: pointer; font-family: inherit; width: 100%;
+  display: flex; align-items: center; gap: 10px; text-align: left; white-space: nowrap;
+  padding: 8px 10px; border: none; border-radius: 9px; background: none;
+  color: var(--text); font-size: 13px; font-weight: 500;
+  /* Satırlar sırayla belirsin (gecikme JS'ten: transitionDelay) */
+  opacity: 0; transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease, background 0.12s ease;
+}
+.di.acik .di-row { opacity: 1; transform: none; }
+.di-row:hover { background: rgba(255, 255, 255, 0.07); }
+.di-ic { display: flex; color: var(--text-dim); flex-shrink: 0; }
+.di-ic svg { width: 16px; height: 16px; }
+
+/* Telefon: rozet metni uzun, üst barda yer yok → yalnız ada kalır */
+@media (max-width: 760px) {
+  .plan-rozet { display: none; }
+}
+
 /* ── Bildirim çanı açılır menüsü ── (üst bar, sağa hizalı) */
 .notif-wrap { position: relative; }
 .notif-dot {

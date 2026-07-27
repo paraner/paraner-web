@@ -157,13 +157,11 @@
       açmak için her modüle "şu id'yi aç" bağlantısı gerekir (③ ile aynı altyapı).
       ② Bireysel hesapta veri araması 3 tabloda (işlem/hesap/varlık) — bireysel menüde diğer
       modüller zaten yok.
-- [ ] **③ Üst barda deneme/plan rozeti + "dinamik ada"** — rozet: deneme sürüyorsa "Deneme · 9 gün"
-      (son 2 gün sarı), ücretsizse "Ücretsiz plan"; **tıklayınca → Ayarlar > Abonelik** (② bittiğinde
-      hedef hazır). × ile o oturumluk gizlenir, yeni girişte döner (sessionStorage — mobildeki
-      KALICI kapatmaya (`trial_notified_day5`) DOKUNMAZ, o ayrı).
-      Ekle düğmesi yerine **Apple'ın Dinamik Ada'sı gibi**: üstüne gelince açılır (Gelir/Gider ekle,
-      Fatura, Teklif, Müşteri, Ürün), uzaklaşınca kapanır. Tıklanınca ilgili modül açılır ve o
-      modülün MEVCUT ekleme formu kendiliğinden açılır (ikinci bir form kopyası YAZILMAYACAK).
+- [x] ✅ **③ Deneme/plan rozeti + hızlı ekleme adası** (27.07) — rozet üst barda, × ile o
+      oturumluk gizlenir; ada fareyle açılır/kapanır, dokunmatikte tıklamayla. Satırlar hedef
+      modülü `?ekle=…` ile açıyor, modül KENDİ formunu açıyor (ikinci form kopyası yok).
+      **Açık kalan:** ada listesi SABİT (mobilde kullanıcı 12 işlemden seçebiliyor —
+      web'de özelleştirme yok). İstenirse profil tercihine bağlanır.
 
 ## 🎨 TASARIM / MARKA — açık maddeler
 > ⚠️ Marka rengi DEĞİŞECEK (teal/yeşil kalmayacak) → teal'e tasarım yatırımı yapma. Aksiyon/UI öğeleri

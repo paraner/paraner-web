@@ -45,6 +45,7 @@ import { CategoryIcon } from "../../../lib/categoryIcons";
 import { Wallet } from "lucide-react";
 import { TrashIcon, EditIcon } from "../../../components/icons";
 import { useAramaTohumu } from "../../../lib/useAramaTohumu";
+import { useEkleTohumu } from "../../../lib/useEkleTohumu";
 import {
   Search,
   X,
@@ -327,9 +328,13 @@ export default function IslemlerClient({
     return () => window.removeEventListener("keydown", onKey);
   }, [selected]);
 
-  function openAdd() {
+  // tur: üst bardaki hızlı ekleme "Gelir ekle" / "Gider ekle" derken önceden seçsin diye.
+  // Üst bardaki hızlı ekleme adasından gelindiyse formu aç (?ekle=…)
+  useEkleTohumu((v) => openAdd(v === "gider" ? "expense" : "income"));
+
+  function openAdd(tur: "income" | "expense" = "income") {
     setEditing(null);
-    setType("income");
+    setType(tur);
     setAmount("");
     setTitle("");
     setCategory("");

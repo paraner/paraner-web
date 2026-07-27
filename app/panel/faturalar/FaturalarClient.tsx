@@ -19,6 +19,7 @@ import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
 import { X, Search, Download, Check, Printer, FileText } from "lucide-react";
 import { useAramaTohumu } from "../../../lib/useAramaTohumu";
+import { useEkleTohumu } from "../../../lib/useEkleTohumu";
 import InvoicePrint, {
   type PrintSeller,
   type PrintItem,
@@ -152,6 +153,9 @@ export default function FaturalarClient({
   const [invoiceDate, setInvoiceDate] = useState(todayStr());
   const [paid, setPaid] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
+
+  // Üst bardaki hızlı ekleme adasından gelindiyse formu aç (?ekle=…)
+  useEkleTohumu(() => openNew());
 
   function openNew() {
     setType(listFilter === "expense" ? "expense" : "income");
