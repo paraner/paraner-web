@@ -72,12 +72,48 @@ button { font-family: inherit; cursor: pointer; }
    görmeli. `:focus-visible` yalnız klavye/erişilebilirlik odağında çıkar — FAREYLE
    tıklamada çıkmaz, yani günlük kullanımda hiç görünmez.
    Renk `--focus-ring` (panelin form odaklarıyla AYNI değişken) → marka rengi netleşince
-   tek satır değişir. Kendi odak stili olan öğeler (input/select/chip: `outline: none` +
-   çerçeve rengi) daha güçlü seçicide oldukları için bundan ETKİLENMEZ. */
+   tek satır değişir. Bu taban kural pazarlama/giriş sayfaları içindir; uygulamanın içi
+   aşağıdaki blokla İÇERİ çizer, metin kutuları da orada kural dışı bırakılır. */
 :focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
+/* ─── UYGULAMA İÇİNDE (panel + admin) HALKA DIŞARI DEĞİL İÇERİ ───
+   ⚠️ NEDEN (Mehmet, 28.07 ekran görüntüleri: "çerçeve tam oturmuyor, taşıyor"):
+   dışa 2px taşan halka sol menüde üç ayrı yerden bozuluyordu —
+     ① `.panel-nav` kaydırılabilir liste ve `overflow-x: hidden` → halkanın SOL/SAĞ
+        kenarları kırpılıyor ("Hesaplar" satırındaki yarım çerçeve tam olarak buydu),
+     ② satır arası boşluk 2px → 2px taşan halka bir ÜSTTEKİ/ALTTAKİ satıra değiyor,
+     ③ dar rayda kutu 44px, rayın iç genişliği 50px → halka rayın kenarına dayanıyordu.
+   Kapsam BİLEREK sol menü değil TÜM kabuk: aynı kırpılma içerikte de var — yatay kayan
+   çip/kart rayları (`.chip-rail`, `.acc-carousel`, `.cur-chip-row`), `overflow: hidden`
+   kartlar, tablo sarmalayıcıları ve açılır menüler. Tek tek kovalamak yerine tek kural.
+   `outline-offset: -2px` halkayı öğenin İÇİNE çizer: köşe yarıçapına birebir oturur,
+   kutuyu büyütmez, hiçbir yerde kırpılmaz. Halka KALDIRILMIYOR — klavyeyle gezen
+   kullanıcı nerede olduğunu görmeye devam eder.
+   Pazarlama/giriş sayfaları bu kuralın DIŞINDA: orada bol boşluk var, dıştaki halka
+   (yukarıdaki taban kural) daha okunaklı duruyor. */
+.panel-shell :focus-visible,
+.admin-shell :focus-visible,
+/* Bunlar `document.body`ye PORTAL ile taşınıyor → kabuğun İÇİNDE değiller, ayrıca
+   yazılmazsa kural onlara işlemez (arama, bildirim, Parla, tarih/kategori seçici). */
+.ps-overlay :focus-visible,
+.notif-menu :focus-visible,
+.nav-pending :focus-visible,
+.parla-drawer :focus-visible,
+.dp-pop :focus-visible,
+.cat-menu :focus-visible { outline-offset: -2px; }
+/* Metin kutuları hariç: odakta zaten çerçeve rengi değişiyor (`--focus-ring`),
+   üstüne bir de halka binerse çift çerçeve olur. */
+.panel-shell input:focus-visible,
+.panel-shell textarea:focus-visible,
+.panel-shell select:focus-visible,
+.admin-shell input:focus-visible,
+.admin-shell textarea:focus-visible,
+.admin-shell select:focus-visible,
+.ps-overlay input:focus-visible,
+.cat-menu input:focus-visible,
+.parla-drawer textarea:focus-visible { outline: none; }
 
 /* ═══ TİPOGRAFİ SİSTEMİ (web/pazarlama) ═══
    Karar (2026-07-13, Mehmet onaylı): büyük başlıklar SERİF + ince (400) — Resend deseni.
@@ -1334,6 +1370,14 @@ ul { list-style: none; }
   position: sticky; top: 12px; align-self: flex-start;
   height: calc(100vh - 24px);
   width: 248px; flex-shrink: 0;
+  /* ⚠️ z-index ŞART (Mehmet, 28.07 ekran görüntüsü: dar rayda profil menüsü açılınca
+     arkadaki grafiğin "5,0M / 3,8M" yazıları menünün ÜSTÜNE biniyordu — menü şeffaf
+     sanılıyordu, oysa zemini opak #161616).
+     Sebep: `position: sticky` kendi yığın bağlamını açar; z-index'i `auto` olunca menü
+     (içerideki z-index: 30) o bağlamın dışına çıkamaz ve DOM'da SONRA gelen `.panel-main`
+     her şeyi üstüne boyar. Sayı üst bar (10) ve grafik katmanlarının üstünde, çekmece/
+     bildirim (110-300) ve modalın (1000) ALTINDA — o katmanlar menüyü örtmeye devam etmeli. */
+  z-index: 20;
   margin: 12px 0 12px 12px;
   display: flex; flex-direction: column;
   /* Ayrı, yüzen bar: yuvarlak köşe + buzlu cam (liquid glass) */
