@@ -1808,12 +1808,14 @@ ul { list-style: none; }
 .plan-rozet:hover {
   border-color: var(--border-strong); background: rgba(255, 255, 255, 0.06); color: var(--text);
 }
-/* Son 2 gün: ANLAM taşıyan renk (uyarı) → marka rengi değişse de kalır */
-.plan-rozet.uyari {
-  border-color: rgba(186, 117, 23, 0.5); background: rgba(186, 117, 23, 0.12);
-  color: var(--warning);
+/* Son 3 gün / denemesi bitmiş: ANLAM taşıyan renk (kırmızı) → marka rengi değişse de kalır */
+.plan-rozet.acil {
+  border-color: rgba(226, 75, 74, 0.5); background: rgba(226, 75, 74, 0.12);
+  color: var(--danger);
 }
-.plan-rozet.uyari:hover { border-color: rgba(186, 117, 23, 0.75); background: rgba(186, 117, 23, 0.18); }
+.plan-rozet.acil:hover { border-color: rgba(226, 75, 74, 0.8); background: rgba(226, 75, 74, 0.19); }
+/* Uzun metin masaüstünde, kısa metin telefonda (tek bileşen, iki yazı) */
+.pr-kisa { display: none; }
 
 /* ─── Üst bar: hızlı ekleme "dinamik ada" ───
    Düğme yerinde durur; panel ondan doğuyormuş gibi SAĞ ÜST köşeden büyüyerek açılır.
@@ -1855,9 +1857,12 @@ ul { list-style: none; }
 .di-ic { display: flex; color: var(--text-dim); flex-shrink: 0; }
 .di-ic svg { width: 16px; height: 16px; }
 
-/* Telefon: rozet metni uzun, üst barda yer yok → yalnız ada kalır */
+/* Telefon: rozet KALIR ama kısa metinle (uzun hâli üst barı taşırırdı).
+   Arama kutusu `flex: 1` + `min-width: 0` olduğu için kalan yere göre kendini daraltır. */
 @media (max-width: 760px) {
-  .plan-rozet { display: none; }
+  .plan-rozet { padding: 0 10px; font-size: 12px; flex-shrink: 0; }
+  .pr-uzun { display: none; }
+  .pr-kisa { display: inline; }
 }
 
 /* ── Bildirim çanı açılır menüsü ── (üst bar, sağa hizalı) */

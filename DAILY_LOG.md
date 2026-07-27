@@ -20,9 +20,31 @@
 
 ## Bu hafta (2026-07-23 →)
 
+### 27.07 (4) — DENEME SÜRESİ DENETİMİ: tutarsızlık YOK, her yerde 14 gün
+- Mehmet sordu ("14 gün sanırım, komple app ve web'de tutarsızlık var mı"). **Canlı
+  veritabanına SORULARAK** doğrulandı (repoya bakarak değil): `get_trial_status` RPC'si
+  test hesabının oturumuyla çağrıldı → `daysPassed 13 · daysLeft 1 · trialExpired false`
+  → 13+1 = **14** ✓. Kontrol edilen 5 yer: canlı DB RPC · mobil `lib/trial.ts` · Parla
+  beyni (`parla/supabase/functions/ai-chat`) · web `lib/plans.ts` · tüm kullanıcı metinleri
+  (ana sayfa, onboarding, mobil premium/plan-detail/setup, hoş geldin maili). Hepsi 14;
+  eski 7 günden kalma tek satır yok (yalnız migration dosyasının başlığında tarihçe olarak).
+- ⚠️ **Uyarı eşikleri AYRI:** web rozeti son 7 günde beliriyor / son 3 günde kırmızı;
+  **mobil banner hâlâ son 2 günde** (`TRIAL_WARN_DAY = TRIAL_DAYS - 2`, DB RPC'de de
+  `days_passed >= 12`). Hata değil (biri rozet, öteki banner) ama istenirse hizalanır —
+  o zaman mobil + RPC birlikte değişir.
+
 ### 27.07 (3) — Plan rozeti + hızlı ekleme "dinamik adası" (üst bar işinin 3. adımı)
-- **Rozet:** üst barda "Deneme · 9 gün" (son 2 gün AMBER), ücretsizde "Ücretsiz plan",
-  ücretlide HİÇ YOK (satacak şey yok). Tıklayınca Ayarlar > Abonelik.
+- **Rozet KURALLARI (Mehmet, 27.07 — hesap türüne göre):** ücretlide HİÇ YOK · denemede
+  kalan **7 günden az**sa "Deneme · N gün", **son 3 günde KIRMIZI** · bireysel ücretsiz/
+  bitmişte "Daha fazla özellik için yükselt" · işletme bitmişte "Denemen bitti · Plan seç",
+  hiç deneme yoksa "Planını seç". ⚠️ İşletmeye ASLA "Ücretsiz plan" yazılmaz — işletmede
+  ücretsiz plan yok (mobil plan-detail.tsx:103 ile aynı gerçek), denemesi biten işletme
+  DB'de `individual_free`'e düşse bile. Telefonda kısa metin ("1 gün", "Yükselt", "Plan seç")
+  — tek bileşen, hangisinin görüneceğine CSS karar veriyor. 13 durumun HEPSİ gerçek bileşen
+  çizdirilerek doğrulandı (geçici test sayfası, ölçümden sonra silindi).
+  ⚠️ **Bugün hiçbir özellik KİLİTLİ DEĞİL** (web'de tek gate yok, denetlendi) → "daha fazla
+  özellik" bir SÖZ; ödeme + kilitler gelince gerçek olur.
+  Tıklayınca Ayarlar > Abonelik.
   ⚠️ **Kapatılamaz:** ilk hâlinde × vardı (sessionStorage ile o oturumluk gizleme);
   Mehmet aynı gün kaldırttı — "o bildirim kaldırılmasın üstten". Kalan gün sürekli görünür.
   Gizleme geri istenirse DB'ye YAZMAMALI: mobildeki kalıcı kapatma (`trial_notified_day5`)

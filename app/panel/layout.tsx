@@ -62,7 +62,10 @@ async function TopbarActions() {
   if (!active) return null;
   return (
     <>
-      <PlanRozeti durum={aboneDurumu(active)} />
+      <PlanRozeti
+        durum={aboneDurumu(active)}
+        isletmeMi={active.profile_type === "business"}
+      />
       <HizliEkle isletmeMi={active.profile_type === "business"} />
     </>
   );
