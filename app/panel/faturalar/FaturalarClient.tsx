@@ -4,8 +4,8 @@ import { showToast } from "../../components/toast";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
+import { useServerSynced } from "../../../lib/useServerSynced";
 import { announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
 import { formatCurrency, formatDate } from "../../../lib/format";
 import { todayStr } from "../../../lib/date";
@@ -13,9 +13,6 @@ import { toCsv, downloadCsv } from "../../../lib/csv";
 import PageHead from "../../../components/ui/PageHead";
 import EmptyState from "../../../components/ui/EmptyState";
 import AddButton from "../../../components/AddButton";
-import SaveButton from "../../../components/SaveButton";
-import Modal from "../../../components/ui/Modal";
-import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
 import { X, Search, Download, Check, Printer, FileText } from "lucide-react";
 import { useAramaTohumu } from "../../../lib/useAramaTohumu";
@@ -24,27 +21,11 @@ import InvoicePrint, {
   type PrintSeller,
   type PrintItem,
 } from "../../../components/InvoicePrint";
+import FaturaFormu, { type Invoice } from "./FaturaFormu";
 
-export type Invoice = {
-  id: string;
-  invoice_number: string | null;
-  customer_name: string | null;
-  customer_tax_number: string | null;
-  customer_address: string | null;
-  note: string | null;
-  subtotal: string | null;
-  vat_rate: number | null;
-  vat_amount: string | null;
-  amount: string | null;
-  currency: string | null;
-  payment_status: string | null;
-  status: string | null;
-  paid_amount: string | null;
-  type: string | null;
-  invoice_date: string | null;
-  due_date: string | null;
-  created_at: string | null;
-};
+/* ⚠️ Fatura oluşturma formu BURADA DEĞİL: `FaturaFormu` bileşeninde — üst bardaki hızlı
+   ekleme adası (+) da aynı formu açıyor (kullanıcı hangi sayfadaysa orada). */
+export type { Invoice };
 
 // Gerçek due_date kolonu VAR (mobil yazıyor). Yoksa fatura tarihinden türetilir.
 const OVERDUE_DAYS = 30;
@@ -81,7 +62,6 @@ export default function FaturalarClient({
   profileId,
   currency,
   invoicePrefix,
-  invoiceNextNumber,
   invoices: initial,
   seller,
   initialFilter,
@@ -89,14 +69,15 @@ export default function FaturalarClient({
   profileId: string;
   currency: string;
   invoicePrefix: string;
-  invoiceNextNumber: number;
   invoices: Invoice[];
   seller: PrintSeller | null;
   initialFilter: "all" | "income" | "expense";
 }) {
   const supabase = createClient();
   const router = useRouter();
-  const [list, setList] = useState<Invoice[]>(initial);
+  /* Sunucu verisi değişince liste kendini tazeler — üst bardaki hızlı ekleme adasından (+)
+     başka bir sayfadayken kayıt eklenirse `router.refresh()` sonrası burada da görünsün. */
+  const [list, setList] = useServerSynced<Invoice[]>(initial);
   // Tür filtresi (Tümü / Satış / Alış) — derin-link ?type= ile başlar
   const [listFilter, setListFilter] = useState(initialFilter);
   useEffect(() => setListFilter(initialFilter), [initialFilter]);
@@ -109,10 +90,8 @@ export default function FaturalarClient({
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  const [nextNumber, setNextNumber] = useState(invoiceNextNumber);
   const [open, setOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
   const [selected, setSelected] = useState<Invoice | null>(null); // sağ detay paneli
   // Parla sohbeti açılırsa detay çekmecesi kapansın (ikisi aynı sağ kenarı paylaşıyor)
   useCloseOnOtherRightPanel("fatura-detay", () => setSelected(null));
@@ -145,29 +124,12 @@ export default function FaturalarClient({
     setPrintLoading(false);
   }
 
-  // Form
-  const [type, setType] = useState<"income" | "expense">("income");
-  const [customer, setCustomer] = useState("");
-  const [subtotal, setSubtotal] = useState("");
-  const [vatRate, setVatRate] = useState("20");
-  const [invoiceDate, setInvoiceDate] = useState(todayStr());
-  const [paid, setPaid] = useState(false);
-  const [isDraft, setIsDraft] = useState(false);
+  function openNew() {
+    setOpen(true);
+  }
 
   // Üst bardaki hızlı ekleme adasından gelindiyse formu aç (?ekle=…)
   useEkleTohumu(() => openNew());
-
-  function openNew() {
-    setType(listFilter === "expense" ? "expense" : "income");
-    setCustomer("");
-    setSubtotal("");
-    setVatRate("20");
-    setInvoiceDate(todayStr());
-    setPaid(false);
-    setIsDraft(false);
-    setError(null);
-    setOpen(true);
-  }
 
   // Özet (yüklü faturalar üzerinden)
   const sum = (rows: Invoice[]) =>
@@ -204,105 +166,6 @@ export default function FaturalarClient({
   const statusCount = (k: "all" | StatusKey) =>
     k === "all" ? scopeForStatus.length : scopeForStatus.filter((i) => invStatus(i) === k).length;
 
-  const submitLock = useSubmitLock();
-
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    const sub = Number(subtotal.replace(",", ".")) || 0;
-    if (!customer.trim()) {
-      setError(type === "expense" ? "Tedarikçi/firma adı gerekli." : "Müşteri/firma adı gerekli.");
-      return;
-    }
-    if (sub <= 0) {
-      setError("Geçerli bir tutar gir.");
-      return;
-    }
-    const rate = Number(vatRate.replace(",", ".")) || 0;
-    const vat = (sub * rate) / 100;
-    const total = sub + vat;
-
-    if (!submitLock.acquire()) return;
-    setSaving(true);
-    try {
-      // Numara: mobil ile AYNI atomik RPC → format `PREFIX-000006` + mükerrer numara riski yok.
-      const { data: nextNum, error: rpcErr } = await supabase.rpc(
-        "get_next_invoice_number",
-        { p_profile_id: profileId }
-      );
-      if (rpcErr) throw rpcErr;
-      const number = `${invoicePrefix}-${String(nextNum).padStart(6, "0")}`;
-      const title = `${number} - ${customer.trim()}`;
-      // Vade: web'de alan yok → fatura tarihi + 30g (invStatus türetmesiyle tutarlı, UTC-güvenli)
-      const due = new Date(invoiceDate + "T00:00:00Z");
-      due.setUTCDate(due.getUTCDate() + 30);
-      const dueDate = due.toISOString().slice(0, 10);
-
-      const { data, error } = await supabase
-        .from("invoices")
-        .insert({
-          user_id: profileId,
-          invoice_number: number,
-          title,
-          customer_name: customer.trim(),
-          subtotal: sub,
-          vat_rate: rate,
-          vat_amount: vat,
-          amount: total,
-          currency,
-          type,
-          status: isDraft ? "draft" : "sent",
-          payment_status: paid ? "paid" : "unpaid",
-          paid_amount: paid ? total : 0,
-          invoice_date: invoiceDate,
-          due_date: dueDate,
-        })
-        .select(
-          "id, invoice_number, customer_name, subtotal, vat_rate, vat_amount, amount, currency, payment_status, status, paid_amount, type, invoice_date, due_date, created_at"
-        )
-        .single();
-      if (error) throw error;
-
-      // Kalem: web basit fatura (kalem editörü yok) → mobil PDF'i boş görmesin diye tek
-      // özet kalem yaz (net tutar = subtotal). Non-fatal: patlarsa fatura yine durur.
-      await supabase.from("invoice_items").insert({
-        invoice_id: (data as Invoice).id,
-        description: customer.trim() || "Fatura",
-        quantity: 1,
-        unit: "adet",
-        unit_price: sub,
-        vat_rate: rate,
-        total: sub,
-      });
-
-      // transactions senkronu (mobil ile parite) → ciro/kâr KPI'ları web faturasını görsün.
-      // Taslak gerçek gelir değil → yalnız kesinleşmiş (draft olmayan) faturada yaz.
-      if (!isDraft) {
-        await supabase.from("transactions").insert({
-          user_id: profileId,
-          invoice_id: (data as Invoice).id,
-          title,
-          amount: total,
-          type,
-          category: "Fatura",
-          date: invoiceDate,
-          currency,
-          source: "web",
-        });
-      }
-
-      setNextNumber((nextNum as number) + 1);
-      setList((prev) => [data as Invoice, ...prev]);
-      setOpen(false);
-      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat liste/bakiye görünmez.
-      router.refresh();
-    } catch {
-      setError("Fatura kaydedilemedi. Tekrar dene.");
-    } finally {
-      setSaving(false);
-      submitLock.release();
-    }
-  }
 
   async function markPaid(inv: Invoice) {
     setBusyId(inv.id);
@@ -659,90 +522,14 @@ export default function FaturalarClient({
       )}
 
       {open && (
-        <Modal title="Fatura Oluştur" onClose={() => setOpen(false)} busy={saving}>
-          <form onSubmit={handleSave}>
-            <div className="type-toggle">
-              <button
-                type="button"
-                className={type === "income" ? "on-income" : ""}
-                onClick={() => setType("income")}
-              >
-                Satış (Kesilen)
-              </button>
-              <button
-                type="button"
-                className={type === "expense" ? "on-expense" : ""}
-                onClick={() => setType("expense")}
-              >
-                Alış (Gelen)
-              </button>
-            </div>
-
-            {error && <div className="form-error">{error}</div>}
-
-            <Field label={type === "expense" ? "Tedarikçi / Firma" : "Müşteri / Firma"}>
-              <input
-                type="text"
-                placeholder="ör. ABC Ltd. Şti."
-                value={customer}
-                onChange={(e) => setCustomer(e.target.value)}
-                autoFocus
-              />
-            </Field>
-
-            <div className="form-row">
-              <Field label="Tutar (KDV hariç)">
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0,00"
-                  value={subtotal}
-                  onChange={(e) => setSubtotal(e.target.value)}
-                />
-              </Field>
-              <Field label="KDV %">
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={vatRate}
-                  onChange={(e) => setVatRate(e.target.value)}
-                />
-              </Field>
-            </div>
-
-            <div className="form-row">
-              <Field label="Fatura Tarihi">
-                <input
-                  type="date"
-                  value={invoiceDate}
-                  onChange={(e) => setInvoiceDate(e.target.value)}
-                />
-              </Field>
-              <Field label="Ödeme Durumu">
-                <select
-                  value={paid ? "paid" : "unpaid"}
-                  onChange={(e) => setPaid(e.target.value === "paid")}
-                >
-                  <option value="unpaid">Ödenmedi</option>
-                  <option value="paid">Ödendi</option>
-                </select>
-              </Field>
-            </div>
-
-            <label className="inv-draft">
-              <input
-                type="checkbox"
-                checked={isDraft}
-                onChange={(e) => setIsDraft(e.target.checked)}
-              />
-              Taslak olarak kaydet (henüz gönderilmedi)
-            </label>
-
-            <SaveButton busy={saving} disabled={saving} style={{ marginTop: 4 }}>
-              {saving ? "Kaydediliyor…" : "Faturayı Kaydet"}
-            </SaveButton>
-          </form>
-        </Modal>
+        <FaturaFormu
+          profileId={profileId}
+          currency={currency}
+          invoicePrefix={invoicePrefix}
+          varsayilanTur={listFilter === "expense" ? "expense" : "income"}
+          onKapat={() => setOpen(false)}
+          onKaydedildi={(kayit) => setList((prev) => [kayit, ...prev])}
+        />
       )}
     </>
   );

@@ -1,12 +1,12 @@
 "use client";
 import AddButton from "../../../components/AddButton";
 import EmptyState from "../../../components/ui/EmptyState";
-import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
+import { useServerSynced } from "../../../lib/useServerSynced";
 import PageHead from "../../../components/ui/PageHead";
 import { EditIcon, TrashIcon } from "../../../components/icons";
 import { Search, Users } from "lucide-react";
@@ -27,19 +27,15 @@ export default function MusterilerClient({
 }) {
   const supabase = createClient();
   const router = useRouter();
-  const [list, setList] = useState<Contact[]>(initial);
+  /* Sunucu verisi değişince liste kendini tazeler — üst bardaki hızlı ekleme adasından (+)
+     başka bir sayfadayken kayıt eklenirse `router.refresh()` sonrası burada da görünsün. */
+  const [list, setList] = useServerSynced<Contact[]>(initial);
   const [filter, setFilter] = useState<"all" | "customer" | "supplier">("all");
   const [query, setQuery] = useState("");
   // Panel geneli aramadan gelindiyse (?q=) kutuyu doldur
   useAramaTohumu(setQuery);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Contact | null>(null);
-
-  /* ⚠️ Sunucu verisi değişince listeyi TAZELE. Liste `useState(initial)` ile bir kez
-     tohumlanıyor; üst bardaki hızlı ekleme adasından (+) başka bir sayfadayken kart
-     eklenirse `router.refresh()` sunucu verisini yeniler ama `useState` onu görmez →
-     kullanıcı bu sayfaya gelince "eklediğim kart yok" derdi. */
-  useEffect(() => setList(initial), [initial]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

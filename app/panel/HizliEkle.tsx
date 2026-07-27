@@ -14,7 +14,9 @@
  *      açılıyor"). Açılan bileşen modülün KENDİ formudur (ör. `musteriler/MusteriFormu`),
  *      kopyası değil → alan eklenince iki yer de alır.
  *   ② `href`: formu henüz ayrı bileşene taşınmamış modüller, eskisi gibi `?ekle=…` ile
- *      o sayfaya gider (`lib/useEkleTohumu`). Taşıma bitince bu dal boşalacak.
+ *      o sayfaya gider (`lib/useEkleTohumu`). ŞU AN BU DAL BOŞ — altı modülün altısı da
+ *      taşındı. Yeni bir satır eklerken ①'i tercih et; `href` yalnız gerçekten sayfaya
+ *      GİTMESİ gereken bir iş için (ör. çok adımlı sihirbaz) kalsın.
  *
  * ⚠️ Formlar `next/dynamic` ile TALEP ANINDA yükleniyor: üst bar her panel sayfasında var,
  * formların kodu her sayfaya bindirilseydi ilk açılış yavaşlardı.
@@ -37,9 +39,14 @@ import {
 
 /* Yerinde açılan formlar — talep anında yüklenir (bkz. dosya başı notu). */
 const MusteriFormu = dynamic(() => import("./musteriler/MusteriFormu"));
+const UrunFormu = dynamic(() => import("./urunler/UrunFormu"));
+const HesapFormu = dynamic(() => import("./hesaplar/HesapFormu"));
+const TeklifFormu = dynamic(() => import("./teklifler/TeklifFormu"));
+const FaturaFormu = dynamic(() => import("./faturalar/FaturaFormu"));
+const IslemFormu = dynamic(() => import("./islemler/IslemFormu"));
 
 /** Yerinde açılabilen form anahtarları. Yeni form taşındıkça buraya eklenir. */
-type FormAnahtari = "musteri";
+type FormAnahtari = "musteri" | "urun" | "hesap" | "teklif" | "fatura" | "gelir" | "gider";
 
 /** `form` → bulunduğun sayfada açılır · `href` → o sayfaya gider (henüz taşınmamış). */
 type Eylem = {
@@ -50,32 +57,39 @@ type Eylem = {
 };
 
 const ISLETME: Eylem[] = [
-  { etiket: "Gelir ekle", href: "/panel/islemler?ekle=gelir", ikon: <ArrowUpCircle /> },
-  { etiket: "Gider ekle", href: "/panel/islemler?ekle=gider", ikon: <ArrowDownCircle /> },
-  { etiket: "Fatura oluştur", href: "/panel/faturalar?ekle=1", ikon: <FileText /> },
-  { etiket: "Teklif oluştur", href: "/panel/teklifler?ekle=1", ikon: <Files /> },
+  { etiket: "Gelir ekle", form: "gelir", ikon: <ArrowUpCircle /> },
+  { etiket: "Gider ekle", form: "gider", ikon: <ArrowDownCircle /> },
+  { etiket: "Fatura oluştur", form: "fatura", ikon: <FileText /> },
+  { etiket: "Teklif oluştur", form: "teklif", ikon: <Files /> },
   { etiket: "Müşteri ekle", form: "musteri", ikon: <UserPlus /> },
-  { etiket: "Ürün ekle", href: "/panel/urunler?ekle=1", ikon: <Package /> },
+  { etiket: "Ürün ekle", form: "urun", ikon: <Package /> },
 ];
 
 const BIREYSEL: Eylem[] = [
-  { etiket: "Gelir ekle", href: "/panel/islemler?ekle=gelir", ikon: <ArrowUpCircle /> },
-  { etiket: "Gider ekle", href: "/panel/islemler?ekle=gider", ikon: <ArrowDownCircle /> },
-  { etiket: "Hesap ekle", href: "/panel/hesaplar?ekle=1", ikon: <Wallet /> },
+  { etiket: "Gelir ekle", form: "gelir", ikon: <ArrowUpCircle /> },
+  { etiket: "Gider ekle", form: "gider", ikon: <ArrowDownCircle /> },
+  { etiket: "Hesap ekle", form: "hesap", ikon: <Wallet /> },
 ];
 
 /** Fare düğmeden panele geçerken aradaki boşlukta kapanmasın diye tolerans. */
 const KAPANMA_GECIKMESI = 140;
 
 export default function HizliEkle({
-  isletmeMi,
   profileId,
+  profileType,
+  currency,
+  invoicePrefix,
 }: {
-  isletmeMi: boolean;
   profileId: string;
+  /** "business" | "individual" — menü içeriği ve hesap formu etiketleri buna bakar. */
+  profileType: string;
+  /** Profilin varsayılan para birimi (yeni hesap/teklif/fatura bununla açılır). */
+  currency: string;
+  /** Fatura numarası öneki (ör. "MGZR" → MGZR-000006). */
+  invoicePrefix: string;
 }) {
   const router = useRouter();
-  const eylemler = isletmeMi ? ISLETME : BIREYSEL;
+  const eylemler = profileType === "business" ? ISLETME : BIREYSEL;
   const [acik, setAcik] = useState(false);
   /** Yerinde açılan form (null = kapalı). */
   const [form, setForm] = useState<FormAnahtari | null>(null);
@@ -131,6 +145,8 @@ export default function HizliEkle({
       document.removeEventListener("mousedown", disari);
     };
   }, [acik]);
+
+  const kapatForm = useCallback(() => setForm(null), []);
 
   function calistir(e: Eylem) {
     setAcik(false);
@@ -197,9 +213,41 @@ export default function HizliEkle({
           kullanıcı o modülün sayfasındaysa listesi de tazelenir (sayfalar `initial`
           prop'unu izliyor), değilse zaten sonra girdiğinde güncel görür. */}
       {mounted &&
-        form === "musteri" &&
+        form &&
         createPortal(
-          <MusteriFormu profileId={profileId} onKapat={() => setForm(null)} />,
+          <>
+            {form === "musteri" && (
+              <MusteriFormu profileId={profileId} onKapat={kapatForm} />
+            )}
+            {form === "urun" && <UrunFormu profileId={profileId} onKapat={kapatForm} />}
+            {form === "hesap" && (
+              <HesapFormu
+                profileId={profileId}
+                profileType={profileType}
+                defaultCurrency={currency}
+                onKapat={kapatForm}
+              />
+            )}
+            {form === "teklif" && (
+              <TeklifFormu profileId={profileId} currency={currency} onKapat={kapatForm} />
+            )}
+            {form === "fatura" && (
+              <FaturaFormu
+                profileId={profileId}
+                currency={currency}
+                invoicePrefix={invoicePrefix}
+                onKapat={kapatForm}
+              />
+            )}
+            {(form === "gelir" || form === "gider") && (
+              <IslemFormu
+                profileId={profileId}
+                currency={currency}
+                varsayilanTur={form === "gider" ? "expense" : "income"}
+                onKapat={kapatForm}
+              />
+            )}
+          </>,
           document.body
         )}
     </div>

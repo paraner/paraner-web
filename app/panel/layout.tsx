@@ -61,7 +61,12 @@ async function TopbarActions() {
   const active = profiles.find((p) => p.is_active) ?? profiles[0] ?? null;
   if (!active) return null;
   return (
-    <HizliEkle isletmeMi={active.profile_type === "business"} profileId={active.id} />
+    <HizliEkle
+      profileId={active.id}
+      profileType={active.profile_type ?? "individual"}
+      currency={active.currency ?? "TRY"}
+      invoicePrefix={active.invoice_prefix ?? "MGZR"}
+    />
   );
 }
 

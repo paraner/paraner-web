@@ -1,38 +1,23 @@
 "use client";
 import AddButton from "../../../components/AddButton";
-import SaveButton from "../../../components/SaveButton";
 import { confirmDialog } from "../../components/confirm";
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSubmitLock } from "../../../lib/useSubmitLock";
 import { createClient } from "../../../lib/supabase/client";
+import { useServerSynced } from "../../../lib/useServerSynced";
 import { formatCurrency } from "../../../lib/format";
 import PageHead from "../../../components/ui/PageHead";
 import EmptyState from "../../../components/ui/EmptyState";
-import Modal from "../../../components/ui/Modal";
-import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
 import { Search, Package } from "lucide-react";
 import { useAramaTohumu } from "../../../lib/useAramaTohumu";
 import { useEkleTohumu } from "../../../lib/useEkleTohumu";
+import UrunFormu, { type Product } from "./UrunFormu";
 
-export type Product = {
-  id: string;
-  name: string;
-  type: string | null; // product / service
-  code: string | null;
-  unit: string | null;
-  buy_price: string | null;
-  sell_price: string | null;
-  vat_rate: string | null;
-  stock_quantity: string | null;
-  min_stock_alert: string | null;
-  category: string | null;
-  is_active: boolean;
-};
-
-const UNITS = ["adet", "kg", "lt", "m", "m²", "saat", "paket"];
+/* ⚠️ Form BURADA DEĞIL: `UrunFormu` bileşeninde — üst bardaki hızlı ekleme adası (+) da
+   aynı formu açıyor (kullanıcı hangi sayfadaysa orada). İki kopya olmasın. */
+export type { Product };
 
 function isLow(p: Product) {
   return (
@@ -55,26 +40,15 @@ export default function UrunlerClient({
 }) {
   const supabase = createClient();
   const router = useRouter();
-  const [list, setList] = useState<Product[]>(initial);
+  /* Sunucu verisi değişince liste kendini tazeler — üst bardaki hızlı ekleme adasından (+)
+     başka bir sayfadayken kayıt eklenirse `router.refresh()` sonrası burada da görünsün. */
+  const [list, setList] = useServerSynced<Product[]>(initial);
   const [query, setQuery] = useState("");
   // Panel geneli aramadan gelindiyse (?q=) kutuyu doldur
   useAramaTohumu(setQuery);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Form
-  const [name, setName] = useState("");
-  const [type, setType] = useState<"product" | "service">("product");
-  const [code, setCode] = useState("");
-  const [unit, setUnit] = useState("adet");
-  const [category, setCategory] = useState("");
-  const [buyPrice, setBuyPrice] = useState("");
-  const [sellPrice, setSellPrice] = useState("");
-  const [vatRate, setVatRate] = useState("20");
-  const [stockQty, setStockQty] = useState("");
-  const [minStock, setMinStock] = useState("");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -96,93 +70,12 @@ export default function UrunlerClient({
 
   function openNew() {
     setEditing(null);
-    setName("");
-    setType("product");
-    setCode("");
-    setUnit("adet");
-    setCategory("");
-    setBuyPrice("");
-    setSellPrice("");
-    setVatRate("20");
-    setStockQty("");
-    setMinStock("");
-    setError(null);
     setOpen(true);
   }
 
   function openEdit(p: Product) {
     setEditing(p);
-    setName(p.name);
-    setType(p.type === "service" ? "service" : "product");
-    setCode(p.code ?? "");
-    setUnit(p.unit ?? "adet");
-    setCategory(p.category ?? "");
-    setBuyPrice(p.buy_price != null ? String(p.buy_price) : "");
-    setSellPrice(p.sell_price != null ? String(p.sell_price) : "");
-    setVatRate(p.vat_rate != null ? String(p.vat_rate) : "20");
-    setStockQty(p.stock_quantity != null ? String(p.stock_quantity) : "");
-    setMinStock(p.min_stock_alert != null ? String(p.min_stock_alert) : "");
-    setError(null);
     setOpen(true);
-  }
-
-  const num = (s: string) => Number(s.replace(",", ".")) || 0;
-
-  const submitLock = useSubmitLock();
-
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    if (!name.trim()) {
-      setError("Ürün/hizmet adı gerekli.");
-      return;
-    }
-    const isProduct = type === "product";
-    const payload = {
-      name: name.trim(),
-      type,
-      code: code.trim() || null,
-      unit: isProduct ? unit : null,
-      category: category.trim() || null,
-      buy_price: num(buyPrice),
-      sell_price: num(sellPrice),
-      vat_rate: num(vatRate),
-      stock_quantity: isProduct ? num(stockQty) : 0,
-      min_stock_alert: isProduct ? num(minStock) : 0,
-    };
-    const cols =
-      "id, name, type, code, unit, buy_price, sell_price, vat_rate, stock_quantity, min_stock_alert, category, is_active";
-
-    if (!submitLock.acquire()) return;
-    setSaving(true);
-    try {
-      if (editing) {
-        const { data, error } = await supabase
-          .from("products")
-          .update(payload)
-          .eq("id", editing.id)
-          .select(cols)
-          .single();
-        if (error) throw error;
-        setList((prev) => prev.map((x) => (x.id === editing.id ? (data as Product) : x)));
-      } else {
-        const { data, error } = await supabase
-          .from("products")
-          .insert({ ...payload, user_id: profileId, is_active: true })
-          .select(cols)
-          .single();
-        if (error) throw error;
-        setList((prev) => [data as Product, ...prev]);
-      }
-      setOpen(false);
-      // Sunucu verisini + istemci önbelleğini tazele → başka sayfaya gidip dönünce bayat veri görünmez.
-      router.refresh();
-    } catch {
-      setError("Kaydedilemedi. Tekrar dene.");
-    } finally {
-      setSaving(false);
-      submitLock.release();
-    }
   }
 
   async function handleDelete(p: Product) {
@@ -305,131 +198,16 @@ export default function UrunlerClient({
       )}
 
       {open && (
-        <Modal
-          title={editing ? "Ürün / Hizmet Düzenle" : "Ürün / Hizmet Ekle"}
-          onClose={() => setOpen(false)}
-          busy={saving}
-        >
-          <form onSubmit={handleSave}>
-            <div className="type-toggle">
-              <button
-                type="button"
-                className={type === "product" ? "on-income" : ""}
-                onClick={() => setType("product")}
-              >
-                Ürün
-              </button>
-              <button
-                type="button"
-                className={type === "service" ? "on-income" : ""}
-                onClick={() => setType("service")}
-              >
-                Hizmet
-              </button>
-            </div>
-
-            {error && <div className="form-error">{error}</div>}
-
-            <Field label="Ad">
-              <input
-                type="text"
-                placeholder={type === "service" ? "ör. Danışmanlık" : "ör. A4 Kağıt"}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoFocus
-              />
-            </Field>
-
-            <div className="form-row">
-              <Field label="Kod / Barkod (ops.)">
-                <input
-                  type="text"
-                  placeholder="ör. URN-001"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                />
-              </Field>
-              <Field label="Kategori (ops.)">
-                <input
-                  type="text"
-                  placeholder="ör. Kırtasiye"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                />
-              </Field>
-            </div>
-
-            <div className="form-row">
-              <Field label="Alış Fiyatı">
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0,00"
-                  value={buyPrice}
-                  onChange={(e) => setBuyPrice(e.target.value)}
-                />
-              </Field>
-              <Field label="Satış Fiyatı">
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0,00"
-                  value={sellPrice}
-                  onChange={(e) => setSellPrice(e.target.value)}
-                />
-              </Field>
-            </div>
-
-            <div className="form-row">
-              <Field label="KDV %">
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={vatRate}
-                  onChange={(e) => setVatRate(e.target.value)}
-                />
-              </Field>
-              {type === "product" && (
-                <Field label="Birim">
-                  <select value={unit} onChange={(e) => setUnit(e.target.value)}>
-                    {UNITS.map((u) => (
-                      <option key={u} value={u}>
-                        {u}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-              )}
-            </div>
-
-            {type === "product" && (
-              <div className="form-row">
-                <Field label={editing ? "Stok Miktarı" : "Başlangıç Stoğu"}>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="0"
-                    value={stockQty}
-                    onChange={(e) => setStockQty(e.target.value)}
-                  />
-                </Field>
-                <Field label="Kritik Stok Uyarısı">
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="0"
-                    value={minStock}
-                    onChange={(e) => setMinStock(e.target.value)}
-                  />
-                </Field>
-              </div>
-            )}
-
-            <SaveButton busy={saving} disabled={saving} style={{ marginTop: 4 }}>
-              {saving ? "Kaydediliyor…" : "Kaydet"}
-            </SaveButton>
-          </form>
-        </Modal>
+        <UrunFormu
+          profileId={profileId}
+          duzenlenen={editing}
+          onKapat={() => setOpen(false)}
+          onKaydedildi={(kayit, yeniMi) =>
+            setList((prev) =>
+              yeniMi ? [kayit, ...prev] : prev.map((x) => (x.id === kayit.id ? kayit : x))
+            )
+          }
+        />
       )}
     </>
   );
