@@ -13,6 +13,7 @@ import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
 import { Search, Users } from "lucide-react";
+import { useAramaTohumu } from "../../../lib/useAramaTohumu";
 
 export type Contact = {
   id: string;
@@ -39,6 +40,8 @@ export default function MusterilerClient({
   const [list, setList] = useState<Contact[]>(initial);
   const [filter, setFilter] = useState<"all" | "customer" | "supplier">("all");
   const [query, setQuery] = useState("");
+  // Panel geneli aramadan gelindiyse (?q=) kutuyu doldur
+  useAramaTohumu(setQuery);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Contact | null>(null);
   const [saving, setSaving] = useState(false);

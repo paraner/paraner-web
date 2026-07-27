@@ -18,6 +18,7 @@ import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { TrashIcon } from "../../../components/icons";
 import { X, Search, Download, Check, Printer, FileText } from "lucide-react";
+import { useAramaTohumu } from "../../../lib/useAramaTohumu";
 import InvoicePrint, {
   type PrintSeller,
   type PrintItem,
@@ -102,6 +103,8 @@ export default function FaturalarClient({
   const [statusFilter, setStatusFilter] = useState<"all" | StatusKey>("all");
   // Arama + tarih aralığı
   const [query, setQuery] = useState("");
+  // Panel geneli aramadan gelindiyse (?q=) kutuyu doldur
+  useAramaTohumu(setQuery);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 

@@ -20,6 +20,32 @@
 
 ## Bu hafta (2026-07-23 →)
 
+### 27.07 (2) — Panel geneli arama (üst bar işinin 2. adımı)
+- **Üst bara arama kutusu** (⌘K ile de açılır): ① **sayfalar** — sol menünün KENDİSİNDEN
+  türetilir (`BUSINESS_SECTIONS`), yani yeni modül eklenince aramaya elle satır eklemek
+  gerekmez; yanına Türkçe eş anlamlılar ("veresiye", "kar", "iban") + Ayarlar sekmeleri.
+  ② **veri** — 12 tabloda (işlem, fatura, teklif, cari, müşteri, ürün, çalışan, hesap,
+  düzenli ödeme, borç, çek/senet, veresiye), 2 harften sonra + 250ms gecikme + grup başına 5 kayıt.
+- **Ders — tutarda TAM EŞLEŞME İŞE YARAMIYOR:** "2583" yazan kullanıcı 2.583,36'yı arıyor;
+  `amount.eq.2583` hiçbir şey bulmuyordu (canlıda ölçüldü). Kuruş yazılmadıysa `[n, n+1)`
+  ARALIĞI aranıyor (PostgREST `or()` içinde `and()` destekliyor). Sayısal kolonda `ilike`
+  mümkün değil → kısmi tutar araması için DB fonksiyonu gerekirdi.
+- **Ders (İKİNCİ KEZ) — üstte duran katmanın zemini OPAK olmalı:** kutuya `var(--card)`
+  verdim, o %4 beyaz yani saydam → arkadaki grafik yazıların içinden okundu. Telefon
+  çekmecesinde (26.07) aynı hata. `.ps-panel` artık düz `#0c0d0f`.
+- **Ders — üst bardan açılan katman PORTAL ister:** `position: fixed` karartma sol menüyü
+  karartmıyordu; sebep üst barın `z-index` taşıyan bir flex öğesi olması → kendi katman
+  bağlamını kuruyor, içindeki `fixed` çocuk oradan çıkamıyor. `createPortal(…, document.body)`
+  (ParlaChat'te de aynı desen).
+- **Ham kategori kimliği yine sızmıştı:** sonuçta "kira_geliri" yazıyordu → `findCategory` +
+  özel kategoriler (kutu ilk açılışta bir kez çekiyor). Tarih de ham ISO'ydu → `formatDate`.
+- **Kolon adları tahmin EDİLMEDİ, modüllerden okundu.** En sinsi tuzak: her tablo `user_id`
+  ile aktif profile bağlıyken **`contacts` `profile_id` kullanıyor**.
+- **Doğrulama:** gerçek tarayıcı + test hesabı, masaüstü ve telefon. "veresiye/kar/abonelik"
+  doğru sayfayı, "kira" işlemi, "2583" 2.583,36'lık kaydı buluyor; Enter → `/panel/islemler?q=Tt`
+  ve o modülün kutusu dolu geliyor. **30 panel sayfası yeniden tarandı: 0 hata, 0 çöken sayfa**
+  (kabuk değiştiği için hepsi kontrol edildi).
+
 ### 27.07 — Ayarlar > Abonelik sekmesi (üst bar işinin 1. adımı)
 - **Panel kullanıcıya planını HİÇ söylemiyordu:** ne hangi plandasın, ne denemen kaç gün sonra
   bitiyor — bu bilgi yalnız telefonda vardı (`components/TrialBanner.tsx`). Webde plan sayfası

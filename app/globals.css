@@ -1886,6 +1886,102 @@ ul { list-style: none; }
   flex-shrink: 0; z-index: 10;
   background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(12px);
 }
+/* ─── Panel geneli arama (üst bar) ───
+   Tetikleyici üst barın SOLUNDA durur: `margin-right: auto` ile. (Üst bar `flex-end`
+   hizalı — arama yokken (profilsiz kullanıcı) ikonlar yine sağda kalsın diye
+   `space-between` YAPILMADI.) */
+.ps-trigger {
+  appearance: none; cursor: text; font-family: inherit;
+  display: flex; align-items: center; gap: 9px; margin-right: auto;
+  min-width: 260px; max-width: 380px; flex: 1;
+  padding: 8px 12px; border-radius: 11px;
+  background: rgba(255, 255, 255, 0.045); border: 1px solid var(--border);
+  color: var(--text-dim); font-size: 13.5px;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.ps-trigger:hover { border-color: var(--border-strong); background: var(--card-2); color: var(--text); }
+.ps-trigger svg { width: 16px; height: 16px; flex-shrink: 0; }
+.ps-trigger-label { flex: 1; text-align: left; }
+.ps-kbd {
+  font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-dim);
+  border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ps-overlay {
+  position: fixed; inset: 0; z-index: 110;
+  background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(3px);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 12vh 20px 20px;
+}
+.ps-panel {
+  width: 100%; max-width: 620px; max-height: 68vh;
+  display: flex; flex-direction: column; overflow: hidden;
+  /* ⚠️ OPAK — `var(--card)` DEĞİL: o %4 beyaz, yani saydam. Sayfanın ÜSTÜNDE duran bir
+     katmanda saydam zemin = arkadaki grafik/kartlar yazının içinden okunur (aynı hata
+     telefon menü çekmecesinde de yaşandı, DAILY_LOG 26.07). Kural: yanında duran panel
+     cam olabilir, üstünde duran katman OLAMAZ. */
+  background: #0c0d0f; border: 1px solid var(--border-strong);
+  border-radius: 16px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+.ps-input-row {
+  display: flex; align-items: center; gap: 11px;
+  padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.ps-input-row > svg { width: 18px; height: 18px; color: var(--text-dim); flex-shrink: 0; }
+.ps-input {
+  flex: 1; background: none; border: none; outline: none;
+  color: var(--text); font-family: inherit; font-size: 15px; min-width: 0;
+}
+.ps-input::placeholder { color: var(--text-dim); }
+.ps-spin {
+  width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+  border: 2px solid var(--border-strong); border-top-color: var(--text);
+  animation: psSpin 0.7s linear infinite;
+}
+@keyframes psSpin { to { transform: rotate(360deg); } }
+
+.ps-results { overflow-y: auto; overscroll-behavior: contain; padding: 6px; }
+.ps-group + .ps-group { margin-top: 4px; }
+.ps-group-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--text-dim); padding: 9px 10px 5px;
+}
+.ps-row {
+  appearance: none; cursor: pointer; font-family: inherit; width: 100%;
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  padding: 9px 10px; border: none; border-radius: 9px; background: none; color: var(--text);
+}
+.ps-row.on { background: rgba(255, 255, 255, 0.07); }
+.ps-row-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ps-row-title { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ps-row-sub { font-size: 11.5px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ps-amount { font-size: 13px; font-weight: 600; flex-shrink: 0; }
+/* Anlam rengi (gelir/gider) — marka rengi değil, kalır */
+.ps-amount.eksi { color: var(--danger); }
+.ps-enter { width: 14px; height: 14px; color: var(--text-dim); opacity: 0; flex-shrink: 0; }
+.ps-row.on .ps-enter { opacity: 0.7; }
+.ps-empty { font-size: 13px; color: var(--text-dim); line-height: 1.6; padding: 18px 12px; margin: 0; }
+
+.ps-foot {
+  display: flex; gap: 16px; align-items: center; flex-shrink: 0;
+  padding: 9px 14px; border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--text-dim);
+}
+.ps-foot kbd {
+  font-family: inherit; border: 1px solid var(--border); border-radius: 5px;
+  padding: 1px 5px; margin-right: 3px; background: rgba(255, 255, 255, 0.05);
+}
+
+/* Telefon: kutu ikona iner (üst barda hamburger + 2 ikon zaten var, yer yok) */
+@media (max-width: 760px) {
+  .ps-trigger { min-width: 0; max-width: none; flex: 0 0 auto; padding: 8px; }
+  .ps-trigger-label, .ps-kbd { display: none; }
+  .ps-overlay { padding: 8vh 12px 12px; }
+  .ps-panel { max-height: 76vh; }
+  .ps-foot { display: none; } /* telefonda klavye kısayolu yok */
+}
+
 .panel-logout {
   background: var(--card); border: 1px solid var(--border); color: var(--text);
   font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 10px;

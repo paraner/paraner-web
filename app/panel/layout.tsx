@@ -11,6 +11,7 @@ import ConfirmProvider from "../components/ConfirmProvider";
 import NotificationBell from "../../components/NotificationBell";
 import ParlaChat from "./parla/ParlaChat";
 import ContentScrollReset from "./ContentScrollReset";
+import PanelSearch from "./PanelSearch";
 
 // Panel uygulamanın içi — tüm /panel sayfaları arama motorlarına kapalı
 export const metadata: Metadata = {
@@ -40,6 +41,16 @@ async function ProfileSidebar() {
   return <Sidebar profiles={profiles} initialCollapsed={kapali} />;
 }
 
+/* Arama kutusu da profile bağlı (aranan veri AKTİF profilin verisi, sayfa listesi profil
+   türüne göre) → sidebar gibi Suspense içinde stream edilir; üst bar onu BEKLEMEZ.
+   getProfiles cache'li: sidebar ile aynı sorguyu paylaşır, ikinci tur yok. */
+async function TopbarSearch() {
+  const profiles = await getProfiles();
+  const active = profiles.find((p) => p.is_active) ?? profiles[0] ?? null;
+  if (!active) return null;
+  return <PanelSearch profilId={active.id} isletmeMi={active.profile_type === "business"} />;
+}
+
 // Layout artık SENKRON (top-level await yok) → kabuk ilk byte'ta stream edilir.
 export default function PanelLayout({
   children,
@@ -63,6 +74,9 @@ export default function PanelLayout({
       </Suspense>
       <div className="panel-main">
         <header className="panel-topbar">
+          <Suspense fallback={null}>
+            <TopbarSearch />
+          </Suspense>
           <div className="panel-topbar-actions">
             {/* Parla (AI asistanı) + bildirim. Ayarlar sol menüde.
                 Parla her panel sayfasında üst barda → tek tık uzakta; sağdan yan panel açar. */}

@@ -14,6 +14,7 @@ import Modal from "../../../components/ui/Modal";
 import Field from "../../../components/ui/Field";
 import { EditIcon, TrashIcon } from "../../../components/icons";
 import { Search, Package } from "lucide-react";
+import { useAramaTohumu } from "../../../lib/useAramaTohumu";
 
 export type Product = {
   id: string;
@@ -55,6 +56,8 @@ export default function UrunlerClient({
   const router = useRouter();
   const [list, setList] = useState<Product[]>(initial);
   const [query, setQuery] = useState("");
+  // Panel geneli aramadan gelindiyse (?q=) kutuyu doldur
+  useAramaTohumu(setQuery);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);

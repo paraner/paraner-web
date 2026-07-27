@@ -44,6 +44,7 @@ import AccountCard from "../../../components/ui/AccountCard";
 import { CategoryIcon } from "../../../lib/categoryIcons";
 import { Wallet } from "lucide-react";
 import { TrashIcon, EditIcon } from "../../../components/icons";
+import { useAramaTohumu } from "../../../lib/useAramaTohumu";
 import {
   Search,
   X,
@@ -244,6 +245,8 @@ export default function IslemlerClient({
 
   // Filtreler — anında, client-side
   const [query, setQuery] = useState("");
+  // Panel geneli aramadan gelindiyse (?q=) kutuyu doldur
+  useAramaTohumu(setQuery);
   const [ftype, setFtype] = useState<"all" | "income" | "expense">("all");
   const [fcat, setFcat] = useState("");
   // Para birimi filtresi ("" = tümü). Çip yalnızca >1 para birimi varsa gösterilir.
