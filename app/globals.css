@@ -1916,28 +1916,65 @@ ul { list-style: none; }
 .di-btn svg { width: 17px; height: 17px; flex-shrink: 0; transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
 .di.acik .di-btn { background: var(--card-2); border-color: var(--border-strong); color: var(--text); }
 .di.acik .di-btn svg { transform: rotate(135deg); } /* + → × */
+/* ─── "DYNAMIC ISLAND" AÇILIŞI ────────────────────────────────────────────────
+   Mehmet (28.07): "iPhone'un dynamic island'ı gibi açılsın."
+   Araştırıldı (cho.sh "Recreating the Dynamic Island", amelie-schlueter/dynamic-island-web,
+   Chrome for Developers `linear()` yazısı). iOS'taki hissin ÜÇ bileşeni var:
+     ① KUTU MORFU: pil şeklindeki kutunun GENİŞLİK + YÜKSEKLİK + KÖŞE YARIÇAPI'nın
+        aynı anda YAY (spring) fiziğiyle büyümesi — hafif tasma (overshoot) ile.
+        Ölçek (`scale`) DEĞİL: ölçek yazıyı ezer; iOS kutuyu büyütür, içeriği ayrı geçirir.
+     ② İÇERİK GEÇİŞİ: içerik kutuyu BEKLER, sonra hafif bulanıktan nete gelir.
+     ③ Kesintiye uğrayabilirlik: yarıda fare çekilince geri döner (transition zaten öyle).
+
+   Yay eğrisi JS'siz: gerçek yay denklemi (stiffness 400, damping 30, mass 1 → ζ=0.75,
+   ω₀=20) 0.45sn boyunca 26 noktada örneklenip `linear()`e yazıldı. Bu değerler cho.sh'in
+   "bir gece deneyerek" bulduğu Framer Motion ayarıyla aynı. Tepe %102.8 → tasma göze
+   çarpmayacak kadar az, Apple'ın dilinde.
+   ⚠️ `linear()` desteklemeyen eski tarayıcı eğriyi yok sayıp doğrusal oynatır — bozulmaz. */
+:root {
+  --yay: linear(0, 0.0503, 0.1681, 0.3151, 0.466, 0.6052, 0.7246, 0.8211, 0.895, 0.9488,
+    0.9855, 1.0087, 1.0216, 1.0274, 1.0282, 1.0262, 1.0225, 1.0182, 1.014, 1.0102, 1.007,
+    1.0044, 1.0025, 1.0011, 1.0002, 0.9996, 0.9993);
+}
 .di-panel {
   /* ⚠️ `fixed` + JS'ten gelen top/right: panel `body`ye portal ediliyor (bkz.
      HizliEkle.tsx notu) — üst barın yığın bağlamında kalsaydı Parla çekmecesinin
      (92) ALTINDA çiziliyordu. z-index bildirim menüsüyle (300) aynı hizada, modalın
      (1000) ve toast'ın (9999) altında. */
   position: fixed; z-index: 310;
-  min-width: 210px; padding: 6px;
-  background: #0c0d0f; border: 1px solid var(--border-strong); border-radius: 14px;
+  /* Kapalı: düğmenin genişliği (`--di-w0`, JS ölçüyor) + ince bir şerit yüksekliği.
+     Açık: menünün doğal ölçüsü (`--di-h1`). Aradaki geçiş = adanın açılması. */
+  width: var(--di-w0, 150px); height: 10px;
+  overflow: hidden; /* büyürken içerik dışarı taşmasın */
+  background: #0c0d0f; border: 1px solid var(--border-strong); border-radius: 11px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 18px 44px rgba(0, 0, 0, 0.55);
-  display: flex; flex-direction: column; gap: 2px;
-  transform-origin: top right;
   opacity: 0; visibility: hidden; pointer-events: none;
-  transform: translateY(-6px) scale(0.94);
-  transition: opacity 0.18s ease, transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-    visibility 0s linear 0.24s;
+  /* KAPANIŞ: yay yok. Kapanırken tasma "geri sekme" gibi görünüyor; iOS'ta da kapanış
+     daha sakin. Bu yüzden kapanışta düz bir yumuşama, açılışta yay (aşağıda). */
+  transition: width 0.26s cubic-bezier(0.32, 0.72, 0, 1),
+    height 0.26s cubic-bezier(0.32, 0.72, 0, 1),
+    border-radius 0.26s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.16s ease, visibility 0s linear 0.26s;
 }
 .di-panel.acik {
+  width: 230px; height: var(--di-h1, 240px); border-radius: 18px;
   opacity: 1; visibility: visible; pointer-events: auto;
-  transform: none; transition-delay: 0s;
+  transition: width 0.45s var(--yay), height 0.45s var(--yay),
+    border-radius 0.45s var(--yay), opacity 0.12s ease, visibility 0s;
 }
-/* Düğme ile panel arasındaki 8px boşlukta fare "dışarı" sayılmasın (menü kapanmasın) */
-.di-panel::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }
+/* İçerik kutusu: SABİT genişlikte ve mutlak konumlu.
+   ⚠️ İkisi de şart — dış kutu daralırken içerik yeniden akarsa (satırlar sarar, yazı
+   kayar) morf "esneyen kutu" değil "bozulan menü" gibi görünür. Sabit genişlik +
+   mutlak konum sayesinde içerik hiç kımıldamaz, yalnız kırpılır.
+   Ayrıca AÇIK yüksekliği bu kutunun `offsetHeight`i veriyor (bkz. HizliEkle.tsx). */
+.di-in {
+  position: absolute; top: 0; right: 0; width: 230px; padding: 6px;
+  display: flex; flex-direction: column; gap: 2px; box-sizing: border-box;
+  /* İçerik kutuyu BEKLER: bulanıktan nete (iOS'taki geçişin aynısı) */
+  opacity: 0; filter: blur(6px);
+  transition: opacity 0.18s ease, filter 0.18s ease;
+}
+.di-panel.acik .di-in { opacity: 1; filter: none; transition-delay: 0.08s; }
 .di-row {
   appearance: none; cursor: pointer; font-family: inherit; width: 100%;
   display: flex; align-items: center; gap: 10px; text-align: left; white-space: nowrap;
@@ -1948,6 +1985,11 @@ ul { list-style: none; }
   transition: opacity 0.2s ease, transform 0.2s ease, background 0.12s ease;
 }
 .di-panel.acik .di-row { opacity: 1; transform: none; }
+/* Hareketi azalt tercihi: yay ve bulanıklık kapanır, açılış anında olur (WCAG 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  .di-panel, .di-panel.acik, .di-in, .di-row { transition-duration: 0.01s; }
+  .di-in { filter: none; }
+}
 .di-row:hover { background: rgba(255, 255, 255, 0.07); }
 .di-ic { display: flex; color: var(--text-dim); flex-shrink: 0; }
 .di-ic svg { width: 16px; height: 16px; }

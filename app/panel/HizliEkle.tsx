@@ -112,11 +112,21 @@ export default function HizliEkle({
      Portal + `position: fixed` ile menü doğrudan `body` katmanında çizilir; konumu CSS
      ile hizalanamadığı için düğmenin yeri ÖLÇÜLÜP yazılır (NotificationBell ile aynı
      desen, aynı sebep). */
-  const [konum, setKonum] = useState<{ top: number; right: number } | null>(null);
+  const [konum, setKonum] = useState<{ top: number; right: number; w: number } | null>(
+    null
+  );
+  /* Menünün AÇIK yüksekliği — "dynamic island" morfu için gerekli: yükseklik `auto`dan
+     animasyon olmaz, sayı gerekir. İçerik kutusu (`.di-in`) mutlak konumlu ve sabit
+     genişlikte olduğu için dış kutu ne kadar küçülürse küçülsün doğal yüksekliğini
+     korur → tek ölçümle doğru sayıyı verir. */
+  const icRef = useRef<HTMLDivElement>(null);
+  const [acikYukseklik, setAcikYukseklik] = useState<number | null>(null);
 
   const konumOlc = useCallback(() => {
     const r = btnRef.current?.getBoundingClientRect();
-    if (r) setKonum({ top: r.bottom + 8, right: window.innerWidth - r.right });
+    if (r) setKonum({ top: r.bottom + 8, right: window.innerWidth - r.right, w: r.width });
+    const h = icRef.current?.offsetHeight;
+    if (h) setAcikYukseklik(h);
   }, []);
 
   const iptal = () => {
@@ -229,10 +239,23 @@ export default function HizliEkle({
             className={`di-panel${acik ? " acik" : ""}`}
             role="menu"
             aria-hidden={!acik}
-            style={konum ? { top: konum.top, right: konum.right } : undefined}
+            /* Kapalı ölçü = DÜĞMENİN ölçüsü, açık ölçü = menünün doğal ölçüsü.
+               İkisi arasında yay (spring) eğrisiyle geçilir → menü düğmeden doğup
+               yayılıyormuş gibi görünür (iOS "dynamic island"). Ölçüler CSS
+               değişkeni olarak veriliyor; hangi setin geçerli olacağına `.acik`
+               sınıfı karar verir (bkz. globals.css). */
+            style={
+              {
+                top: konum?.top,
+                right: konum?.right,
+                "--di-w0": konum ? `${konum.w}px` : undefined,
+                "--di-h1": acikYukseklik ? `${acikYukseklik}px` : undefined,
+              } as React.CSSProperties
+            }
             onPointerEnter={hoverVar ? ac : undefined}
             onPointerLeave={hoverVar ? gecikmeliKapat : undefined}
           >
+            <div className="di-in" ref={icRef}>
             {eylemler.map((e, i) => (
               <button
                 key={e.etiket}
@@ -249,6 +272,7 @@ export default function HizliEkle({
                 {e.etiket}
               </button>
             ))}
+            </div>
           </div>,
           document.body
         )}
