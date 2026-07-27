@@ -1796,28 +1796,24 @@ ul { list-style: none; }
 
 /* ─── Üst bar: plan / deneme rozeti ───
    Ücretli kullanıcıda hiç render edilmez (bileşen null döner). */
+/* Kapatma (×) YOK — rozet sürekli görünür (Mehmet, 27.07). Rozetin kendisi bağlantı. */
 .plan-rozet {
-  display: inline-flex; align-items: center; gap: 2px; height: 40px;
-  padding: 0 4px 0 12px; border-radius: 11px;
+  display: inline-flex; align-items: center; height: 40px;
+  padding: 0 13px; border-radius: 11px;
   background: rgba(255, 255, 255, 0.045); border: 1px solid var(--border);
-  transition: border-color 0.18s ease, background 0.18s ease;
-}
-.plan-rozet:hover { border-color: var(--border-strong); background: rgba(255, 255, 255, 0.06); }
-.plan-rozet .pr-link {
   font-size: 12.5px; font-weight: 600; color: var(--text-dim);
-  text-decoration: none; white-space: nowrap; transition: color 0.15s;
+  text-decoration: none; white-space: nowrap;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
-.plan-rozet:hover .pr-link { color: var(--text); }
+.plan-rozet:hover {
+  border-color: var(--border-strong); background: rgba(255, 255, 255, 0.06); color: var(--text);
+}
 /* Son 2 gün: ANLAM taşıyan renk (uyarı) → marka rengi değişse de kalır */
-.plan-rozet.uyari { border-color: rgba(186, 117, 23, 0.5); background: rgba(186, 117, 23, 0.12); }
-.plan-rozet.uyari .pr-link { color: var(--warning); }
-.pr-kapat {
-  appearance: none; background: none; border: none; cursor: pointer;
-  display: flex; padding: 5px; margin-left: 2px; border-radius: 6px;
-  color: var(--text-dim); transition: color 0.15s, background 0.15s;
+.plan-rozet.uyari {
+  border-color: rgba(186, 117, 23, 0.5); background: rgba(186, 117, 23, 0.12);
+  color: var(--warning);
 }
-.pr-kapat:hover { color: var(--text); background: rgba(255, 255, 255, 0.09); }
-.pr-kapat svg { width: 13px; height: 13px; }
+.plan-rozet.uyari:hover { border-color: rgba(186, 117, 23, 0.75); background: rgba(186, 117, 23, 0.18); }
 
 /* ─── Üst bar: hızlı ekleme "dinamik ada" ───
    Düğme yerinde durur; panel ondan doğuyormuş gibi SAĞ ÜST köşeden büyüyerek açılır.

@@ -157,8 +157,8 @@
       açmak için her modüle "şu id'yi aç" bağlantısı gerekir (③ ile aynı altyapı).
       ② Bireysel hesapta veri araması 3 tabloda (işlem/hesap/varlık) — bireysel menüde diğer
       modüller zaten yok.
-- [x] ✅ **③ Deneme/plan rozeti + hızlı ekleme adası** (27.07) — rozet üst barda, × ile o
-      oturumluk gizlenir; ada fareyle açılır/kapanır, dokunmatikte tıklamayla. Satırlar hedef
+- [x] ✅ **③ Deneme/plan rozeti + hızlı ekleme adası** (27.07) — rozet üst barda ve
+      KAPATILAMAZ (× kaldırıldı, Mehmet kararı); ada fareyle açılır/kapanır, dokunmatikte tıklamayla. Satırlar hedef
       modülü `?ekle=…` ile açıyor, modül KENDİ formunu açıyor (ikinci form kopyası yok).
       **Açık kalan:** ada listesi SABİT (mobilde kullanıcı 12 işlemden seçebiliyor —
       web'de özelleştirme yok). İstenirse profil tercihine bağlanır.

@@ -22,9 +22,11 @@
 
 ### 27.07 (3) — Plan rozeti + hızlı ekleme "dinamik adası" (üst bar işinin 3. adımı)
 - **Rozet:** üst barda "Deneme · 9 gün" (son 2 gün AMBER), ücretsizde "Ücretsiz plan",
-  ücretlide HİÇ YOK (satacak şey yok). Tıklayınca Ayarlar > Abonelik. × ile gizlenir —
-  `sessionStorage`, yani yeni sekmede/girişte geri gelir. ⚠️ Bu × mobildeki KALICI
-  kapatmadan (`trial_notified_day5` DB alanı) AYRIDIR, DB'ye hiçbir şey yazmaz.
+  ücretlide HİÇ YOK (satacak şey yok). Tıklayınca Ayarlar > Abonelik.
+  ⚠️ **Kapatılamaz:** ilk hâlinde × vardı (sessionStorage ile o oturumluk gizleme);
+  Mehmet aynı gün kaldırttı — "o bildirim kaldırılmasın üstten". Kalan gün sürekli görünür.
+  Gizleme geri istenirse DB'ye YAZMAMALI: mobildeki kalıcı kapatma (`trial_notified_day5`)
+  ayrı bir şeydir, oraya dokunulmaz.
 - **Ada:** fareyle üzerine gelince açılır, ayrılınca kapanır (140ms tolerans: düğmeden
   panele geçerken kapanmasın). Satırlar sırayla beliriyor, + işareti ×'e dönüyor.
 - **Formların kopyası ÇIKARILMADI:** her satır `/panel/islemler?ekle=gider` gibi gidiyor,
