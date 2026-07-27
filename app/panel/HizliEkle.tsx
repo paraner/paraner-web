@@ -8,13 +8,22 @@
  * Davranış: fareyle üzerine gelince açılır, ayrılınca kapanır. Dokunmatikte hover yoktur →
  * TIKLAMA da açar/kapatır. Klavyeyle odaklanınca da açılır (Tab ile gezen kullanıcı).
  *
- * ⚠️ FORMLARIN KOPYASI BURADA DEĞİL: her satır ilgili modüle `?ekle=…` ile gider, o modül
- * KENDİ ekleme formunu açar (`lib/useEkleTohumu`). Üst bara ikinci bir form yazmak iki ayrı
- * form demek olurdu — biri düzelir, öteki unutulur.
+ * ⚠️ FORMLARIN KOPYASI BURADA DEĞİL. İki çalışma biçimi var:
+ *   ① `form`: modülün ekleme formu BURADA açılır — kullanıcı bulunduğu sayfada kalır
+ *      (Mehmet, 28.07: "hangi sayfadaysa orada kalsın, ilgili sayfaya gitmesin, geç
+ *      açılıyor"). Açılan bileşen modülün KENDİ formudur (ör. `musteriler/MusteriFormu`),
+ *      kopyası değil → alan eklenince iki yer de alır.
+ *   ② `href`: formu henüz ayrı bileşene taşınmamış modüller, eskisi gibi `?ekle=…` ile
+ *      o sayfaya gider (`lib/useEkleTohumu`). Taşıma bitince bu dal boşalacak.
+ *
+ * ⚠️ Formlar `next/dynamic` ile TALEP ANINDA yükleniyor: üst bar her panel sayfasında var,
+ * formların kodu her sayfaya bindirilseydi ilk açılış yavaşlardı.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import {
   Plus,
   ArrowDownCircle,
@@ -26,14 +35,26 @@ import {
   Wallet,
 } from "lucide-react";
 
-type Eylem = { etiket: string; href: string; ikon: React.ReactNode };
+/* Yerinde açılan formlar — talep anında yüklenir (bkz. dosya başı notu). */
+const MusteriFormu = dynamic(() => import("./musteriler/MusteriFormu"));
+
+/** Yerinde açılabilen form anahtarları. Yeni form taşındıkça buraya eklenir. */
+type FormAnahtari = "musteri";
+
+/** `form` → bulunduğun sayfada açılır · `href` → o sayfaya gider (henüz taşınmamış). */
+type Eylem = {
+  etiket: string;
+  ikon: React.ReactNode;
+  form?: FormAnahtari;
+  href?: string;
+};
 
 const ISLETME: Eylem[] = [
   { etiket: "Gelir ekle", href: "/panel/islemler?ekle=gelir", ikon: <ArrowUpCircle /> },
   { etiket: "Gider ekle", href: "/panel/islemler?ekle=gider", ikon: <ArrowDownCircle /> },
   { etiket: "Fatura oluştur", href: "/panel/faturalar?ekle=1", ikon: <FileText /> },
   { etiket: "Teklif oluştur", href: "/panel/teklifler?ekle=1", ikon: <Files /> },
-  { etiket: "Müşteri ekle", href: "/panel/musteriler?ekle=1", ikon: <UserPlus /> },
+  { etiket: "Müşteri ekle", form: "musteri", ikon: <UserPlus /> },
   { etiket: "Ürün ekle", href: "/panel/urunler?ekle=1", ikon: <Package /> },
 ];
 
@@ -46,10 +67,25 @@ const BIREYSEL: Eylem[] = [
 /** Fare düğmeden panele geçerken aradaki boşlukta kapanmasın diye tolerans. */
 const KAPANMA_GECIKMESI = 140;
 
-export default function HizliEkle({ isletmeMi }: { isletmeMi: boolean }) {
+export default function HizliEkle({
+  isletmeMi,
+  profileId,
+}: {
+  isletmeMi: boolean;
+  profileId: string;
+}) {
   const router = useRouter();
   const eylemler = isletmeMi ? ISLETME : BIREYSEL;
   const [acik, setAcik] = useState(false);
+  /** Yerinde açılan form (null = kapalı). */
+  const [form, setForm] = useState<FormAnahtari | null>(null);
+  /* ⚠️ Form `body`'ye PORTAL ile taşınır (PanelSearch ile aynı desen, aynı sebep):
+     bu bileşen ÜST BARIN içinde doğuyor, üst bar hem `z-index: 10` hem
+     `backdrop-filter` taşıyor. `backdrop-filter` `position: fixed` çocuklar için
+     yeni bir sabitleme kutusu kurar → modalın tam-ekran karartması ekranı değil
+     ÜST BARI kaplardı ve sol menünün (z-index: 20) altında kalırdı. */
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const kapatmaZamani = useRef<ReturnType<typeof setTimeout> | null>(null);
   const kokRef = useRef<HTMLDivElement>(null);
 
@@ -96,9 +132,14 @@ export default function HizliEkle({ isletmeMi }: { isletmeMi: boolean }) {
     };
   }, [acik]);
 
-  function git(href: string) {
+  function calistir(e: Eylem) {
     setAcik(false);
-    router.push(href);
+    // Taşınmış modül: formu BURADA aç, sayfa değişmesin.
+    if (e.form) {
+      setForm(e.form);
+      return;
+    }
+    if (e.href) router.push(e.href);
   }
 
   return (
@@ -136,13 +177,13 @@ export default function HizliEkle({ isletmeMi }: { isletmeMi: boolean }) {
       <div className="di-panel" role="menu" aria-hidden={!acik}>
         {eylemler.map((e, i) => (
           <button
-            key={e.href}
+            key={e.etiket}
             type="button"
             role="menuitem"
             className="di-row"
             tabIndex={acik ? 0 : -1}
             style={{ transitionDelay: acik ? `${40 + i * 22}ms` : "0ms" }}
-            onClick={() => git(e.href)}
+            onClick={() => calistir(e)}
           >
             <span className="di-ic" aria-hidden="true">
               {e.ikon}
@@ -151,6 +192,16 @@ export default function HizliEkle({ isletmeMi }: { isletmeMi: boolean }) {
           </button>
         ))}
       </div>
+
+      {/* Yerinde açılan formlar. Kaydedince form kendi `router.refresh()`ini çağırır →
+          kullanıcı o modülün sayfasındaysa listesi de tazelenir (sayfalar `initial`
+          prop'unu izliyor), değilse zaten sonra girdiğinde güncel görür. */}
+      {mounted &&
+        form === "musteri" &&
+        createPortal(
+          <MusteriFormu profileId={profileId} onKapat={() => setForm(null)} />,
+          document.body
+        )}
     </div>
   );
 }

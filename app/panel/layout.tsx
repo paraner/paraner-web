@@ -60,7 +60,9 @@ async function TopbarActions() {
   const profiles = await getProfiles();
   const active = profiles.find((p) => p.is_active) ?? profiles[0] ?? null;
   if (!active) return null;
-  return <HizliEkle isletmeMi={active.profile_type === "business"} />;
+  return (
+    <HizliEkle isletmeMi={active.profile_type === "business"} profileId={active.id} />
+  );
 }
 
 /* Rozet üst barın SOLUNDA (arama kutusu ortada sabit, sağdaki küme dolu; sol taraf boştu).
