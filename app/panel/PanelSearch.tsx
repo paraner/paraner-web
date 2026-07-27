@@ -140,6 +140,25 @@ export default function PanelSearch({
      (ölçüldü: menü kararmıyordu). */
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  /* Kısayol ipucu işletim sistemine göre: Mac'te ⌘K, Windows/Linux'ta Ctrl K.
+     Kısayolun KENDİSİ zaten ikisini de dinliyordu (aşağıda `metaKey || ctrlKey`) —
+     eksik olan yalnız kutudaki yazıydı: Windows kullanıcısı hiç basmayacağı bir tuşu
+     görüyordu (Mehmet, 28.07).
+     ⚠️ Sunucuda işletim sistemi BİLİNEMEZ → ilk çizimde ⌘K yazılır, tarayıcı açılınca
+     düzeltilir. Varsayılan Mac tarafı: aksi hâlde Mac kullanıcısında yazı "Ctrl K"den
+     "⌘K"ya atlar; bu kutuyu asıl kullanan kitle Mac. Windows'ta tek karelik bir
+     düzelme olur, kimse fark etmez. (Sunucu/istemci ilk çizim aynı olmalı — yoksa
+     React "hydration" uyarısı verir; bu yüzden state + effect, doğrudan okuma değil.) */
+  const [mac, setMac] = useState(true);
+  useEffect(() => {
+    const p =
+      (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData
+        ?.platform ??
+      navigator.platform ??
+      "";
+    // iPad/iPhone'da da ⌘ doğru (harici klavye); "Mac" ve "iP*" birlikte bakılır.
+    setMac(/mac|iphone|ipad|ipod/i.test(`${p} ${navigator.userAgent}`));
+  }, []);
   const ozelKatAlindi = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listeRef = useRef<HTMLDivElement>(null);
@@ -364,7 +383,9 @@ export default function PanelSearch({
             <X aria-hidden="true" />
           </button>
         ) : (
-          <kbd className="ps-kbd">⌘K</kbd>
+          <kbd className="ps-kbd" title={mac ? "Command + K" : "Ctrl + K"}>
+            {mac ? "⌘K" : "Ctrl K"}
+          </kbd>
         )}
       </div>
 

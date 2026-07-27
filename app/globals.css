@@ -2071,6 +2071,8 @@ ul { list-style: none; }
   font-family: inherit; font-size: 11px; font-weight: 600; color: var(--text-dim);
   border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px;
   background: rgba(255, 255, 255, 0.05);
+  /* Windows'ta yazı "Ctrl K" (⌘K'dan geniş) → ne sarsın ne de yazı alanını ezsin */
+  white-space: nowrap; flex-shrink: 0;
 }
 
 /* Karartma yalnız "dışarı tıklayınca kapat" içindir + arkayı hafifçe geri çeker.
