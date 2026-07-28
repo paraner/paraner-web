@@ -36,6 +36,22 @@ Bunlar kendi sunucularından atmaz; **senin posta kutularını** bağlar, aralar
 > Sonuç: **iki ayrı sistem**. İşlem mailleri (Resend + paraner.com) ve kampanya (soğuk mail
 > aracı + ayrı alan adı) birbirine HİÇ değmez.
 
+### Hangi platform olur, hangisi olmaz — tek tabloda
+Mehmet sırayla soruyor ("Klaviyo olmaz mı?"), o yüzden hepsi burada. **Ayrım tek soruda:**
+*bu araç, LİSTEYE İZİN VERMİŞ kişilere mi yazıyor, yoksa hiç tanımadığın kişilere mi?*
+
+| Platform | Soğuk mail? | Neden |
+|---|---|---|
+| **Klaviyo** | ❌ **Olmaz** | Kabul Edilebilir Kullanım Politikası satın alınmış/kiralanmış/toplanmış listeyi açıkça yasaklıyor; ihlal **hesap kapatma** sebebi. Dahası Klaviyo özellikle **yeni hesabın taze liste yüklemesini** işaretleyip incelemeye alıyor — bizim yapacağımız şey birebir bu. İlk kampanyada kapanır. Ayrıca e-ticaret için kurulmuş (Shopify, sepet hatırlatma) ve **profil başına** ücretlendiriyor; 10.000 kişi pahalıya patlar. |
+| **Mailchimp / Brevo / Sendinblue** | ❌ Olmaz | Aynı kural, aynı yasak. |
+| **Resend / Postmark / SendGrid** | ❌ Olmaz | İşlem maili araçları; soğuk mail sözleşmeye aykırı. Üstelik Paraner'in kendi mailleri Resend'de — hesap kapanırsa ürün mailleri de durur. |
+| **Instantly / Smartlead / Lemlist** | ✅ **Olur** | Tam bu iş için yapılmışlar. Kendi sunucularından atmazlar; **senin posta kutularını** bağlar, aralarında paylaştırır, ısıtır, yanıtları tek gelen kutusunda toplar. |
+
+⚠️ Klaviyo'yu tamamen eleme — **ileride başka bir iş için doğru araç**: deneme başlatan
+kullanıcıya sıralı eğitim mailleri, terk edeni geri kazanma, aylık özet. Yani **kendi
+kullanıcılarına**. O zaman geldiğinde B2B'ye daha uygun ve ucuz seçenekler de var
+(Loops, Customer.io). Bu ayrı bir karar, kampanyayla karıştırma.
+
 ---
 
 ## 1. Yasal taraf (Türkiye) — iyi haber var
@@ -242,3 +258,5 @@ kısarsan tüm bütçe çöpe gider.
 - Resend Kabul Edilebilir Kullanım (soğuk mail yasak): <https://resend.com/legal/acceptable-use>
 - "Resend: Wrong Tool for Cold Email": <https://missioninbox.com/compare/resend>
 - Smartlead vs Instantly karşılaştırması: <https://sparkle.io/blog/smartlead-vs-instantly/>
+- Klaviyo Kabul Edilebilir Kullanım Politikası: <https://www.klaviyo.com/legal/acceptable-use-policy>
+- "Klaviyo veya Mailchimp ile soğuk mail atılır mı?": <https://frontbrick.io/cold-email-lead-gen-agency/can-you-cold-email-with-klaviyo>
