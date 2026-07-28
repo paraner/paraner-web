@@ -1896,103 +1896,131 @@ ul { list-style: none; }
   .pr-orta { display: inline; }
 }
 
-/* ─── Üst bar: hızlı işlem "dinamik ada" ───
-   Düğme yerinde durur; panel ondan doğuyormuş gibi SAĞ ÜST köşeden büyüyerek açılır.
-   ⚠️ Panel DOM'dan silinmiyor (unmount anında animasyon çalışmaz) → kapalıyken
-   `visibility: hidden` + `pointer-events: none` ile tamamen erişim dışı. */
-.di { position: relative; display: inline-flex; }
-/* Düğme YAZILI: "＋ Hızlı İşlem" (Mehmet, 28.07 — önceden yalnız + ikonuydu).
-   Ölçüler üst barın öteki öğeleriyle (arama kutusu, Parla, bildirim) AYNI dil:
-   40px yükseklik, 11px köşe, aynı zemin/çerçeve/hover. */
-.di-btn {
-  display: inline-flex; align-items: center; gap: 7px;
-  height: 40px; padding: 0 13px 0 11px; border-radius: 11px;
-  background: rgba(255, 255, 255, 0.045); border: 1px solid var(--border);
-  color: var(--text-dim); font-family: inherit; font-size: 13.5px; font-weight: 600;
-  white-space: nowrap; cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
-}
-.di-btn:hover { background: rgba(255, 255, 255, 0.06); border-color: var(--border-strong); color: var(--text); }
-.di-btn svg { width: 17px; height: 17px; flex-shrink: 0; transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
-.di.acik .di-btn { background: var(--card-2); border-color: var(--border-strong); color: var(--text); }
-.di.acik .di-btn svg { transform: rotate(135deg); } /* + → × */
-/* ─── "DYNAMIC ISLAND" AÇILIŞI ────────────────────────────────────────────────
-   Mehmet (28.07): "iPhone'un dynamic island'ı gibi açılsın."
-   Araştırıldı (cho.sh "Recreating the Dynamic Island", amelie-schlueter/dynamic-island-web,
-   Chrome for Developers `linear()` yazısı). iOS'taki hissin ÜÇ bileşeni var:
-     ① KUTU MORFU: pil şeklindeki kutunun GENİŞLİK + YÜKSEKLİK + KÖŞE YARIÇAPI'nın
-        aynı anda YAY (spring) fiziğiyle büyümesi — hafif tasma (overshoot) ile.
-        Ölçek (`scale`) DEĞİL: ölçek yazıyı ezer; iOS kutuyu büyütür, içeriği ayrı geçirir.
-     ② İÇERİK GEÇİŞİ: içerik kutuyu BEKLER, sonra hafif bulanıktan nete gelir.
-     ③ Kesintiye uğrayabilirlik: yarıda fare çekilince geri döner (transition zaten öyle).
+/* ─── ÜST BAR: HIZLI İŞLEM — "DYNAMIC ISLAND" ─────────────────────────────────
+   Mehmet (28.07): "ayrı bir panelmiş gibi görünmesin, hemen altında güzel açılsın;
+   iOS nasıl yapıyor iyice araştır, aynısı olsun."
 
-   Yay eğrisi JS'siz: gerçek yay denklemi (stiffness 400, damping 30, mass 1 → ζ=0.75,
-   ω₀=20) 0.45sn boyunca 26 noktada örneklenip `linear()`e yazıldı. Bu değerler cho.sh'in
-   "bir gece deneyerek" bulduğu Framer Motion ayarıyla aynı. Tepe %102.8 → tasma göze
-   çarpmayacak kadar az, Apple'ın dilinde.
-   ⚠️ `linear()` desteklemeyen eski tarayıcı eğriyi yok sayıp doğrusal oynatır — bozulmaz. */
+   ARAŞTIRMA (beui.dev dynamic-island bileşeni · cho.sh "Recreating the Dynamic Island" ·
+   amelie-schlueter/dynamic-island-web · Chrome for Developers `linear()` · WWDC23
+   "Animate with springs"). iOS'un yaptığı DÖRT şey:
+
+   ① TEK KUTU. Pil ve açık ada AYRI ÖĞE DEĞİL — aynı kabuk büyüyor. Bizde de öyle:
+      `.di-ada` hem düğme hem menü. (Önceki hâlde düğme + altında ayrı panel vardı;
+      Mehmet'in "ayrı panel gibi duruyor" dediği buydu.)
+   ② KÖŞE YARIÇAPI ANİMASYON ALMAZ. Sabit bırakılır; tarayıcı yarıçapı kutu
+      yüksekliğinin yarısına kadar KISAR → pil↔dikdörtgen dönüşümü boyut
+      animasyonundan BEDAVA çıkar. (beui.dev'in en net dersi; yarıçapı ayrıca
+      animasyona sokmak "şişen köşe" hissi veriyordu.)
+   ③ İKİ AYRI YAY. Kabuk sakin (bounce 0.20), içerik biraz daha canlı (bounce 0.30) —
+      "content gets a touch more life than the shell". Apple'ın duration/bounce
+      ikilisi: sönüm oranı ζ = 1 − bounce.
+   ④ İÇERİK KUTUYU İZLER. Satırlar hafif bulanık + küçük + yukarıda başlar, kutu
+      açıldıkça sırayla yerine oturur (blur 5px, scale 0.94, y −8 — beui.dev değerleri).
+
+   GENİŞLİK BİLEREK SABİT: ada `width: max-content` ile EN GENİŞ SATIRA göre kurulur,
+   pil de o genişlikte durur (Mehmet: "çerçeveyi içerikle genişlet"). Böylece açılırken
+   yazılar yana kaymaz; hareket tek eksende, aşağı doğru — "hemen altında açılıyor" hissi.
+
+   Yay eğrileri JS'siz: gerçek yay denklemi 29 noktada örneklenip `linear()`e yazıldı
+   (kabuk: response 0.50s / ζ 0.80 / tepe %101.5 · içerik: 0.45s / ζ 0.70 / tepe %104.6).
+   ⚠️ `linear()` desteklemeyen tarayıcı eğriyi yok sayar, animasyon düz oynar — bozulmaz. */
 :root {
-  --yay: linear(0, 0.0503, 0.1681, 0.3151, 0.466, 0.6052, 0.7246, 0.8211, 0.895, 0.9488,
-    0.9855, 1.0087, 1.0216, 1.0274, 1.0282, 1.0262, 1.0225, 1.0182, 1.014, 1.0102, 1.007,
-    1.0044, 1.0025, 1.0011, 1.0002, 0.9996, 0.9993);
+  --yay-kabuk: linear(0, 0.0314, 0.1085, 0.2108, 0.3235, 0.4364, 0.5428, 0.6387, 0.7222,
+    0.7927, 0.8507, 0.8971, 0.9333, 0.9608, 0.9809, 0.9951, 1.0046, 1.0105, 1.0138, 1.015,
+    1.015, 1.0141, 1.0127, 1.011, 1.0093, 1.0076, 1.0061, 1.0048, 1.0036);
+  --yay-icerik: linear(0, 0.0388, 0.1341, 0.2597, 0.396, 0.5296, 0.6515, 0.7571, 0.8441,
+    0.9127, 0.9641, 1.0006, 1.0245, 1.0385, 1.0449, 1.0458, 1.0431, 1.0382, 1.0322, 1.0259,
+    1.0199, 1.0145, 1.0099, 1.0061, 1.0032, 1.0011, 0.9996, 0.9986, 0.9981);
 }
-.di-panel {
-  /* ⚠️ `fixed` + JS'ten gelen top/right: panel `body`ye portal ediliyor (bkz.
-     HizliEkle.tsx notu) — üst barın yığın bağlamında kalsaydı Parla çekmecesinin
-     (92) ALTINDA çiziliyordu. z-index bildirim menüsüyle (300) aynı hizada, modalın
-     (1000) ve toast'ın (9999) altında. */
+
+/* Üst bardaki YER TUTUCU — görünmez. Ölçüler JS'ten (bkz. HizliEkle.tsx). */
+.di { display: block; flex-shrink: 0; }
+
+.di-ada {
+  /* ⚠️ `fixed` + JS'ten gelen top/right: ada `body`ye portal ediliyor. Üst barın yığın
+     bağlamında kalsaydı (z-index: 10) Parla çekmecesinin (92) ALTINDA çizilirdi.
+     310 = bildirim menüsünün (300) hemen üstü, modalın (1000) ve toast'ın (9999) altı. */
   position: fixed; z-index: 310;
-  /* Kapalı: düğmenin genişliği (`--di-w0`, JS ölçüyor) + ince bir şerit yüksekliği.
-     Açık: menünün doğal ölçüsü (`--di-h1`). Aradaki geçiş = adanın açılması. */
-  width: var(--di-w0, 150px); height: 10px;
-  overflow: hidden; /* büyürken içerik dışarı taşmasın */
-  background: #0c0d0f; border: 1px solid var(--border-strong); border-radius: 11px;
+  width: max-content;
+  height: var(--di-y0, 40px);
+  overflow: hidden;
+  /* ② SABİT yarıçap — animasyona SOKULMAZ (yukarıdaki nota bak) */
+  border-radius: 18px;
+  /* Kapalıyken üst barın öteki düğmeleriyle aynı dil; açılınca menü zeminine geçer */
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--border);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  color: var(--text-dim);
+  /* KAPANIŞ: yay YOK. Kapanışta tasma "geri sekme" gibi duruyor; iOS'ta da kapanış
+     daha sakin — kısa ve düz bir yumuşama. */
+  transition: height 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+    width 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+    background 0.2s ease, border-color 0.2s ease, box-shadow 0.28s ease, color 0.2s ease;
+}
+.di-ada:hover { background: rgba(255, 255, 255, 0.06); border-color: var(--border-strong); color: var(--text); }
+.di-ada.acik {
+  height: var(--di-y1, 260px);
+  background: #0c0d0f;
+  border-color: var(--border-strong);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 18px 44px rgba(0, 0, 0, 0.55);
-  opacity: 0; visibility: hidden; pointer-events: none;
-  /* KAPANIŞ: yay yok. Kapanırken tasma "geri sekme" gibi görünüyor; iOS'ta da kapanış
-     daha sakin. Bu yüzden kapanışta düz bir yumuşama, açılışta yay (aşağıda). */
-  transition: width 0.26s cubic-bezier(0.32, 0.72, 0, 1),
-    height 0.26s cubic-bezier(0.32, 0.72, 0, 1),
-    border-radius 0.26s cubic-bezier(0.32, 0.72, 0, 1),
-    opacity 0.16s ease, visibility 0s linear 0.26s;
+  color: var(--text);
+  /* ③ AÇILIŞ: kabuk yayı */
+  /* Genişlik masaüstünde HİÇ değişmez (ada zaten liste genişliğinde) — kural yalnız
+     telefon için var; orada pil 40px ikon, açılınca listeye genişliyor. */
+  transition: height 0.5s var(--yay-kabuk), width 0.5s var(--yay-kabuk),
+    background 0.24s ease, border-color 0.24s ease, box-shadow 0.34s ease, color 0.2s ease;
 }
-.di-panel.acik {
-  width: 230px; height: var(--di-h1, 240px); border-radius: 18px;
-  opacity: 1; visibility: visible; pointer-events: auto;
-  transition: width 0.45s var(--yay), height 0.45s var(--yay),
-    border-radius 0.45s var(--yay), opacity 0.12s ease, visibility 0s;
+/* ⚠️ `width: max-content` + `min-width: 100%`: iç kutu DAİMA doğal genişliğini korur
+   (telefonda ada 40px'e inse bile) → hem ölçüm doğru kalır hem satırlar sarmaz. */
+.di-ic {
+  padding: 6px; display: flex; flex-direction: column; gap: 2px;
+  width: max-content; min-width: 100%;
 }
-/* İçerik kutusu: SABİT genişlikte ve mutlak konumlu.
-   ⚠️ İkisi de şart — dış kutu daralırken içerik yeniden akarsa (satırlar sarar, yazı
-   kayar) morf "esneyen kutu" değil "bozulan menü" gibi görünür. Sabit genişlik +
-   mutlak konum sayesinde içerik hiç kımıldamaz, yalnız kırpılır.
-   Ayrıca AÇIK yüksekliği bu kutunun `offsetHeight`i veriyor (bkz. HizliEkle.tsx). */
-.di-in {
-  position: absolute; top: 0; right: 0; width: 230px; padding: 6px;
-  display: flex; flex-direction: column; gap: 2px; box-sizing: border-box;
-  /* İçerik kutuyu BEKLER: bulanıktan nete (iOS'taki geçişin aynısı) */
-  opacity: 0; filter: blur(6px);
-  transition: opacity 0.18s ease, filter 0.18s ease;
+
+/* Başlık satırı = kapalıyken görünen "pil". Açıkken adanın tepesinde kalır (iOS'ta da
+   compact içerik kaybolmaz, yerini korur). */
+.di-bas {
+  appearance: none; background: none; border: none; cursor: pointer; font-family: inherit;
+  /* Dolgu/aralık ALTTAKİ SATIRLARLA aynı (10px + 10px) → başlıktaki ikon, listedeki
+     ikonlarla tek sütunda hizalanır; ada tek gövde gibi okunur. */
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  height: 28px; padding: 0 10px; border-radius: 10px;
+  color: inherit; font-size: 13.5px; font-weight: 600; white-space: nowrap;
 }
-.di-panel.acik .di-in { opacity: 1; filter: none; transition-delay: 0.08s; }
+.di-bas svg { width: 16px; height: 16px; flex-shrink: 0; transition: transform 0.34s var(--yay-icerik); }
+.di-ada.acik .di-bas svg { transform: rotate(135deg); } /* + → × */
+
+/* Başlık ile liste arasındaki ince çizgi — yalnız açıkken. Ayrı panel gibi durmasın
+   diye çerçeve değil SAÇ ÇİZGİSİ; kutu tek gövde kalıyor. */
+.di-liste {
+  display: flex; flex-direction: column; gap: 2px;
+  margin-top: 6px; padding-top: 6px;
+  border-top: 1px solid transparent;
+  transition: border-color 0.2s ease 0.06s;
+}
+.di-ada.acik .di-liste { border-top-color: var(--border); }
+
 .di-row {
   appearance: none; cursor: pointer; font-family: inherit; width: 100%;
   display: flex; align-items: center; gap: 10px; text-align: left; white-space: nowrap;
-  padding: 8px 10px; border: none; border-radius: 9px; background: none;
+  padding: 8px 10px; border: none; border-radius: 10px; background: none;
   color: var(--text); font-size: 13px; font-weight: 500;
-  /* Satırlar sırayla belirsin (gecikme JS'ten: transitionDelay) */
-  opacity: 0; transform: translateY(-4px);
-  transition: opacity 0.2s ease, transform 0.2s ease, background 0.12s ease;
+  /* ④ İçerik kutuyu izler: bulanık + küçük + yukarıdan yerine oturur */
+  opacity: 0; transform: translateY(-8px) scale(0.94); filter: blur(5px);
+  transform-origin: top center;
+  transition: opacity 0.18s ease, transform 0.42s var(--yay-icerik),
+    filter 0.18s ease, background 0.12s ease;
 }
-.di-panel.acik .di-row { opacity: 1; transform: none; }
-/* Hareketi azalt tercihi: yay ve bulanıklık kapanır, açılış anında olur (WCAG 2.3.3) */
-@media (prefers-reduced-motion: reduce) {
-  .di-panel, .di-panel.acik, .di-in, .di-row { transition-duration: 0.01s; }
-  .di-in { filter: none; }
-}
+.di-ada.acik .di-row { opacity: 1; transform: none; filter: none; }
 .di-row:hover { background: rgba(255, 255, 255, 0.07); }
-.di-ic { display: flex; color: var(--text-dim); flex-shrink: 0; }
-.di-ic svg { width: 16px; height: 16px; }
+.di-ikon { display: flex; color: var(--text-dim); flex-shrink: 0; }
+.di-ikon svg { width: 16px; height: 16px; }
+
+/* Hareketi azalt tercihi: yay ve bulanıklık kapanır (WCAG 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  .di-ada, .di-ada.acik, .di-row, .di-liste { transition-duration: 0.01s; }
+  .di-row { filter: none; }
+}
 
 /* Telefon: rozet KALIR ama kısa metinle (uzun hâli üst barı taşırırdı).
    Arama kutusu `flex: 1` + `min-width: 0` olduğu için kalan yere göre kendini daraltır. */
@@ -2235,9 +2263,17 @@ ul { list-style: none; }
     width: auto; flex: 1 1 auto; min-width: 0; margin-right: 10px;
   }
   .ps-kbd { display: none; }
-  /* Telefonda "Hızlı İşlem" yazısı üst barı taşırır → yalnız ikon (40x40 kare) */
-  .di-btn { width: 40px; padding: 0; justify-content: center; gap: 0; }
-  .di-btn-txt { display: none; }
+  /* Telefonda "Hızlı İşlem" yazısı üst barı taşırır → başlıkta yalnız ikon kalır.
+     ⚠️ Ada genişliği `max-content` ile listeye göre kurulur; yazı gizlenince pil
+     yine liste kadar geniş olurdu → kapalıyken genişliği ikon kutusuna sabitle.
+     Ada açılınca `max-content`e döner (aşağıdaki `.acik` kuralı). */
+  .di { width: 40px !important; }
+  .di-ada { width: 40px; }
+  .di-ada.acik { width: var(--di-w1); }
+  /* Kapalıyken yuvarlak ikon düğmesi; açılınca başlık tam genişlikte, yazı geri gelir */
+  .di-ada:not(.acik) .di-bas { width: 40px; justify-content: center; padding: 0; }
+  .di-bas-txt { display: none; }
+  .di-ada.acik .di-bas-txt { display: inline; }
   .ps-panel { max-height: 66vh; }
   .ps-foot { display: none; } /* telefonda klavye kısayolu yok */
 }

@@ -8,6 +8,14 @@
  * Davranış: fareyle üzerine gelince açılır, ayrılınca kapanır. Dokunmatikte hover yoktur →
  * TIKLAMA da açar/kapatır. Klavyeyle odaklanınca da açılır (Tab ile gezen kullanıcı).
  *
+ * ⚠️ TEK GÖVDE (28.07, Mehmet: "ayrı bir panelmiş gibi görünmesin, hemen altında açılsın").
+ * Düğme ile menü AYRI İKİ KUTU DEĞİL: "Hızlı İşlem" yazan pilin KENDİSİ büyüyor — iOS
+ * Dynamic Island'ın yaptığı da tam olarak bu (araştırma notu globals.css'te). Bu yüzden
+ * üst barda duran `.di` yalnız YER TUTUCUdur (görünmez); görünen ada `body`ye portal
+ * edilip o yer tutucunun tam üstüne oturtulur.
+ * ⚠️ Bilinen ödün: ada portal edildiği için Tab sırası görsel sıradan farklı (sayfanın
+ * sonunda). Menü zaten portaldeydi; erişilebilirlik bu turda kötüleşmedi.
+ *
  * ⚠️ FORMLARIN KOPYASI BURADA DEĞİL. İki çalışma biçimi var:
  *   ① `form`: modülün ekleme formu BURADA açılır — kullanıcı bulunduğu sayfada kalır
  *      (Mehmet, 28.07: "hangi sayfadaysa orada kalsın, ilgili sayfaya gitmesin, geç
@@ -102,8 +110,6 @@ export default function HizliEkle({
   useEffect(() => setMounted(true), []);
   const kapatmaZamani = useRef<ReturnType<typeof setTimeout> | null>(null);
   const kokRef = useRef<HTMLDivElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
   /* Menünün ekrandaki yeri — düğmenin altına, sağ kenarları hizalı.
      ⚠️ Menü de `body`'ye PORTAL ediliyor (form gibi). NEDEN (Mehmet, 28.07: "Parla
      açıkken + üzerine gelince menü arkada kalıyor"): üst bar `z-index: 10` ile KENDİ
@@ -112,22 +118,50 @@ export default function HizliEkle({
      Portal + `position: fixed` ile menü doğrudan `body` katmanında çizilir; konumu CSS
      ile hizalanamadığı için düğmenin yeri ÖLÇÜLÜP yazılır (NotificationBell ile aynı
      desen, aynı sebep). */
-  const [konum, setKonum] = useState<{ top: number; right: number; w: number } | null>(
-    null
-  );
-  /* Menünün AÇIK yüksekliği — "dynamic island" morfu için gerekli: yükseklik `auto`dan
-     animasyon olmaz, sayı gerekir. İçerik kutusu (`.di-in`) mutlak konumlu ve sabit
-     genişlikte olduğu için dış kutu ne kadar küçülürse küçülsün doğal yüksekliğini
-     korur → tek ölçümle doğru sayıyı verir. */
+  /* Adanın ekrandaki yeri = üst bardaki yer tutucunun yeri. */
+  const [konum, setKonum] = useState<{ top: number; right: number } | null>(null);
+  /* Adanın ölçüleri. `height: auto` animasyon almaz → sayı şart.
+       kapali = yalnız başlık satırı (pil hâli)
+       acik   = başlık + liste (açık ada)
+       w      = içeriğin doğal genişliği
+     MASAÜSTÜNDE GENİŞLİK DEĞİŞMEZ: ada `width: max-content` ile en geniş satıra göre
+     kurulur, pil de o genişlikte durur (Mehmet: "çerçeveyi içerikle genişlet") → açılırken
+     yazı yana kaymaz, hareket tek eksende. `w` yalnız TELEFONDA gerekli: orada pil 40px
+     ikon olur, açılınca bu genişliğe yayılır. */
+  const [olcu, setOlcu] = useState<{ w: number; kapali: number; acik: number } | null>(null);
+  const adaRef = useRef<HTMLDivElement>(null);
   const icRef = useRef<HTMLDivElement>(null);
-  const [acikYukseklik, setAcikYukseklik] = useState<number | null>(null);
+  const basRef = useRef<HTMLButtonElement>(null);
+
+  /* ⚠️ Ölçüm `overflow: hidden` ada içinde bile doğrudur: kırpma çocuğun yüksekliğini
+     değiştirmez, yalnız görünürlüğünü keser. */
+  const olcumAl = useCallback(() => {
+    const ic = icRef.current;
+    const bas = basRef.current;
+    if (!ic || !bas) return;
+    setOlcu({
+      // Genişlik iç kutudan: ada telefonda 40px'e kırpılıyor, iç kutu doğal genişlikte kalıyor
+      w: ic.offsetWidth,
+      kapali: bas.offsetHeight + 12, // başlık + iç kutunun dikey dolgusu (6+6)
+      acik: ic.offsetHeight,
+    });
+  }, []);
 
   const konumOlc = useCallback(() => {
-    const r = btnRef.current?.getBoundingClientRect();
-    if (r) setKonum({ top: r.bottom + 8, right: window.innerWidth - r.right, w: r.width });
-    const h = icRef.current?.offsetHeight;
-    if (h) setAcikYukseklik(h);
+    const r = kokRef.current?.getBoundingClientRect();
+    if (r) setKonum({ top: r.top, right: window.innerWidth - r.right });
   }, []);
+
+  /* İlk ölçüm + profil türü değişince (menü satır sayısı değişir) yeniden ölç.
+     Yazı tipi geç yüklenirse genişlik değişebilir → `document.fonts.ready` sonrası bir daha. */
+  useEffect(() => {
+    olcumAl();
+    konumOlc();
+    document.fonts?.ready.then(() => {
+      olcumAl();
+      konumOlc();
+    });
+  }, [olcumAl, konumOlc, profileType]);
 
   const iptal = () => {
     if (kapatmaZamani.current) clearTimeout(kapatmaZamani.current);
@@ -138,6 +172,7 @@ export default function HizliEkle({
     konumOlc();
     setAcik(true);
   }, [konumOlc]);
+
   const gecikmeliKapat = useCallback(() => {
     iptal();
     kapatmaZamani.current = setTimeout(() => setAcik(false), KAPANMA_GECIKMESI);
@@ -162,11 +197,10 @@ export default function HizliEkle({
     const esc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setAcik(false);
     };
-    /* Menü artık `body`de → `kokRef` onu KAPSAMAZ; panel de ayrıca sorulmalı,
-       yoksa menünün kendi içine tıklamak menüyü kapatırdı. */
+    /* Ada `body`de → üst bardaki yer tutucu (`kokRef`) onu KAPSAMAZ; adanın kendisi
+       sorulmalı, yoksa adanın içine tıklamak menüyü kapatırdı. */
     const disari = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (!kokRef.current?.contains(t) && !panelRef.current?.contains(t)) setAcik(false);
+      if (!adaRef.current?.contains(e.target as Node)) setAcik(false);
     };
     window.addEventListener("keydown", esc);
     document.addEventListener("mousedown", disari);
@@ -193,85 +227,79 @@ export default function HizliEkle({
   }
 
   return (
-    /* ⚠️ onMouseEnter DEĞİL, pointerType kontrollü onPointerEnter: dokunmatikte tarayıcı
-       parmak değince ÖNCE sentetik "fare girdi" olayı üretiyor (menü açılıyor), hemen
-       ardından click gelip kapatıyordu → telefonda menü hiç açılmıyordu (ölçüldü).
-       Hover yalnız gerçek fare/kalem için; dokunmatikte tıklama açar. */
-    <div
-      className={`di${acik ? " acik" : ""}`}
-      ref={kokRef}
-      onPointerEnter={hoverVar ? ac : undefined}
-      onPointerLeave={hoverVar ? gecikmeliKapat : undefined}
-    >
-      <button
-        ref={btnRef}
-        type="button"
-        className="di-btn"
-        aria-label="Hızlı işlem"
-        aria-expanded={acik}
-        aria-haspopup="menu"
-        onClick={() => {
-          konumOlc();
-          setAcik((a) => !a);
-        }}
-        /* ⚠️ Düz `onFocus={ac}` OLMAZ: dokunmatikte parmak değince düğme ODAKLANIYOR
-           (menü açılıyor), hemen ardından click gelip kapatıyordu → telefonda ilk dokunuş
-           hiçbir şey yapmıyor gibi görünüyordu (ölçüldü). `:focus-visible` yalnız KLAVYE
-           odağında doğrudur; fare/parmakla odaklanmada değil. */
-        onFocus={(e) => {
-          if (e.currentTarget.matches(":focus-visible")) ac();
-        }}
-      >
-        <Plus aria-hidden="true" />
-        <span className="di-btn-txt">Hızlı İşlem</span>
-      </button>
+    <>
+      {/* ÜST BARDAKİ YER TUTUCU — görünmez, yalnız adanın kapladığı yeri ayırır.
+          Ada `body`ye portal edildiği için (bkz. dosya başı notu) üst bar onun
+          genişliğini kendiliğinden bilemez; ölçülen değer buraya yazılır. */}
+      <div
+        className="di"
+        ref={kokRef}
+        aria-hidden="true"
+        style={olcu ? { width: olcu.w, height: olcu.kapali } : undefined}
+      />
 
-      {/* Panel her zaman DOM'da: açılış/kapanış CSS ile (giriş-çıkış animasyonu için
-          unmount etmiyoruz — unmount anında animasyon çalışmaz). Kapalıyken
-          `visibility/pointer-events` ile tamamen erişim dışı.
-          ⚠️ Hover dinleyicileri BURADA DA olmalı: panel artık `body`de, yani fare
-          düğmeden panele geçerken `.di`den çıkmış sayılıyor ve gecikmeli kapanma
-          tetikleniyor — panele girince o zamanlayıcı iptal edilmezse menü kaçardı. */}
+      {/* ADA — tek gövde: pil de menü de bu kutu. Kapalıyken yalnız başlık satırı
+          görünür, açılınca kutu aşağı doğru büyür ve liste ortaya çıkar.
+          ⚠️ onMouseEnter DEĞİL, hover yeteneği kontrollü onPointerEnter: dokunmatikte
+          tarayıcı parmak değince sentetik "fare girdi" üretiyor (menü açılıyor), hemen
+          ardından click gelip kapatıyordu → telefonda menü hiç açılmıyordu (ölçüldü). */}
       {mounted &&
         createPortal(
           <div
-            ref={panelRef}
-            className={`di-panel${acik ? " acik" : ""}`}
-            role="menu"
-            aria-hidden={!acik}
-            /* Kapalı ölçü = DÜĞMENİN ölçüsü, açık ölçü = menünün doğal ölçüsü.
-               İkisi arasında yay (spring) eğrisiyle geçilir → menü düğmeden doğup
-               yayılıyormuş gibi görünür (iOS "dynamic island"). Ölçüler CSS
-               değişkeni olarak veriliyor; hangi setin geçerli olacağına `.acik`
-               sınıfı karar verir (bkz. globals.css). */
+            ref={adaRef}
+            className={`di-ada${acik ? " acik" : ""}`}
             style={
               {
                 top: konum?.top,
                 right: konum?.right,
-                "--di-w0": konum ? `${konum.w}px` : undefined,
-                "--di-h1": acikYukseklik ? `${acikYukseklik}px` : undefined,
+                "--di-y0": olcu ? `${olcu.kapali}px` : undefined,
+                "--di-y1": olcu ? `${olcu.acik}px` : undefined,
+                "--di-w1": olcu ? `${olcu.w}px` : undefined,
               } as React.CSSProperties
             }
             onPointerEnter={hoverVar ? ac : undefined}
             onPointerLeave={hoverVar ? gecikmeliKapat : undefined}
           >
-            <div className="di-in" ref={icRef}>
-            {eylemler.map((e, i) => (
+            <div className="di-ic" ref={icRef}>
               <button
-                key={e.etiket}
+                ref={basRef}
                 type="button"
-                role="menuitem"
-                className="di-row"
-                tabIndex={acik ? 0 : -1}
-                style={{ transitionDelay: acik ? `${40 + i * 22}ms` : "0ms" }}
-                onClick={() => calistir(e)}
+                className="di-bas"
+                aria-label="Hızlı işlem"
+                aria-expanded={acik}
+                aria-haspopup="menu"
+                onClick={() => setAcik((a) => !a)}
+                /* ⚠️ Düz `onFocus={ac}` OLMAZ: dokunmatikte parmak değince düğme
+                   ODAKLANIYOR (menü açılıyor), hemen ardından click gelip kapatıyordu →
+                   telefonda ilk dokunuş hiçbir şey yapmıyor gibi görünüyordu (ölçüldü).
+                   `:focus-visible` yalnız KLAVYE odağında doğrudur. */
+                onFocus={(e) => {
+                  if (e.currentTarget.matches(":focus-visible")) ac();
+                }}
               >
-                <span className="di-ic" aria-hidden="true">
-                  {e.ikon}
-                </span>
-                {e.etiket}
+                <Plus aria-hidden="true" />
+                <span className="di-bas-txt">Hızlı İşlem</span>
               </button>
-            ))}
+
+              <div className="di-liste" role="menu" aria-hidden={!acik}>
+                {eylemler.map((e, i) => (
+                  <button
+                    key={e.etiket}
+                    type="button"
+                    role="menuitem"
+                    className="di-row"
+                    tabIndex={acik ? 0 : -1}
+                    /* Satırlar sırayla belirsin — kutu önde, içerik peşinde (iOS deseni) */
+                    style={{ transitionDelay: acik ? `${60 + i * 26}ms` : "0ms" }}
+                    onClick={() => calistir(e)}
+                  >
+                    <span className="di-ikon" aria-hidden="true">
+                      {e.ikon}
+                    </span>
+                    {e.etiket}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>,
           document.body
@@ -318,6 +346,6 @@ export default function HizliEkle({
           </>,
           document.body
         )}
-    </div>
+    </>
   );
 }
