@@ -142,14 +142,26 @@ h1 {
   font-weight: 400;
   letter-spacing: -0.012em;
 }
+/* ⚠️ YENİ BİR KABUK/EKRAN EKLERSEN BAŞLIĞINI BU LİSTEYE DE EKLE.
+   Yukarıdaki `h1` kuralı SERİF (Playfair) — o yalnız pazarlama sayfaları içindir.
+   Uygulama ekranları (panel, admin, auth) veri/işlem ekranı; orada serif yanlış.
+   Hata örneği (Mehmet, 28.07): `.admin-shell` bu listede yoktu → admin.paraner.com'daki
+   sayfa başlıkları Playfair (serif) çıkıyor, app.paraner.com'dakiler Inter (sans)
+   kalıyordu; iki panel farklı yazı tipiyle görünüyordu. */
 .panel-shell h1,
 .panel-h1,
+.admin-shell h1,
+.admin-h1,
 .auth-head h1,
 .reset-card h1 {   /* /sifre-sifirla — o da bir form kartı (auth-head sınıfını kullanmıyor) */
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  font-weight: 600;
   letter-spacing: -0.02em;
 }
+/* Ağırlık ayrı: `.admin-h1` kendi ağırlığını (700) veriyor, ezmeyelim. */
+.panel-shell h1,
+.panel-h1,
+.auth-head h1,
+.reset-card h1 { font-weight: 600; }
 ul { list-style: none; }
 
 /* ─── ARKA PLAN KATMANLARI ─── */
