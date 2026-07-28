@@ -156,20 +156,47 @@ export default function HizliEkle({
     if (r) setKonum({ top: r.top, right: window.innerWidth - r.right });
   }, []);
 
-  /* İlk ölçüm + profil türü değişince (menü satır sayısı değişir) yeniden ölç.
-     Yazı tipi geç yüklenirse genişlik değişebilir → `document.fonts.ready` sonrası bir daha. */
-  useEffect(() => {
+  /* ⚠️ ÖLÇÜM `mounted`E DE BAĞLI — BU BİR YARIŞ HATASIYDI (Mehmet, 28.07: "bazen düzgün
+     bazen aşağıda"). Ada `body`ye portal ediliyor ve portal ancak `mounted` true olunca
+     basılıyor; yani İLK render'da `icRef`/`basRef` HENÜZ BOŞ. Ölçüm effect'i o turda
+     erken dönüp `olcu`yu null bırakıyor ve BİR DAHA ÇALIŞMIYORDU (bağımlılıkları
+     değişmiyordu) → yer tutucu 0 yükseklikte kalıyor, dikeyde ortalanan sıfır yükseklikli
+     kutunun ortası ölçülüyor, ada 20px aşağı düşüyordu.
+     "Bazen düzgün" olmasının sebebi: `document.fonts.ready` GEÇ çözülürse ölçüm bir daha
+     deneniyor ve tutuyordu — yazı tipi önbellekteyse erken çözülüyor ve hata kalıcı oluyordu.
+     ⚠️ `useEffect` DEĞİL yerleşim (layout) effect'i: state boyamadan ÖNCE yazılır, yoksa
+     ada bir kare yanlış yerde görünüp zıplar. */
+  useYerlesimEtkisi(() => {
     olcumAl();
-    document.fonts?.ready.then(olcumAl);
-  }, [olcumAl, profileType]);
+  }, [olcumAl, mounted, profileType]);
 
-  /* ⚠️ KONUM, ÖLÇÜDEN SONRA alınmalı — SIRA ÖNEMLİ (28.07 canlı hata: pil öteki üst bar
-     düğmelerinden ~20px AŞAĞIDA duruyordu, üst barın alt çizgisini taşıyordu).
-     Sebep: yer tutucunun yüksekliği `olcu`dan geliyor; ölçümle aynı turda konum alınınca
-     yer tutucu HENÜZ 0 yükseklikteydi ve dikeyde ortalı kutunun ortası ölçülüyordu.
-     `olcu` ekrana yazıldıktan SONRA (layout effect) ölçmek şart. */
+  // Yazı tipi geç yüklenirse genişlik değişir → bir kez daha ölç.
+  useEffect(() => {
+    document.fonts?.ready.then(olcumAl).catch(() => {});
+  }, [olcumAl]);
+
+  /* KONUM: yer tutucu son hâlini ALDIKTAN sonra ölçülür (yukarıdaki effect `olcu`yu yazar,
+     bu effect onu bağımlılık olarak izler).
+     ⚠️ Tek başına "olcu değişince ölç" YETMEZ — yer tutucunun EKRANDAKİ YERİ, boyu hiç
+     değişmeden de kayar: sol menü daraltılınca üst bar genişler, pencere boyutlanır, plan
+     rozeti sonradan gelir. ResizeObserver boyut değişimini yakalar, yer değişimini değil →
+     hem yer tutucuyu HEM üst barı izliyoruz; pencere yeniden boyutlanmasını da menü
+     kapalıyken bile dinliyoruz. */
   useYerlesimEtkisi(() => {
     konumOlc();
+    const el = kokRef.current;
+    if (!el) return;
+    const temizle: (() => void)[] = [];
+    if (typeof ResizeObserver !== "undefined") {
+      const go = new ResizeObserver(konumOlc);
+      go.observe(el);
+      const ustBar = el.closest(".panel-topbar");
+      if (ustBar) go.observe(ustBar); // sol menü daralınca üst barın genişliği değişir
+      temizle.push(() => go.disconnect());
+    }
+    window.addEventListener("resize", konumOlc);
+    temizle.push(() => window.removeEventListener("resize", konumOlc));
+    return () => temizle.forEach((f) => f());
   }, [konumOlc, olcu]);
 
   const iptal = () => {
@@ -213,12 +240,11 @@ export default function HizliEkle({
     };
     window.addEventListener("keydown", esc);
     document.addEventListener("mousedown", disari);
-    window.addEventListener("resize", konumOlc);
+    // resize sürekli dinleniyor (yukarıda); burada yalnız kaydırma — açıkken hizada kalsın
     window.addEventListener("scroll", konumOlc, true);
     return () => {
       window.removeEventListener("keydown", esc);
       document.removeEventListener("mousedown", disari);
-      window.removeEventListener("resize", konumOlc);
       window.removeEventListener("scroll", konumOlc, true);
     };
   }, [acik, konumOlc]);
@@ -257,8 +283,12 @@ export default function HizliEkle({
           <div
             ref={adaRef}
             className={`di-ada${acik ? " acik" : ""}`}
+            /* Konum bilinmeden çizme: aksi hâlde ilk karede yanlış yerde bir an görünür.
+               ⚠️ Yalnız `konum`a bak — `olcu`ya da bağlarsak ölçüm herhangi bir sebeple
+               tutmadığında ada TAMAMEN kaybolur; kilit hatayı gizlememeli. */
             style={
               {
+                visibility: konum ? undefined : "hidden",
                 top: konum?.top,
                 right: konum?.right,
                 "--di-y0": olcu ? `${olcu.kapali}px` : undefined,
