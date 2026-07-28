@@ -72,6 +72,16 @@ kutuyu izler (bulanıktan nete, satırlar sırayla).
 - Arama kutusundaki kısayol ipucu işletim sistemine göre: Mac'te `⌘K`, Windows'ta `Ctrl K`
   (kısayolun kendisi zaten ikisini de dinliyordu, eksik olan yazıydı).
 
+**Plan (kod değil) — abonelik sayfası:** `docs/ABONELIK-SAYFASI-PLANI.md`. Plan seçim popup'ı
+(FireVibe düzeni, bizim titanyum renklerimizle) + "Planım" / "Ödeme Yöntemi" / "Faturalarım"
+blokları. Üç tarama yapıldı, sonuç: **hiçbir ödeme sağlayıcısı entegre değil** (paket/tablo/
+webhook sıfır) ve zincir **EIN'de takılı** → iş tamamen arayüz, kart/fatura blokları "Yakında"
+kalacak. ⚠️ `invoices` tablosu MÜŞTERİNİN faturaları; abonelik makbuzu ayrı tablo olacak.
+Mehmet "sonra devam" dedi — kodlanmadı. Yan bulgular GOREVLER'e işlendi: yeni **İşletme Pro
+Yıllık** planı (5 yeri birden ilgilendiriyor, asıl kaynak mobil `premium.tsx`) · gizlilik
+sayfasındaki **yanlış RevenueCat metni** (canlıda) · pazarlamadaki sayı iddiasının DB'den
+gelmesi kararı.
+
 **Plan (kod değil):** işletmelere soğuk mail kampanyası → `docs/SOGUK-MAIL-PLANI.md`.
 ⚠️ İki tuzak kaynaktan doğrulandı: kampanya **paraner.com'dan gönderilemez** (spam şikâyeti
 şifre sıfırlama maillerini de öldürür) ve **Resend'den gönderilemez** (sözleşmesi soğuk

@@ -54,6 +54,24 @@
 - [ ] **DMARC sıkılaştırma o gün TAKILI olmalı** — "faturanız/kartınız" taklidi ödeme gelince para
       kazandıran dolandırıcılığa döner; aşamalı geçiş haftalar sürer, o gün başlamak geç kalır (aşağı bak).
 - [ ] İşletme hesabı eklemede **Stripe ödeme/trial kapısı** (şu an direkt açılıyor).
+- [ ] **Abonelik sayfası yenilemesi — plan hazır: `docs/ABONELIK-SAYFASI-PLANI.md`** (28.07, onaylı
+      değil; Mehmet "sonra devam" dedi). Kapsam: plan seçim popup'ı (abone değilse Abonelik sekmesinde
+      oturumda bir kez) · ortak `PlanSecici` (sekme + popup tek bileşen) · Modal'a `xl` boyut ·
+      "Planım" / "Ödeme Yöntemi" / "Faturalarım" blokları (Stripe'a kadar boş + "Yakında").
+      ⚠️ `invoices` tablosu MÜŞTERİNİN kendi faturaları — abonelik makbuzu AYRI tablo (`billing_invoices`).
+- [ ] **Yeni plan: İşletme Pro Yıllık (`business_pro_yearly`)** — Mehmet istedi (28.07). Öneri
+      ₺4.900/yıl (₺408,33/ay, 2 ay bedava, ₺980 tasarruf); fiyat toplu güncellemede kesinleşecek.
+      ⚠️ **5 yer birlikte:** mobil `stores/authStore.ts` SubscriptionTier → mobil `app/premium.tsx`
+      (ASIL kaynak) → `lib/plans.ts` → `app/page.tsx` PLANS → `app/layout.tsx` AggregateOffer.
+      `TRIAL_PLANS`'a EKLENMEZ (deneme yalnız aylık planlarda).
+- [ ] 🔴 **CANLIDA YANLIŞ HUKUKİ METİN:** `app/gizlilik/page.tsx:25` "Ödeme bilgileri doğrudan
+      RevenueCat tarafından işlenir" diyor — RevenueCat entegre DEĞİL, hiç ödeme alınmıyor. Mobilde de
+      aynı (`paraner-app/app/privacy.tsx:24`) ve `terms.tsx:35` ("App Store üzerinden işlenir") bununla
+      ÇELİŞİYOR. Ödeme gelmeden önce üçü birden gerçeğe uydurulmalı.
+- [ ] **Pazarlamada sayı iddiası:** "N+ işletmenin tercihi" satırı ELLE yazılmayacak — kayıtlı işletme
+      sayısı DB'den okunup eşik üstündeyse basılacak, altındaysa doğrulanabilir güven satırı çıkacak.
+      Sebep: Ticari Reklam Yönetmeliği iddianın ispatlanabilir olmasını şart koşuyor (Reklam Kurulu
+      cezası). Aynı cümle soğuk mailde de kullanılacak → risk katlanır.
 
 ## 🤖 AI ASİSTAN — TEK BEYİN (web + mobil ortak) · `~/Developer/Paraner/parla/PLAN.md`
 > 🧪 **SONRAKİ OTURUMUN İLK İŞİ = UÇTAN UCA TEST** (Mehmet, 25.07 — "bir dahaki işe başlarken ilk bunu"):
