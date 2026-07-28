@@ -162,30 +162,6 @@ export default function PanelSearch({
   const ozelKatAlindi = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listeRef = useRef<HTMLDivElement>(null);
-  const kutuRef = useRef<HTMLDivElement>(null);
-  const [konum, setKonum] = useState<{ left: number; top: number; width: number } | null>(null);
-
-  /* Listeyi kutunun altına çivile. Portal `body`'de olduğu için hizalama CSS ile
-     yapılamıyor → kutunun ekrandaki yeri ölçülüp yazılıyor.
-     Telefonda kutu daraldığı için liste kutuya değil EKRANA göre genişler (yoksa
-     sonuçlar 200px'lik bir şeride sıkışırdı). */
-  const olc = useCallback(() => {
-    const r = kutuRef.current?.getBoundingClientRect();
-    if (!r) return;
-    const dar = window.innerWidth <= 760;
-    setKonum(
-      dar
-        ? { left: 12, top: r.bottom + 8, width: window.innerWidth - 24 }
-        : { left: r.left, top: r.bottom + 8, width: r.width }
-    );
-  }, []);
-
-  useEffect(() => {
-    if (!acik) return;
-    olc();
-    window.addEventListener("resize", olc);
-    return () => window.removeEventListener("resize", olc);
-  }, [acik, olc]);
 
   /* AÇILIŞ/KAPANIŞ — kapanışta liste bir anda YOK OLMASIN diye ayrı bir "kapanıyor"
      evresi var: `acik` false olunca DOM'dan hemen silmiyoruz, çıkış animasyonu bitene
@@ -216,17 +192,21 @@ export default function PanelSearch({
           (h.tagName === "INPUT" || h.tagName === "TEXTAREA" || h.isContentEditable);
         if (yaziAlani && h !== inputRef.current) return;
         e.preventDefault();
-        inputRef.current?.focus();
-        inputRef.current?.select();
         setAcik(true);
       }
-      if (e.key === "Escape") {
-        setAcik(false);
-        inputRef.current?.blur();
-      }
+      if (e.key === "Escape") setAcik(false);
     };
     window.addEventListener("keydown", f);
     return () => window.removeEventListener("keydown", f);
+  }, [acik]);
+
+  /* Pencere açılınca imleç doğrudan yazı alanında olsun (kullanıcı ikinci kez
+     tıklamak zorunda kalmasın). Portal DOM'a girdikten SONRA odaklanmalı →
+     bir kare beklenir. */
+  useEffect(() => {
+    if (!acik) return;
+    const r = requestAnimationFrame(() => inputRef.current?.focus());
+    return () => cancelAnimationFrame(r);
   }, [acik]);
 
   useEffect(() => {
@@ -347,64 +327,66 @@ export default function PanelSearch({
 
   return (
     <>
-      {/* Kutunun KENDİSİ gerçek input — ayrı bir "tetikleyici düğme + pencere içinde ikinci
-          input" kurgusu yoktu artık: kullanıcı ortadaki kutuya yazar, liste tam ALTINDA açılır. */}
-      <div className="ps-box" ref={kutuRef}>
+      {/* Üst bardaki kutu artık yazı alanı DEĞİL, yalnız TETİKLEYİCİ (Mehmet, 28.07:
+          "basıldığında ekranın ortasında belirsin" — Supabase/Linear komut penceresi deseni).
+          Yazı alanı pencerenin İÇİNDE; buradaki kutu görsel olarak aynı kalır. */}
+      <button type="button" className="ps-box" onClick={() => setAcik(true)} aria-haspopup="dialog" aria-expanded={acik}>
         <Search aria-hidden="true" />
-        <input
-          ref={inputRef}
-          className="ps-input"
-          value={terim}
-          onChange={(e) => {
-            setTerim(e.target.value);
-            setImlec(0);
-            if (!acik) setAcik(true);
-          }}
-          onFocus={() => setAcik(true)}
-          onKeyDown={tus}
-          placeholder="Ara"
-          aria-label="Panelde ara"
-          aria-expanded={acik}
-          autoComplete="off"
-          spellCheck={false}
-        />
-        {araniyor ? (
-          <span className="ps-spin" aria-label="Aranıyor" />
-        ) : terim ? (
-          <button
-            type="button"
-            className="ps-clear"
-            aria-label="Aramayı temizle"
-            onClick={() => {
-              setTerim("");
-              inputRef.current?.focus();
-            }}
-          >
-            <X aria-hidden="true" />
-          </button>
-        ) : (
-          <kbd className="ps-kbd" title={mac ? "Command + K" : "Ctrl + K"}>
-            {mac ? "⌘K" : "Ctrl K"}
-          </kbd>
-        )}
-      </div>
+        <span className="ps-box-txt">Ara</span>
+        <kbd className="ps-kbd" title={mac ? "Command + K" : "Ctrl + K"}>
+          {mac ? "⌘K" : "Ctrl K"}
+        </kbd>
+      </button>
 
-      {mounted && gorunur && konum && createPortal(
+      {mounted && gorunur && createPortal(
         <div
           className={`ps-overlay${acik ? "" : " kapaniyor"}`}
           onMouseDown={() => setAcik(false)}
           role="presentation"
         >
-          {/* Liste kutuya ÇİVİLİ: konum/genişlik kutunun ölçüsünden gelir (portal body'de
-              olduğu için CSS ile hizalanamaz, ölçüp yazıyoruz). */}
+          {/* Pencere EKRANIN ORTASINDA (artık kutuya çivili değil) → konum ölçmeye gerek yok,
+              hizalama tamamen CSS'te (`.ps-panel`). */}
           <div
             className={`ps-panel${acik ? "" : " kapaniyor"}`}
-            role="listbox"
-            aria-label="Arama sonuçları"
-            style={{ left: konum.left, top: konum.top, width: konum.width }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Panelde ara"
             onMouseDown={(e) => e.stopPropagation()}
           >
-            <div className="ps-results" ref={listeRef}>
+            <div className="ps-head">
+              <Search aria-hidden="true" />
+              <input
+                ref={inputRef}
+                className="ps-input"
+                value={terim}
+                onChange={(e) => {
+                  setTerim(e.target.value);
+                  setImlec(0);
+                }}
+                onKeyDown={tus}
+                placeholder="Sayfa, kişi, fatura ya da tutar ara…"
+                aria-label="Panelde ara"
+                autoComplete="off"
+                spellCheck={false}
+              />
+              {araniyor ? (
+                <span className="ps-spin" aria-label="Aranıyor" />
+              ) : terim ? (
+                <button
+                  type="button"
+                  className="ps-clear"
+                  aria-label="Aramayı temizle"
+                  onClick={() => {
+                    setTerim("");
+                    inputRef.current?.focus();
+                  }}
+                >
+                  <X aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
+
+            <div className="ps-results" ref={listeRef} role="listbox" aria-label="Arama sonuçları">
               {sayfaSonuc.length > 0 && (
                 <div className="ps-group">
                   <div className="ps-group-label">{terim.trim() ? "Sayfalar" : "Hızlı erişim"}</div>

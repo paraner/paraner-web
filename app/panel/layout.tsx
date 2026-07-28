@@ -105,7 +105,8 @@ export default function PanelLayout({
       </Suspense>
       <div className="panel-main">
         <header className="panel-topbar">
-          {/* Sıra ÖNEMLİ: arama kutusu en solda (Mehmet, 28.07), rozet hemen sağında. */}
+          {/* Arama kutusu üst barın TAM ORTASINDA durur (CSS'te `position:absolute`,
+              bkz. `.ps-box`) → akışta yer kaplamaz; rozet solda, ikonlar sağda kalır. */}
           <Suspense fallback={null}>
             <TopbarSearch />
           </Suspense>

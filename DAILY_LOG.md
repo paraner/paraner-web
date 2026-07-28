@@ -20,6 +20,19 @@
 
 ## Bu hafta (2026-07-23 →)
 
+### 28.07 (2) — Arama ORTAYA döndü + komut penceresi (Supabase deseni)
+Aynı gün sabah sola alınan arama kutusu **üst barın tam ortasına** geri kondu (Mehmet,
+ekran görüntüsüyle: "basıldığında böyle belirsin"). İki değişiklik:
+- **Kutu artık yazı alanı değil, DÜĞME.** Tıklayınca (ya da ⌘K/Ctrl+K) ekranın ortasında,
+  arkası kararmış bir **pencere** açılıyor; yazı alanı pencerenin içinde, sonuçlar altında.
+  Öncesi: yazı doğrudan üst bardaki kutuya giriyor, liste kutunun altına açılıyordu.
+- **Ortalama `position: absolute; left: 50%` ile** — akışla değil. Sebep: solda rozet
+  (deneme bitince kayboluyor), sağda ikon kümesi (sayısı değişiyor) → akışta ortalasak
+  kutu duruma göre kayardı. Telefonda (≤760px) ortalama kapalı: kutu akışa dönüp kalan
+  yeri dolduruyor, yoksa hamburger + sağdaki düğmelerle çakışıyordu.
+- Pencerenin konumu artık JS ile ÖLÇÜLMÜYOR (kutuya çivili değil) → `getBoundingClientRect`
+  + `resize` dinleyicisi kalktı, hizalama tamamen CSS'te.
+
 ### 28.07 (1) — HIZLI İŞLEM adası + üst bar düzeni + admin yazı tipi
 **Hızlı ekleme artık SAYFA DEĞİŞTİRMİYOR (6/6 modül).** Üst bardaki menüden bir şey
 seçilince ilgili sayfaya gidilip form orada açılıyordu (yavaş). Altı modülün ekleme formu
