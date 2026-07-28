@@ -33,6 +33,25 @@ ekran görüntüsüyle: "basıldığında böyle belirsin"). İki değişiklik:
 - Pencerenin konumu artık JS ile ÖLÇÜLMÜYOR (kutuya çivili değil) → `getBoundingClientRect`
   + `resize` dinleyicisi kalktı, hizalama tamamen CSS'te.
 
+**"Tam ortada mı?" denetimi — ÖLÇÜLDÜ, üç hata çıktı** (Mehmet: "sol/sağ panel açılıp
+kapanınca bile sayfanın tam ortasında olmalı"). Test hesabıyla 8 pencere genişliği ×
+menü açık/dar × Parla açık/kapalı ölçüldü:
+- ① **Kutu üst barın ortasındaydı, sayfanın değil** → menü açıkken merkezden **+130px**,
+  menü daralınca **+43px** sağdaydı; açılan pencere ise hep tam ortadaydı → kutuya basınca
+  pencere yana zıplıyordu. Şimdi ikisi de pencere merkezinde: **sapma 0px** (1024px ve
+  üstündeki tüm genişliklerde, dört durumda da).
+- ② ⚠️ **`position: fixed` üst barın İÇİNDE çalışmıyordu.** Sebep kalıcı ders:
+  `backdrop-filter`/`filter`/`transform` taşıyan bir ata, içindeki `fixed` öğe için
+  "pencere" yerine geçer → kutu pencereye değil ÜST BARA çivileniyordu. Zemin+bulanıklık
+  `.panel-topbar::before`'a taşındı (sözde öğe ata değildir) → görüntü aynı, hapis bitti.
+  **Üst bara yeniden filtre/transform eklenirse aynı hata geri gelir.**
+- ③ Karartma **Hızlı İşlem adasının (310) ve bildirim menüsünün (300) ALTINDA** kalıyordu
+  → pencere açıkken sağ üst köşe kararmadan parlıyordu. `.ps-overlay` 110 → **320**.
+- Yan ayar: kutu ortada sabit durduğu için dar pencerede rozetle/sağdaki kümeyle çakışma
+  riski var → genişlik `clamp(200px, 100vw - 840px, 460px)`, deneme rozeti daha erken
+  kısalıyor (tam ≥1520 · orta 1400-1519 · kısa <1400), **1000px altında ortalama kapalı**
+  (kutu akışa dönüyor — orada üç öğe yan yana zaten sığmıyor). Çakışma: hiçbir genişlikte yok.
+
 ### 28.07 (1) — HIZLI İŞLEM adası + üst bar düzeni + admin yazı tipi
 **Hızlı ekleme artık SAYFA DEĞİŞTİRMİYOR (6/6 modül).** Üst bardaki menüden bir şey
 seçilince ilgili sayfaya gidilip form orada açılıyordu (yavaş). Altı modülün ekleme formu

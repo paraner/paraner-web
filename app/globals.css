@@ -1896,16 +1896,24 @@ ul { list-style: none; }
   color: var(--danger);
 }
 .plan-rozet.acil:hover { border-color: rgba(226, 75, 74, 0.8); background: rgba(226, 75, 74, 0.19); }
-/* Rozet arama kutusunun HEMEN SAĞINDA. (Arama kutusu 28.07'de sola alındı → rozetin eski
-   yeri olan sol boşluk kalmadı; sağdaki küme `margin-left: auto` ile ayrıldığı için rozet
-   aradaki esnek boşlukta durur.) */
+/* Rozet üst barın EN SOLUNDA: arama kutusu artık akıştan çıktı (pencere ortasına sabit,
+   bkz. `.ps-box`) → akıştaki ilk öğe rozet oluyor, sağdaki küme `margin-left: auto` ile
+   sağa yaslanıyor. */
 .plan-rozet { flex-shrink: 0; }
-/* Üç metinden hangisi görünecek — ölçülmüş eşikler (bkz. PlanRozeti.tsx notu):
-   ≥1250px soldaki boşluk uzun cümleye yetiyor, altında orta metne düşülüyor. */
+/* Üç metinden hangisi görünecek — eşikler 28.07'de YENİDEN ÖLÇÜLDÜ (arama kutusu pencere
+   ortasına sabitlendi → rozete kalan yer artık pencere genişliğine bağlı):
+   ölçülen genişlikler: tam 228px · orta ~180px · kısa ~70px; rozet sol menü açıkken
+   288px'te başlar, kutunun sol kenarı `clamp(...)` ile 1300px altında 420px'te sabit.
+   Eşikler "rozetin sağ kenarı + 12px < kutunun sol kenarı" olacak şekilde seçildi.
+   ⚠️ Rozet kısalmazsa kutu ortada duramaz (ya rozetin üstüne biner ya ortadan kaçar). */
 .pr-orta, .pr-kisa { display: none; }
-@media (max-width: 1249px) {
+@media (max-width: 1519px) {
   .pr-tam { display: none; }
   .pr-orta { display: inline; }
+}
+@media (max-width: 1399px) {
+  .pr-orta { display: none; }
+  .pr-kisa { display: inline; }
 }
 
 /* ─── ÜST BAR: HIZLI İŞLEM — "DYNAMIC ISLAND" ─────────────────────────────────
@@ -2142,21 +2150,39 @@ ul { list-style: none; }
   padding: 16px 28px; border-bottom: 1px solid var(--border);
   /* sticky DEĞİL: kaydırma kutusunun dışında, zaten sabit (bkz. .panel-shell notu) */
   flex-shrink: 0; z-index: 10;
+}
+/* ⚠️ ZEMİN + BULANIKLIK AYRI KATMANDA (28.07). `backdrop-filter` doğrudan üst barın
+   üstündeyken, İÇİNDEKİ `position: fixed` öğeler pencereye değil ÜST BARA çivileniyordu
+   (CSS kuralı: filtre/transform taşıyan ata, fixed için "yeni pencere" olur).
+   ÖLÇÜLDÜ: arama kutusu bu yüzden sayfa merkezinden 130px sağda kalıyordu; filtre
+   kaldırılınca sapma 0 oldu. Görüntü aynı kalsın diye zemin+bulanıklık `::before`'a
+   taşındı — sözde öğe ATA DEĞİL, dolayısıyla kutuyu hapsetmez.
+   ⚠️ Üst bara yeni bir `filter`/`transform`/`backdrop-filter` EKLEME: aynı hata geri gelir. */
+.panel-topbar::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
   background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(12px);
 }
 /* ─── Panel geneli arama (üst bar) ───
-   ⚠️ Kutu ÜST BARIN TAM ORTASINDA (Mehmet, 28.07 — aynı gün önce sola alınmıştı, sonra
-   ortaya döndü). Ortalama `position: absolute; left: 50%` ile YAPILIR, akışla değil:
-   solda rozet, sağda ikon kümesi var; genişlikleri değişken (deneme rozeti kaybolur,
-   ikon eklenir) → akışta ortalasaydık kutu her durumda başka yerde durur, sayfa
-   değiştikçe kayardı. Mutlak ortalamada kutu HER ZAMAN ekranın orta çizgisinde.
+   ⚠️ Kutu SAYFANIN (pencerenin) tam ortasında — üst barın ortasında DEĞİL.
+   Fark önemli: üst bar sol menüden sonra başlar, sol menü daralınca üst barın ortası
+   87px sola kayıyordu → ÖLÇÜLDÜ (28.07): menü açıkken kutu sayfa merkezinden +130px,
+   daralınca +43px sağdaydı; açılan komut penceresi ise (ekranın ortasında) 0px'ti →
+   kutuya basınca pencere yana zıplıyordu (Mehmet fark etti).
+   ÇÖZÜM: `position: fixed` + `left: 50%` → ölçü PENCEREDEN alınır; sol menü açılsın
+   kapansın, Parla çekmecesi açılsın, kutu da pencere de HEP aynı orta çizgide.
+   ⚠️ `top: 16px` üst barın kendi iç boşluğuyla aynı (ölçüldü: kutu 16px'ten başlıyor,
+   üst bar 73px). `--panel-topbar-h` BURAYA yazılmadı: o değişken 71px diyor, gerçek 73.
+   ⚠️ Genişlik `100vw - 840px` ile daralır: solda deneme rozeti (en uzun hâli 228px,
+   sol menü açıkken 516px'te biter), sağda Hızlı İşlem + ikonlar (264px) var; kutu ortada
+   sabit durduğu için dar pencerede İKİSİNİN DE üstüne binerdi. Bu formülle kutunun sol
+   kenarı 1300px altında 420px'te sabitlenir. Rozet de erken kısalır (bkz. `.pr-orta`).
    ⚠️ Ortadaki kutu artık yazı alanı değil, pencereyi açan DÜĞME (bkz. `.ps-panel`). */
 .panel-topbar { position: relative; }
 .ps-box {
-  position: absolute; left: 50%; transform: translateX(-50%);
+  position: fixed; left: 50%; transform: translateX(-50%); top: 16px; z-index: 11;
   appearance: none; cursor: pointer; font-family: inherit; text-align: left;
   display: flex; align-items: center; gap: 9px;
-  width: min(460px, 40vw); height: 40px; padding: 0 12px; border-radius: 11px;
+  width: clamp(200px, calc(100vw - 840px), 460px); height: 40px; padding: 0 12px; border-radius: 11px;
   background: rgba(255, 255, 255, 0.045); border: 1px solid var(--border);
   color: var(--text-dim); font-size: 13.5px;
   transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
@@ -2186,12 +2212,26 @@ ul { list-style: none; }
   /* Windows'ta yazı "Ctrl K" (⌘K'dan geniş) → ne sarsın ne de yazı alanını ezsin */
   white-space: nowrap; flex-shrink: 0;
 }
+/* Dar pencerede ORTALAMADAN VAZGEÇİLİR (1000px altı): sol menü 248px + rozet + sağdaki
+   küme yan yana zaten ~660px yer kaplıyor; pencere ortasında sabit duran bir kutu orada
+   kaçınılmaz olarak birinin üstüne biner. Kutu akışa döner, kalan yeri doldurur —
+   telefondaki davranışın aynısı. AÇILAN PENCERE yine tam ortada (o hep ortada). */
+@media (max-width: 999px) {
+  .ps-box {
+    position: static; transform: none;
+    width: auto; flex: 1 1 auto; min-width: 0; margin-right: 10px;
+  }
+}
 
 /* Karartma: pencere ekranın ORTASINDA duran bir katman → arkası belirgin şekilde
    geri çekilir (Supabase/Linear komut penceresi gibi). Aynı zamanda "dışarı tıklayınca
    kapat" yüzeyi. */
 .ps-overlay {
-  position: fixed; inset: 0; z-index: 110; background: rgba(0, 0, 0, 0.55);
+  /* z-index 110 → 320 (28.07): 110'da karartma, `body`ye portal edilen iki komşunun
+     ALTINDA kalıyordu — Hızlı İşlem adası (310) ve bildirim menüsü (300) pencere
+     açıkken kararmadan parlıyordu (ölçüldü: üst barın sağ ucunda en üstteki öğe
+     `.di-bas-txt`di). 320 = ikisinin hemen üstü, modalın (1000) ve toast'ın (9999) altı. */
+  position: fixed; inset: 0; z-index: 320; background: rgba(0, 0, 0, 0.55);
   display: flex; justify-content: center; align-items: flex-start;
   /* Tam dikey orta DEĞİL: pencere büyüdükçe aşağı doğru uzasın, üstü sabit kalsın —
      ekranın biraz üstünde durması gözün yazı alanını aramasını engeller. */

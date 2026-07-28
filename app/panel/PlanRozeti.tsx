@@ -73,11 +73,12 @@ export default function PlanRozeti({
 }
 
 /* ÜÇ METİN, TEK BİLEŞEN — hangisinin görüneceğine CSS karar verir.
-   ⚠️ Neden üç: dar ekranda uzun cümle üst barı taşırıyor. Ölçüm 27.07'de rozet SOLDA,
-   arama kutusu ORTADAYKEN yapılmıştı; 28.07'de arama kutusu sola alındı ve rozet onun
-   sağına geçti → rozete kalan yer ARTTI, eşikler bilerek olduğu gibi bırakıldı (güvenli
-   taraf: erken kısalmak, taşmaktan iyidir). Yeniden ölçülecekse `.pr-*` kuralları
-   globals.css'te tek yerde. */
+   ⚠️ Neden üç: dar ekranda uzun cümle üst barı taşırıyor. Eşikler 28.07 AKŞAMI yeniden
+   ölçüldü: arama kutusu pencerenin tam ortasına ÇİVİLENDİ (sol menü açılıp kapansa da
+   kımıldamıyor) → rozete kalan yer artık pencere genişliğine bağlı ve rozet ZAMANINDA
+   kısalmazsa kutunun üstüne biner. Ölçülen genişlikler: tam 228px · orta ~180px ·
+   kısa ~70px → tam ≥1520px, orta 1400-1519px, kısa <1400px.
+   Eşikler `.pr-*` kurallarında (globals.css), tek yerde. */
 function Rozet({
   tam,
   orta,
