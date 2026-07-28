@@ -20,6 +20,65 @@
 
 ## Bu hafta (2026-07-23 →)
 
+### 28.07 (1) — HIZLI İŞLEM adası + üst bar düzeni + admin yazı tipi
+**Hızlı ekleme artık SAYFA DEĞİŞTİRMİYOR (6/6 modül).** Üst bardaki menüden bir şey
+seçilince ilgili sayfaya gidilip form orada açılıyordu (yavaş). Altı modülün ekleme formu
+ayrı bileşene **taşındı** (kopya değil taşıma): `MusteriFormu` · `UrunFormu` · `HesapFormu`
+· `TeklifFormu` · `FaturaFormu` · `IslemFormu`. Hem modülün kendi sayfası hem üst bar AYNI
+bileşeni açar → alan eklenince iki yer de alır. Formlar `next/dynamic` ile talep anında
+yükleniyor, `body`ye portal ediliyor.
+- ⚠️ **Yeni bir hızlı-ekleme satırı eklenirse** `app/panel/HizliEkle.tsx` içindeki `form`
+  dalını kullan; `href` dalı (o sayfaya git) artık BOŞ, yalnız gerçekten gezinme gereken
+  çok adımlı işler için bırakıldı.
+- Yan düzeltmeler: liste sayfaları `useServerSynced`e geçti (başka sayfadan eklenen kayıt
+  "yok" görünmesin) · teklif numarası artık **kaydetme anında** DB'den üretiliyor (sayfa
+  uzun açık kalınca mükerrer numara riski kalktı, sayfadan bir sorgu da eksildi) · yeni
+  hesabın "varsayılan mı" kararı ekrandaki listeden değil **DB sayımından**.
+
+**Üst bar:** arama kutusu ortadan **sola** alındı (rozet onun sağına geçti) · `+` ikonu
+**"Hızlı İşlem"** yazılı düğme oldu · menü `body`ye portal edildi (üst bar `z-index: 10`
+ile kendi yığın bağlamını kurduğu için menü **Parla çekmecesinin altında** kalıyordu).
+
+**"Dynamic island" açılışı** (Mehmet istedi, web araştırıldı — beui.dev · cho.sh ·
+Chrome `linear()` · WWDC23). Uygulanan dört kural: ① düğme ve menü **TEK KUTU**, aynı
+kabuk büyüyor ② **köşe yarıçapı animasyona SOKULMAZ** (tarayıcı yarıçapı yüksekliğin
+yarısına kısar → pil↔dikdörtgen dönüşümü bedava; yarıçapı da oynatmak "şişen köşe" hissi
+veriyordu) ③ **iki ayrı yay**: kabuk sakin / içerik canlı, gerçek yay denklemi 29 noktada
+örneklenip CSS `linear()`e yazıldı → **kütüphane yok, çalışma anında JS yok** ④ içerik
+kutuyu izler (bulanıktan nete, satırlar sırayla).
+- ⚠️ **Ada `body`ye portal + `position: fixed`** → yeri ÖLÇÜLEREK konuluyor. İki ölçüm
+  hatası canlıda yakalandı, ikisi de kalıcı not: **(a)** ölçüm `mounted`e bağlı olmalı —
+  portal ilk render'da basılmadığı için ref'ler boştu, ölçüm sessizce boş dönüp bir daha
+  çalışmıyordu → ada 20px aşağı düşüyordu; "bazen düzgün bazen bozuk" olmasının sebebi
+  `document.fonts.ready`nin bazen geç çözülüp ölçümü kurtarmasıydı (yazı tipi
+  önbellekteyse kurtarmıyor). **(b)** konum, ölçü DOM'a yazıldıktan SONRA alınmalı; ayrıca
+  yer tutucu + üst bar `ResizeObserver` ile ve pencere `resize` ile sürekli izleniyor
+  (sol menü daralınca / pencere değişince ada hizadan çıkıyordu).
+
+**Diğer düzeltmeler:**
+- **Admin panelin sayfa başlıkları serif çıkıyordu.** Genel `h1` kuralı Playfair (serif)
+  veriyor — o kural pazarlama sayfaları için; uygulama ekranları muaf tutuluyor ama
+  muafiyet listesinde `.admin-shell` YOKTU. ⚠️ **Yeni bir kabuk/ekran eklersen başlığını
+  `globals.css`teki o listeye de ekle.**
+- Odak halkası (Tab ile gezerken) tarayıcının MAVİ varsayılanıydı → temaya çevrildi ve
+  uygulama içinde **İÇERİ** çiziliyor (`outline-offset: -2px`): dışa taşan halka
+  `overflow` kırpan liste/ray/kartlarda kesiliyor, dar menüde komşu satıra değiyordu.
+- Sol menü daraltılmışken profil menüsünde **hesap adları görünmüyordu** (daraltma kuralı
+  `flex: 0 0 0` veriyor, `width: auto` onu ezmiyor → isim satırı `overflow: hidden`
+  olduğu için kırpılıyor, tür satırı taşarak görünmeye devam ediyordu). Aynı eksik telefon
+  çekmecesinde de vardı.
+- Sol menüye `z-index: 20`: `position: sticky` kendi yığın bağlamını açtığı için profil
+  menüsü arkadaki grafiğin ALTINDA kalıyordu ("menü şeffaf mı?").
+- Arama kutusundaki kısayol ipucu işletim sistemine göre: Mac'te `⌘K`, Windows'ta `Ctrl K`
+  (kısayolun kendisi zaten ikisini de dinliyordu, eksik olan yazıydı).
+
+**Plan (kod değil):** işletmelere soğuk mail kampanyası → `docs/SOGUK-MAIL-PLANI.md`.
+⚠️ İki tuzak kaynaktan doğrulandı: kampanya **paraner.com'dan gönderilemez** (spam şikâyeti
+şifre sıfırlama maillerini de öldürür) ve **Resend'den gönderilemez** (sözleşmesi soğuk
+maili yasaklıyor; hesap askıya alınırsa ürünün TÜM mailleri durur). Klaviyo/Mailchimp/Brevo
+da aynı kategoride. Yasal: tacir/esnafa önceden onay gerekmiyor ama **İYS kaydı + ret
+kontrolü** zorunlu. Kampanya, ödeme sistemi bitmeden başlamamalı.
+
 ### 27.07 (4) — DENEME SÜRESİ DENETİMİ: tutarsızlık YOK, her yerde 14 gün
 - Mehmet sordu ("14 gün sanırım, komple app ve web'de tutarsızlık var mı"). **Canlı
   veritabanına SORULARAK** doğrulandı (repoya bakarak değil): `get_trial_status` RPC'si
