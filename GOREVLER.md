@@ -256,6 +256,12 @@
 - [ ] **Hesap silme v2:** admin/dashboard silmede FARKLI mail (kullanıcı kendi silince "Görüşmek üzere" var;
       biz silersek ayrı). Trigger'a silme kaynağı ayrımı.
 - [ ] Dış-entegrasyon "Yakında": Fiş Tara (OCR), Döviz & Altın (API), PDF Rapor, SGK, e-Defter, Muhasebeci.
+- [ ] **Soğuk mail kampanyası** — işletmelere "14 gün ücretsiz" maili (10.000+). Plan hazır:
+      `docs/SOGUK-MAIL-PLANI.md`. ⚠️ İKİ TUZAK: (1) paraner.com'dan GÖNDERİLMEZ — spam şikâyeti
+      şifre sıfırlama maillerini de öldürür, ayrı alan adı şart. (2) Resend'den GÖNDERİLMEZ —
+      sözleşmesi soğuk maili yasaklıyor, hesap askıya alınırsa tüm işlem mailleri durur.
+      Ayrıca İYS kaydı zorunlu (tacir/esnafa onay gerekmiyor ama kayıt + ret kontrolü gerekiyor).
+      Başlamadan önce ödeme sistemi + onboarding bitmiş olmalı.
 
 ## Notlar
 - DB şemasına dokunma — mobil aynı şemayı kullanıyor; yeni kolon/tablo gerekiyorsa önce sor.
