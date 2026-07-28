@@ -30,7 +30,7 @@
  * formların kodu her sayfaya bindirilseydi ilk açılış yavaşlardı.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -81,6 +81,10 @@ const BIREYSEL: Eylem[] = [
 
 /** Fare düğmeden panele geçerken aradaki boşlukta kapanmasın diye tolerans. */
 const KAPANMA_GECIKMESI = 140;
+
+/* Sunucuda `useLayoutEffect` uyarı basar (DOM yok). Ölçüm boyaMADAN önce yapılmalı →
+   tarayıcıda layout, sunucuda normal effect. Modül seviyesinde sabit, koşullu hook değil. */
+const useYerlesimEtkisi = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export default function HizliEkle({
   profileId,
@@ -156,12 +160,17 @@ export default function HizliEkle({
      Yazı tipi geç yüklenirse genişlik değişebilir → `document.fonts.ready` sonrası bir daha. */
   useEffect(() => {
     olcumAl();
+    document.fonts?.ready.then(olcumAl);
+  }, [olcumAl, profileType]);
+
+  /* ⚠️ KONUM, ÖLÇÜDEN SONRA alınmalı — SIRA ÖNEMLİ (28.07 canlı hata: pil öteki üst bar
+     düğmelerinden ~20px AŞAĞIDA duruyordu, üst barın alt çizgisini taşıyordu).
+     Sebep: yer tutucunun yüksekliği `olcu`dan geliyor; ölçümle aynı turda konum alınınca
+     yer tutucu HENÜZ 0 yükseklikteydi ve dikeyde ortalı kutunun ortası ölçülüyordu.
+     `olcu` ekrana yazıldıktan SONRA (layout effect) ölçmek şart. */
+  useYerlesimEtkisi(() => {
     konumOlc();
-    document.fonts?.ready.then(() => {
-      olcumAl();
-      konumOlc();
-    });
-  }, [olcumAl, konumOlc, profileType]);
+  }, [konumOlc, olcu]);
 
   const iptal = () => {
     if (kapatmaZamani.current) clearTimeout(kapatmaZamani.current);

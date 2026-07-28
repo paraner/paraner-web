@@ -1944,8 +1944,12 @@ ul { list-style: none; }
   width: max-content;
   height: var(--di-y0, 40px);
   overflow: hidden;
-  /* ② SABİT yarıçap — animasyona SOKULMAZ (yukarıdaki nota bak) */
-  border-radius: 18px;
+  /* ② SABİT yarıçap — animasyona SOKULMAZ (yukarıdaki nota bak).
+     ⚠️ 18px DEĞİL 12px: 18'de kapalı pil neredeyse stadyum şekli oluyordu ve yanındaki
+     Parla/bildirim düğmeleriyle (11px) aynı dili konuşmuyordu — üst barda yabancı bir
+     "baloncuk" gibi duruyordu (Mehmet, 28.07). 12px hem üst barın diliyle uyumlu hem
+     açıkken menü köşesi olarak doğru. */
+  border-radius: 12px;
   /* Kapalıyken üst barın öteki düğmeleriyle aynı dil; açılınca menü zeminine geçer */
   background: rgba(255, 255, 255, 0.045);
   border: 1px solid var(--border);
