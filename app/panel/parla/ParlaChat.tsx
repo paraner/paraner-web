@@ -150,7 +150,7 @@ export default function ParlaChat() {
   const [genis, setGenis] = useState(false);
   const [kapaniyor, setKapaniyor] = useState(false);
   const [girdi, setGirdi] = useState(false); // ilk kareden sonra true → içeri kayar
-  const surukleW = useRef<{ x0: number; w0: number } | null>(null);
+  const surukleBirak = useRef<(() => void) | null>(null);
   const kapatmaZamani = useRef<ReturnType<typeof setTimeout> | null>(null);
   const oncekiAcik = useRef(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -405,17 +405,29 @@ export default function ParlaChat() {
      Menü daraltılabildiği için (248 ↔ 74) değer SABİT YAZILAMAZ; menüyü ölçüp yazıyoruz.
      ⚠️ Telefonda menü çekmece (akışta yer kaplamıyor) → orada 0 yazılır, panel zaten
      tam ekran olduğu için etkisi yok. */
+  /* ⚠️ MENÜ SONRADAN GELİYOR (01.08 — canlıda ölçüldü: menü daraltılınca genişlet 174px
+     şaşıyordu). Sol menü `layout.tsx`te Suspense içinde AKIŞLA geliyor; Parla üst barda
+     ondan ÖNCE bağlanıyor. İlk hâlde `querySelector` boş dönüp `return` ediyor, bir daha
+     da denemiyordu → değişken 248'de donuyordu. Artık menü belirene kadar DOM izleniyor. */
   useEffect(() => {
-    const menu = document.querySelector(".panel-sidebar");
-    if (!menu) return;
-    const yaz = () => {
-      const w = (menu as HTMLElement).getBoundingClientRect().width;
+    let gozlemci: ResizeObserver | null = null;
+    const yaz = (menu: Element) => {
+      const w = menu.getBoundingClientRect().width;
       document.body.style.setProperty("--parla-nav-w", `${Math.round(w)}px`);
     };
-    yaz();
-    const gozlemci = new ResizeObserver(yaz);
-    gozlemci.observe(menu);
-    return () => gozlemci.disconnect();
+    const bagla = () => {
+      const menu = document.querySelector(".panel-sidebar");
+      if (!menu) return false;
+      yaz(menu);
+      gozlemci = new ResizeObserver(() => yaz(menu));
+      gozlemci.observe(menu);
+      return true;
+    };
+    if (bagla()) return () => gozlemci?.disconnect();
+    // Henüz yok → gelene kadar izle, gelince bağlan ve izlemeyi bırak.
+    const dom = new MutationObserver(() => { if (bagla()) dom.disconnect(); });
+    dom.observe(document.body, { childList: true, subtree: true });
+    return () => { dom.disconnect(); gozlemci?.disconnect(); };
   }, []);
 
   /* ─── Kapanış animasyonu ───
@@ -448,25 +460,37 @@ export default function ParlaChat() {
      anlık takip ediyor (bırakınca değil). `pointer` olayları kullanılıyor → fare,
      kalem ve dokunmatik tek kodla çalışır; `setPointerCapture` sayesinde imleç panelin
      dışına çıksa bile sürükleme kopmaz. */
+  /* ⚠️ DİNLEYİCİLER PENCEREDE, tutamakta DEĞİL (01.08 — canlıda ölçüldü, ilk hâli HİÇ
+     çalışmadı). Önce tutamağın kendi `onPointerMove`u + `setPointerCapture` kullanılmıştı:
+     `pointerdown` çalışıyordu (`body.parla-dragging` ekleniyordu) ama hareket hiç gelmiyor,
+     sınıf da üstte kalıyordu. Tutamak 8px — imleç ilk karede dışına çıkıyor ve olay
+     yakalama React'in kök dinleyicisiyle güvenilir kurulmuyor.
+     Pencereye bağlanınca imleç NEREYE giderse gitsin hareket gelir; bırakma da garanti. */
   const surukleBasla = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    surukleW.current = { x0: e.clientX, w0: genislik };
-    e.currentTarget.setPointerCapture(e.pointerId);
+    const x0 = e.clientX;
+    const w0 = genislik;
     document.body.classList.add("parla-dragging");
+
+    const hareket = (ev: PointerEvent) => {
+      // Panel SAĞDA: imleç sola gidince (fark negatif) panel GENİŞLER → işaret ters.
+      const hedef = w0 - (ev.clientX - x0);
+      setGenislik(Math.min(PARLA_MAX_W, Math.max(PARLA_MIN_W, Math.round(hedef))));
+    };
+    const bitir = () => {
+      document.body.classList.remove("parla-dragging");
+      window.removeEventListener("pointermove", hareket);
+      window.removeEventListener("pointerup", bitir);
+      window.removeEventListener("pointercancel", bitir);
+      surukleBirak.current = null;
+    };
+    window.addEventListener("pointermove", hareket);
+    window.addEventListener("pointerup", bitir);
+    window.addEventListener("pointercancel", bitir);
+    surukleBirak.current = bitir; // sürükleme ortasında bileşen sökülürse temizlensin
   }, [genislik]);
 
-  const surukleHareket = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
-    const s = surukleW.current;
-    if (!s) return;
-    // Panel SAĞDA: imleç sola gidince (fark negatif) panel GENİŞLER → işaret ters.
-    const hedef = s.w0 - (e.clientX - s.x0);
-    setGenislik(Math.min(PARLA_MAX_W, Math.max(PARLA_MIN_W, Math.round(hedef))));
-  }, []);
-
-  const surukleBitir = useCallback(() => {
-    surukleW.current = null;
-    document.body.classList.remove("parla-dragging");
-  }, []);
+  useEffect(() => () => { surukleBirak.current?.(); }, []);
 
   /* Klavyeyle boyutlandırma (tutamak odaktayken ok tuşları) — fare kullanamayan
      kullanıcı da genişliği değiştirebilsin. Shopify'da yok, erişilebilirlik için eklendi. */
@@ -831,9 +855,6 @@ export default function ParlaChat() {
             type="button"
             className="parla-resize"
             onPointerDown={surukleBasla}
-            onPointerMove={surukleHareket}
-            onPointerUp={surukleBitir}
-            onPointerCancel={surukleBitir}
             onKeyDown={surukleTus}
             aria-label="Paneli yeniden boyutlandır"
             title="Sürükleyerek genişliği değiştir"

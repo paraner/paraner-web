@@ -5558,8 +5558,10 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
               bottom 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 /* Sürüklenirken genişlik parmağı BİREBİR takip etsin — geçiş araya girmesin
-   (Shopify'da da içerik sürükleme sırasında anlık takip ediyor, bırakınca değil). */
-.parla-drawer.dragging { transition: none; }
+   (Shopify'da da içerik sürükleme sırasında anlık takip ediyor, bırakınca değil).
+   ⚠️ Sınıf BODY'de (`parla-dragging`), kutunun kendisinde değil — ParlaChat onu body'ye
+   basıyor. Önce yanlışlıkla `.parla-drawer.dragging` yazılmıştı, hiç eşleşmiyordu. */
+body.parla-dragging .parla-drawer { transition: none; }
 /* Kapanış: sağa kayarak çıkar (8px = Shopify'ın kullandığı fazladan pay) */
 .parla-drawer.kapali { transform: translateX(calc(100% + 8px)); pointer-events: none; }
 
@@ -5601,17 +5603,17 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
    768–1039  yüzen kart: 356px, kenarlardan 4px içeride, köşeler tam yuvarlak
    ≤767      tam ekran: üst barı da kapatır, köşe yok, tutamak kaybolur */
 @media (max-width: 1039px) {
-  .parla-drawer {
-    top: calc(var(--panel-topbar-h) + 4px); right: 4px; bottom: 4px;
-    width: 356px;
-  }
-  .parla-panel { border-radius: var(--parla-radius); }
-  .parla-drawer.kapali { transform: translateX(calc(100% + 8px)); }
+  /* ⚠️ KENARA YAPIŞIK KALIR — Shopify burada 4px içeri çekip yüzen kart yapıyor, biz
+     YAPMIYORUZ. Sebep (01.08 canlı ölçüm): 4px boşluk bırakılınca içeriğin kaydırma
+     çubuğu (x 889–900) panelin sağ kenarının (896) DIŞINDA kalıp o boşluktan görünüyor →
+     Parla'nın kendi çubuğuyla (885–896) yan yana İKİ ÇUBUK. Bütün bu işin çıkış noktası
+     tam da buydu. Panel kenara yapışınca içeriğin çubuğunu tamamen örtüyor.
+     (Shopify'da da aynı artık var — orada 4px'lik ince bir şerit sızıyor.) */
+  .parla-drawer { width: 356px; }
   /* Dar ekranda sürükleme ve genişletme yok — yer zaten yok (Shopify da kaldırıyor) */
   .parla-resize { display: none; }
   .parla-genislet { display: none; }
   .parla-drawer.genis { width: 356px; }
-  .parla-drawer.genis .parla-panel { border-radius: var(--parla-radius); }
 }
 @media (max-width: 767px) {
   .parla-drawer {
@@ -5619,7 +5621,11 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
   }
   .parla-panel { border-radius: 0; border-left: none; }
   .parla-drawer.genis { width: auto; }
-  .parla-drawer.genis .parla-panel { border-radius: 0; }
+  /* ⚠️ Panel tam ekranken ARKADAKİ SAYFA KAYMASIN (01.08 canlı ölçüm: 700px'te panelin
+     sağında sayfanın kendi kaydırma çubuğu 11px'lik şerit hâlinde görünüyordu — panel
+     `left:0; right:0` olduğu için 100vw'ye değil, çubuğun soluna kadar uzanıyor).
+     Sol menü çekmecesinde de aynı desen var: `body.panel-menu-open { overflow: hidden }`. */
+  body.parla-open { overflow: hidden; }
 }
 
 /* ═══ İÇERİK SOLA KAYAR — sağdan çekmece (Parla / işlem-fatura detayı) açıkken ═══
