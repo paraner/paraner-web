@@ -2364,7 +2364,11 @@ ul { list-style: none; }
 .panel-logout:hover { background: var(--card-2); border-color: var(--border-strong); }
 .panel-logout:disabled { opacity: 0.55; cursor: not-allowed; }
 .panel-content {
-  padding: 28px 32px; width: 100%;
+  padding: 28px 32px;
+  /* ⚠️ `width: 100%` DEĞİL (28.07): sağdan çekmece açılınca bu kutuya `margin-right`
+     veriliyor; `width:100%` kap genişliğine kilitlendiği için margin'i yok sayar ve kutu
+     taşar. Dikey flex'te varsayılan `stretch` zaten tam genişlik verir → `auto` doğrusu. */
+  width: auto;
   flex: 1; min-height: 0; overflow-y: auto;
   /* Lastik kaydırma dışarı taşmasın (kabuğu esnetmesin) */
   overscroll-behavior: contain;
@@ -2797,10 +2801,16 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
 /* İşlem satırı tıklanabilir (detay paneli) */
 .tx-row-click { cursor: pointer; }
 
-/* Detay paneli açıkken liste alanı sola kayar (drawer'ın altına girmez) */
+/* Detay paneli açıkken liste alanı sola kayar (drawer'ın altına girmez).
+   ⚠️ MÜŞTERİ PANELİNDE kayma artık BURADA değil: kaydırma kutusu olan `.panel-content`
+   daralıyor (bkz. "İÇERİK SOLA KAYAR" bloğu) — yoksa kaydırma çubuğu pencerenin sağ
+   kenarında, çekmecenin arkasında kalıyor. Burada `.shifted` yalnız SINIF olarak duruyor;
+   `:has()` onu okuyup kutuyu daraltıyor.
+   Admin kabuğunda (`.admin-content`) kaydırma pencerenin kendisinde olduğu için çubuk
+   zaten taşınamaz → orada eski yöntem (iç boşluk) geçerli kalıyor. */
 .tx-area { transition: padding-right 0.24s cubic-bezier(0.22, 1, 0.36, 1); }
-.tx-area.shifted { padding-right: 408px; }
-@media (max-width: 1040px) { .tx-area.shifted { padding-right: 0; } }
+.admin-content .tx-area.shifted { padding-right: 408px; }
+@media (max-width: 1040px) { .admin-content .tx-area.shifted { padding-right: 0; } }
 
 /* Sağ detay paneli (drawer) */
 /* Sağ detay paneli — üst bar yüksekliği (16+38+16+1 ≈ 71px) altından başlar,
@@ -5493,16 +5503,24 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
   .parla-drawer { left: 12px; right: 12px; width: auto; }
 }
 
-/* İÇERİK SOLA KAYAR — Parla açıkken sayfa çekmecenin altına girmez.
-   İşlemler'deki `.tx-area.shifted` ile AYNI davranış ve aynı ölçü (408 = 384 + 12 + 12),
-   ama TÜM panel sayfaları için: kabuğun tek ortak sarmalayıcısı `.panel-content`.
-   Sınıf body'ye ParlaChat tarafından basılır (kabuk sunucu bileşeni; prop geçirmek yerine
-   tek satır sınıf → hiçbir sayfanın kodu değişmez, yeni sayfalar da otomatik uyar).
-   ⚠️ Dar ekranda kaydırma YOK: yer kalmadığı için çekmece üstte durur (tx-drawer ile aynı eşik). */
-.panel-content { transition: padding-right 0.24s cubic-bezier(0.22, 1, 0.36, 1); }
-body.parla-open .panel-content { padding-right: 408px; }
+/* ═══ İÇERİK SOLA KAYAR — sağdan çekmece (Parla / işlem-fatura detayı) açıkken ═══
+   ⚠️ KAYDIRMA KUTUSUNUN KENDİSİ DARALIR (`margin-right`), içine boşluk KONMAZ (`padding-right`).
+   Sebep (Mehmet, 28.07 — "scroll çubukları karmaşık gözüküyor", ölçüldü):
+   iç boşluk verilince yazılar sola kayar ama kutu pencerenin sağ kenarında kalır →
+   kaydırma çubuğu da orada kalır. Ölçüm (1600px ekran): sayfa çubuğu x=1600, Parla'nın
+   kendi çubuğu x=1587 → sağ kenarda 13px arayla İKİ çubuk, üstelik sayfa çubuğu
+   kaydırdığı yazılardan 400px uzakta. Kutuyu daraltınca çubuk içerikle birlikte sola
+   gelir ve çekmecenin soluna oturur (Shopify Sidekick'te de içerik sütunu gerçekten daralır).
+   Ölçü: 408 = çekmece 384 + sağ boşluğu 12 + aradaki boşluk 12.
+   `body.parla-open` sınıfını ParlaChat basar; `.tx-area.shifted` ise İşlemler/Faturalar
+   detay çekmecesi → `:has()` ile aynı kural, o sayfaların kodu değişmiyor.
+   ⚠️ Dar ekranda kayma YOK: yer kalmadığı için çekmece içeriğin üstünde durur. */
+.panel-content { transition: margin-right 0.24s cubic-bezier(0.22, 1, 0.36, 1); }
+body.parla-open .panel-content,
+.panel-content:has(.tx-area.shifted) { margin-right: 408px; }
 @media (max-width: 1040px) {
-  body.parla-open .panel-content { padding-right: 32px; }
+  body.parla-open .panel-content,
+  .panel-content:has(.tx-area.shifted) { margin-right: 0; }
 }
 
 .parla-head {

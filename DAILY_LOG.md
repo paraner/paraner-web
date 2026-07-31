@@ -20,6 +20,45 @@
 
 ## Bu hafta (2026-07-23 →)
 
+### 01.08 — Sağdan çekmece açılınca KAYDIRMA ÇUBUĞU da sola geliyor
+Mehmet: "Parla açılınca scroll çubukları karmaşık gözüküyor; sayfanın scroll'u sola
+kayarak sağdan Parla çıksın" (+ Shopify Sidekick ekran görüntüleri).
+
+**Sebep — kayma SAHTEYDİ:** `.panel-content`'e `padding-right: 408px` veriliyordu. Yazılar
+sola kayıyor ama **kutu pencerenin sağ kenarında kalıyor**; kaydırma çubuğu her zaman
+kutunun kenarına oturduğu için çubuk da orada kalıyordu. Canlıda ölçüldü (1600px):
+sayfa çubuğu **x=1600**, Parla'nın kendi çubuğu **x=1587** → sağ kenarda **13px arayla iki
+çubuk**, üstelik sayfa çubuğu kaydırdığı yazılardan 400px uzakta.
+
+**Shopify ne yapıyor (ekran görüntülerinden):** chat yüzen kutu değil, **gerçek üçüncü
+sütun**. Üst bar tam genişlikte kalıyor; altındaki alan sol menü · içerik · chat diye
+bölünüyor. İçerik sütunu fiziksel olarak daraldığı için çubuğu da onunla sola geliyor;
+sığmayan tablo sütunun İÇİNDE yatay kayıyor (chat açıkken sütunlar kırpılmış + tablonun
+altında yatay çubuk çıkmış).
+
+**Çözüm:** iç boşluk yerine **kutunun kendisi daralıyor** → `margin-right: 408px`
+(= çekmece 384 + sağ boşluk 12 + ara boşluk 12). Tek CSS bloğu; hiçbir sayfanın kodu
+değişmedi. İşlemler/Faturalar detay çekmecesi de aynı kurala `:has(.tx-area.shifted)` ile
+bağlandı (o bileşenlere dokunulmadı). ⚠️ `.panel-content`'ten `width: 100%` KALKTI —
+`width:100%` kap genişliğine kilitlenip margin'i yok sayıyor, kutu taşıyordu; dikey
+flex'te `stretch` zaten tam genişlik veriyor.
+- ⚠️ **Admin kabuğu ayrı bırakıldı:** orada kaydırma pencerenin kendisinde, çubuk
+  taşınamaz → `.admin-content .tx-area.shifted` eski iç-boşluk yöntemini sürdürüyor
+  (ölçülerek teyit edildi: açılınca hâlâ `padding-right: 408px`).
+- **Ölçüm (yerel prod build, test hesabı):** 1600 ve 1280px'te içerik sağ kenarı çekmecenin
+  tam **12px** solunda; iki çubuk arası 13px → **395px** (her biri kendi sütununda).
+  **30 panel sayfası Parla açıkken tarandı: 30/30 yatay taşma 0px.**
+- ⚠️ **≤1040px'te DEĞİŞMEDİ** (bilinçli, eski karar): yer olmadığı için çekmece içeriğin
+  ÜSTÜNDE duruyor, sayfa kutusu daralmıyor → orada iki çubuk hâlâ 13px arayla. Düzeltmek
+  istenirse o aralıkta çekmecenin tam genişliğe çıkması ya da sayfa kaydırmasının
+  kilitlenmesi gerekir (davranış değişikliği, Mehmet kararı).
+- **Ders (kalıcı):** sağdan panel açılınca içeriği kaydırmak için **kaydırma kutusunun
+  kendisini daralt** (`margin`), içine boşluk koyma (`padding`) — yoksa çubuk içerikten
+  kopar. Yeni bir sağ panel eklenirse aynı kural.
+- ⚠️ Chrome 136+ **varsayılan profilde uzaktan hata ayıklamayı engelliyor** → çalışan
+  Chrome'a bağlanıp Shopify'ı canlı incelemek mümkün olmadı (profil kopyalama da güvenlik
+  filtresine takıldı, doğrusu bu). Shopify tarafı ekran görüntülerinden okundu.
+
 ### 28.07 (2) — Arama ORTAYA döndü + komut penceresi (Supabase deseni)
 Aynı gün sabah sola alınan arama kutusu **üst barın tam ortasına** geri kondu (Mehmet,
 ekran görüntüsüyle: "basıldığında böyle belirsin"). İki değişiklik:
