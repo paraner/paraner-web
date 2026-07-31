@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Sparkles, X, ArrowUp, Plus, ImageIcon, Trash2, Check } from "lucide-react";
+import { Sparkles, X, ArrowUp, Plus, ImageIcon, Trash2, Check, Maximize2, Minimize2 } from "lucide-react";
 import { createClient } from "../../../lib/supabase/client";
 import { announceDataChanged, announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
 import RichText, { parseBlocks, countWords } from "./RichText";
@@ -97,6 +97,19 @@ function bildir(action?: string | null) {
 
 /* Belge (fiş/fatura/dekont) yükleme — sunucunun kabul ettiği türler (edge ALLOWED_IMAGE_MIME).
    ⚠️ PDF sunucuda desteklenmiyor; kullanıcıya seçtirip sonra reddetmemek için listede yok. */
+/* ─── Panel genişliği (Shopify Sidekick'ten birebir ölçüldü, 01.08) ───────────────
+   Shopify: varsayılan 400px, sürükleme sınırı 300–600, kademe YOK (1px hassasiyet),
+   değer `localStorage`da `{"open":true,"size":437}` biçiminde saklanıyor ve sayfa
+   yenilense de korunuyor. Aynı sınırlar ve aynı saklama biçimi. */
+const PARLA_VARSAYILAN_W = 400;
+const PARLA_MIN_W = 300;
+const PARLA_MAX_W = 600;
+const PARLA_DEPO = "paraner-parla-panel";
+/* Kapanış animasyonu süresi — CSS'teki geçişle AYNI olmalı (`.parla-drawer` 0.25s).
+   ⚠️ Biri değişirse ikisi de: kısa kalırsa kutu kayma bitmeden sökülür, uzun kalırsa
+   kapandıktan sonra görünmez bir kutu tıklamaları yutar. */
+const PARLA_KAPANIS_MS = 250;
+
 const ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif";
 /* Fiş okuma için 1600px fazlasıyla yeterli (mobil `compressImage` ile aynı ölçü): tarayıcıda
    küçültmek yüklemeyi hızlandırır, 8MB sınırına takılmayı ve gereksiz AI maliyetini önler. */
@@ -129,6 +142,17 @@ export default function ParlaChat() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  /* Panel genişliği + "genişletildi mi" — Shopify Sidekick deseni (canlı ölçüldü 01.08).
+     Genişlik kullanıcının sürüklediği değer; sınırlar Shopify'ınkiyle aynı: 300–600.
+     `kapaniyor`: kapanış animasyonu sürerken kutu DOM'da kalsın diye (yoksa yok olur,
+     sağa kayarak çıkamaz — Shopify'da panel hiç sökülmüyor). */
+  const [genislik, setGenislik] = useState(PARLA_VARSAYILAN_W);
+  const [genis, setGenis] = useState(false);
+  const [kapaniyor, setKapaniyor] = useState(false);
+  const [girdi, setGirdi] = useState(false); // ilk kareden sonra true → içeri kayar
+  const surukleW = useRef<{ x0: number; w0: number } | null>(null);
+  const kapatmaZamani = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const oncekiAcik = useRef(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -335,6 +359,127 @@ export default function ParlaChat() {
     document.body.classList.toggle("parla-open", open);
     return () => document.body.classList.remove("parla-open");
   }, [open]);
+
+  /* ─── Genişlik: kaydedilmiş değeri geri yükle (Shopify da `localStorage` kullanıyor) ───
+     ⚠️ Yalnız GENİŞLİK geri yükleniyor, "açık mıydı" DEĞİL. Shopify paneli açık
+     bırakıyor ama bizde Parla üst bardaki bir düğme — her sayfa açılışında kendiliğinden
+     açılması istenmeyen bir davranış (Mehmet onaylamadı). Açıklık istenirse buraya
+     `open` de eklenir, saklama biçimi zaten hazır. */
+  useEffect(() => {
+    try {
+      const ham = localStorage.getItem(PARLA_DEPO);
+      if (!ham) return;
+      const v = JSON.parse(ham) as { size?: number };
+      if (typeof v.size === "number" && Number.isFinite(v.size)) {
+        setGenislik(Math.min(PARLA_MAX_W, Math.max(PARLA_MIN_W, Math.round(v.size))));
+      }
+    } catch {
+      /* bozuk/dolu depo → varsayılan genişlikle devam, kullanıcıya yansımasın */
+    }
+  }, []);
+
+  /* Genişliği hem CSS'e (kutu + içeriğin kayması aynı değişkenden okur) hem depoya yaz. */
+  useEffect(() => {
+    document.body.style.setProperty("--parla-w", `${genislik}px`);
+    try {
+      localStorage.setItem(PARLA_DEPO, JSON.stringify({ size: genislik }));
+    } catch {
+      /* depo doluysa görsel davranış bozulmasın — sadece hatırlanmaz */
+    }
+  }, [genislik]);
+
+  /* Genişletilmiş mod: içerik itilmesin diye body'ye de işaretlenir (CSS: `body.parla-genis`). */
+  useEffect(() => {
+    document.body.classList.toggle("parla-genis", open && genis);
+    return () => document.body.classList.remove("parla-genis");
+  }, [open, genis]);
+
+  /* Panel kapanınca genişletilmiş mod sıfırlansın — tekrar açılınca kullanıcı
+     beklemediği hâlde tüm ekranı kaplayan bir panelle karşılaşmasın. */
+  useEffect(() => {
+    if (!open) setGenis(false);
+  }, [open]);
+
+  /* ─── Sol menü genişliği → `--parla-nav-w` ───
+     "Genişlet" panelin `100vw - sol menü` olmasını istiyor (Shopify: 1973 → 1733).
+     Menü daraltılabildiği için (248 ↔ 74) değer SABİT YAZILAMAZ; menüyü ölçüp yazıyoruz.
+     ⚠️ Telefonda menü çekmece (akışta yer kaplamıyor) → orada 0 yazılır, panel zaten
+     tam ekran olduğu için etkisi yok. */
+  useEffect(() => {
+    const menu = document.querySelector(".panel-sidebar");
+    if (!menu) return;
+    const yaz = () => {
+      const w = (menu as HTMLElement).getBoundingClientRect().width;
+      document.body.style.setProperty("--parla-nav-w", `${Math.round(w)}px`);
+    };
+    yaz();
+    const gozlemci = new ResizeObserver(yaz);
+    gozlemci.observe(menu);
+    return () => gozlemci.disconnect();
+  }, []);
+
+  /* ─── Kapanış animasyonu ───
+     Shopify paneli hiç sökmüyor, `translateX` ile sağa kaydırıyor. Bizde kutu `open`
+     ile takılıp söküldüğü için kapanış anlıktı (pat diye yok oluyordu). Artık kapanınca
+     kutu bir süre daha DOM'da kalıp sağa kayıyor, sonra sökülüyor. */
+  useEffect(() => {
+    if (open) {
+      setKapaniyor(false);
+      if (kapatmaZamani.current) { clearTimeout(kapatmaZamani.current); kapatmaZamani.current = null; }
+      return;
+    }
+    if (!oncekiAcik.current) return; // hiç açılmadıysa kapanış animasyonu da yok
+    setKapaniyor(true);
+    kapatmaZamani.current = setTimeout(() => setKapaniyor(false), PARLA_KAPANIS_MS);
+  }, [open]);
+  useEffect(() => { oncekiAcik.current = open; }, [open]);
+  useEffect(() => () => { if (kapatmaZamani.current) clearTimeout(kapatmaZamani.current); }, []);
+
+  /* Açılışta içeri kayma: kutu önce "kapalı" konumda takılır, bir sonraki karede
+     sınıf kalkar → geçiş tetiklenir. Tek karede takılıp bırakılırsa animasyon oynamaz. */
+  useEffect(() => {
+    if (!open) { setGirdi(false); return; }
+    const r = requestAnimationFrame(() => setGirdi(true));
+    return () => cancelAnimationFrame(r);
+  }, [open]);
+
+  /* ─── Sol kenardan sürükleyerek boyutlandırma ───
+     Shopify'da ölçüldü: 300–600 arası, kademe yok (1px), içerik sürükleme SIRASINDA
+     anlık takip ediyor (bırakınca değil). `pointer` olayları kullanılıyor → fare,
+     kalem ve dokunmatik tek kodla çalışır; `setPointerCapture` sayesinde imleç panelin
+     dışına çıksa bile sürükleme kopmaz. */
+  const surukleBasla = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    surukleW.current = { x0: e.clientX, w0: genislik };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    document.body.classList.add("parla-dragging");
+  }, [genislik]);
+
+  const surukleHareket = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    const s = surukleW.current;
+    if (!s) return;
+    // Panel SAĞDA: imleç sola gidince (fark negatif) panel GENİŞLER → işaret ters.
+    const hedef = s.w0 - (e.clientX - s.x0);
+    setGenislik(Math.min(PARLA_MAX_W, Math.max(PARLA_MIN_W, Math.round(hedef))));
+  }, []);
+
+  const surukleBitir = useCallback(() => {
+    surukleW.current = null;
+    document.body.classList.remove("parla-dragging");
+  }, []);
+
+  /* Klavyeyle boyutlandırma (tutamak odaktayken ok tuşları) — fare kullanamayan
+     kullanıcı da genişliği değiştirebilsin. Shopify'da yok, erişilebilirlik için eklendi. */
+  const surukleTus = useCallback((e: React.KeyboardEvent<HTMLButtonElement>) => {
+    const adim = e.shiftKey ? 40 : 10;
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      setGenislik((w) => Math.min(PARLA_MAX_W, w + adim));
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      setGenislik((w) => Math.max(PARLA_MIN_W, w - adim));
+    }
+  }, []);
 
   /* Biçimlendirme çözümü mesaj listesi değişince yapılır — her tuş vuruşunda değil
      (input state'i de bu bileşende; memo olmasa 50 mesaj her harfte yeniden ayrıştırılırdı). */
@@ -668,8 +813,27 @@ export default function ParlaChat() {
         <Sparkles size={18} />
       </button>
 
-      {mounted && open && createPortal(
-        <aside className="parla-drawer" role="dialog" aria-label="Parla sohbeti">
+      {mounted && (open || kapaniyor) && createPortal(
+        <aside
+          className={`parla-drawer${!open || !girdi ? " kapali" : ""}${genis ? " genis" : ""}`}
+          role="dialog"
+          aria-label="Parla sohbeti"
+          aria-hidden={!open}
+        >
+          {/* Sol kenardan sürükleyerek boyutlandırma — görünmez şerit, tek işaret imleç.
+              `button` çünkü klavyeyle de odaklanıp ok tuşlarıyla boyutlandırılabiliyor. */}
+          <button
+            type="button"
+            className="parla-resize"
+            onPointerDown={surukleBasla}
+            onPointerMove={surukleHareket}
+            onPointerUp={surukleBitir}
+            onPointerCancel={surukleBitir}
+            onKeyDown={surukleTus}
+            aria-label="Paneli yeniden boyutlandır"
+            title="Sürükleyerek genişliği değiştir"
+          />
+          <div className="parla-panel">
           <header className="parla-head">
             <div className="parla-id">
               <span className="parla-ic"><Sparkles size={15} /></span>
@@ -693,6 +857,19 @@ export default function ParlaChat() {
                   <Trash2 size={15} />
                 </button>
               )}
+              {/* Genişlet/Daralt — Shopify'daki "Genişletin" düğmesinin karşılığı.
+                  Panel sol menüye kadar açılır. Dar ekranda (≤1039px) yer olmadığı için
+                  gizli: orada panel zaten neredeyse tüm genişliği kaplıyor. */}
+              <button
+                type="button"
+                className="parla-close parla-genislet"
+                onClick={() => setGenis((g) => !g)}
+                aria-label={genis ? "Daralt" : "Genişlet"}
+                title={genis ? "Daralt" : "Genişlet"}
+                aria-pressed={genis}
+              >
+                {genis ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+              </button>
               <button type="button" className="parla-close" onClick={() => setOpen(false)} aria-label="Kapat">
                 <X size={16} />
               </button>
@@ -880,6 +1057,7 @@ export default function ParlaChat() {
                 <ArrowUp size={16} />
               </button>
             </div>
+          </div>
           </div>
           </div>
         </aside>,

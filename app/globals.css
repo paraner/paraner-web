@@ -1378,6 +1378,40 @@ ul { list-style: none; }
   height: 100dvh;
   overflow: hidden;
 }
+
+/* ═══ KABUK KENARA YAPIŞIK (Shopify Sidekick düzeni — Mehmet kararı, 01.08) ═══
+   NEYDİ: üst bar sol menüden SONRA başlıyordu (menünün içinde değil, yanında) ve hem
+   menü hem panel 12px boşluklu yüzen kartlardı. Shopify'da üst bar pencerenin tamamını
+   kaplar, altındaki alan `sol menü · içerik · sohbet` diye bölünür; hiçbirinin arasında
+   boşluk yoktur. Ölçüldü (admin.shopify.com, 1973px): üst bar [0,0,1973,56], menü
+   [0,56,240,981], panel sağ/alt kenara 0 boşlukla yapışık.
+   ⚠️ Üst bar `fixed` yapıldı, DOM'da yeri değişmedi → `layout.tsx` dokunulmadı.
+   ⚠️ Üst bara `filter/transform/backdrop-filter` EKLEME (zaten yasak, bkz. `.panel-topbar`
+   notu): `position: fixed` bunu yapmaz, ama o üçü ortadaki arama kutusunu üst bara
+   çivileyip sayfanın ortasından kaydırır. `::before` katmanı bu yüzden var, öyle kalsın.
+   ⚠️ TELEFON HARİÇ (≤760px): orada menü zaten çekmece, sayfa penceresiyle kayıyor —
+   sabit üst bar içeriğin üstünü örterdi. O aralık eskisi gibi bırakıldı.
+   ⚠️ Seçicilerde `.panel-shell` ÖN EKİ ŞART: bu blok dosyada `.panel-topbar` ve
+   `.panel-sidebar` temel tanımlarından ÖNCE geliyor. Ön ek olmadan aynı özgüllükte
+   kalıp SONRAKİ temel tanım tarafından eziliyor (üst bar `relative`e, menü 12px
+   boşluklu yuvarlak karta geri dönüyordu — denendi, öyle oldu). */
+@media (min-width: 761px) {
+  .panel-shell { padding-top: var(--panel-topbar-h); }
+  .panel-shell .panel-topbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    /* Sol menünün (20) ÜSTÜNDE, çekmecelerin (91/92) ve bildirim/modalın ALTINDA */
+    z-index: 40;
+  }
+  .panel-shell .panel-sidebar,
+  .panel-shell .panel-sidebar.collapsed {
+    /* ⚠️ `static` DEĞİL: `z-index: 20` yalnız konumlandırılmış öğede çalışır. Static
+       yapılırsa menü yığın sırasını kaybeder ve profil menüsü arkadaki grafiğin ALTINDA
+       kalır (bkz. `.panel-sidebar` z-index notu — Mehmet, 28.07 ekran görüntüsü). */
+    position: relative; align-self: stretch; height: auto;
+    margin: 0; border: none; border-right: 1px solid var(--border);
+    border-radius: 0; box-shadow: none;
+  }
+}
 .panel-sidebar {
   position: sticky; top: 12px; align-self: flex-start;
   height: calc(100vh - 24px);
@@ -2140,9 +2174,15 @@ ul { list-style: none; }
 .notif-row-chevron { color: var(--text-dim); flex-shrink: 0; margin-top: 8px; }
 
 .panel-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; overflow: hidden; }
-/* ⚠️ Yüksekliği (16+38+16+1 = 71px) İKİ yer daha kullanıyor: .tx-drawer üst konumu ve
-   yükleniyor göstergesinin optik ortalaması → tek kaynak olsun diye değişken. */
-:root { --panel-topbar-h: 71px; }
+/* ⚠️ ÜST BAR YÜKSEKLİĞİ — ÖLÇÜLDÜ, 73px (16 üst + 40 kutu + 16 alt + 1 kenarlık).
+   Eskiden burada 38px'lik bir kutu varsayılıp 71 yazılmıştı; arama kutusu 40px olunca
+   değişken 2px GERİ KALDI. Üst bar akışta durduğu sürece zararsızdı (gerçek yüksekliği
+   kendisi kaplıyordu), ama 01.08'de bar `position: fixed` yapılınca `.panel-shell`in
+   üst boşluğu bu değişkenden hesaplanmaya başladı → içeriğin üst 2px'i barın ALTINDA
+   kalıyordu (canlı ölçüldü: bar 0–73, içerik 71'den başlıyor). 73'e çekildi.
+   ⚠️ `.tx-drawer` BİLEREK 83px'te bırakıldı (73+10): oraya 85 yazmak İşlemler/Faturalar
+   detay çekmecesini 2px oynatırdı, o çekmecenin görünümü değişmeyecek. */
+:root { --panel-topbar-h: 73px; }
 /* Parla köşe dili — TEK yerden: kutu ve içindeki tüm öğeler bu ikisini kullanır. */
 :root { --parla-radius: 18px; --parla-radius-sm: 11px; }
 .panel-topbar {
@@ -5488,38 +5528,128 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
    ═══════════════════════════════════════════════════════════════════════════ */
 .parla-btn.on { background: var(--card-2); border-color: var(--border-strong); color: var(--text); }
 
-/* Ölçüler `.tx-drawer` ile BİREBİR aynı (384px / top:83 / right:12 / bottom:12) —
-   kullanıcı hangi sayfada açarsa açsın tanıdık aynı çekmeceyi görsün. ⚠️ Biri değişirse ikisi de. */
+/* ═══ PARLA PANELİ — Shopify Sidekick ölçüleri (Mehmet kararı, 01.08) ═══
+   Canlı ölçüldü (admin.shopify.com/orders, Chrome eklentisiyle). Shopify'ın kuralları:
+   · Panel sağ + alt kenara SIFIR boşlukla yapışık, üst barın hemen altından dibe kadar.
+   · Varsayılan 400px; kullanıcı sol kenardan sürükleyip 300–600 arası değiştirebilir.
+   · Kutu İKİ KATMAN: dış katman (`.parla-drawer`) yalnız konum + kayma; zemin/köşe/gölge
+     iç katmanda (`.parla-panel`). Sebep: kapanışta dış katman `translateX` ile kayarken
+     iç katmanın köşesi/gölgesi ayrı ritimde değişebiliyor (Shopify birebir böyle yapıyor).
+   · SADECE ÜST İKİ KÖŞE yuvarlak (12px), alt köşeler kare — panel dibe oturduğu için.
+   · Kapanış: yok olmuyor, `translateX(100% + 8px)` ile sağa kayıp çıkıyor.
+   · Geçiş 0.25s cubic-bezier(0.25, 0.1, 0.25, 1) — açılış ve kapanış aynı.
+   ⚠️ Genişlik `--parla-w`'den okunur; ParlaChat onu `body`ye yazar (Shopify da genişliği
+   `document.body.style`e yazıyor). İçeriğin kayması da AYNI değişkeni kullanır → tek kaynak. */
+:root { --parla-w: 400px; --parla-nav-w: 248px; }
+
 .parla-drawer {
-  position: fixed; top: 83px; right: 12px; bottom: 12px;
-  width: 384px; max-width: calc(100vw - 24px);
+  position: fixed; top: var(--panel-topbar-h); right: 0; bottom: 0;
+  width: var(--parla-w); max-width: 100vw;
   z-index: 92; display: flex; flex-direction: column;
-  background: var(--surface-modal); border: 1px solid var(--border-strong);
-  border-radius: 22px; overflow: hidden;
-  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  animation: drawerIn 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+              width 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+              top 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+              right 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+              bottom 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
-@media (max-width: 720px) {
-  .parla-drawer { left: 12px; right: 12px; width: auto; }
+/* Sürüklenirken genişlik parmağı BİREBİR takip etsin — geçiş araya girmesin
+   (Shopify'da da içerik sürükleme sırasında anlık takip ediyor, bırakınca değil). */
+.parla-drawer.dragging { transition: none; }
+/* Kapanış: sağa kayarak çıkar (8px = Shopify'ın kullandığı fazladan pay) */
+.parla-drawer.kapali { transform: translateX(calc(100% + 8px)); pointer-events: none; }
+
+/* İç katman — zemin, köşe, gölge. Üst iki köşe yuvarlak, alt köşeler kare. */
+.parla-panel {
+  flex: 1; min-height: 0; display: flex; flex-direction: column;
+  background: var(--surface-modal);
+  border-left: 1px solid var(--border-strong);
+  border-radius: var(--parla-radius) var(--parla-radius) 0 0;
+  overflow: hidden;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: border-radius 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+              box-shadow 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* ─── Sürükleme tutamağı — panelin SOL kenarında, tamamen görünmez ───
+   Shopify'da ölçüldü: 8px genişlik, tam boy, zemin şeffaf, `::before`/`::after` yok,
+   üstüne gelince hiçbir vurgu YOK — tek işaret imlecin `col-resize` olması. Aynısı. */
+.parla-resize {
+  position: absolute; top: 0; left: 0; bottom: 0; width: 8px;
+  cursor: col-resize; background: none; border: none; padding: 0;
+  z-index: 2; touch-action: none;
+}
+/* Klavye kullanıcısı için tek istisna: odakta görünür olsun (Shopify'da da odak halkası var) */
+.parla-resize:focus-visible { outline: 2px solid rgba(238, 240, 242, 0.42); outline-offset: -2px; }
+
+/* ─── GENİŞLET — tüm pencere eksi sol menü ───
+   Shopify: 1973 → 1733 = 100vw - 240 (menü genişliği). Menü yerinde kalıyor.
+   Açılınca SOL ÜST köşe kareleşiyor (panel menüye dayandığı için), sağ üst 12px kalıyor. */
+.parla-drawer.genis { width: calc(100vw - var(--parla-nav-w)); }
+.parla-drawer.genis .parla-panel { border-radius: 0 var(--parla-radius) 0 0; }
+/* Genişken sürükleme tutamağı anlamsız (kenara dayalı) — Shopify'da da devre dışı */
+.parla-drawer.genis .parla-resize { display: none; }
+
+/* ═══ KIRILMA NOKTALARI — Shopify'ın 4 kademesi (canlı ölçüldü) ═══
+   ≥1200  yerleşik: içeriği iter (aşağıdaki `.panel-content` kuralı)
+   1040–1199 kenara yapışık ama İTMEZ — üstüne biner. ⚠️ İki kaydırma çubuğu sorunu
+             BURADA kapanıyor: panel sağ kenara yapışınca sayfa çubuğunun üstünü örtüyor.
+   768–1039  yüzen kart: 356px, kenarlardan 4px içeride, köşeler tam yuvarlak
+   ≤767      tam ekran: üst barı da kapatır, köşe yok, tutamak kaybolur */
+@media (max-width: 1039px) {
+  .parla-drawer {
+    top: calc(var(--panel-topbar-h) + 4px); right: 4px; bottom: 4px;
+    width: 356px;
+  }
+  .parla-panel { border-radius: var(--parla-radius); }
+  .parla-drawer.kapali { transform: translateX(calc(100% + 8px)); }
+  /* Dar ekranda sürükleme ve genişletme yok — yer zaten yok (Shopify da kaldırıyor) */
+  .parla-resize { display: none; }
+  .parla-genislet { display: none; }
+  .parla-drawer.genis { width: 356px; }
+  .parla-drawer.genis .parla-panel { border-radius: var(--parla-radius); }
+}
+@media (max-width: 767px) {
+  .parla-drawer {
+    top: 0; right: 0; bottom: 0; left: 0; width: auto;
+  }
+  .parla-panel { border-radius: 0; border-left: none; }
+  .parla-drawer.genis { width: auto; }
+  .parla-drawer.genis .parla-panel { border-radius: 0; }
 }
 
 /* ═══ İÇERİK SOLA KAYAR — sağdan çekmece (Parla / işlem-fatura detayı) açıkken ═══
-   ⚠️ KAYDIRMA KUTUSUNUN KENDİSİ DARALIR (`margin-right`), içine boşluk KONMAZ (`padding-right`).
-   Sebep (Mehmet, 28.07 — "scroll çubukları karmaşık gözüküyor", ölçüldü):
-   iç boşluk verilince yazılar sola kayar ama kutu pencerenin sağ kenarında kalır →
-   kaydırma çubuğu da orada kalır. Ölçüm (1600px ekran): sayfa çubuğu x=1600, Parla'nın
-   kendi çubuğu x=1587 → sağ kenarda 13px arayla İKİ çubuk, üstelik sayfa çubuğu
-   kaydırdığı yazılardan 400px uzakta. Kutuyu daraltınca çubuk içerikle birlikte sola
-   gelir ve çekmecenin soluna oturur (Shopify Sidekick'te de içerik sütunu gerçekten daralır).
-   Ölçü: 408 = çekmece 384 + sağ boşluğu 12 + aradaki boşluk 12.
+   ⚠️ ASIL KURAL: KAYDIRAN KUTUNUN KENDİ GENİŞLİĞİ küçülmeli.
+   Sebep (Mehmet, 28.07 — "scroll çubukları karmaşık gözüküyor", ölçüldü): kaydırma
+   çubuğu her zaman kaydıran kutunun kenarına oturur. Kutu pencere genişliğinde kalıp
+   içine boşluk konursa yazılar sola kayar ama ÇUBUK sağ kenarda kalır. Ölçüm (1600px):
+   sayfa çubuğu x=1600, Parla'nın çubuğu x=1587 → 13px arayla iki çubuk, üstelik sayfa
+   çubuğu kaydırdığı yazılardan 400px uzakta.
+   ⚠️ DÜZELTME (01.08, Shopify canlı incelendi): eskiden buraya "padding değil margin
+   kullan" diye yazmıştık — YANLIŞ GEREKÇE. Shopify'ın kendisi `padding-inline-end`
+   kullanıyor; işe yaraması onlarda kaydıran kutunun bir ALT katman olması ve o katmanın
+   daralmasından. Yani belirleyici olan padding/margin seçimi değil, kaydıran kutunun
+   daralması. BİZDE kaydıran kutu en dıştaki (`.panel-content`) olduğu için `margin` tek
+   doğru yol — ama yeni bir kabuk kurulursa kural bu cümledeki hâliyle uygulanmalı.
+   Ölçü: Parla `--parla-w + 4px` (Shopify'ın arası 4px). Detay çekmecesi ayrı: 408px.
    `body.parla-open` sınıfını ParlaChat basar; `.tx-area.shifted` ise İşlemler/Faturalar
-   detay çekmecesi → `:has()` ile aynı kural, o sayfaların kodu değişmiyor.
-   ⚠️ Dar ekranda kayma YOK: yer kalmadığı için çekmece içeriğin üstünde durur. */
-.panel-content { transition: margin-right 0.24s cubic-bezier(0.22, 1, 0.36, 1); }
-body.parla-open .panel-content,
+   detay çekmecesi → `:has()` ile, o sayfaların kodu değişmiyor. */
+.panel-content { transition: margin-right 0.25s cubic-bezier(0.25, 0.1, 0.25, 1); }
+/* Parla: genişlik değişken (kullanıcı sürükleyebiliyor) + 4px ara — Shopify ölçüsü. */
+body.parla-open .panel-content { margin-right: calc(var(--parla-w) + 4px); }
+/* Sürüklerken geçiş kapalı → içerik parmağı anlık takip eder (Shopify da böyle). */
+body.parla-dragging .panel-content { transition: none; }
+/* Genişletilmişken itme YOK: panel zaten sol menüye kadar her yeri kaplıyor. */
+body.parla-genis .panel-content { margin-right: 0; }
+/* 1199px altında itme yok — panel içeriğin üstüne biner (Shopify'ın eşiği: 1200). */
+@media (max-width: 1199px) {
+  body.parla-open .panel-content { margin-right: 0; }
+}
+
+/* İşlemler/Faturalar DETAY çekmecesi — DEĞİŞMEDİ, bilerek ayrıldı.
+   O çekmece hâlâ eski yüzen kart (384 + sağ 12 + ara 12 = 408) ve sürüklenemiyor;
+   Parla'nın değişken genişliğine bağlanırsa detay açınca içerik yanlış kayar. */
 .panel-content:has(.tx-area.shifted) { margin-right: 408px; }
 @media (max-width: 1040px) {
-  body.parla-open .panel-content,
   .panel-content:has(.tx-area.shifted) { margin-right: 0; }
 }
 
