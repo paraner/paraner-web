@@ -20,6 +20,40 @@
 
 ## Bu hafta (2026-07-23 →)
 
+### 01.08 (2) — Kabuk + Parla paneli Shopify Sidekick düzenine geçirildi (commit 270b2dc)
+Mehmet kararı (seçenek sunuldu, en büyüğünü seçti): **"kabuğun tamamı Shopify gibi olsun"**.
+Shopify Sidekick **canlı ölçüldü** (Claude Chrome eklentisi, `admin.shopify.com/orders`).
+- **Kabuk:** üst bar tam genişlik + `position: fixed` (z-index 40), sol menü kenara yapışık
+  (margin/yuvarlak köşe/gölge kalktı). ⚠️ Telefon (≤760px) HARİÇ — orada menü çekmece,
+  sayfa pencereyle kayıyor, sabit bar içeriği örterdi.
+- **Parla:** iki katman (`.parla-drawer` konum / `.parla-panel` zemin), sağ+alt kenara sıfır
+  boşluk, sadece üst iki köşe yuvarlak. Varsayılan 400px, sol kenardan **sürüklenebilir
+  300–600** (kademe yok, canlı takip), **genişlet** düğmesi (100vw − sol menü), genişlik
+  `localStorage: paraner-parla-panel`, kapanış sağa kayma (0.25s).
+- **4 kademe:** ≥1200 iter · 1040–1199 kenara yapışık biner (**iki çubuk sorunu BURADA
+  kapandı** — panel sayfa çubuğunu örtüyor) · 768–1039 356px yüzen kart · ≤767 tam ekran.
+- ⚠️ **`--panel-topbar-h` 71 → 73px:** gerçek yükseklik 73 (16+40+16+1). Bar akıştayken
+  zararsızdı; sabitlenince içeriğin üst 2px'i barın altında kalıyordu (ölçüldü).
+  `.tx-drawer` bilerek 83px'te bırakıldı — detay çekmecesi oynamasın diye.
+- ⚠️ **Seçicilerde `.panel-shell` ön eki ŞART:** blok dosyada temel tanımlardan ÖNCE
+  geliyor, ön eksiz aynı özgüllükte kalıp SONRAKİ tanım tarafından eziliyor (denendi).
+- **Eski "padding değil margin" dersi DÜZELTİLDİ:** Shopify'ın kendisi `padding-inline-end`
+  kullanıyor; belirleyici olan **kaydıran kutunun daralması**. Bizde en dıştaki kutu
+  kaydırdığı için `margin` doğru yol — ama yeni kabukta kural bu hâliyle uygulanmalı.
+- **Değişmedi:** yazı alanı (Mehmet), İşlemler/Faturalar detay çekmecesi (408px, ayrı
+  kurala alındı), admin kabuğu, DB/edge/SEO, mobil (orada Parla tam ekran sayfa).
+- **Ölçüldü (yerel prod, 1400px):** üst bar 0–1400 · panel sağ kenarı = innerWidth ·
+  içerik `margin-right: 404` · sürükleme max 600 / min 300 · 1100'de margin 0 + yapışık ·
+  900'de 356px 4px boşluklu · 700'de tam ekran · yenilemeden sonra genişlik korundu.
+- 🔴 **DOĞRULANMADI (bir sonraki turda):** sol menünün yeni hâli + "genişlet"in menü
+  kenarına oturması — yerel oturumda profil yoktu, sol menü render edilmiyordu.
+  Mehmet canlıda baktı, **"gözüme çarpan şeyler var"** dedi ama listeyi vermeden limiti
+  doldu → **ilk iş onun gördüklerini sor.**
+- ✅ **Chrome köprüsü ARTIK ÇALIŞIYOR** (dünkü "bağlanamadı" notu geçersiz): `claude --chrome`
+  + Claude eklentisi. Kullanım: `cd /tmp && claude --chrome --allowedTools "mcp__claude-in-chrome" -p '…'`
+  ⚠️ Bu VS Code oturumunda `/chrome` YOK; alt oturum açarak kullanılıyor.
+  Mehmet eklentiyi **admin@paraner.com profiline de kurdu** → panel oturumlu ölçüm oradan.
+
 ### 01.08 — Sağdan çekmece açılınca KAYDIRMA ÇUBUĞU da sola geliyor
 Mehmet: "Parla açılınca scroll çubukları karmaşık gözüküyor; sayfanın scroll'u sola
 kayarak sağdan Parla çıksın" (+ Shopify Sidekick ekran görüntüleri).
