@@ -818,7 +818,12 @@ export default function ParlaChat() {
           className={`parla-drawer${!open || !girdi ? " kapali" : ""}${genis ? " genis" : ""}`}
           role="dialog"
           aria-label="Parla sohbeti"
-          aria-hidden={!open}
+          /* ⚠️ `aria-hidden` DEĞİL, `inert`: kapat düğmesine basınca odak hâlâ panelin
+             İÇİNDE (düğmenin üstünde) kalıyor; odaklı öğeyi `aria-hidden` ile gizlemek
+             tarayıcının engellediği bir durum ("Blocked aria-hidden… retained focus"
+             uyarısı). `inert` odağı da düzgünce dışarı alır. Panel kapanış animasyonu
+             boyunca (250ms) DOM'da durduğu için bu gerekli. */
+          inert={!open}
         >
           {/* Sol kenardan sürükleyerek boyutlandırma — görünmez şerit, tek işaret imleç.
               `button` çünkü klavyeyle de odaklanıp ok tuşlarıyla boyutlandırılabiliyor. */}

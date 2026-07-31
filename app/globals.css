@@ -1379,12 +1379,14 @@ ul { list-style: none; }
   overflow: hidden;
 }
 
-/* ═══ KABUK KENARA YAPIŞIK (Shopify Sidekick düzeni — Mehmet kararı, 01.08) ═══
-   NEYDİ: üst bar sol menüden SONRA başlıyordu (menünün içinde değil, yanında) ve hem
-   menü hem panel 12px boşluklu yüzen kartlardı. Shopify'da üst bar pencerenin tamamını
-   kaplar, altındaki alan `sol menü · içerik · sohbet` diye bölünür; hiçbirinin arasında
-   boşluk yoktur. Ölçüldü (admin.shopify.com, 1973px): üst bar [0,0,1973,56], menü
-   [0,56,240,981], panel sağ/alt kenara 0 boşlukla yapışık.
+/* ═══ ÜST BAR TAM GENİŞLİK (Shopify Sidekick düzeni — Mehmet kararı, 01.08) ═══
+   NEYDİ: üst bar sol menüden SONRA başlıyordu (menünün yanında), pencerenin tamamını
+   kaplamıyordu. Shopify'da bar tepede tam genişliktedir, altındaki alan
+   `sol menü · içerik · sohbet` diye bölünür. Ölçüldü (admin.shopify.com, 1973px):
+   üst bar [0,0,1973,56], menü [0,56,240,981], sohbet paneli sağ/alt kenara 0 boşlukla.
+   ⚠️ SOL MENÜ BU DÜZENE DAHİL DEĞİL: Mehmet 01.08'de "sol paneli eski haline al, o
+   shopify gibi olmasın" dedi → menü 12px boşluklu, yuvarlak köşeli YÜZEN KART olarak
+   kaldı. Kenara yapışan yalnız ÜST BAR ve sağdaki Parla paneli.
    ⚠️ Üst bar `fixed` yapıldı, DOM'da yeri değişmedi → `layout.tsx` dokunulmadı.
    ⚠️ Üst bara `filter/transform/backdrop-filter` EKLEME (zaten yasak, bkz. `.panel-topbar`
    notu): `position: fixed` bunu yapmaz, ama o üçü ortadaki arama kutusunu üst bara
@@ -1393,8 +1395,8 @@ ul { list-style: none; }
    sabit üst bar içeriğin üstünü örterdi. O aralık eskisi gibi bırakıldı.
    ⚠️ Seçicilerde `.panel-shell` ÖN EKİ ŞART: bu blok dosyada `.panel-topbar` ve
    `.panel-sidebar` temel tanımlarından ÖNCE geliyor. Ön ek olmadan aynı özgüllükte
-   kalıp SONRAKİ temel tanım tarafından eziliyor (üst bar `relative`e, menü 12px
-   boşluklu yuvarlak karta geri dönüyordu — denendi, öyle oldu). */
+   kalıp SONRAKİ temel tanım tarafından eziliyor (üst bar `relative`e geri dönüyordu
+   — denendi, öyle oldu). */
 @media (min-width: 761px) {
   .panel-shell { padding-top: var(--panel-topbar-h); }
   .panel-shell .panel-topbar {
@@ -1402,14 +1404,15 @@ ul { list-style: none; }
     /* Sol menünün (20) ÜSTÜNDE, çekmecelerin (91/92) ve bildirim/modalın ALTINDA */
     z-index: 40;
   }
+  /* ⚠️ SOL MENÜ ESKİ HÂLİNDE KALIR (Mehmet, 01.08: "sol paneli eski haline al, o
+     shopify gibi olmasın"). Yani 12px boşluklu, 22px yuvarlak köşeli, gölgeli YÜZEN
+     KART — Shopify'ın kenara yapışık menüsü DEĞİL. Burada yalnız YÜKSEKLİĞİ düzeltiyoruz:
+     menünün kendi tanımı `calc(100vh - 24px)` diyor, o ölçü üst bar akıştayken doğruydu;
+     bar sabitlenip kabuğa 73px üst boşluk eklenince menü 73px taşıyordu (alt kenarı
+     ekranın dışında kalıyordu). Görünümüne DOKUNULMUYOR — sadece taşma düzeltmesi. */
   .panel-shell .panel-sidebar,
   .panel-shell .panel-sidebar.collapsed {
-    /* ⚠️ `static` DEĞİL: `z-index: 20` yalnız konumlandırılmış öğede çalışır. Static
-       yapılırsa menü yığın sırasını kaybeder ve profil menüsü arkadaki grafiğin ALTINDA
-       kalır (bkz. `.panel-sidebar` z-index notu — Mehmet, 28.07 ekran görüntüsü). */
-    position: relative; align-self: stretch; height: auto;
-    margin: 0; border: none; border-right: 1px solid var(--border);
-    border-radius: 0; box-shadow: none;
+    height: calc(100vh - var(--panel-topbar-h) - 24px);
   }
 }
 .panel-sidebar {
@@ -3302,7 +3305,9 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
 
 /* ── Destek sohbet thread'i (chat) ── */
 .thread-wrap {
-  display: flex; flex-direction: column; height: calc(100vh - 71px - 56px);
+  /* ⚠️ Üst bar yüksekliği DEĞİŞKENDEN (01.08): burada 71px sabit yazılıydı, gerçek 73 →
+     destek sohbeti kabuğu 2px taşıyordu. Tek kaynak `--panel-topbar-h`. (56 = alt yazı alanı.) */
+  display: flex; flex-direction: column; height: calc(100vh - var(--panel-topbar-h) - 56px);
   max-width: 820px; margin: 0 auto;
 }
 .thread-head {
