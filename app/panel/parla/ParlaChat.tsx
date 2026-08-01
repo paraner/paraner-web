@@ -185,6 +185,7 @@ export default function ParlaChat() {
   const boslukRef = useRef<HTMLDivElement | null>(null);
   const turAcikRef = useRef(false);   // gönderim turu sürüyor mu (boşluk yönetilsin mi)
   const kaydirildiRef = useRef(false); // bu turda anchor tepeye kaydırıldı mı
+  const kaydirBekliyorRef = useRef(false); // boşluk yerleştikten sonra kaydırılacak mı
 
   useEffect(() => setMounted(true), []);
 
@@ -221,7 +222,27 @@ export default function ParlaChat() {
     const mevcutBosluk = boslukRef.current?.offsetHeight ?? 0;
     const alt = Math.max(0, liste.scrollHeight - mevcutBosluk - anchorY); // anchor + cevap
     setBosluk(Math.max(0, liste.clientHeight - alt - SNAP_PAY * 2));
-    if (!kaydir) return;
+    /* ⚠️ KAYDIRMA BURADA YAPILMAZ, İŞARETLENİR (01.08 canlı testte yakalandı).
+       NEYDİ: kaydırma hemen `requestAnimationFrame` içinde yapılıyordu — yani boşluk
+       kutusunun yeni yüksekliği HENÜZ EKRANA YERLEŞMEDEN. Kutu kısa olduğu için
+       kaydırılabilir alan da kısa kalıyor, tarayıcı hedefi kırpıyor (clamp) ve liste
+       olduğu yerde kalıyordu. Sonraki karede boşluk büyüyor ama kaydırmayı tekrar
+       tetikleyen bir şey yok (`kaydirildiRef` çoktan true).
+       Ölçüm: uzun cevaptan sonra yeni mesaj gönderilince `scrollTop` 2061'de çakılı
+       kaldı; yeni mesaj ve cevabı listenin görünen alanının ALTINDA kaldı → kullanıcı
+       Parla'nın cevap vermediğini sandı. Kısa geçmişte olmuyordu, çünkü hedef zaten
+       mevcut kaydırma sınırının içindeydi.
+       ŞİMDİ: bayrak konur, aşağıdaki layout effect boşluk EKRANA YERLEŞTİKTEN SONRA
+       kaydırır. Böylece kaydırılabilir alan tam gerektiği kadar olur, kırpılma olmaz. */
+    if (kaydir) kaydirBekliyorRef.current = true;
+  }, []);
+
+  /* Bekleyen snap kaydırmasını, boşluk DOM'a yansıdıktan sonraki ilk render'da yapar.
+     Bağımlılık listesi YOK — her render'dan sonra çalışır; bayrak tek seferlik olduğu
+     için gereksiz kaydırma olmaz. */
+  useLayoutEffect(() => {
+    if (!kaydirBekliyorRef.current) return;
+    kaydirBekliyorRef.current = false;
     requestAnimationFrame(() => {
       const el = listRef.current;
       const a = anchorRef.current;
@@ -229,7 +250,7 @@ export default function ParlaChat() {
       const y = a.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop;
       el.scrollTo({ top: Math.max(0, y - SNAP_PAY), behavior: "smooth" });
     });
-  }, []);
+  });
 
   /* Panel kapanınca snap boşluğu askıda kalmasın — tekrar açılınca sohbetin altında
      sebepsiz boşluk olarak görünürdü. */
