@@ -5525,7 +5525,11 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
 :root { --parla-w: 400px; --parla-nav-w: 248px; }
 
 .parla-drawer {
-  position: fixed; top: var(--panel-topbar-h); right: 0; bottom: 0;
+  /* ⚠️ ALTTA 12px BOŞLUK — sol menüyle eşit dursun diye (Mehmet, 01.08: "alt bölümde
+     boşluk olsun, aynı sol panelimiz nasıl ise eşit olsun"). Menü de altta 12px boşluk
+     bırakıyor (`.panel-sidebar` margin) → iki panelin alt kenarı aynı çizgide.
+     Sağda boşluk YOK: orası bilerek pencereye yapışık (bkz. `.parla-panel` köşe notu). */
+  position: fixed; top: var(--panel-topbar-h); right: 0; bottom: 12px;
   width: var(--parla-w); max-width: 100vw;
   z-index: 92; display: flex; flex-direction: column;
   transition: transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
@@ -5547,12 +5551,17 @@ body.parla-dragging .parla-drawer { transition: none; }
   flex: 1; min-height: 0; display: flex; flex-direction: column;
   background: var(--surface-modal);
   border-left: 1px solid var(--border-strong);
-  /* ⚠️ YALNIZ SOL ÜST köşe yuvarlak. Sağ üst KARE (Mehmet, 01.08: "sağ üstte hâlâ köşe
-     yuvarlatma var, onu kaldır, birleşik olsun"). Shopify orada 12px yuvarlatma
-     bırakıyor ama bizde panel pencerenin sağ kenarına yapışık: yuvarlatınca köşede
-     arkadaki koyu zemin bir çentik gibi sızıyordu. Alt köşeler zaten kare (dibe oturuyor).
-     Sonuç: panel sağ kenara ve tabana BİRLEŞİK, yalnız içeriğe bakan sol üst köşe yumuşak. */
-  border-radius: var(--parla-radius) 0 0 0;
+  /* ⚠️ SOL KÖŞELER YUVARLAK (22px), SAĞ KÖŞELER KARE — Mehmet, 01.08:
+     ① "sağ üstte hâlâ köşe yuvarlatma var, onu kaldır, birleşik olsun" → panel
+        pencerenin sağ kenarına yapışık; sağ köşe yuvarlatılınca orada arkadaki koyu
+        zemin çentik gibi sızıyordu. Sağ taraf pencereyle BİRLEŞİK kalır.
+     ② "alt sola da köşe yuvarlatma ekleyelim… sol panelimiz nasıl ise eşit olsun"
+        → sol menü 12px boşluklu, 22px yuvarlak bir kart. Parla'nın SOL tarafı da
+        aynı dil: iki sol köşe 22px + altta 12px boşluk (`.parla-drawer` bottom).
+     ⚠️ 22px `--parla-radius` (18) DEĞİL, `.panel-sidebar`ın kendi ölçüsü — "eşit olsun"
+     dendiği için menüye bakarak seçildi. Menünün köşesi değişirse burası da değişmeli.
+     Sıra: sol-üst · sağ-üst · sağ-alt · sol-alt. */
+  border-radius: 22px 0 0 22px;
   overflow: hidden;
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   transition: border-radius 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
