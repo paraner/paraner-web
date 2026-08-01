@@ -5550,7 +5550,16 @@ body.parla-dragging .parla-drawer { transition: none; }
 .parla-panel {
   flex: 1; min-height: 0; display: flex; flex-direction: column;
   background: var(--surface-modal);
-  border-left: 1px solid var(--border-strong);
+  /* ⚠️ ÇİZGİ HER KENARDA + BELİRGİN RENK (Mehmet, 01.08: "çizgiler belli olsun…
+     kalınlaştırmana gerek yok, renkleri belirgin olsun yeter").
+     NEYDİ: yalnız SOL kenarda çizgi vardı ve rengi `--border-strong` (%16 beyaz) idi.
+     Yuvarlatılmış köşeyi çizecek üst/alt kenar olmadığı için köşe "boşlukta" duruyordu —
+     Mehmet'in "sadece köşe belli" dediği buydu.
+     ŞİMDİ: üst + sol + alt kenarda 1px çizgi (kalınlık AYNI, yalnız renk parlatıldı:
+     %16 → %28 beyaz; #121212 üstünde ~#383838 → ~#545454). Sağ kenarda çizgi YOK —
+     orası pencereye yapışık, "birleşik" kalmalı (bkz. köşe notu). */
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-right: none;
   /* ⚠️ SOL KÖŞELER YUVARLAK (22px), SAĞ KÖŞELER KARE — Mehmet, 01.08:
      ① "sağ üstte hâlâ köşe yuvarlatma var, onu kaldır, birleşik olsun" → panel
         pencerenin sağ kenarına yapışık; sağ köşe yuvarlatılınca orada arkadaki koyu
