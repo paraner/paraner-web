@@ -5558,9 +5558,17 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
    ⚠️ Renk `--bg` (sayfa zemini) — boşluk "boşluk" gibi dursun diye. Zemin değişirse burası
    da kendiliğinden uyar. */
 .parla-drawer::after {
-  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  content: ""; position: absolute; z-index: -1;
   left: 0; right: 0; top: 0; bottom: -12px;
   background: var(--bg);
+  /* ⚠️ `pointer-events: none` DEĞİL (01.08 canlı ölçümde yakalandı): katman görüntüyü
+     kapatıyordu ama tıklamayı kapatmıyordu — alttaki 12px şeritte fare, GÖRÜNMEYEN
+     kartların üstüne düşüyordu (`elementFromPoint` y=817'de `.dash-accounts-card`
+     döndürüyordu). Kullanıcı boş sandığı yere tıklayıp arkadaki kartı tetikleyebilirdi.
+     `auto` ile şerit hem görsel hem tıklama olarak kapanır.
+     Panel kapalıyken sorun yok: `.parla-drawer.kapali` zaten `pointer-events: none` ve
+     bu özellik kalıtımla sözde-öğeye de geçer. */
+  pointer-events: auto;
 }
 /* Tam ekranda (≤767) boşluk zaten yok → katmana da gerek yok. */
 @media (max-width: 767px) { .parla-drawer::after { display: none; } }
