@@ -1379,42 +1379,18 @@ ul { list-style: none; }
   overflow: hidden;
 }
 
-/* ═══ ÜST BAR TAM GENİŞLİK (Shopify Sidekick düzeni — Mehmet kararı, 01.08) ═══
-   NEYDİ: üst bar sol menüden SONRA başlıyordu (menünün yanında), pencerenin tamamını
-   kaplamıyordu. Shopify'da bar tepede tam genişliktedir, altındaki alan
-   `sol menü · içerik · sohbet` diye bölünür. Ölçüldü (admin.shopify.com, 1973px):
-   üst bar [0,0,1973,56], menü [0,56,240,981], sohbet paneli sağ/alt kenara 0 boşlukla.
-   ⚠️ SOL MENÜ BU DÜZENE DAHİL DEĞİL: Mehmet 01.08'de "sol paneli eski haline al, o
-   shopify gibi olmasın" dedi → menü 12px boşluklu, yuvarlak köşeli YÜZEN KART olarak
-   kaldı. Kenara yapışan yalnız ÜST BAR ve sağdaki Parla paneli.
-   ⚠️ Üst bar `fixed` yapıldı, DOM'da yeri değişmedi → `layout.tsx` dokunulmadı.
-   ⚠️ Üst bara `filter/transform/backdrop-filter` EKLEME (zaten yasak, bkz. `.panel-topbar`
-   notu): `position: fixed` bunu yapmaz, ama o üçü ortadaki arama kutusunu üst bara
-   çivileyip sayfanın ortasından kaydırır. `::before` katmanı bu yüzden var, öyle kalsın.
-   ⚠️ TELEFON HARİÇ (≤760px): orada menü zaten çekmece, sayfa penceresiyle kayıyor —
-   sabit üst bar içeriğin üstünü örterdi. O aralık eskisi gibi bırakıldı.
-   ⚠️ Seçicilerde `.panel-shell` ÖN EKİ ŞART: bu blok dosyada `.panel-topbar` ve
-   `.panel-sidebar` temel tanımlarından ÖNCE geliyor. Ön ek olmadan aynı özgüllükte
-   kalıp SONRAKİ temel tanım tarafından eziliyor (üst bar `relative`e geri dönüyordu
-   — denendi, öyle oldu). */
-@media (min-width: 761px) {
-  .panel-shell { padding-top: var(--panel-topbar-h); }
-  .panel-shell .panel-topbar {
-    position: fixed; top: 0; left: 0; right: 0;
-    /* Sol menünün (20) ÜSTÜNDE, çekmecelerin (91/92) ve bildirim/modalın ALTINDA */
-    z-index: 40;
-  }
-  /* ⚠️ SOL MENÜ ESKİ HÂLİNDE KALIR (Mehmet, 01.08: "sol paneli eski haline al, o
-     shopify gibi olmasın"). Yani 12px boşluklu, 22px yuvarlak köşeli, gölgeli YÜZEN
-     KART — Shopify'ın kenara yapışık menüsü DEĞİL. Burada yalnız YÜKSEKLİĞİ düzeltiyoruz:
-     menünün kendi tanımı `calc(100vh - 24px)` diyor, o ölçü üst bar akıştayken doğruydu;
-     bar sabitlenip kabuğa 73px üst boşluk eklenince menü 73px taşıyordu (alt kenarı
-     ekranın dışında kalıyordu). Görünümüne DOKUNULMUYOR — sadece taşma düzeltmesi. */
-  .panel-shell .panel-sidebar,
-  .panel-shell .panel-sidebar.collapsed {
-    height: calc(100vh - var(--panel-topbar-h) - 24px);
-  }
-}
+/* ═══ ÜST BAR — SOL MENÜNÜN YANINDA (eski düzen, KASITLI) ═══
+   01.08'de üst bar kısa süre Shopify gibi TAM GENİŞLİK + `position: fixed` yapılmıştı.
+   GERİ ALINDI (Mehmet, canlıda gördü): bar tam genişlik olunca sol menüyü 73px aşağı
+   itiyor ve barın SOL TARAFI boş bir şerit olarak kalıyordu — PARANER logosu, hesap
+   değiştirici ve menü başlıkları aşağı kayıyordu. Mehmet: "sol panel tam olsun eskisi
+   gibi… üst panel boş duruyor… paraner logosu, hesap değiştirici, genel bakış/işlemler
+   eski halinde olmalı."
+   Yani kabuk ESKİSİ GİBİ: sol menü en üstten başlar (12px boşlukla, tam boy), üst bar
+   yalnız içeriğin üstünde durur. Shopify düzenine geçen TEK ŞEY sağdaki Parla paneli.
+   ⚠️ Buraya `padding-top` / `position: fixed` geri EKLEME — aynı boş şerit geri gelir.
+   ⚠️ `--panel-topbar-h` 73px olarak KALIYOR (ölçülen gerçek yükseklik); Parla'nın üst
+   hizası ve destek sohbeti ondan besleniyor. */
 .panel-sidebar {
   position: sticky; top: 12px; align-self: flex-start;
   height: calc(100vh - 24px);
