@@ -5839,10 +5839,12 @@ body.parla-genis .panel-content { margin-right: 0; }
 .parla-composer-alan {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
   padding: 10px 12px 12px;
-  /* ⚠️ ZEMİN OPAK OLMALI (01.08, Mehmet: "input'u neden şeffaflaştırdın, çok kötü
-     olmuş"). Kutu artık metnin ÜSTÜNDE yüzdüğü için altındaki yazı görünüyordu;
-     yazı alanının içinden arkadaki cevap okunuyor, ikisi üst üste biniyordu. */
-  background: var(--surface-modal);
+  /* ⚠️ BANDIN KENDİ ZEMİNİ YOK — solmayı `::after` degradesi yapıyor.
+     Kısa süre burada opak `--surface-modal` vardı; degradeyi TAMAMEN örtüyordu, o yüzden
+     "solma olmamış gibi" görünüyordu (Mehmet fark etti).
+     ⚠️ Okunabilirlik BANDIN değil, KUTUNUN işi: `.parla-composer` opak (#202020), yani
+     yazı alanının içinden hiçbir şey geçmiyor. Bandın yarı saydam kalması gerekiyor ki
+     kutunun altındaki şeritte metin ChatGPT'deki gibi silik silik seçilsin. */
 }
 /* Kararma + hafif blur: metin yazı alanının altına girerken erisin, sertçe kesilmesin.
    Katman yazı alanının 36px ÜSTÜNDEN başlar, altında da onun zeminini kapatır.
@@ -5856,16 +5858,25 @@ body.parla-genis .panel-content { margin-right: 0; }
    "Siyah %80" yerine kendi panel zeminimiz (#121212) %85'te: altındaki metin ChatGPT'deki
    gibi silik silik seçiliyor, ama okunacak kadar değil.
    ⚠️ Blur KALDIRILDI: ChatGPT'de yok. Yumuşaklığı degrade veriyor, blur değil. */
-.parla-composer-alan::before {
-  content: ""; position: absolute; left: 0; right: 0; bottom: 100%;
-  height: 32px; z-index: -1; pointer-events: none;
-  background: linear-gradient(to bottom, rgba(18, 18, 18, 0), rgba(18, 18, 18, 0.85));
-}
-/* Yazı alanının ARKASI ve ALTI: metin buraya girince silikleşir ama tamamen kaybolmaz
-   (ChatGPT'de de kutunun altında 24px'lik şeritte yazı silik silik görünüyor). */
+/* ⚠️ SOLMA KUTUNUN ÜSTÜNDE DEĞİL, ARKASINDA VE ALTINDA (01.08 — Mehmet: "onlarda
+   input'un alt bölümünde solukluk belli oluyor, ama bizde input'un üstünde solma
+   başlıyor").
+   İLK DENEME YANLIŞ YERDEYDİ: katman `bottom: 100%` ile kutunun ÜSTÜNE konmuştu, metin
+   kutuya varmadan soluyordu. ChatGPT'nin ölçümüne tekrar bakınca yer belli oldu:
+   onların katmanı y=747'de, yani KUTUNUN TAM ÜSTÜNDEN başlayıp 32px AŞAĞI doğru
+   opaklaşıyor ve kutunun altındaki 24px'lik şeride kadar iniyor.
+   Yani: üstteki metin kutunun arkasında kayboluyor (solmadan), görünen solukluk
+   kutunun ALTINDAKİ şeritte. Aynısı yapıldı.
+   ⚠️ %85 opaklık bilinçli: %100 yapılırsa alttaki şerit ölü siyah olur ve derinlik
+   hissi kaybolur; ChatGPT'de de orada yazı silik silik seçiliyor. */
 .parla-composer-alan::after {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: rgba(18, 18, 18, 0.85);
+  background: linear-gradient(
+    to bottom,
+    rgba(18, 18, 18, 0) 0,
+    rgba(18, 18, 18, 0.85) 32px,
+    rgba(18, 18, 18, 0.85) 100%
+  );
 }
 
 /* ═══ "EN ALTA İN" DÜĞMESİ — ChatGPT ölçüleriyle (01.08) ═══
