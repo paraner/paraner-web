@@ -20,6 +20,64 @@
 
 ## Bu hafta (2026-07-23 →)
 
+### 01.08 (3) — Parla paneli: 16 düzeltme, hepsi CANLI ÖLÇÜMLE bulundu
+Aynı gün, `270b2dc`'den sonra Mehmet canlıda gözle bakıp tek tek bildirdi; her biri
+Chrome eklentisiyle ölçülüp düzeltildi. **Son hâl:**
+- **Kabuk GERİ ALINDI** (`40e65a3`): üst bar tam genişlik + `fixed` denendi, sol menüyü
+  73px aşağı itip barın SOLUNU boş şerit bırakıyordu (logo/hesap değiştirici aşağı
+  kayıyordu). Mehmet: "sol panel tam olsun eskisi gibi". Kabuk eskisi gibi; Shopify
+  düzenine geçen TEK ŞEY sağdaki Parla paneli.
+- **Panel geometrisi:** sağ+alt kenara yapışık değil → sol köşeler 22px yuvarlak, altta
+  12px boşluk (sol menüyle aynı hizada), sağ kenar pencereyle birleşik ve köşesiz,
+  çizgi üst+sol+altta %28 beyaz.
+- **`--parla-nav-w` = menünün SAĞ KENARI + daraltma düğmesi** (`.sidebar-toggle`
+  `right:-14px` ile 14px dışarı taşıyor). Genişletilmiş panel menüden 12px ayrık.
+- **Yazı alanı `--parla-max-w` (600) ile sınırlı, ORTALI — `.genis`E BAĞLI DEĞİL.**
+  Sınıfa bağlıyken daraltmada bir karede 600→1700 fırlıyordu. Mesaj sütunu da 600
+  (genişte satır başına 239 karakter ölçülmüştü, okunmaz).
+- **Alt boşluktaki sızıntı:** panel içeriğin üstüne bindiğinde (geniş mod / ≤1199)
+  içerik itilmediği için sayfa panelin ARKASINDA kalıyor, 12px şeritten sızıyordu.
+  `.parla-drawer::after` opak katman (`z-index:-1`, 12px aşağı/sola taşar) + katman
+  `pointer-events: auto` (görsel kapalıydı ama TIKLAMA sızıyordu, ölçümle yakalandı).
+- 🔴 **KAPANIŞ ANİMASYONU HİÇ OYNAMIYORMUŞ:** kutu `open || kapaniyor` ile çiziliyordu;
+  `open` false olan RENDER'da `kapaniyor` hâlâ false → kutu bir kare SÖKÜLÜP kapalı
+  konumda yeniden takılıyor, tarayıcıda "önceki konum" kalmıyordu. Artık bir kez
+  açıldıktan sonra hiç sökülmez (`hicAcildi`), yalnız `kapali` sınıfıyla kayar.
+- **Sol menüyle eşzamanlılık:** menü 0.26s'de daralırken panel kendi 0.25s geçişiyle
+  HAREKETLİ HEDEFİ kovalıyordu. Menü oynarken panelin geçişi kapanıyor
+  (`body.parla-nav-oynuyor`, son ölçümden 320ms sonra kalkar). Ölçülen sapma ≤0.5px.
+- **Telefonda arkadaki sayfa kayıyordu:** `body{overflow:hidden}` işe yaramıyor, bu
+  sayfada kaydıran öğe `html` → `html:has(body.parla-open)` eklendi.
+- **Klavye:** odak panele girer, Tab içeride döner, kapanınca açan düğmeye döner.
+  Sürüklerken Escape önce SÜRÜKLEMEYİ iptal eder (eskiden `parla-dragging` asılı kalıyordu).
+- **Yazı alanı otomatik büyüme kodu HİÇ YAZILMAMIŞTI** (CSS'te niyet vardı) — eklendi.
+
+⚠️ **KAYDIRMA ÇUBUĞU TUZAĞI (kalıcı ders):** Chrome'da bir öğede `scrollbar-width` /
+`scrollbar-color` tanımlıysa o öğenin **BÜTÜN `::-webkit-scrollbar` tarifi yok sayılır.**
+`* { scrollbar-width: thin }` yüzünden 24.07'de yazılan ince çubuk tarifi **bir hafta
+boyunca hiç çalışmamış**. Standart özellikler artık yalnız
+`@supports not selector(::-webkit-scrollbar)` içinde (Shopify de aynı yöntemi kullanıyor).
+Aynı tuzak `.cat-list` ve `.parla-kat-cipler`de de vardı. **Yeni yere `scrollbar-width`
+yazarken bunu hatırla.** Çubuk şekli Shopify'dan: oluk 10px + thumb'a 3px şeffaf kenarlık
++ `background-clip: content-box` → görünen hap 4px, track kuralı yok.
+
+🔴 **PARLA BEYNİNDE (bu repo DEĞİL, `~/Developer/Paraner/parla/`) — açık:**
+"sil" komutları YENİ GİDER olarak ayrıştırılıyor. `"1) 350 TL…"` → −1,00 ₺ taslak
+(liste işaretini tutar sanıyor); `"Market isimli 350 TL'lik gideri sil"` → −350,00 ₺
+taslak (fiil yok sayılıyor). **Tek çip dokunuşuyla kullanıcı istediğinin TERSİNİ
+kaydediyor.** Silme hiç desteklenmiyor ("İşlemler sekmesine gidin" diyor).
+Ayrıca: işlem adı "Dun kahve" (tarih kelimesi ada sızıyor, ASCII), kayıttan hemen
+sonra "−0,00 ₺" özeti (işlem temmuza düştü, özet ağustos → başarısız gibi okunuyor).
+
+🔴 **BU REPODA AÇIK KALAN:** uzun cevaptan sonra yeni mesaj görünüme KAYDIRILMIYOR
+(ölçüm: `scrollTop` 2061'de takılı, yeni mesaj 941px aşağıda → kullanıcı cevabı hiç
+görmüyor). Snap mantığında; ölçerek düzeltilmeli. Ayrıca kısa cevaptan sonra 239px ölü
+kaydırma alanı (snap boşluğu temizlenmiyor).
+
+⚠️ **TEST KAYITLARI DURUYOR** (işlevsel testte oluştu, Parla silemediği için temizlenemedi):
+`Market −₺350,00` (01.08) ve `Dun kahve −₺120,00` (31.07). Silinince "Bu Ay Gider"
+₺850 → ₺500'e döner.
+
 ### 01.08 (2) — Kabuk + Parla paneli Shopify Sidekick düzenine geçirildi (commit 270b2dc)
 Mehmet kararı (seçenek sunuldu, en büyüğünü seçti): **"kabuğun tamamı Shopify gibi olsun"**.
 Shopify Sidekick **canlı ölçüldü** (Claude Chrome eklentisi, `admin.shopify.com/orders`).
