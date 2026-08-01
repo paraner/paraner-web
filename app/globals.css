@@ -3847,7 +3847,11 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
 .cat-list {
   display: flex; flex-direction: column; max-height: 240px; overflow-y: auto;
   overscroll-behavior: contain;       /* kaydırma modala sıçramasın */
-  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent;
+}
+/* ⚠️ Standart özellikler yalnız Firefox'a (bkz. genel çubuk notu): Chrome'da burada
+   dururlarsa aşağıdaki `::-webkit-scrollbar` tarifi tamamen yok sayılır. */
+@supports not selector(::-webkit-scrollbar) {
+  .cat-list { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent; }
 }
 .cat-list::-webkit-scrollbar { width: 8px; }
 .cat-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 8px; }
@@ -5796,10 +5800,24 @@ body.parla-genis .panel-content { margin-right: 0; }
 }
 .parla-send:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* İnce kaydırma çubuğu — varsayılan (Chrome ~15px) kalın ve kaba duruyordu (Mehmet, 24.07).
+/* ═══ İNCE KAYDIRMA ÇUBUĞU ═══
+   Varsayılan (Chrome ~15px) kalın ve kaba duruyordu (Mehmet, 24.07).
    Tüm sitede geçerli: pazarlama + panel + admin aynı dili konuşsun.
-   ⚠️ Kaldırmıyoruz, İNCELTİYORUZ: görünmez yapmak "kaydırılabilir mi?" bilgisini yok eder. */
-* { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.18) transparent; }
+   ⚠️ Kaldırmıyoruz, İNCELTİYORUZ: görünmez yapmak "kaydırılabilir mi?" bilgisini yok eder.
+
+   ⚠️⚠️ İKİSİ AYNI ANDA YAZILMAZ (01.08'de bulundu — aşağıdaki tarif BİR HAFTA BOYUNCA
+   HİÇ ÇALIŞMADI). Chrome'da bir öğede `scrollbar-width`/`scrollbar-color` (standart
+   özellikler) tanımlıysa, `::-webkit-scrollbar` sözde-öğelerinin TAMAMI yok sayılır.
+   `*` seçicisi bunları HER öğeye verdiği için 7px'lik yuvarlak tarif hiç devreye
+   girmiyor, Chrome kendi "thin" çubuğunu çiziyordu: 11px, köşeli, kaba.
+   Canlıda ölçüldü: `.panel-content` offsetWidth − clientWidth = 11 (7 olmalıydı).
+   ÇÖZÜM: standart özellikler yalnız `::-webkit-scrollbar`ı DESTEKLEMEYEN tarayıcılara
+   (Firefox) verilir. Chrome/Safari aşağıdaki tarifi kullanır.
+   ⚠️ Yeni bir yere `scrollbar-width` yazarken aynı tuzağa düşme: o öğede webkit tarifi
+   ölür. Yazacaksan onu da `@supports not selector(::-webkit-scrollbar)` içine al. */
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.18) transparent; }
+}
 ::-webkit-scrollbar { width: 7px; height: 7px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 999px; }
@@ -5845,7 +5863,11 @@ body.parla-genis .panel-content { margin-right: 0; }
 /* MASAÜSTÜ: ince kaydırma çubuğu — çubuk hiç görünmeyince kullanıcı rayın kaydığını
    anlamıyordu (Mehmet, 25.07: "scroll edilemiyor"). Dokunmatikte gizli kalır. */
 @media (hover: hover) and (pointer: fine) {
-  .parla-kat-cipler { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+  /* ⚠️ Standart özellikler yalnız Firefox'a (bkz. genel çubuk notu): Chrome'da burada
+     dururlarsa alttaki `::-webkit-scrollbar` tarifi yok sayılır ve şerit çubuksuz kalır. */
+  @supports not selector(::-webkit-scrollbar) {
+    .parla-kat-cipler { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+  }
   .parla-kat-cipler::-webkit-scrollbar { height: 4px; }
   .parla-kat-cipler::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
   .parla-kat-cipler::-webkit-scrollbar-track { background: transparent; }
