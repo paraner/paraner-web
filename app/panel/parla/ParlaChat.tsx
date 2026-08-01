@@ -411,9 +411,14 @@ export default function ParlaChat() {
      da denemiyordu → değişken 248'de donuyordu. Artık menü belirene kadar DOM izleniyor. */
   useEffect(() => {
     let gozlemci: ResizeObserver | null = null;
+    /* ⚠️ GENİŞLİK DEĞİL, SAĞ KENAR (01.08 canlı ölçüm: genişletilmiş panel menünün
+       üstüne tam 12px biniyordu). Sol menü yüzen kart → soldan 12px boşluk var:
+       genişliği 248 ama sağ kenarı 260. Panel `100vw - değişken` kadar olduğu için
+       genişlik yazılınca sol kenarı 248'e geliyor, yani menünün 12px üstüne. Sağ kenar
+       yazılınca tam menünün bittiği yerden başlıyor (daraltılmışken de: 74 → 86). */
     const yaz = (menu: Element) => {
-      const w = menu.getBoundingClientRect().width;
-      document.body.style.setProperty("--parla-nav-w", `${Math.round(w)}px`);
+      const sagKenar = menu.getBoundingClientRect().right;
+      document.body.style.setProperty("--parla-nav-w", `${Math.round(sagKenar)}px`);
     };
     const bagla = () => {
       const menu = document.querySelector(".panel-sidebar");

@@ -5590,7 +5590,10 @@ body.parla-dragging .parla-drawer { transition: none; }
 
 /* ─── GENİŞLET — tüm pencere eksi sol menü ───
    Shopify: 1973 → 1733 = 100vw - 240 (menü genişliği). Menü yerinde kalıyor.
-   Açılınca SOL ÜST köşe kareleşiyor (panel menüye dayandığı için), sağ üst 12px kalıyor. */
+   Açılınca SOL ÜST köşe kareleşiyor (panel menüye dayandığı için), sağ üst 12px kalıyor.
+   ⚠️ `--parla-nav-w` menünün GENİŞLİĞİ değil SAĞ KENARIDIR (ParlaChat yazıyor). Bizim
+   menü yüzen kart, soldan 12px boşluğu var → genişliği yazsaydık panel menünün 12px
+   üstüne binerdi (canlıda ölçüldü, öyle oluyordu). */
 .parla-drawer.genis { width: calc(100vw - var(--parla-nav-w)); }
 .parla-drawer.genis .parla-panel { border-radius: 0 var(--parla-radius) 0 0; }
 /* Genişken sürükleme tutamağı anlamsız (kenara dayalı) — Shopify'da da devre dışı */
