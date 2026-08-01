@@ -5870,7 +5870,15 @@ body.parla-genis .panel-content { margin-right: 0; }
    ⚠️ %85 opaklık bilinçli: %100 yapılırsa alttaki şerit ölü siyah olur ve derinlik
    hissi kaybolur; ChatGPT'de de orada yazı silik silik seçiliyor. */
 .parla-composer-alan::after {
-  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  content: "";
+  position: absolute; z-index: -1; pointer-events: none;
+  /* ⚠️ ÜSTTEN 10px = bandın kendi `padding-top`u → degrade TAM KUTUNUN ÜSTÜNDEN başlar.
+     `inset: 0` denendi, ölçümde yakalandı: bandın tepesi kutunun 10px üstünde olduğu için
+     degradenin ilk 10px'i AÇIKTA kalıyor ve metin kutuya varmadan soluyordu (kenarda
+     alfa ≈ 0.27, yani parlaklık ~%73'e iniyordu). ChatGPT'de bu pay SIFIR: katmanları
+     kutunun tam üstünden başlıyor, üstteki yazı sonuna kadar parlak kalıp kutunun
+     arkasında kayboluyor. ⚠️ Bandın `padding-top`u değişirse burası da değişmeli. */
+  inset: 10px 0 0 0;
   background: linear-gradient(
     to bottom,
     rgba(18, 18, 18, 0) 0,
