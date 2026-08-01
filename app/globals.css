@@ -5591,6 +5591,8 @@ body.parla-nav-oynuyor .parla-drawer { transition: none; }
 /* İç katman — zemin, köşe, gölge. Üst iki köşe yuvarlak, alt köşeler kare. */
 .parla-panel {
   flex: 1; min-height: 0; display: flex; flex-direction: column;
+  /* ⚠️ Yazı alanı bunun içinde MUTLAK konumda yüzüyor → dayanak nokta burası. */
+  position: relative;
   background: var(--surface-modal);
   /* ⚠️ ÇİZGİ HER KENARDA + BELİRGİN RENK (Mehmet, 01.08: "çizgiler belli olsun…
      kalınlaştırmana gerek yok, renkleri belirgin olsun yeter").
@@ -5747,6 +5749,10 @@ body.parla-genis .panel-content { margin-right: 0; }
   flex: 1; min-height: 0; overflow-y: auto;
   display: flex; flex-direction: column; gap: 10px;
   padding: 18px;
+  /* ⚠️ Yazı alanı artık listenin ÜSTÜNDE yüzüyor (bkz. `.parla-composer-alan`) →
+     metin altına kayabilsin ama son mesaj yine de üstünde durabilsin diye onun
+     yüksekliği kadar alt boşluk. Değeri ParlaChat ölçüp yazıyor; 84 ilk kare payı. */
+  padding-bottom: calc(var(--parla-composer-h, 84px) + 10px);
   /* Liste sonuna gelince kaydırma DIŞARI taşmasın: yoksa macOS'ta belge esner ve
      sabit duran her şey (menü, üst bar, panelin kendisi) oynuyormuş gibi görünür.
      Aynı gerekçe `.panel-content` ve `.panel-nav` için de geçerli. */
@@ -5818,13 +5824,32 @@ body.parla-genis .panel-content { margin-right: 0; }
    ⚠️ `mask-image` KULLANILMADI: Safari'de maske+filtre birleşimi görünmezliğe yol
    açabiliyor (auth ekranında yaşandı, DAILY_LOG'da kayıtlı). Düz degrade yeterli.
    Blur çok hafif (2px) — ChatGPT'de de amaç bulanıklaştırmak değil, kenarı yumuşatmak. */
-.parla-composer-alan { padding: 10px 12px 12px; position: relative; }
+/* ⚠️ YAZI ALANI ARTIK LİSTENİN ÜSTÜNDE YÜZÜYOR (Mehmet, 01.08 karşılaştırmalı ekran
+   görüntüsü: "input'un altında kararıyor onlarınki, o gibi olsun").
+   NEYDİ: liste ile yazı alanı yan yana iki kutuydu (flex kardeş) → liste yazı alanının
+   HEMEN ÜSTÜNDE bitiyordu. Metin oraya gelince duruyordu; altında hiçbir şey yoktu.
+   ChatGPT'de ise metin yazı alanının ALTINA doğru devam ediyor ve orada kararıyor —
+   yazı alanı içeriğin ÜSTÜNDE yüzen bir kutu.
+   ŞİMDİ AYNISI: yazı alanı mutlak konumda, listenin üstünde; liste onun yüksekliği
+   kadar alt boşluk alıyor, böylece metin altına kayabiliyor ama son mesaj yine de
+   yazı alanının üstünde durabiliyor.
+   ⚠️ Yükseklik SABİT YAZILAMAZ: yazı alanı kendi kendine büyüyor (bir satır → 120px).
+   ParlaChat `--parla-composer-h`yi ölçüp yazıyor; buradaki 84px yalnız ilk kare için
+   emniyet payı. */
+.parla-composer-alan {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+  padding: 10px 12px 12px;
+}
+/* Kararma + hafif blur: metin yazı alanının altına girerken erisin, sertçe kesilmesin.
+   Katman yazı alanının 36px ÜSTÜNDEN başlar, altında da onun zeminini kapatır.
+   ⚠️ `mask-image` KULLANILMADI — Safari'de maske+filtre görünmezlik yapabiliyor
+   (auth ekranında yaşandı, DAILY_LOG'da kayıtlı). Düz degrade yeterli. */
 .parla-composer-alan::before {
-  content: ""; position: absolute; left: 0; right: 0; bottom: 100%;
-  height: 32px; pointer-events: none; z-index: 1;
-  background: linear-gradient(to bottom, transparent, var(--surface-modal) 92%);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  content: ""; position: absolute; inset: -36px 0 0 0; z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--surface-modal) 62%);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 .parla-composer {
   display: flex; flex-direction: column; gap: 8px;

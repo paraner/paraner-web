@@ -665,6 +665,24 @@ export default function ParlaChat() {
     el.style.height = `${el.scrollHeight}px`;
   }, [input]);
 
+  /* ─── YAZI ALANININ YÜKSEKLİĞİ → `--parla-composer-h` ───
+     Yazı alanı listenin ÜSTÜNDE yüzdüğü için (ChatGPT deseni), liste onun yüksekliği
+     kadar alt boşluk almalı — yoksa son mesaj kutunun altında kalır. Kutu kendi kendine
+     büyüdüğünden (bir satır → 120px) değer SABİT YAZILAMAZ, ölçülüp yazılıyor. */
+  useEffect(() => {
+    if (!open || !hicAcildi) return;
+    const kutu = panelRef.current?.querySelector(".parla-composer-alan");
+    if (!kutu) return;
+    const yaz = () => {
+      const h = Math.round(kutu.getBoundingClientRect().height);
+      document.body.style.setProperty("--parla-composer-h", `${h}px`);
+    };
+    yaz();
+    const g = new ResizeObserver(yaz);
+    g.observe(kutu);
+    return () => g.disconnect();
+  }, [open, hicAcildi]);
+
   /* ─── KLAVYE ODAĞI ───
      Canlı ölçümde üç eksik çıktı: (1) panel açılınca odak içeri girmiyordu (`body`de
      kalıyordu), (2) odak panele HAPSOLMUYOR — Tab ile arkadaki sol menüye çıkılıyordu,
