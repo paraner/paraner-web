@@ -5816,12 +5816,23 @@ body.parla-genis .panel-content { margin-right: 0; }
    Sebep: yazı alanı kullanıcının o anki dar tercihine göre küçülürse tam ekranda
    gereksiz dar kalıyordu; sabit üst sınır hem tutarlı hem okunaklı satır uzunluğu verir.
    ⚠️ Shopify'da da aynı fikir var, onlarda sabit 800px (ölçüldü). Bizde 600, çünkü
-   bizim panelin kendi üst sınırı da 600 — kullanıcının gördüğü en geniş yazı alanı bu. */
-.parla-drawer.genis .parla-composer {
+   bizim panelin kendi üst sınırı da 600 — kullanıcının gördüğü en geniş yazı alanı bu.
+   ⚠️ KURAL `.genis`E BAĞLI DEĞİL, HER ZAMAN AÇIK (01.08, Mehmet: "büyültüp küçültürken
+   input sanki uyumsuz büyüyüp küçülüyor, tam ekrandan daralt dediğimde gözle görülebilir
+   taşma gibi oluyor"). Önce yalnız `.parla-drawer.genis .parla-composer` idi: daraltınca
+   sınıf ANINDA kalkıyor, 600px sınırı bir karede yok oluyor, ama panel 0.25s'de daralıyor
+   → yazı alanı önce 600'den panelin O ANKİ geniş ölçüsüne (≈1700) FIRLIYOR, sonra panelle
+   birlikte iniyordu. Görülen "taşma" buydu.
+   Sınır sürekli açık olunca yazı alanı = `min(%100, 600px)`: normal modda panel zaten
+   en fazla 600 (yazı alanı iç boşlukla 576) → sınır hiç devreye girmez, HİÇBİR ŞEY
+   değişmez; geniş modda 600'de durur. Sınıf değişiminde sıçrayacak bir değer kalmaz. */
+.parla-composer {
   width: 100%;
   max-width: var(--parla-max-w);
   margin-inline: auto;
 }
+/* Telefonda (≤767) panel tam ekran: 600px sınırı orada kenarlarda tuhaf boşluk bırakır. */
+@media (max-width: 767px) { .parla-composer { max-width: none; } }
 /* Alt sıra: solda belge ekle, sağda gönder */
 .parla-composer-alt { display: flex; align-items: center; justify-content: space-between; }
 

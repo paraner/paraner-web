@@ -426,8 +426,17 @@ export default function ParlaChat() {
        menünün o anki kenarına BİREBİR oturur, ikisi tek parça gibi hareket eder.
        Sınıf, son ölçümden 320ms sonra kalkar (menü geçişi 260ms; pay bırakıldı) —
        böylece düğmeyle genişlet/daralt gibi normal hareketler yine yumuşak kalır. */
+    /* ⚠️ DARALTMA DÜĞMESİ DE HESABA KATILIR (Mehmet, 01.08: "tam ekranda sol panelin
+       daraltma büyültme çubuğuna denk geliyor, oysa arada biraz boşluk bırakmıştık").
+       `.sidebar-toggle` menünün SAĞ KENARINDAN 14px DIŞARI taşıyor (`right: -14px`,
+       genişlik 28 → yarısı dışarıda duran yuvarlak düğme). Yalnız menünün kenarı
+       ölçülünce panel 260+12 = 272'ye geliyor, düğmenin sağ kenarı ise 274 → panel
+       düğmenin ÜSTÜNE biniyordu. Artık ikisinin de sağ kenarı alınıp BÜYÜĞÜ kullanılıyor,
+       12px boşluk düğmeden sonra başlıyor. Düğme yoksa (telefon) ölçü menüden gelir. */
     const yaz = (menu: Element) => {
-      const sagKenar = menu.getBoundingClientRect().right;
+      let sagKenar = menu.getBoundingClientRect().right;
+      const dugme = menu.querySelector(".sidebar-toggle");
+      if (dugme) sagKenar = Math.max(sagKenar, dugme.getBoundingClientRect().right);
       document.body.style.setProperty("--parla-nav-w", `${Math.round(sagKenar)}px`);
       document.body.classList.add("parla-nav-oynuyor");
       if (navZaman.current) clearTimeout(navZaman.current);
