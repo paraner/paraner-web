@@ -61,22 +61,48 @@ Aynı tuzak `.cat-list` ve `.parla-kat-cipler`de de vardı. **Yeni yere `scrollb
 yazarken bunu hatırla.** Çubuk şekli Shopify'dan: oluk 10px + thumb'a 3px şeffaf kenarlık
 + `background-clip: content-box` → görünen hap 4px, track kuralı yok.
 
-🔴 **PARLA BEYNİNDE (bu repo DEĞİL, `~/Developer/Paraner/parla/`) — açık:**
-"sil" komutları YENİ GİDER olarak ayrıştırılıyor. `"1) 350 TL…"` → −1,00 ₺ taslak
-(liste işaretini tutar sanıyor); `"Market isimli 350 TL'lik gideri sil"` → −350,00 ₺
-taslak (fiil yok sayılıyor). **Tek çip dokunuşuyla kullanıcı istediğinin TERSİNİ
-kaydediyor.** Silme hiç desteklenmiyor ("İşlemler sekmesine gidin" diyor).
-Ayrıca: işlem adı "Dun kahve" (tarih kelimesi ada sızıyor, ASCII), kayıttan hemen
-sonra "−0,00 ₺" özeti (işlem temmuza düştü, özet ağustos → başarısız gibi okunuyor).
+✅ **PARLA BEYNİ (`~/Developer/Paraner/parla/`, commit `e1016b0`) — DÜZELTİLDİ + YAYINDA + CANLIDA DOĞRULANDI**
+NEYDİ: "sil" komutları YENİ GİDER olarak ayrıştırılıyordu. `"1) 350 TL…"` → −1,00 ₺
+taslak (liste işaretini tutar sanıyordu); `"Market isimli 350 TL'lik gideri sil"` →
+−350,00 ₺ taslak. Tek çip dokunuşuyla kullanıcı istediğinin TERSİNİ kaydediyordu.
+İKİ AYRI HATA vardı:
+1. **Sıralama:** `routeMessage` katmanları `ekle → hedef → SİL → sorgu` sırasıyla
+   deniyordu. Rakam taşıyan her silme isteği daha ilk katmanda yakalanıyor, silme
+   katmanına sıra HİÇ gelmiyordu. Silme kodu zaten vardı ve çalışıyordu.
+   → Artık açık silme niyeti varsa ÖNCE silme denenir; ekleme/hedef ATLANIR. Bulunamazsa
+   AI'ya bırakılır, ekleme katmanına DÜŞÜRÜLMEZ. ⚠️ Niyet tespiti kelime sınırıyla
+   (`includes("sil")` "silgi"/"silah"ı da yakalardı).
+2. **İsme göre arama TERSTİ:** `title.includes(searchText)` — işlem ADININ kullanıcının
+   cümlesinin TAMAMINI içermesi bekleniyordu → "dun kahve isimli gideri sil" hiç
+   bulunamıyordu. Yön çevrildi: işlem adının KELİMELERİ cümlede geçiyor mu?
+   ⚠️ Aynı derecede birden fazla eşleşme → SİLMEZ, listeler ve SORAR (silme geri alınamaz).
+**Deploy:** `supabase functions deploy ai-chat --project-ref oqhonmmbcqrkcaoijgnb`
+(sağlık kontrolü 401 döndü = doğru). **Canlı test PASS:** "Deneme kahvesi isimli 80 TL
+lik gideri sil" → *"Silindi: Deneme kahvesi — −80,00 ₺"*, çip yok, taslak yok, yeni
+kayıt oluşmadı, işlem sayısı testten önceki hâline döndü.
+⚠️ Beyin MOBİLLE ORTAK — buradaki her deploy telefonu da etkiler.
 
-🔴 **BU REPODA AÇIK KALAN:** uzun cevaptan sonra yeni mesaj görünüme KAYDIRILMIYOR
-(ölçüm: `scrollTop` 2061'de takılı, yeni mesaj 941px aşağıda → kullanıcı cevabı hiç
-görmüyor). Snap mantığında; ölçerek düzeltilmeli. Ayrıca kısa cevaptan sonra 239px ölü
-kaydırma alanı (snap boşluğu temizlenmiyor).
+🟡 **Parla beyninde KALAN (küçük, açık):** işlem adı "Dun kahve" (tarih kelimesi ada
+sızıyor, üstelik ASCII "Dun"); kayıttan hemen sonra "−0,00 ₺" özeti (işlem temmuza
+düştü, özet ağustos → başarısız gibi okunuyor).
 
-⚠️ **TEST KAYITLARI DURUYOR** (işlevsel testte oluştu, Parla silemediği için temizlenemedi):
-`Market −₺350,00` (01.08) ve `Dun kahve −₺120,00` (31.07). Silinince "Bu Ay Gider"
-₺850 → ₺500'e döner.
+✅ **KAYDIRMA HATASI (commit `10b4323`) — DÜZELTİLDİ, canlı ölçüm bekliyor.**
+NEYDİ: uzun cevaptan sonra yeni mesaj görünüme kaydırılmıyordu (`scrollTop` 2061'de
+takılı → kullanıcı Parla'nın cevap vermediğini sanıyordu).
+SEBEP ZAMANLAMA: `snapUygula` boşluk yüksekliğini state ile güncelleyip HEMEN `rAF`
+içinde kaydırıyordu — boşluk EKRANA YERLEŞMEDEN. Kaydırılabilir alan kısa kalıyor,
+tarayıcı hedefi kırpıyor, liste yerinde kalıyordu; sonraki karede boşluk büyüyor ama
+kaydırmayı tekrar tetikleyen yok (`kaydirildiRef` true). Kısa geçmişte hedef zaten
+sınırın içinde olduğu için tekrarlamıyordu.
+ÇÖZÜM: kaydırma işaretlenir (`kaydirBekliyorRef`), bağımlılıksız bir `useLayoutEffect`
+boşluk DOM'a yansıdıktan SONRAKİ ilk render'da kaydırır.
+🟡 Kalan küçük: kısa cevaptan sonra ~239px ölü kaydırma alanı (snap boşluğu tasarım
+gereği duruyor — rahatsız ederse ayrıca bakılır).
+
+✅ **TEST KAYITLARI TEMİZLENDİ:** `Market −₺350,00` (01.08) ve `Dun kahve −₺120,00`
+(31.07) silindi; "Bu Ay Gider" ₺850 → ₺500. ⚠️ Aynı gün/aynı ad/aynı kategoride
+**Mehmet'in kendi `Market −₺500,00`** kaydı vardı — ad+tutar+tarih birlikte doğrulanarak
+korundu. (Silme her zaman böyle yapılmalı, ad tek başına yetmez.)
 
 ### 01.08 (2) — Kabuk + Parla paneli Shopify Sidekick düzenine geçirildi (commit 270b2dc)
 Mehmet kararı (seçenek sunuldu, en büyüğünü seçti): **"kabuğun tamamı Shopify gibi olsun"**.
