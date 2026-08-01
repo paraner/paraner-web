@@ -5678,8 +5678,13 @@ body.parla-nav-oynuyor .parla-drawer { transition: none; }
   /* ⚠️ Panel tam ekranken ARKADAKİ SAYFA KAYMASIN (01.08 canlı ölçüm: 700px'te panelin
      sağında sayfanın kendi kaydırma çubuğu 11px'lik şerit hâlinde görünüyordu — panel
      `left:0; right:0` olduğu için 100vw'ye değil, çubuğun soluna kadar uzanıyor).
-     Sol menü çekmecesinde de aynı desen var: `body.panel-menu-open { overflow: hidden }`. */
+     Sol menü çekmecesinde de aynı desen var: `body.panel-menu-open { overflow: hidden }`.
+     ⚠️ `html`E DE GEREKLİ (01.08 canlı ölçüm): yalnız `body`ye yazmak İŞE YARAMIYORDU —
+     bu sayfada kaydıran öğe `html` (`document.scrollingElement`). Ölçüm: panel tüm ekranı
+     kaplarken sayfa 0'dan 285'e kaydırılabiliyordu (scrollHeight 1855 / clientHeight 823).
+     Yani telefonda panelin ARKASINDAKİ sayfa parmakla kayıyordu. */
   body.parla-open { overflow: hidden; }
+  html:has(body.parla-open) { overflow: hidden; }
 }
 
 /* ═══ İÇERİK SOLA KAYAR — sağdan çekmece (Parla / işlem-fatura detayı) açıkken ═══

@@ -105,10 +105,6 @@ const PARLA_VARSAYILAN_W = 400;
 const PARLA_MIN_W = 300;
 const PARLA_MAX_W = 600;
 const PARLA_DEPO = "paraner-parla-panel";
-/* Kapanış animasyonu süresi — CSS'teki geçişle AYNI olmalı (`.parla-drawer` 0.25s).
-   ⚠️ Biri değişirse ikisi de: kısa kalırsa kutu kayma bitmeden sökülür, uzun kalırsa
-   kapandıktan sonra görünmez bir kutu tıklamaları yutar. */
-const PARLA_KAPANIS_MS = 250;
 
 const ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif";
 /* Fiş okuma için 1600px fazlasıyla yeterli (mobil `compressImage` ile aynı ölçü): tarayıcıda
@@ -144,15 +140,13 @@ export default function ParlaChat() {
   const [mounted, setMounted] = useState(false);
   /* Panel genişliği + "genişletildi mi" — Shopify Sidekick deseni (canlı ölçüldü 01.08).
      Genişlik kullanıcının sürüklediği değer; sınırlar Shopify'ınkiyle aynı: 300–600.
-     `kapaniyor`: kapanış animasyonu sürerken kutu DOM'da kalsın diye (yoksa yok olur,
-     sağa kayarak çıkamaz — Shopify'da panel hiç sökülmüyor). */
+     `hicAcildi`: kutu bir kez açıldıktan sonra DOM'dan HİÇ sökülmez (Shopify da sökmüyor)
+     — kapanış animasyonunun oynayabilmesi için şart, bkz. aşağıdaki animasyon notu. */
   const [genislik, setGenislik] = useState(PARLA_VARSAYILAN_W);
   const [genis, setGenis] = useState(false);
-  const [kapaniyor, setKapaniyor] = useState(false);
+  const [hicAcildi, setHicAcildi] = useState(false); // bir kez açıldıysa kutu DOM'da kalır
   const [girdi, setGirdi] = useState(false); // ilk kareden sonra true → içeri kayar
   const surukleBirak = useRef<(() => void) | null>(null);
-  const kapatmaZamani = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const oncekiAcik = useRef(false);
   const navZaman = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -466,30 +460,33 @@ export default function ParlaChat() {
     return () => { dom.disconnect(); gozlemci?.disconnect(); temizle(); };
   }, []);
 
-  /* ─── Kapanış animasyonu ───
-     Shopify paneli hiç sökmüyor, `translateX` ile sağa kaydırıyor. Bizde kutu `open`
-     ile takılıp söküldüğü için kapanış anlıktı (pat diye yok oluyordu). Artık kapanınca
-     kutu bir süre daha DOM'da kalıp sağa kayıyor, sonra sökülüyor. */
+  /* ─── AÇILIŞ / KAPANIŞ ANİMASYONU ───
+     ⚠️ KUTU İLK AÇILIŞTAN SONRA DOM'DA KALIR — sökülmez.
+     NEYDİ (01.08 canlı ölçüm): kapanış HİÇ animasyon oynatmıyordu. Panel sol kenarı
+     1200'den 1608'e 10ms'de ZIPLIYOR, sonra görünmez hâlde 250ms bekleyip söküleyordu
+     (`getAnimations()` boş). Açılış ise 16 karede 265ms sürüyordu — yani tek yönlü.
+     NEDEN: kutu `open || kapaniyor` koşuluyla çiziliyordu. `open` false olduğu RENDER'da
+     `kapaniyor` hâlâ false (o değeri effect SONRADAN veriyor) → kutu bir kare SÖKÜLÜYOR,
+     effect çalışınca KAPALI konumda yeniden takılıyordu. Tarayıcının animasyon için
+     "önceki konum"u kalmıyor → geçiş hiç başlamıyor. Ölçüm bunu birebir gördü: öğe
+     t=65'te bir kare `null`, hemen ardından doğrudan kapalı transform'la geri geliyor.
+     ÇÖZÜM (Shopify'ın yaptığı): kutu bir kez açıldıktan sonra hiç sökülmez, yalnız
+     `kapali` sınıfıyla sağa kaydırılır. Kapalıyken `pointer-events: none` + `inert`
+     olduğu için ne tıklanır ne de klavyeyle içine girilir. */
   useEffect(() => {
-    if (open) {
-      setKapaniyor(false);
-      if (kapatmaZamani.current) { clearTimeout(kapatmaZamani.current); kapatmaZamani.current = null; }
-      return;
-    }
-    if (!oncekiAcik.current) return; // hiç açılmadıysa kapanış animasyonu da yok
-    setKapaniyor(true);
-    kapatmaZamani.current = setTimeout(() => setKapaniyor(false), PARLA_KAPANIS_MS);
+    if (open) setHicAcildi(true);
   }, [open]);
-  useEffect(() => { oncekiAcik.current = open; }, [open]);
-  useEffect(() => () => { if (kapatmaZamani.current) clearTimeout(kapatmaZamani.current); }, []);
 
-  /* Açılışta içeri kayma: kutu önce "kapalı" konumda takılır, bir sonraki karede
-     sınıf kalkar → geçiş tetiklenir. Tek karede takılıp bırakılırsa animasyon oynamaz. */
+  /* Açılışta içeri kayma: kutu önce "kapalı" konumda takılır, BİR SONRAKİ karede sınıf
+     kalkar → geçiş tetiklenir. Aynı karede takılıp bırakılırsa animasyon oynamaz.
+     ⚠️ `hicAcildi` de bağımlılık: ilk açılışta kutu bu değer true olana kadar DOM'da
+     yok. Yalnız `open`e baksaydık rAF kutu takılmadan çalışır, ilk açılış animasyonsuz
+     olurdu (sonrakiler doğru çalışırdı — yakalanması zor bir fark). */
   useEffect(() => {
-    if (!open) { setGirdi(false); return; }
+    if (!open || !hicAcildi) { setGirdi(false); return; }
     const r = requestAnimationFrame(() => setGirdi(true));
     return () => cancelAnimationFrame(r);
-  }, [open]);
+  }, [open, hicAcildi]);
 
   /* ─── Sol kenardan sürükleyerek boyutlandırma ───
      Shopify'da ölçüldü: 300–600 arası, kademe yok (1px), içerik sürükleme SIRASINDA
@@ -596,13 +593,63 @@ export default function ParlaChat() {
     setHatirlatma(null);
   }, [hatirlatma, daktilo, loading]);
 
-  // Escape ile kapat
+  /* Escape ile kapat.
+     ⚠️ SÜRÜKLEME SÜRÜYORSA ÖNCE ONU İPTAL EDER, paneli KAPATMAZ (01.08 canlı ölçümde
+     yakalandı): sürükleme ortasında Escape'e basılınca panel kapanıyor, ama sürükleme
+     temizliği hiç çalışmadığı için `body.parla-dragging` sınıfı DOM'da panel yokken
+     asılı kalıyordu (yalnız bir sonraki fare bırakması siliyordu). Ayrıca kapanmak
+     sezgisel de değildi — sürüklerken Escape "bu işlemi bırak" demektir. */
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (surukleBirak.current) { surukleBirak.current(); return; }
+      setOpen(false);
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
+
+  /* ─── KLAVYE ODAĞI ───
+     Canlı ölçümde üç eksik çıktı: (1) panel açılınca odak içeri girmiyordu (`body`de
+     kalıyordu), (2) odak panele HAPSOLMUYOR — Tab ile arkadaki sol menüye çıkılıyordu,
+     (3) kapanınca odak Parla düğmesine dönmüyordu. En kötüsü ≤767px'te: orada panel tam
+     ekran, yani klavye kullanıcısı GÖREMEDİĞİ içeriğin arasında dolaşıyordu.
+     Şimdi: açılınca ilk odaklanabilir öğeye geçilir, Tab panelin içinde döner, kapanınca
+     odak paneli açan düğmeye geri verilir. */
+  const acanDugme = useRef<HTMLButtonElement | null>(null);
+  const panelRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!open || !hicAcildi) return;
+    const kutu = panelRef.current;
+    if (!kutu) return;
+    const SEC = 'button:not([disabled]), textarea, input:not([type="hidden"]), a[href], [tabindex]:not([tabindex="-1"])';
+    // Açılışta odağı içeri al (kutunun kendisi değil, ilk gerçek öğe).
+    const ilkler = kutu.querySelectorAll<HTMLElement>(SEC);
+    ilkler[0]?.focus();
+
+    const onTab = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const list = Array.from(kutu.querySelectorAll<HTMLElement>(SEC)).filter(
+        (el) => el.offsetParent !== null || el === document.activeElement,
+      );
+      if (list.length === 0) return;
+      const ilk = list[0];
+      const son = list[list.length - 1];
+      const simdi = document.activeElement as HTMLElement | null;
+      // Panelin dışına düştüyse geri çek; uçlarda halkayı kapat.
+      if (!simdi || !kutu.contains(simdi)) { e.preventDefault(); (e.shiftKey ? son : ilk).focus(); return; }
+      if (e.shiftKey && simdi === ilk) { e.preventDefault(); son.focus(); }
+      else if (!e.shiftKey && simdi === son) { e.preventDefault(); ilk.focus(); }
+    };
+    window.addEventListener("keydown", onTab);
+    return () => {
+      window.removeEventListener("keydown", onTab);
+      // Kapanışta odağı paneli açan düğmeye geri ver (odak boşlukta kalmasın).
+      acanDugme.current?.focus();
+    };
+  }, [open, hicAcildi]);
 
   async function onFilePicked(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -864,6 +911,7 @@ export default function ParlaChat() {
     <>
       <button
         type="button"
+        ref={acanDugme}
         className={`topbar-icon-btn parla-btn${open ? " on" : ""}`}
         onClick={() => (open ? setOpen(false) : ac())}
         aria-label="Parla — yapay zeka asistanı"
@@ -873,8 +921,9 @@ export default function ParlaChat() {
         <Sparkles size={18} />
       </button>
 
-      {mounted && (open || kapaniyor) && createPortal(
+      {mounted && hicAcildi && createPortal(
         <aside
+          ref={panelRef}
           className={`parla-drawer${!open || !girdi ? " kapali" : ""}${genis ? " genis" : ""}`}
           role="dialog"
           aria-label="Parla sohbeti"
