@@ -5848,13 +5848,50 @@ body.parla-genis .panel-content { margin-right: 0; }
    Katman yazı alanının 36px ÜSTÜNDEN başlar, altında da onun zeminini kapatır.
    ⚠️ `mask-image` KULLANILMADI — Safari'de maske+filtre görünmezlik yapabiliyor
    (auth ekranında yaşandı, DAILY_LOG'da kayıtlı). Düz degrade yeterli. */
+/* ⚠️ SOLMA ÖLÇÜLERİ CHATGPT'DEN (01.08 canlı ölçüm — Mehmet: "chatteki gibi olsun").
+   Onlarda: siyah zemin %80 opaklıkta, üstten 32px'te tam opaklığa ulaşan bir maskeyle
+   şekillendirilmiş; toplam bant 76px; `backdrop-filter` YOK.
+   Bizde MASKE KULLANILMADI, aynı görüntü doğrudan degradeyle kuruldu — maske+filtre
+   Safari'de görünmezlik yapabiliyor (auth ekranında yaşandı, DAILY_LOG'da kayıtlı).
+   "Siyah %80" yerine kendi panel zeminimiz (#121212) %85'te: altındaki metin ChatGPT'deki
+   gibi silik silik seçiliyor, ama okunacak kadar değil.
+   ⚠️ Blur KALDIRILDI: ChatGPT'de yok. Yumuşaklığı degrade veriyor, blur değil. */
 .parla-composer-alan::before {
   content: ""; position: absolute; left: 0; right: 0; bottom: 100%;
-  height: 36px; z-index: -1; pointer-events: none;
-  background: linear-gradient(to bottom, transparent, var(--surface-modal));
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  height: 32px; z-index: -1; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(18, 18, 18, 0), rgba(18, 18, 18, 0.85));
 }
+/* Yazı alanının ARKASI ve ALTI: metin buraya girince silikleşir ama tamamen kaybolmaz
+   (ChatGPT'de de kutunun altında 24px'lik şeritte yazı silik silik görünüyor). */
+.parla-composer-alan::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: rgba(18, 18, 18, 0.85);
+}
+
+/* ═══ "EN ALTA İN" DÜĞMESİ — ChatGPT ölçüleriyle (01.08) ═══
+   Ölçülenler: 32×32 (kenarlıkla 34), tam yuvarlak, zemin kutu renginin %65'i,
+   1px %15 beyaz kenarlık, gölge YOK, `backdrop-filter: blur(2px)`,
+   ALT KENARI yazı alanının üstünden 24px yukarıda, yatayda ortalı.
+   ⚠️ EŞİK 140px — bu ölçümün sürpriziydi. Önceki tahmin "dipten ayrılır ayrılmaz
+   çıkıyor"du; gerçekte 1/5/20/60px'te GÖRÜNMÜYOR, 130'da yok, 140'ta var. Yani küçük
+   kaydırmalarda düğme çıkıp kullanıcıyı rahatsız etmiyor. */
+.parla-dip-btn {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: calc(var(--parla-composer-h, 84px) + 24px);
+  z-index: 3; width: 32px; height: 32px; padding: 0;
+  display: grid; place-items: center;
+  border-radius: 999px; cursor: pointer;
+  background: rgba(32, 32, 32, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  /* Yokken tıklamayı yutmasın; ChatGPT'de de kapalıyken `pointer-events: none`. */
+  opacity: 0; pointer-events: none; scale: 0.85;
+  transition: opacity 0.18s ease, scale 0.18s ease;
+}
+.parla-dip-btn.gorunur { opacity: 1; pointer-events: auto; scale: 1; }
+.parla-dip-btn:hover { background: rgba(48, 48, 48, 0.8); }
 .parla-composer {
   display: flex; flex-direction: column; gap: 8px;
   padding: 10px 10px 8px;

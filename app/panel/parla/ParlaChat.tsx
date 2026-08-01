@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Sparkles, X, ArrowUp, Plus, ImageIcon, Trash2, Check, Maximize2, Minimize2 } from "lucide-react";
+import { Sparkles, X, ArrowUp, Plus, ImageIcon, Trash2, Check, Maximize2, Minimize2, ArrowDown } from "lucide-react";
 import { createClient } from "../../../lib/supabase/client";
 import { announceDataChanged, announceRightPanel, useCloseOnOtherRightPanel } from "../../../lib/rightPanel";
 import RichText, { parseBlocks, countWords } from "./RichText";
@@ -53,6 +53,10 @@ const DAKTILO_MAX_MS = 34;
 
 /** Snap'te mesajın tepeden bırakacağı nefes payı (px). */
 const SNAP_PAY = 6;
+
+/* "En alta in" düğmesinin çıkma eşiği. ChatGPT'de ölçüldü (01.08): dipten ayrılır
+   ayrılmaz DEĞİL, ~140px sonra çıkıyor (130'da yok, 140'ta var). Aynısı kullanıldı. */
+const DIP_ESIGI = 140;
 
 
 /* Cevaplanmamış kategori sorusu hatırlatması.
@@ -147,6 +151,7 @@ export default function ParlaChat() {
   const [genis, setGenis] = useState(false);
   const [hicAcildi, setHicAcildi] = useState(false); // bir kez açıldıysa kutu DOM'da kalır
   const [girdi, setGirdi] = useState(false); // ilk kareden sonra true → içeri kayar
+  const [dipUzak, setDipUzak] = useState(false); // dipten uzak mı → "en alta in" düğmesi
   const surukleBirak = useRef<(() => void) | null>(null);
   const navZaman = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -665,6 +670,31 @@ export default function ParlaChat() {
     el.style.height = `${el.scrollHeight}px`;
   }, [input]);
 
+  /* ─── "EN ALTA İN" DÜĞMESİ — görünürlük ───
+     ChatGPT'de ölçüldü (01.08): düğme dipten ayrılır ayrılmaz DEĞİL, ancak ~140px
+     uzaklaşınca çıkıyor (1/5/20/60px'te görünmüyor; 130'da yok, 140'ta var). Küçük
+     kaydırmalarda ekranda düğme belirip kaybolmasın diye — aynı eşik kullanıldı. */
+  useEffect(() => {
+    if (!open || !hicAcildi) return;
+    const el = listRef.current;
+    if (!el) return;
+    const bak = () => {
+      setDipUzak(el.scrollHeight - el.scrollTop - el.clientHeight > DIP_ESIGI);
+    };
+    bak();
+    el.addEventListener("scroll", bak, { passive: true });
+    // Cevap yazıldıkça yükseklik değişiyor → kaydırma olayı gelmez, ayrıca izlenmeli.
+    const g = new ResizeObserver(bak);
+    g.observe(el);
+    return () => { el.removeEventListener("scroll", bak); g.disconnect(); };
+  }, [open, hicAcildi, msgs, bosluk]);
+
+  const dibeIn = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight - el.clientHeight, behavior: "smooth" });
+  }, []);
+
   /* ─── YAZI ALANININ YÜKSEKLİĞİ → `--parla-composer-h` ───
      Yazı alanı listenin ÜSTÜNDE yüzdüğü için (ChatGPT deseni), liste onun yüksekliği
      kadar alt boşluk almalı — yoksa son mesaj kutunun altında kalır. Kutu kendi kendine
@@ -1115,6 +1145,17 @@ export default function ParlaChat() {
               <div ref={boslukRef} aria-hidden style={{ height: bosluk, flexShrink: 0 }} />
             )}
           </div>
+
+          <button
+            type="button"
+            className={`parla-dip-btn${dipUzak ? " gorunur" : ""}`}
+            onClick={dibeIn}
+            aria-label="En alta in"
+            title="En alta in"
+            tabIndex={dipUzak ? 0 : -1}
+          >
+            <ArrowDown size={18} />
+          </button>
 
           <div className="parla-composer-alan"><div className="parla-composer">
             {/* KATEGORİ SORUSU — yazma alanının üstünde, aynı kutunun içinde.
