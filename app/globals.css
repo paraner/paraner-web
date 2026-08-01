@@ -3853,9 +3853,7 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
 @supports not selector(::-webkit-scrollbar) {
   .cat-list { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent; }
 }
-.cat-list::-webkit-scrollbar { width: 8px; }
-.cat-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 8px; }
-.cat-list::-webkit-scrollbar-track { background: transparent; }
+/* Kendi çubuk tanımı YOK — genel kural (10px oluk / 4px hap) geçerli, her yer aynı olsun. */
 .cat-opt {
   display: flex; align-items: center; border-radius: 9px; padding-right: 6px;
   color: rgba(255,255,255,0.82); font-size: 14px; font-weight: 500;
@@ -3955,8 +3953,7 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
   max-height: 132px; overflow-y: auto; overscroll-behavior: contain;
   margin-bottom: 14px; padding-right: 2px;
 }
-.cat-icon-grid::-webkit-scrollbar { width: 8px; }
-.cat-icon-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 8px; }
+/* Kendi çubuk tanımı YOK — genel kural geçerli (bkz. ince kaydırma çubuğu bölümü). */
 .cat-icon-opt {
   display: flex; align-items: center; justify-content: center; aspect-ratio: 1;
   border-radius: 9px; cursor: pointer; color: var(--text-dim);
@@ -5818,10 +5815,28 @@ body.parla-genis .panel-content { margin-right: 0; }
 @supports not selector(::-webkit-scrollbar) {
   * { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.18) transparent; }
 }
-::-webkit-scrollbar { width: 7px; height: 7px; }
+/* ─── ŞEKİL: Shopify'ın tekniği (canlı ölçüldü 01.08, admin.shopify.com) ───
+   Onların yaptığı: OLUK GENİŞ kalıyor ama içine sadece İNCE BİR HAP çiziliyor.
+   Ölçüm: ana kaydırıcı oluk 16px + thumb kenarı 6px → görünen thumb 16−12 = 4px;
+   sohbet paneli oluk 10px + kenar 3px → yine 4px. Yani oluk değişiyor, thumb hep 4px.
+   Numara: thumb'a ŞEFFAF KENARLIK + `background-clip: content-box` → renk yalnız
+   içeriye basılır, kenarlık boşluk gibi durur. Track kuralı YOK → oluk, öğenin kendi
+   zeminini gösterir (gri kanal/oluk görünmez). Kaydırma bitince SOLMUYOR.
+   Bizde oluk 10px seçildi (Shopify'ın dar panelde kullandığı ölçü): görünen thumb yine
+   4px, ama eskiye (11px) göre yer neredeyse aynı → hiçbir sayfanın düzeni oynamaz.
+   ⚠️ Renk koyu temaya UYARLANDI, kopyalanmadı: Shopify beyaz üstünde #b5b5b5 (fark ~74).
+   Siyah üstünde aynı farkı vermek için rgba(255,255,255,0.28) ≈ #4a4a4a. Birebir
+   #b5b5b5 kullansaydık koyu zeminde parlak bir çizgi gibi dururdu. */
+::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  /* Görünen kalınlık = 10 − (2 × 3) = 4px. Kenarlık şeffaf, boşluk gibi durur. */
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.46); }
 ::-webkit-scrollbar-corner { background: transparent; }
 
 /* Parla cevabının biçimi — hafif markdown (kalın + madde). Model kurallara rağmen
@@ -5868,9 +5883,10 @@ body.parla-genis .panel-content { margin-right: 0; }
   @supports not selector(::-webkit-scrollbar) {
     .parla-kat-cipler { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
   }
-  .parla-kat-cipler::-webkit-scrollbar { height: 4px; }
-  .parla-kat-cipler::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
-  .parla-kat-cipler::-webkit-scrollbar-track { background: transparent; }
+  /* ⚠️ Yükseklik 4px DEĞİL 10px: genel kuralda thumb'ın 3px şeffaf kenarlığı var, 4px'lik
+     olukta görünen kalınlık 4−6 = eksiye düşer, yani çubuk HİÇ görünmezdi. 10px olukta
+     görünen hap yine 4px olur — her yerdeki çubukla aynı. Thumb rengi de genelden gelir. */
+  .parla-kat-cipler::-webkit-scrollbar { height: 10px; }
 }
 .parla-kat-cip {
   flex-shrink: 0;
