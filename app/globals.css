@@ -5766,6 +5766,21 @@ body.parla-genis .panel-content { margin-right: 0; }
   transition: border-color 0.15s;
 }
 .parla-composer:focus-within { border-color: var(--focus-ring); }
+
+/* ═══ GENİŞLETİLMİŞ MODDA YAZI ALANI BÜYÜMEZ ═══
+   Mehmet (01.08): "tam ekran açıldığında input'un o kadar çok büyümesi rahatsız edici…
+   kullanıcı ne kadar genişlettiyse o büyüklükte kalacak."
+   Panel tüm ekranı kaplayınca yazı alanı da 2000px'e yayılıyordu; imleç ekranın solunda,
+   gönder düğmesi ta sağda kalıyordu. Artık ORTALANIR ve genişliği `--parla-w`de sabitlenir
+   — yani kullanıcının tutamağı sürükleyerek belirlediği genişlik. Sürükleyip 520 yaptıysa
+   tam ekranda da 520 kalır; hiç dokunmadıysa varsayılan 400.
+   ⚠️ Shopify'da da aynı fikir var ama SABİT: onlarda tam genişlikte yazı alanı 800px'e
+   sabitlenip ortalanıyor (ölçüldü). Bizde sabit sayı yerine kullanıcının kendi ölçüsü. */
+.parla-drawer.genis .parla-composer {
+  width: 100%;
+  max-width: var(--parla-w);
+  margin-inline: auto;
+}
 /* Alt sıra: solda belge ekle, sağda gönder */
 .parla-composer-alt { display: flex; align-items: center; justify-content: space-between; }
 
