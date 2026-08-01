@@ -5839,22 +5839,30 @@ body.parla-genis .panel-content { margin-right: 0; }
 .parla-composer-alan {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
   padding: 10px 12px 12px;
+  /* ⚠️ ZEMİN OPAK OLMALI (01.08, Mehmet: "input'u neden şeffaflaştırdın, çok kötü
+     olmuş"). Kutu artık metnin ÜSTÜNDE yüzdüğü için altındaki yazı görünüyordu;
+     yazı alanının içinden arkadaki cevap okunuyor, ikisi üst üste biniyordu. */
+  background: var(--surface-modal);
 }
 /* Kararma + hafif blur: metin yazı alanının altına girerken erisin, sertçe kesilmesin.
    Katman yazı alanının 36px ÜSTÜNDEN başlar, altında da onun zeminini kapatır.
    ⚠️ `mask-image` KULLANILMADI — Safari'de maske+filtre görünmezlik yapabiliyor
    (auth ekranında yaşandı, DAILY_LOG'da kayıtlı). Düz degrade yeterli. */
 .parla-composer-alan::before {
-  content: ""; position: absolute; inset: -36px 0 0 0; z-index: -1;
-  pointer-events: none;
-  background: linear-gradient(to bottom, transparent, var(--surface-modal) 62%);
+  content: ""; position: absolute; left: 0; right: 0; bottom: 100%;
+  height: 36px; z-index: -1; pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--surface-modal));
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
 }
 .parla-composer {
   display: flex; flex-direction: column; gap: 8px;
   padding: 10px 10px 8px;
-  background: var(--card-2); border: 1px solid var(--border);
+  /* ⚠️ OPAK (01.08): eskiden `var(--card-2)` = %6 saydam beyazdı. Altında panelin opak
+     zemini olduğu sürece sorun değildi; kutu metnin ÜSTÜNE yüzdürülünce arkadaki cevap
+     içinden okunmaya başladı. #202020 = #121212 zemin üzerine %6 beyazın OPAK karşılığı
+     → görünüm birebir aynı, ama artık hiçbir şey geçirmiyor. */
+  background: #202020; border: 1px solid var(--border);
   border-radius: var(--parla-radius);
   transition: border-color 0.15s;
 }
