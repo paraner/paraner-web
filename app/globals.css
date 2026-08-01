@@ -5600,6 +5600,17 @@ body.parla-dragging .parla-drawer { transition: none; }
    12px = kabuğun her yerinde kullanılan boşluk (menünün kendi kenar boşluğu da 12px).
    `--parla-nav-w` menünün SAĞ KENARI olduğu için: sol kenar = sağ kenar + 12. */
 .parla-drawer.genis { width: calc(100vw - var(--parla-nav-w) - 12px); }
+/* ⚠️ GENİŞ MODDA ALT BOŞLUK KAPANIR (Mehmet, 01.08: "tam ekran açıldığında arka planda
+   panel büyüdüğü için alt boşluklarında panelin içeriği gözüküyor").
+   Sebep: geniş modda içeriğin sağa kayması KAPATILIYOR (`body.parla-genis .panel-content
+   { margin-right: 0 }`) çünkü panel zaten her yeri kaplıyor → sayfa panelin ARKASINDA
+   tam genişlikte duruyor. Alttaki 12px boşluk şeffaf olduğu için oradan arkadaki
+   kaydırılan içerik şerit hâlinde sızıyordu.
+   Normal (yerleşik) modda bu sorun YOK: orada içerik gerçekten sola itiliyor, panelin
+   arkasında hiçbir şey kalmıyor → boşluk düz zemin gösterir, o yüzden orada 12px kalır.
+   Alt kenar dibe oturduğu için sol-alt köşe de kareleşir (yoksa köşede çentik olur). */
+.parla-drawer.genis { bottom: 0; }
+.parla-drawer.genis .parla-panel { border-radius: 22px 0 0 0; }
 /* Genişken köşe kuralı DEĞİŞMEZ: sol üst yuvarlak, sağ üst kare (bkz. `.parla-panel`).
    Panel menüye dayanmıyor (arada 12px var) → sol üstü kareleştirmenin sebebi yok;
    sağ kenar yine pencereye yapışık → sağ üst kare kalmalı. */
@@ -5612,6 +5623,13 @@ body.parla-dragging .parla-drawer { transition: none; }
              BURADA kapanıyor: panel sağ kenara yapışınca sayfa çubuğunun üstünü örtüyor.
    768–1039  yüzen kart: 356px, kenarlardan 4px içeride, köşeler tam yuvarlak
    ≤767      tam ekran: üst barı da kapatır, köşe yok, tutamak kaybolur */
+/* ⚠️ 1199px ALTINDA DA ALT BOŞLUK KAPANIR — aynı sebep (yukarıdaki geniş mod notu):
+   bu aralıkta içerik itilmiyor, panel üstüne biniyor → sayfa panelin arkasında kalıyor
+   ve 12px'lik şeffaf şeritten görünüyor. Panel dibe oturunca şerit diye bir şey kalmıyor. */
+@media (max-width: 1199px) {
+  .parla-drawer { bottom: 0; }
+  .parla-panel { border-radius: 22px 0 0 0; }
+}
 @media (max-width: 1039px) {
   /* ⚠️ KENARA YAPIŞIK KALIR — Shopify burada 4px içeri çekip yüzen kart yapıyor, biz
      YAPMIYORUZ. Sebep (01.08 canlı ölçüm): 4px boşluk bırakılınca içeriğin kaydırma
