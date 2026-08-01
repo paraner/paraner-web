@@ -81,7 +81,21 @@ Mehmet ChatGPT'yi referans aldı: **"onlar analiz etmiştir, yeni bir şey üret
   boşluk yerleştikten sonra kaydırıyor. Ölçüm: `scrollTop` 441 → 4177, mesaj tepeden 12px.
 - ⚠️ **`mask-image` KULLANILMADI** (ChatGPT kullanıyor): maske+filtre Safari'de
   görünmezlik yapabiliyor (auth ekranında yaşandı) → aynı görüntü düz degradeyle kuruldu.
+- ⚠️ **Koyu bant kaydırma çubuğunu örtüyordu** (`802080e`): bant panelin tamamını
+  kaplıyordu, çubuk listenin sağ kenarında olduğu için alt kısmı bandın altında
+  kalıyordu → `right: 10px` + `.parla-list { scrollbar-gutter: stable }` (oluk her zaman
+  ayrılsın ki bandın bittiği yer çubuğun başladığı yerle tutsun).
+- ⚠️ **Düğme 34px yukarıdaydı, 24 olmalıydı:** konum `--parla-composer-h` (BANDIN
+  yüksekliği) üzerinden veriliyordu; bandın 10px üst dolgusu olduğu için kutunun tepesi
+  banttan 10px içeride → `+24px` yerine `+14px`. ChatGPT: düğmenin ALT kenarı KUTUNUN
+  üstünden 24px.
 - 🟡 Bilinçli fark: kutunun altındaki şerit bizde **12px**, ChatGPT'de 24px (panel dar).
+- **Ders (kalıcı):** solma işinde üst üste üç kez yanlış yapıldı ve üçünü de Mehmet
+  ekran görüntüsüyle yakaladı. Ortak hata: ölçüm rakamı DOĞRU alınıp YANLIŞ YERE
+  uygulandı. Ölçüm bunu yakalamıyor — çünkü ölçülen şey zaten kendi koyduğun yer.
+  **Yeni bir katman/geometri kurarken "bu ölçü neyin neresinden?" sorusunu açıkça yaz**
+  (bandın mı kutunun mu, üstünden mi altından mı) — buradaki hataların hepsi bu soruyu
+  atlamaktan çıktı.
 
 ⚠️ **KAYDIRMA ÇUBUĞU TUZAĞI (kalıcı ders):** Chrome'da bir öğede `scrollbar-width` /
 `scrollbar-color` tanımlıysa o öğenin **BÜTÜN `::-webkit-scrollbar` tarifi yok sayılır.**
