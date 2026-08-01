@@ -5547,7 +5547,12 @@ body.parla-dragging .parla-drawer { transition: none; }
   flex: 1; min-height: 0; display: flex; flex-direction: column;
   background: var(--surface-modal);
   border-left: 1px solid var(--border-strong);
-  border-radius: var(--parla-radius) var(--parla-radius) 0 0;
+  /* ⚠️ YALNIZ SOL ÜST köşe yuvarlak. Sağ üst KARE (Mehmet, 01.08: "sağ üstte hâlâ köşe
+     yuvarlatma var, onu kaldır, birleşik olsun"). Shopify orada 12px yuvarlatma
+     bırakıyor ama bizde panel pencerenin sağ kenarına yapışık: yuvarlatınca köşede
+     arkadaki koyu zemin bir çentik gibi sızıyordu. Alt köşeler zaten kare (dibe oturuyor).
+     Sonuç: panel sağ kenara ve tabana BİRLEŞİK, yalnız içeriğe bakan sol üst köşe yumuşak. */
+  border-radius: var(--parla-radius) 0 0 0;
   overflow: hidden;
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   transition: border-radius 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
@@ -5577,8 +5582,9 @@ body.parla-dragging .parla-drawer { transition: none; }
    12px = kabuğun her yerinde kullanılan boşluk (menünün kendi kenar boşluğu da 12px).
    `--parla-nav-w` menünün SAĞ KENARI olduğu için: sol kenar = sağ kenar + 12. */
 .parla-drawer.genis { width: calc(100vw - var(--parla-nav-w) - 12px); }
-/* Genişken de İKİ ÜST KÖŞE yuvarlak: panel artık menüye dayanmıyor, arada boşluk var →
-   sol üst köşeyi kareleştirmenin sebebi kalmadı (dayalıyken kareleşiyordu). */
+/* Genişken köşe kuralı DEĞİŞMEZ: sol üst yuvarlak, sağ üst kare (bkz. `.parla-panel`).
+   Panel menüye dayanmıyor (arada 12px var) → sol üstü kareleştirmenin sebebi yok;
+   sağ kenar yine pencereye yapışık → sağ üst kare kalmalı. */
 /* Genişken sürükleme tutamağı anlamsız (kenara dayalı) — Shopify'da da devre dışı */
 .parla-drawer.genis .parla-resize { display: none; }
 
