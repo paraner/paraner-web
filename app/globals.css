@@ -5538,6 +5538,31 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
               right 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
               bottom 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
+/* ═══ BOŞLUKLARIN ARKASINI KAPATAN OPAK KATMAN ═══
+   Mehmet (01.08): "tam ekran açıldığında arka planda panel büyüdüğü için alt
+   boşluklarında panelin içeriği gözüküyor" → sonra: "dibe oturtmadan bir yol bulamaz mıyız?"
+   SEBEP: Panel içeriğin ÜSTÜNE bindiği durumlarda (genişletilmiş mod ve ≤1199px) içeriğin
+   sağa kayması kapatılıyor — panel zaten her yeri kapladığı için. Böylece sayfa panelin
+   ARKASINDA tam genişlikte duruyor. Panelin altındaki 12px boşluk ŞEFFAF olduğu için
+   arkadaki kaydırılan içerik oradan şerit hâlinde sızıyordu (`.panel-content` bir kaydırma
+   kutusu; alt dolgusu kutunun İÇİNDE kaldığından kaydırınca alt kenarda gerçek satırlar geçer).
+   İLK DENEME (geri alındı): panel dibe oturtuldu (`bottom: 0`). Şerit gitti ama Mehmet'in
+   istediği "sol menüyle eşit alt boşluk" da gitti → beğenmedi.
+   ŞİMDİ: boşluk DURUYOR, arkası opak sayfa zeminiyle kapatılıyor. Katman panelin kendi
+   kutusundan 12px AŞAĞI taşar (geniş modda 12px SOLA da) ve `z-index: -1` ile panelin
+   ALTINDA, arkadaki sayfanın ÜSTÜNDE kalır — `.parla-drawer`ın `z-index: 92`si kendi
+   yığın bağlamını açtığı için -1 bu bağlamın dışına çıkamaz, sayfayı örtmeye devam eder.
+   Sonuç: boşluk görünür ve sol menüyle aynı hizada, ama içinden hiçbir şey sızmaz.
+   ⚠️ Renk `--bg` (sayfa zemini) — boşluk "boşluk" gibi dursun diye. Zemin değişirse burası
+   da kendiliğinden uyar. */
+.parla-drawer::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  left: 0; right: 0; top: 0; bottom: -12px;
+  background: var(--bg);
+}
+/* Tam ekranda (≤767) boşluk zaten yok → katmana da gerek yok. */
+@media (max-width: 767px) { .parla-drawer::after { display: none; } }
+
 /* Sürüklenirken genişlik parmağı BİREBİR takip etsin — geçiş araya girmesin
    (Shopify'da da içerik sürükleme sırasında anlık takip ediyor, bırakınca değil).
    ⚠️ Sınıf BODY'de (`parla-dragging`), kutunun kendisinde değil — ParlaChat onu body'ye
@@ -5600,17 +5625,8 @@ body.parla-dragging .parla-drawer { transition: none; }
    12px = kabuğun her yerinde kullanılan boşluk (menünün kendi kenar boşluğu da 12px).
    `--parla-nav-w` menünün SAĞ KENARI olduğu için: sol kenar = sağ kenar + 12. */
 .parla-drawer.genis { width: calc(100vw - var(--parla-nav-w) - 12px); }
-/* ⚠️ GENİŞ MODDA ALT BOŞLUK KAPANIR (Mehmet, 01.08: "tam ekran açıldığında arka planda
-   panel büyüdüğü için alt boşluklarında panelin içeriği gözüküyor").
-   Sebep: geniş modda içeriğin sağa kayması KAPATILIYOR (`body.parla-genis .panel-content
-   { margin-right: 0 }`) çünkü panel zaten her yeri kaplıyor → sayfa panelin ARKASINDA
-   tam genişlikte duruyor. Alttaki 12px boşluk şeffaf olduğu için oradan arkadaki
-   kaydırılan içerik şerit hâlinde sızıyordu.
-   Normal (yerleşik) modda bu sorun YOK: orada içerik gerçekten sola itiliyor, panelin
-   arkasında hiçbir şey kalmıyor → boşluk düz zemin gösterir, o yüzden orada 12px kalır.
-   Alt kenar dibe oturduğu için sol-alt köşe de kareleşir (yoksa köşede çentik olur). */
-.parla-drawer.genis { bottom: 0; }
-.parla-drawer.genis .parla-panel { border-radius: 22px 0 0 0; }
+/* Geniş modda soldaki boşluk da opak olsun (bkz. `.parla-drawer::after` notu). */
+.parla-drawer.genis::after { left: -12px; }
 /* Genişken köşe kuralı DEĞİŞMEZ: sol üst yuvarlak, sağ üst kare (bkz. `.parla-panel`).
    Panel menüye dayanmıyor (arada 12px var) → sol üstü kareleştirmenin sebebi yok;
    sağ kenar yine pencereye yapışık → sağ üst kare kalmalı. */
@@ -5623,13 +5639,6 @@ body.parla-dragging .parla-drawer { transition: none; }
              BURADA kapanıyor: panel sağ kenara yapışınca sayfa çubuğunun üstünü örtüyor.
    768–1039  yüzen kart: 356px, kenarlardan 4px içeride, köşeler tam yuvarlak
    ≤767      tam ekran: üst barı da kapatır, köşe yok, tutamak kaybolur */
-/* ⚠️ 1199px ALTINDA DA ALT BOŞLUK KAPANIR — aynı sebep (yukarıdaki geniş mod notu):
-   bu aralıkta içerik itilmiyor, panel üstüne biniyor → sayfa panelin arkasında kalıyor
-   ve 12px'lik şeffaf şeritten görünüyor. Panel dibe oturunca şerit diye bir şey kalmıyor. */
-@media (max-width: 1199px) {
-  .parla-drawer { bottom: 0; }
-  .parla-panel { border-radius: 22px 0 0 0; }
-}
 @media (max-width: 1039px) {
   /* ⚠️ KENARA YAPIŞIK KALIR — Shopify burada 4px içeri çekip yüzen kart yapıyor, biz
      YAPMIYORUZ. Sebep (01.08 canlı ölçüm): 4px boşluk bırakılınca içeriğin kaydırma
