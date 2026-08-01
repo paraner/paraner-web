@@ -5522,7 +5522,9 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
    · Geçiş 0.25s cubic-bezier(0.25, 0.1, 0.25, 1) — açılış ve kapanış aynı.
    ⚠️ Genişlik `--parla-w`'den okunur; ParlaChat onu `body`ye yazar (Shopify da genişliği
    `document.body.style`e yazıyor). İçeriğin kayması da AYNI değişkeni kullanır → tek kaynak. */
-:root { --parla-w: 400px; --parla-nav-w: 248px; }
+/* ⚠️ `--parla-max-w` = panelin sürüklenerek çıkabildiği EN GENİŞ ölçü.
+   ParlaChat.tsx'teki `PARLA_MAX_W` ile AYNI OLMALI — biri değişirse ikisi de. */
+:root { --parla-w: 400px; --parla-max-w: 600px; --parla-nav-w: 248px; }
 
 .parla-drawer {
   /* ⚠️ ALTTA 12px BOŞLUK — sol menüyle eşit dursun diye (Mehmet, 01.08: "alt bölümde
@@ -5568,6 +5570,13 @@ body.panel-menu-open { overflow: hidden; } /* arkadaki sayfa kaymasın */
    ⚠️ Sınıf BODY'de (`parla-dragging`), kutunun kendisinde değil — ParlaChat onu body'ye
    basıyor. Önce yanlışlıkla `.parla-drawer.dragging` yazılmıştı, hiç eşleşmiyordu. */
 body.parla-dragging .parla-drawer { transition: none; }
+/* ⚠️ SOL MENÜ HAREKET EDERKEN DE GEÇİŞ KAPALI (Mehmet, 01.08: "sol menüyü daraltıp
+   genişletmek istediğinde uyumsuz bir görüntü meydana çıkıyor, eşzamanlı değiller").
+   Genişletilmiş panelin sol kenarı menünün sağ kenarına dayanıyor. Menü 0.26s'de
+   daralırken ParlaChat her karede yeni kenarı yazıyor; panel de o değere kendi 0.25s'lik
+   geçişiyle gitmeye çalışınca HAREKETLİ HEDEFİ KOVALIYOR ve geride kalıyordu.
+   Geçiş kapanınca panel her karede menünün o anki kenarına birebir oturur → tek parça. */
+body.parla-nav-oynuyor .parla-drawer { transition: none; }
 /* Kapanış: sağa kayarak çıkar (8px = Shopify'ın kullandığı fazladan pay) */
 .parla-drawer.kapali { transform: translateX(calc(100% + 8px)); pointer-events: none; }
 
@@ -5798,14 +5807,19 @@ body.parla-genis .panel-content { margin-right: 0; }
    Mehmet (01.08): "tam ekran açıldığında input'un o kadar çok büyümesi rahatsız edici…
    kullanıcı ne kadar genişlettiyse o büyüklükte kalacak."
    Panel tüm ekranı kaplayınca yazı alanı da 2000px'e yayılıyordu; imleç ekranın solunda,
-   gönder düğmesi ta sağda kalıyordu. Artık ORTALANIR ve genişliği `--parla-w`de sabitlenir
-   — yani kullanıcının tutamağı sürükleyerek belirlediği genişlik. Sürükleyip 520 yaptıysa
-   tam ekranda da 520 kalır; hiç dokunmadıysa varsayılan 400.
-   ⚠️ Shopify'da da aynı fikir var ama SABİT: onlarda tam genişlikte yazı alanı 800px'e
-   sabitlenip ortalanıyor (ölçüldü). Bizde sabit sayı yerine kullanıcının kendi ölçüsü. */
+   gönder düğmesi ta sağda kalıyordu. Artık ORTALANIR ve genişliği SABİTLENİR.
+   ⚠️ ÖLÇÜ = `--parla-max-w` (600) — yani panelin SÜRÜKLENEREK ÇIKABİLDİĞİ EN GENİŞ hâli.
+   Kullanıcının o anki genişliği DEĞİL (ilk deneme öyleydi, Mehmet düzeltti: "input
+   istediğim gibi olmamış… parla tam ekran olduğunda da input o sürükleyerek parlanın
+   büyüyebildiği şekilde kalacak"). Yani panel 300'e daraltılmış da olsa, hiç
+   dokunulmamış (400) da olsa, genişletilmiş modda yazı alanı HER ZAMAN 600 ve ortada.
+   Sebep: yazı alanı kullanıcının o anki dar tercihine göre küçülürse tam ekranda
+   gereksiz dar kalıyordu; sabit üst sınır hem tutarlı hem okunaklı satır uzunluğu verir.
+   ⚠️ Shopify'da da aynı fikir var, onlarda sabit 800px (ölçüldü). Bizde 600, çünkü
+   bizim panelin kendi üst sınırı da 600 — kullanıcının gördüğü en geniş yazı alanı bu. */
 .parla-drawer.genis .parla-composer {
   width: 100%;
-  max-width: var(--parla-w);
+  max-width: var(--parla-max-w);
   margin-inline: auto;
 }
 /* Alt sıra: solda belge ekle, sağda gönder */

@@ -153,6 +153,7 @@ export default function ParlaChat() {
   const surukleBirak = useRef<(() => void) | null>(null);
   const kapatmaZamani = useRef<ReturnType<typeof setTimeout> | null>(null);
   const oncekiAcik = useRef(false);
+  const navZaman = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -416,9 +417,24 @@ export default function ParlaChat() {
        genişliği 248 ama sağ kenarı 260. Panel `100vw - değişken` kadar olduğu için
        genişlik yazılınca sol kenarı 248'e geliyor, yani menünün 12px üstüne. Sağ kenar
        yazılınca tam menünün bittiği yerden başlıyor (daraltılmışken de: 74 → 86). */
+    /* ⚠️ MENÜ HAREKET EDERKEN PANELİN KENDİ GEÇİŞİ KAPANIR (Mehmet, 01.08: "sol menüyü
+       daraltıp genişletmek istediğinde uyumsuz bir görüntü meydana çıkıyor, eşzamanlı
+       değiller"). Sebep ÇİFT ANİMASYON: menü genişliğini 0.26s'de değiştiriyor; bu
+       gözlemci her karede yeni sağ kenarı yazıyor; panel ise o değere kendi 0.25s'lik
+       geçişiyle gitmeye çalışıyor → HAREKETLİ BİR HEDEFİ KOVALIYOR ve hep geride kalıyor.
+       Çözüm: menü hareket ettiği sürece panelin geçişini kapat → panel her karede
+       menünün o anki kenarına BİREBİR oturur, ikisi tek parça gibi hareket eder.
+       Sınıf, son ölçümden 320ms sonra kalkar (menü geçişi 260ms; pay bırakıldı) —
+       böylece düğmeyle genişlet/daralt gibi normal hareketler yine yumuşak kalır. */
     const yaz = (menu: Element) => {
       const sagKenar = menu.getBoundingClientRect().right;
       document.body.style.setProperty("--parla-nav-w", `${Math.round(sagKenar)}px`);
+      document.body.classList.add("parla-nav-oynuyor");
+      if (navZaman.current) clearTimeout(navZaman.current);
+      navZaman.current = setTimeout(() => {
+        document.body.classList.remove("parla-nav-oynuyor");
+        navZaman.current = null;
+      }, 320);
     };
     const bagla = () => {
       const menu = document.querySelector(".panel-sidebar");
@@ -428,11 +444,17 @@ export default function ParlaChat() {
       gozlemci.observe(menu);
       return true;
     };
-    if (bagla()) return () => gozlemci?.disconnect();
+    /* ⚠️ Sökülürken bekleyen zamanlayıcı İPTAL + sınıf TEMİZLENİR: yoksa `parla-nav-oynuyor`
+       body'de asılı kalır ve panelin geçişi kalıcı olarak kapalı kalırdı. */
+    const temizle = () => {
+      if (navZaman.current) { clearTimeout(navZaman.current); navZaman.current = null; }
+      document.body.classList.remove("parla-nav-oynuyor");
+    };
+    if (bagla()) return () => { gozlemci?.disconnect(); temizle(); };
     // Henüz yok → gelene kadar izle, gelince bağlan ve izlemeyi bırak.
     const dom = new MutationObserver(() => { if (bagla()) dom.disconnect(); });
     dom.observe(document.body, { childList: true, subtree: true });
-    return () => { dom.disconnect(); gozlemci?.disconnect(); };
+    return () => { dom.disconnect(); gozlemci?.disconnect(); temizle(); };
   }, []);
 
   /* ─── Kapanış animasyonu ───
