@@ -54,6 +54,10 @@ const DAKTILO_MAX_MS = 34;
 /** Snap'te mesajın tepeden bırakacağı nefes payı (px). */
 const SNAP_PAY = 6;
 
+/* Takip eşiği: kullanıcı dipten bu kadar uzaktaysa akış onu zorla aşağı çekmez.
+   Bir-iki satırlık pay — kullanıcı bilinçli olarak yukarı kaydırdıysa hemen anlaşılır. */
+const TAKIP_ESIGI = 80;
+
 /* Cevaplanmamış kategori sorusu hatırlatması.
    ⚠️ DAVRANIŞ DEĞİŞTİ (Mehmet, 25.07): eskiden kullanıcı çip seçmeden başka bir şey
    yazınca taslak SESSİZCE düşüyordu — "ne oldu ona?" sorusu doğuyordu. Artık taslak
@@ -186,6 +190,7 @@ export default function ParlaChat() {
   const turAcikRef = useRef(false);   // gönderim turu sürüyor mu (boşluk yönetilsin mi)
   const kaydirildiRef = useRef(false); // bu turda anchor tepeye kaydırıldı mı
   const kaydirBekliyorRef = useRef(false); // boşluk yerleştikten sonra kaydırılacak mı
+  const takipRef = useRef(false);          // cevap ekranı aştı → aşağı takip et
 
   useEffect(() => setMounted(true), []);
 
@@ -221,7 +226,23 @@ export default function ParlaChat() {
     // Boşluk hesabın içine girmemeli, yoksa kendi kendini besler.
     const mevcutBosluk = boslukRef.current?.offsetHeight ?? 0;
     const alt = Math.max(0, liste.scrollHeight - mevcutBosluk - anchorY); // anchor + cevap
-    setBosluk(Math.max(0, liste.clientHeight - alt - SNAP_PAY * 2));
+    const yeniBosluk = Math.max(0, liste.clientHeight - alt - SNAP_PAY * 2);
+    setBosluk(yeniBosluk);
+
+    /* ⚠️ CEVAP EKRANI AŞTIĞINDA TAKİP ET (Mehmet, 01.08 ekran görüntüsüyle: "cevap
+       yazarken input'un arkasında geçiyor… üstünde kalsa daha iyi olur, kaya kaya
+       aşağı doğru iner").
+       NEYDİ: snap boşluğu 0'a indikten sonra — yani cevap görünen alandan UZUN olduğunda —
+       yazı aşağı doğru büyümeye devam ediyor ama liste hiç kaydırılmıyordu. Yeni satırlar
+       görünen alanın altında kalıyor, kullanıcı okumak için elle kaydırmak zorundaydı.
+       ⚠️ 25.07'deki "ekran zıplamasın" kuralıyla ÇELİŞMEZ: oradaki sorun, içerik boyu
+       değişirken dibe SIÇRAMAKTI. Boşluk hâlâ varken (kısa cevap) kaydırma YOK — mesaj
+       tepede sabit duruyor, eski davranış aynen korunuyor. Takip yalnızca boşluk bittikten
+       sonra, yani yazının zaten görünmez olacağı anda başlıyor; hareket sürekli ve tek
+       yönlü (aşağı), sıçrama değil.
+       ⚠️ KULLANICI YUKARI KAYDIRDIYSA TAKİP ETME: geriyi okuyan birini zorla dibe çekmek
+       en sinir bozucu sohbet hatasıdır. Yalnız kullanıcı zaten dibe yakınsa takip edilir. */
+    takipRef.current = yeniBosluk <= 0;
     /* ⚠️ KAYDIRMA BURADA YAPILMAZ, İŞARETLENİR (01.08 canlı testte yakalandı).
        NEYDİ: kaydırma hemen `requestAnimationFrame` içinde yapılıyordu — yani boşluk
        kutusunun yeni yüksekliği HENÜZ EKRANA YERLEŞMEDEN. Kutu kısa olduğu için
@@ -241,15 +262,31 @@ export default function ParlaChat() {
      Bağımlılık listesi YOK — her render'dan sonra çalışır; bayrak tek seferlik olduğu
      için gereksiz kaydırma olmaz. */
   useLayoutEffect(() => {
-    if (!kaydirBekliyorRef.current) return;
-    kaydirBekliyorRef.current = false;
-    requestAnimationFrame(() => {
-      const el = listRef.current;
-      const a = anchorRef.current;
-      if (!el || !a) return;
-      const y = a.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop;
-      el.scrollTo({ top: Math.max(0, y - SNAP_PAY), behavior: "smooth" });
-    });
+    const el = listRef.current;
+    if (!el) return;
+
+    // ① Tur başındaki tek seferlik snap: kullanıcı mesajını tepeye al.
+    if (kaydirBekliyorRef.current) {
+      kaydirBekliyorRef.current = false;
+      requestAnimationFrame(() => {
+        const l = listRef.current;
+        const a = anchorRef.current;
+        if (!l || !a) return;
+        const y = a.getBoundingClientRect().top - l.getBoundingClientRect().top + l.scrollTop;
+        l.scrollTo({ top: Math.max(0, y - SNAP_PAY), behavior: "smooth" });
+      });
+      return;
+    }
+
+    /* ② Cevap ekranı aştıysa TAKİP: yeni satırlar hep görünür kalsın.
+       `behavior: smooth` KULLANILMAZ — her kelimede yeni bir yumuşak kaydırma başlatmak
+       bir öncekini kesip titreme yapar. Kelime artışları küçük olduğu için anlık
+       kaydırma zaten akıcı ve tek yönlü görünür.
+       Dipten UZAKSA dokunma: kullanıcı geriye dönüp okuyorsa yerinde bırakılır. */
+    if (!takipRef.current || !turAcikRef.current) return;
+    const dipeUzaklik = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (dipeUzaklik > TAKIP_ESIGI) return; // kullanıcı yukarı kaydırmış → karışma
+    el.scrollTop = el.scrollHeight - el.clientHeight;
   });
 
   /* Panel kapanınca snap boşluğu askıda kalmasın — tekrar açılınca sohbetin altında
