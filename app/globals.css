@@ -5806,7 +5806,26 @@ body.parla-genis .panel-content { margin-right: 0; }
    iç içe iki kutu görünüyordu. Referans: sohbet uygulamalarının tek-kutu composer'ı. */
 /* Yazma alanının üstünde AYIRIM ÇİZGİSİ YOK (Mehmet, 24.07): tek kutunun kendi
    kenarlığı zaten sınırı belli ediyor; ikinci çizgi gürültü yapıyordu. */
-.parla-composer-alan { padding: 10px 12px 12px; }
+/* ⚠️ YAZI ALANININ ÜSTÜNDE YUMUŞAK SOLMA (Mehmet, 01.08: "onların input'unun altında
+   hafif blur var, aynı şekilde biz de ekleyelim, keskin olmasın bizde de").
+   NEYDİ: liste yazı alanının hemen üstünde BİTİYOR → akan metin orada bıçakla kesilmiş
+   gibi duruyordu (ekran görüntüsünde yarım satır asılı kalıyordu).
+   ŞİMDİ: yazı alanının üstüne, panelin kendi zeminine doğru giden bir solma katmanı.
+   Metin oraya geldikçe kesilmek yerine eriyip kayboluyor.
+   ⚠️ `bottom: 100%` ile konumlandı: yazı alanı kendi kendine büyüyebildiği için (uzun
+   metin yazınca 120px'e kadar) sabit bir yükseklik varsayılamaz — katman her zaman
+   kutunun tam ÜSTÜNE oturur.
+   ⚠️ `mask-image` KULLANILMADI: Safari'de maske+filtre birleşimi görünmezliğe yol
+   açabiliyor (auth ekranında yaşandı, DAILY_LOG'da kayıtlı). Düz degrade yeterli.
+   Blur çok hafif (2px) — ChatGPT'de de amaç bulanıklaştırmak değil, kenarı yumuşatmak. */
+.parla-composer-alan { padding: 10px 12px 12px; position: relative; }
+.parla-composer-alan::before {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 100%;
+  height: 32px; pointer-events: none; z-index: 1;
+  background: linear-gradient(to bottom, transparent, var(--surface-modal) 92%);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
 .parla-composer {
   display: flex; flex-direction: column; gap: 8px;
   padding: 10px 10px 8px;
@@ -5854,9 +5873,17 @@ body.parla-genis .panel-content { margin-right: 0; }
    tutarsızdı: yazı alanı ortada dar bir kutu, üstündeki metin tam genişlik.
    Şimdi mesajlar da 600'de durup ortalanıyor → tek sütun, yazı alanıyla aynı hizada.
    (Normal modda panel zaten ≤600 olduğu için hiçbir şey değişmez.) */
-.parla-drawer.genis .parla-list > * {
-  max-width: var(--parla-max-w);
-  margin-inline: auto;
+/* ⚠️ SÜTUN DARALTILIR, MESAJLAR ORTALANMAZ (01.08, Mehmet ekran görüntüsüyle:
+   "kullanıcının yazdığı yazı… bu şekilde olmaz").
+   İLK DENEME YANLIŞTI: her mesaja `max-width` + `margin-inline: auto` verilmişti.
+   `.parla-list` bir dikey flex ve hizalama `align-self` ile yapılıyor
+   (`.parla-msg.user` → `flex-end`, `.parla-msg.assistant` → `flex-start`).
+   Flex'te `margin: auto` `align-self`i EZER → kullanıcı balonu sağa yaslanmayı bırakıp
+   ORTAYA geldi; sohbet "kim ne dedi" ayrımını kaybetti.
+   DOĞRUSU: mesajlara dokunmadan LİSTENİN İÇ BOŞLUĞUNU büyütmek. Böylece içerik alanı
+   600px'e iner ve ortalanır, ama her mesaj kendi hizasını (sağ/sol) korur. */
+.parla-drawer.genis .parla-list {
+  padding-inline: max(18px, calc((100% - var(--parla-max-w)) / 2));
 }
 /* Alt sıra: solda belge ekle, sağda gönder */
 .parla-composer-alt { display: flex; align-items: center; justify-content: space-between; }
