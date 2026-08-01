@@ -5846,6 +5846,18 @@ body.parla-genis .panel-content { margin-right: 0; }
 }
 /* Telefonda (≤767) panel tam ekran: 600px sınırı orada kenarlarda tuhaf boşluk bırakır. */
 @media (max-width: 767px) { .parla-composer { max-width: none; } }
+
+/* ⚠️ MESAJ SÜTUNU DA AYNI GENİŞLİKTE SINIRLANIR (01.08 canlı ölçüm):
+   genişletilmiş modda yazı alanı 600'e sabitlenmişti ama MESAJLAR kenardan kenara
+   yayılıyordu → ölçüldü: panel 2009px, metin sütunu 1715px, satır başına ~239 KARAKTER.
+   Rahat okunan üst sınır ~70-80 karakter; yani 3 katından fazla. Ayrıca kendi içinde
+   tutarsızdı: yazı alanı ortada dar bir kutu, üstündeki metin tam genişlik.
+   Şimdi mesajlar da 600'de durup ortalanıyor → tek sütun, yazı alanıyla aynı hizada.
+   (Normal modda panel zaten ≤600 olduğu için hiçbir şey değişmez.) */
+.parla-drawer.genis .parla-list > * {
+  max-width: var(--parla-max-w);
+  margin-inline: auto;
+}
 /* Alt sıra: solda belge ekle, sağda gönder */
 .parla-composer-alt { display: flex; align-items: center; justify-content: space-between; }
 
@@ -5974,9 +5986,17 @@ body.parla-genis .panel-content { margin-right: 0; }
 .parla-kat-cipler {
   display: flex; flex-wrap: nowrap; gap: 6px;
   overflow-x: auto; overscroll-behavior: contain;
-  scrollbar-width: none; padding-bottom: 2px;
+  padding-bottom: 2px;
   /* Sürüklerken çip yazıları seçilmesin (fareyle kaydırma) */
   user-select: none; -webkit-user-select: none;
+}
+/* ⚠️ AYNI TUZAK BURADA DA VARDI (01.08 canlı ölçüm: şeritte HİÇ çubuk yoktu).
+   Buradaki `scrollbar-width: none` Chrome'da bu öğenin BÜTÜN `::-webkit-scrollbar`
+   tarifini iptal ediyordu → aşağıdaki masaüstü kuralı (10px oluk, 4px hap) hiç
+   çizilmiyordu. Standart özellik yalnız Firefox'a veriliyor; Chrome'da gizleme işini
+   `::-webkit-scrollbar { height: 0 }` yapıyor (hemen altta). */
+@supports not selector(::-webkit-scrollbar) {
+  .parla-kat-cipler { scrollbar-width: none; }
 }
 .parla-kat-cipler::-webkit-scrollbar { height: 0; }
 /* MASAÜSTÜ: ince kaydırma çubuğu — çubuk hiç görünmeyince kullanıcı rayın kaydığını

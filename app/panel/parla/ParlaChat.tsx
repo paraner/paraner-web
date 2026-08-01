@@ -610,6 +610,23 @@ export default function ParlaChat() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  /* ─── YAZI ALANI KENDİLİĞİNDEN BÜYÜR ───
+     ⚠️ Bu kod HİÇ YAZILMAMIŞTI (01.08 canlı ölçümde çıktı): CSS'te niyet var
+     (`max-height: 120px`, `min-height: 34px`) ama yüksekliği ayarlayan taraf yoktu →
+     kutu 0, 124 ve 311 karakterde de 34px'te sabit kalıyordu; içerik `scrollHeight`
+     34 → 45 → 85'e çıkarken kullanıcı 1,5 satırlık bir yarıktan, kendi yazdığını
+     kaydırarak yazıyordu.
+     Yöntem: önce `auto` (küçülme de çalışsın diye — yoksa silince yükseklik takılı
+     kalır), sonra içeriğin gerçek yüksekliği. Üst sınırı CSS'teki `max-height` koyar,
+     ondan sonrası kutunun içinde kayar. `useLayoutEffect`: boyama ÖNCESİ ayarlanır,
+     yoksa her tuşta bir kare zıplama görünür. */
+  useLayoutEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [input]);
+
   /* ─── KLAVYE ODAĞI ───
      Canlı ölçümde üç eksik çıktı: (1) panel açılınca odak içeri girmiyordu (`body`de
      kalıyordu), (2) odak panele HAPSOLMUYOR — Tab ile arkadaki sol menüye çıkılıyordu,
