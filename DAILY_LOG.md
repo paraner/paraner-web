@@ -52,6 +52,37 @@ Chrome eklentisiyle ölçülüp düzeltildi. **Son hâl:**
   Sürüklerken Escape önce SÜRÜKLEMEYİ iptal eder (eskiden `parla-dragging` asılı kalıyordu).
 - **Yazı alanı otomatik büyüme kodu HİÇ YAZILMAMIŞTI** (CSS'te niyet vardı) — eklendi.
 
+### 01.08 (4) — Sohbet akışı ChatGPT'ye göre hizalandı (yazı alanı, solma, "en alta in")
+Mehmet ChatGPT'yi referans aldı: **"onlar analiz etmiştir, yeni bir şey üretmemize gerek yok."**
+- ⚠️ **AKIŞ SIRASINDA TAKİP YOK — DENENDİ, GERİ ALINDI** (`1689c57` → `8c3a8fe`).
+  Kısa süre "cevap ekranı aşınca dibe hizala" eklenmişti. ChatGPT ölçüldü: **takip
+  ETMİYOR** — `scrollTop` akış boyunca 0'da sabit kaldı, `scrollHeight` 823 → 11438.
+  Yani ~10.500px ekran dışına aktı, hiç kaydırmadı. **Buraya takip EKLEME.**
+- **Yazı alanı listenin ÜSTÜNDE yüzüyor** (`ceff7fa`): eskiden flex kardeşti, liste
+  kutunun üstünde bitiyordu. Artık `position: absolute`, liste `padding-bottom:
+  var(--parla-composer-h) + 10` alıyor → metin altına kayabiliyor.
+  ⚠️ Yükseklik ResizeObserver'la ölçülüp yazılıyor (kutu 34→120px büyüyebiliyor).
+- ⚠️ **ÜÇ KEZ ÜST ÜSTE YANLIŞ YAPILDI, üçü de Mehmet'in ekran görüntüsüyle çıktı:**
+  ① kutunun zemini `--card-2` = **%6 saydam beyaz**du; metnin üstüne yüzdürülünce
+     arkadaki cevap içinden okunmaya başladı → `#202020` (aynı tonun OPAK karşılığı).
+  ② düzeltirken banda opak zemin verildi → **solma degradesini tamamen örttü**,
+     "solma hiç olmamış" gibi göründü → bandın zemini kaldırıldı, solmayı `::after` yapar.
+  ③ solma **kutunun ÜSTÜNE** konmuştu; ChatGPT'de katman kutunun TAM ÜSTÜNDEN başlayıp
+     AŞAĞI opaklaşıyor → `inset: 10px 0 0 0` (10 = bandın `padding-top`u).
+     Ölçüm: `inset: 0` iken kutu kenarında alfa 0.27, metin %73 parlaklığa düşüyordu.
+- **"En alta in" düğmesi eklendi** (`8b64045`), ChatGPT ölçüleriyle: 32×32, tam yuvarlak,
+  `rgba(32,32,32,0.65)`, 1px %15 beyaz kenarlık, `blur(2px)`, gölge YOK, alt kenarı yazı
+  alanının **24px** üstünde, ortalı. ⚠️ **EŞİK 140px** — sürpriz çıktı: dipten ayrılır
+  ayrılmaz DEĞİL (1/5/20/60px'te görünmüyor; 130 yok, 140 var). Görünürlük hem `scroll`
+  hem `ResizeObserver`dan besleniyor: cevap yazılırken yükseklik değişir ama kaydırma
+  olayı GELMEZ.
+- **Snap kaydırması düzeltildi** (`10b4323`, ölçümle doğrulandı): boşluk DOM'a yansımadan
+  kaydırılıyordu, tarayıcı hedefi kırpıyordu. Artık bağımlılıksız `useLayoutEffect`
+  boşluk yerleştikten sonra kaydırıyor. Ölçüm: `scrollTop` 441 → 4177, mesaj tepeden 12px.
+- ⚠️ **`mask-image` KULLANILMADI** (ChatGPT kullanıyor): maske+filtre Safari'de
+  görünmezlik yapabiliyor (auth ekranında yaşandı) → aynı görüntü düz degradeyle kuruldu.
+- 🟡 Bilinçli fark: kutunun altındaki şerit bizde **12px**, ChatGPT'de 24px (panel dar).
+
 ⚠️ **KAYDIRMA ÇUBUĞU TUZAĞI (kalıcı ders):** Chrome'da bir öğede `scrollbar-width` /
 `scrollbar-color` tanımlıysa o öğenin **BÜTÜN `::-webkit-scrollbar` tarifi yok sayılır.**
 `* { scrollbar-width: thin }` yüzünden 24.07'de yazılan ince çubuk tarifi **bir hafta
