@@ -5564,14 +5564,20 @@ body.parla-dragging .parla-drawer { transition: none; }
 /* Klavye kullanıcısı için tek istisna: odakta görünür olsun (Shopify'da da odak halkası var) */
 .parla-resize:focus-visible { outline: 2px solid rgba(238, 240, 242, 0.42); outline-offset: -2px; }
 
-/* ─── GENİŞLET — tüm pencere eksi sol menü ───
-   Shopify: 1973 → 1733 = 100vw - 240 (menü genişliği). Menü yerinde kalıyor.
-   Açılınca SOL ÜST köşe kareleşiyor (panel menüye dayandığı için), sağ üst 12px kalıyor.
+/* ─── GENİŞLET — tüm pencere eksi (sol menü + 12px boşluk) ───
+   Shopify'da panel `100vw - 240` (menü genişliği) olup menüye BİTİŞİK başlıyor ve sol üst
+   köşesi kareleşiyor. Bizde bitişik DEĞİL (aşağıdaki nota bak) → sol üst köşe de yuvarlak.
    ⚠️ `--parla-nav-w` menünün GENİŞLİĞİ değil SAĞ KENARIDIR (ParlaChat yazıyor). Bizim
    menü yüzen kart, soldan 12px boşluğu var → genişliği yazsaydık panel menünün 12px
    üstüne binerdi (canlıda ölçüldü, öyle oluyordu). */
-.parla-drawer.genis { width: calc(100vw - var(--parla-nav-w)); }
-.parla-drawer.genis .parla-panel { border-radius: 0 var(--parla-radius) 0 0; }
+/* ⚠️ SOL MENÜYE YAPIŞMAZ — arada 12px (Mehmet, 01.08 canlı: "tam ekranda sol panele
+   tam oturmasın, ayrık olsunlar birbirlerinden"). Shopify'da panel menüye bitişik
+   başlıyor ama bizim menü yüzen kart; bitişik durunca iki ayrı dil çakışıyordu.
+   12px = kabuğun her yerinde kullanılan boşluk (menünün kendi kenar boşluğu da 12px).
+   `--parla-nav-w` menünün SAĞ KENARI olduğu için: sol kenar = sağ kenar + 12. */
+.parla-drawer.genis { width: calc(100vw - var(--parla-nav-w) - 12px); }
+/* Genişken de İKİ ÜST KÖŞE yuvarlak: panel artık menüye dayanmıyor, arada boşluk var →
+   sol üst köşeyi kareleştirmenin sebebi kalmadı (dayalıyken kareleşiyordu). */
 /* Genişken sürükleme tutamağı anlamsız (kenara dayalı) — Shopify'da da devre dışı */
 .parla-drawer.genis .parla-resize { display: none; }
 
