@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { RefreshCw, ArrowLeftRight } from "lucide-react";
 import type { CurrencyRate, GoldPrice } from "../../../lib/market";
@@ -214,7 +213,10 @@ export default function DovizAltinClient({
                   <div key={g.name} className="tx-row">
                     <div className="tx-main">
                       {GOLD_IMG_BY_NAME[g.name] ? (
-                        <Image
+                        /* Cüzdanım'daki `AssetIcon` ile aynı yöntem: düz <img>.
+                           next/image ile ilk denemede ikon alanı BOŞ çıktı (05.08 testi). */
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
                           src={GOLD_IMG_BY_NAME[g.name]}
                           alt=""
                           width={30}

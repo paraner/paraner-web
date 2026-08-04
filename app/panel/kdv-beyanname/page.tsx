@@ -1,5 +1,6 @@
 import { createClient } from "../../../lib/supabase/server";
 import { getActiveProfile } from "../../../lib/supabase/profile";
+import { bugunISO } from "../../../lib/format";
 import KdvBeyannameClient, { type BeyanFatura } from "./KdvBeyannameClient";
 
 // Mobil `vat-declaration.tsx` karşılığı. Mobil ay ay sorgu atıyor; web'de ay gezinmesi
@@ -26,6 +27,7 @@ export default async function KdvBeyannamePage() {
     <KdvBeyannameClient
       currency={profile.currency ?? "TRY"}
       invoices={(data as BeyanFatura[]) ?? []}
+      bugun={bugunISO()}
     />
   );
 }

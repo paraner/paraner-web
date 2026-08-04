@@ -1,5 +1,6 @@
 import { createClient } from "../../../lib/supabase/server";
 import { getActiveProfile } from "../../../lib/supabase/profile";
+import { bugunISO } from "../../../lib/format";
 import SgkClient, { type MaasOdemesi } from "./SgkClient";
 
 /* Mobil `sgk-declarations.tsx` karşılığı.
@@ -45,6 +46,7 @@ export default async function SgkPage() {
       currency={profile.currency ?? "TRY"}
       calisanSayisi={ids.length}
       odemeler={odemeler}
+      bugun={bugunISO()}
     />
   );
 }

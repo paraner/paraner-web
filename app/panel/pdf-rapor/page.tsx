@@ -1,6 +1,7 @@
 import { createClient } from "../../../lib/supabase/server";
 import { getActiveProfile } from "../../../lib/supabase/profile";
 import { getCustomCategories } from "../../../lib/customCategoriesServer";
+import { bugunISO } from "../../../lib/format";
 import PdfRaporClient, { type RaporTx, type RaporFatura } from "./PdfRaporClient";
 
 // Mobil `pdf-report.tsx` karşılığı. Mobilde expo-print ile PDF üretiliyor;
@@ -51,6 +52,7 @@ export default async function PdfRaporPage() {
       transactions={(tx as RaporTx[]) ?? []}
       invoices={(fat as RaporFatura[]) ?? []}
       customCategories={ozelKategoriler}
+      bugun={bugunISO()}
     />
   );
 }

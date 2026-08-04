@@ -64,6 +64,20 @@ export function formatDateTime(iso: string | null | undefined): string {
 }
 
 /** "14:35" — yalnız saat. */
+/* Sunucudaki "bugün" — Europe/Istanbul'a göre "YYYY-MM-DD".
+   ⚠️ NEDEN VAR: tarihe bağlı metni ("54 gün kaldı") hem sunucu hem istemci KENDİ saatinden
+   hesaplarsa iki metin farklı çıkar → React hydration hatası (#418) ve gereksiz yeniden
+   render. Sunucu sayfası bunu bir kez üretip client bileşene prop olarak geçmeli;
+   client `new Date()` ÇAĞIRMAMALI. (05.08.2026'da kdv-beyanname + sgk'da bu hata çıktı.) */
+export function bugunISO(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
 export function formatTime(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);

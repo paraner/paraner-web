@@ -38,13 +38,19 @@ type Ozet = {
 export default function KdvBeyannameClient({
   currency,
   invoices,
+  bugun,
 }: {
   currency: string;
   invoices: BeyanFatura[];
+  /* Sunucudaki "bugün" (YYYY-MM-DD, Europe/Istanbul). ⚠️ Burada `new Date()` ÇAĞIRMA:
+     sunucu ile istemci farklı gün/saat hesaplarsa "N gün kaldı" metni uyuşmaz →
+     React #418 hydration hatası (05.08.2026'da canlıda çıktı). */
+  bugun: string;
 }) {
-  const simdi = new Date();
-  const [ay, setAy] = useState(simdi.getMonth());
-  const [yil, setYil] = useState(simdi.getFullYear());
+  const [by, bm, bd] = bugun.split("-").map(Number);
+  const simdi = new Date(by, bm - 1, bd);
+  const [ay, setAy] = useState(bm - 1);
+  const [yil, setYil] = useState(by);
   const [kopyalandi, setKopyalandi] = useState(false);
 
   const o: Ozet = useMemo(() => {
@@ -100,7 +106,7 @@ export default function KdvBeyannameClient({
 
   // Beyanname son günü: takip eden ayın 28'i (KDV1)
   const sonGun = new Date(yil, ay + 1, 28);
-  const kalanGun = Math.ceil((sonGun.getTime() - Date.now()) / 86400000);
+  const kalanGun = Math.round((sonGun.getTime() - simdi.getTime()) / 86400000);
 
   const ozetMetni = useMemo(() => {
     const s = (n: number) => formatCurrency(n, currency);

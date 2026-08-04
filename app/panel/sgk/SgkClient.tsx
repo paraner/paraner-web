@@ -44,14 +44,19 @@ export default function SgkClient({
   currency,
   calisanSayisi,
   odemeler,
+  bugun,
 }: {
   currency: string;
   calisanSayisi: number;
   odemeler: MaasOdemesi[];
+  /* Sunucudaki "bugün" (YYYY-MM-DD, Europe/Istanbul). ⚠️ Burada `new Date()` ÇAĞIRMA —
+     "N gün kaldı" metni sunucu/istemcide farklı çıkar → React #418 hydration hatası. */
+  bugun: string;
 }) {
-  const simdi = new Date();
-  const [ay, setAy] = useState(simdi.getMonth());
-  const [yil, setYil] = useState(simdi.getFullYear());
+  const [by, bm, bd] = bugun.split("-").map(Number);
+  const simdi = new Date(by, bm - 1, bd);
+  const [ay, setAy] = useState(bm - 1);
+  const [yil, setYil] = useState(by);
 
   // Seçili ayda yapılan maaş ödemelerinin toplamı — prim tahmini bunun üzerinden.
   const { toplamMaas, odemeSayisi } = useMemo(() => {
@@ -85,15 +90,15 @@ export default function SgkClient({
   }
 
   const satirlar = useMemo(() => {
-    const bugun = new Date();
-    bugun.setHours(0, 0, 0, 0);
+    // Referans gün SUNUCUDAN gelir (bkz. `bugun` prop'u) — client'ta `new Date()` yok.
+    const ref = new Date(by, bm - 1, bd).getTime();
     return BILDIRGELER.map((b) => {
       const sonGunSayi = b.gun === 0 ? new Date(yil, ay + 1, 0).getDate() : b.gun;
       const sonTarih = new Date(yil, ay, sonGunSayi);
-      const kalan = Math.ceil((sonTarih.getTime() - bugun.getTime()) / 86400000);
+      const kalan = Math.round((sonTarih.getTime() - ref) / 86400000);
       return { ...b, sonGunSayi, kalan };
     });
-  }, [ay, yil]);
+  }, [ay, yil, by, bm, bd]);
 
   return (
     <>

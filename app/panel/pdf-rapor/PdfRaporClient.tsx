@@ -37,16 +37,20 @@ export default function PdfRaporClient({
   transactions,
   invoices,
   customCategories = [],
+  bugun,
 }: {
   currency: string;
   firmaAdi: string;
   transactions: RaporTx[];
   invoices: RaporFatura[];
   customCategories?: CustomCategory[];
+  /* Sunucudaki "bugün" (YYYY-MM-DD, Europe/Istanbul). Client'ta `new Date()` yok →
+     sunucu/istemci metni birebir aynı (hydration uyuşmazlığı olmaz). */
+  bugun: string;
 }) {
-  const simdi = new Date();
-  const [ay, setAy] = useState(simdi.getMonth());
-  const yil = simdi.getFullYear();
+  const [by, bm, bd] = bugun.split("-").map(Number);
+  const [ay, setAy] = useState(bm - 1);
+  const yil = by;
 
   // Ayda geçen para birimleri — para birimleri AYRI yaşar, çevirme YOK (mobil ile aynı kural).
   const [gosterilenPB, setGosterilenPB] = useState(currency);
@@ -113,7 +117,7 @@ export default function PdfRaporClient({
     setAy(m);
   }
 
-  const bugun = new Date().toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" });
+  const bugunGosterim = `${String(bd).padStart(2, "0")}.${String(bm).padStart(2, "0")}.${by}`;
 
   return (
     <>
@@ -274,7 +278,7 @@ export default function PdfRaporClient({
         )}
 
         <p className="pr-foot">
-          {bugun} tarihinde Paraner ile oluşturuldu · paraner.com
+          {bugunGosterim} tarihinde Paraner ile oluşturuldu · paraner.com
         </p>
       </div>
 
