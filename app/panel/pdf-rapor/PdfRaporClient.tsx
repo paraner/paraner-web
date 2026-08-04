@@ -132,7 +132,11 @@ export default function PdfRaporClient({
                düğme çıplak tarayıcı düğmesi gibi görünür (05.08.2026'da böyle çıktı). */
             <button className="btn btn-primary btn-sm" onClick={() => window.print()}>
               <Printer size={16} />
-              Yazdır / PDF Kaydet
+              Yazdır
+              {/* Dar ekranda gizlenir: `.btn` `white-space: nowrap` + `overflow:hidden`
+                  olduğu için uzun etiket sarmıyor, KESİLİYOR (390px'te "…PDF Kayde"
+                  diye çıkıyordu, 05.08 telefon testi). */}
+              <span className="pr-print-uzun"> / PDF Kaydet</span>
             </button>
           }
         />

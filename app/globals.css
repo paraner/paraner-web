@@ -6291,6 +6291,8 @@ body.parla-genis .panel-content { margin-right: 0; }
 @media (max-width: 560px) {
   .pr-kpis { grid-template-columns: 1fr; }
   .pr-sheet { padding: 18px 14px; }
+  /* Başlık düğmesi dar ekranda yalnız "Yazdır" olur — bkz. PdfRaporClient yorumu. */
+  .pr-print-uzun { display: none; }
 }
 
 /* Yazdırma: kabuğu KALDIR, yalnız rapor sayfası çıksın.
