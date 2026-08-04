@@ -2,7 +2,7 @@
 
 > 2026-08-04. Kaynak: ham HTML (pazarlama sitesi + fiyat sayfası + sitemap + robots), iTunes API,
 > Google Play `batchexecute` API, kendi kodumuzda grep/read,
-> **panel ana ekranı: Mehmet'in gönderdiği ekran görüntüsü** (14 gün denemeli gerçek hesap).
+> ve **panelin kendisi — 14 günlük deneme hesabıyla oturum açılıp tüm menüler tek tek gezildi.**
 > Özet: Defteran'ın tersi. Bizden **ürün olarak çok daha derin**, ama **10 yıllık yorgunluk**
 > topluyor: mobil 22 aydır güncellenmemiş, Play puanı 3,22, en çok istenen özellik 5 yıldır yapılmamış.
 
@@ -44,26 +44,129 @@ Tam ₺15.840** · Logo İşbaşı ~₺7.860 · Defteran ₺5.200 · **Paraner �
 → Bizim Hesap **fiyat kırıcı değil, kapsam satıcısı**: Paraşüt seviyesinde fiyatlıyor, karşılığında
 Paraşüt'te olmayan e-ticaret/saha/üretim veriyor.
 
-## Panel — ana ekran (gerçek hesap, 04.08.2026)
+## Panel — CANLI GEZİLDİ (oturumlu, 04.08.2026)
 
-Kaynak: Mehmet'in 14 gün denemeli hesabının ekran görüntüsü. URL `bizimhesap.com/web/ngn/newportal`
-(tam sayfa yenilenen klasik yol yapısı, SPA değil).
+Mehmet'in 14 günlük deneme hesabıyla panele **girildi ve tüm menüler tek tek açıldı.**
+(Yöntem: ayrı bir Chrome örneği + DevTools Protocol; Mehmet giriş yaptı, gezinme salt-okunur oldu.
+`Ekran Kilidi` **bilerek açılmadı** — oturumu kilitleyip erişimi kesecekti.)
 
-### Sol menü — 17 satır, birebir sırasıyla
+### Sol menü — tam ağaç (canlı DOM'dan, birebir)
 
-`ANA SAYFA` · `BizimSipariş` [yeni] · **`BizimMuhasebeci`** (kalın) · `Müşteriler` · `Tedarikçiler` ·
-`Ürünler` (+) · `Satışlar` · `Alışlar` · `Teklifler` · `Nakit Yönetimi` (+) · `E-Ticaret` [yeni] (+) ·
-`Avantajlar` [yeni] (+) · `Ayarlar` (+) · `Raporlar` (+) · `Yardım` — ayraç — `Fihrist` · `Ekran Kilidi`
+```
+ANA SAYFA                      /web/ngn/newportal
+BizimSipariş [yeni]            /web/ngn/app/ngnb2bad
+BizimMuhasebeci                /web/ngn/app/ngnaccountantad
+Müşteriler                     /web/ngn/pos/ngncustomers
+Tedarikçiler                   /web/ngn/org/ngnsuppliers
+Ürünler
+  ├ Ürün / Hizmet Tanımları    /web/ngn/prd/ngnproducts
+  ├ Depolar                    /web/ngn/sto/ngnwarehouses
+  ├ Üretim                     /web/ngn/sto/ngnproduction
+  ├ Özel Fiyat Listeleri [yeni]/web/ngn/prd/ngnpricelists
+  ├ Kataloglarınız             /web/ngn/prd/ngncatalogs
+  └ Ürün Varyantları           /web/ngn/prd/ngnvariant
+Satışlar                       /web/ngn/doc/ngnretailsales
+Alışlar                        /web/ngn/doc/ngnretailpurchases
+Teklifler                      /web/ngn/doc/ngnretailproposals
+Nakit Yönetimi
+  ├ Hesaplarım                 /web/ngn/acc/ngnaccounts
+  ├ Çalışanlar                 /web/ngn/org/ngnemployees
+  ├ Masraflar                  /web/ngn/acc/ngncostss
+  ├ Gelen E-Faturalar          /web/ngn/app/ngneinvoices
+  ├ Krediler                   /web/ngn/acc/ngncredits
+  ├ Demirbaşlar                /web/ngn/org/ngnassets
+  ├ Projeler                   /web/ngn/acc/ngnprojects
+  ├ Çek Portföyü               /web/ngn/acc/ngnchequeportfolio
+  └ Senet Portföyü             /web/ngn/acc/ngnbondportfolio
+E-Ticaret [yeni]
+  ├ Satışlar (toplu)           /web/ngn/doc/ngnbulksales
+  ├ Mutabakat [yeni]           /web/ngn/ext/ngnecommercesettlement
+  ├ İstatistikler              /web/ngn/ext/ngnecommerceportal
+  ├ Ayarlar                    /web/ngn/app/ngnecommercesettings
+  ├ Müşteri Soruları           /web/ngn/ext/ngnmarketplacemessages
+  ├ Ürün Eşleştirme            /web/ngn/prd/ngnproductmatch
+  ├ Listeleme                  /web/ngn/prd/ngnproductlist
+  └ Fiyat Güncelleme           /web/ngn/prd/ngnmarketplaceprices
+Avantajlar [yeni]              /web/ngn/app/ngnadvantages
+Ayarlar
+  ├ Kullanıcılar               /web/ngn/sec/ngnusers
+  ├ Tanımlar                   /web/ngn/org/ngnmasterdata
+  ├ E-Fatura                   /web/ngn/app/ngneinvoicesettings
+  ├ e-Fatura POS Ayarları [yeni]/web/ngn/pay/ngnpossettings
+  ├ Fatura/İrsaliye Ayarı      /web/ngn/doc/ngntemplate
+  ├ Teklif ve Özel Şablonlar   /web/ngn/org/ngnproposaltemplates
+  ├ Etiket Şablonları          /web/ngn/org/ngnlabeltemplates
+  ├ SMS Ayarları               /web/ngn/app/ngnsmssettings
+  └ Kargo Entegrasyonu [yeni]  /web/ngn/app/ngncargosetting
+Raporlar
+  ├ Satışlar - Alışlar         /web/ngn/rep/ngndocumentreports
+  ├ Finansal Raporlar          /web/ngn/rep/ngnfinancialreports
+  ├ Stok Raporları             /web/ngn/rep/ngnstockreports
+  └ Müşteri Listesi            /web/ngn/rep/ngnstorereporthistoricnew
+Yardım                         /web/ngn/splash
+Fihrist                        /web/ngn/crm/ngncrmindexesnew
+Ekran Kilidi                   /web/ngn/sec/screenlock
+```
 
 **Okunacaklar:**
 - **Müşteriler ve Tedarikçiler AYRI menüler** — bizde tek "Cariler" var. Onların ayrımı esnafın
   kafasındaki ayrıma daha yakın.
-- **Satışlar / Alışlar** üst düzey menü; bizde "İşlemler" altında gizli.
-- **`BizimMuhasebeci` menüde KALIN yazılmış** — mali müşavir bağlantısını ürünün merkezine koymuşlar.
-- **`Ekran Kilidi`** — dükkân tezgâhındaki ortak bilgisayar gerçeğine göre tasarlanmış bir özellik.
-  Küçük ama "bu insanları tanıyorlar" sinyali. Bizde yok, düşünmemişiz bile.
-- **`Fihrist`** — ayrı bir dizin/rehber sayfası.
-- **Menüde AI/asistan YOK, arama kutusu YOK.**
+- **Satışlar / Alışlar / Teklifler üst düzey menü** — bizde "İşlemler" altında gizli.
+- `Nakit Yönetimi` bir çöp çekmecesi: hesaplar, çalışanlar, masraflar, gelen e-faturalar, krediler,
+  **demirbaşlar**, projeler, çek ve senet portföyü — hepsi tek başlıkta. Bilgi mimarisi zayıf.
+- **Menüde AI/asistan YOK, genel arama kutusu YOK.**
+- `Kataloglarınız`, `Özel Fiyat Listeleri`, `Etiket Şablonları`, `Demirbaşlar` — bizde hiçbiri yok.
+
+### 🔴 KÂR-ZARAR RAPORU: **YOK** — canlı panelden kesin teyit
+
+Raporlar dört sayfaya bölünmüş. **Toplam 29 rapor** var, hiçbirinde "kâr"/"karlılık" geçmiyor:
+
+**Finansal Raporlar (14):** KASA-BANKA HAREKETLERİ · ÇALIŞANLAR · Vadesi Geçen Alacaklar ·
+KDV RAPORU · MASRAFLAR · SENETLER · **BA-BS LİSTESİ** · **GELİR GİDER DURUMU** · HESAP BAKİYELERİ ·
+ÇEKLER · KREDİLER · GÜNLÜK HESAP GİRİŞ ÇIKIŞLARI · BORÇ ALACAK FİŞLERİ · KULLANICI SATIŞ-TAHSİLAT RAPORU
+
+**Satışlar-Alışlar (9):** BASİT SATIŞ RAPORU · ÜRÜN ALIŞ-SATIŞ RAPORU · SATIŞ KAYBI · ALIŞLAR ·
+İADELER · TEKLİFLER · 6 AYLIK SATIŞLAR · STOK-SATIŞ KARŞILAMA · Kategori Bazlı Satış Raporu
+
+**Stok Raporları (5):** ÜRÜNLER · STOK HAREKETLERİ · DEPO DURUMU · STOK-SATIŞ KARŞILAMA ·
+**HAREKET GÖRMEYEN ÜRÜNLER** (ölü stok — bizde yok, iyi fikir)
+
+**+ Müşteri Listesi (1).**
+
+→ En yakını **"GELİR GİDER DURUMU"** — gelirle gideri yan yana koyuyor ama **kâr hesaplamıyor**.
+Mağaza yorumlarındaki 5 yıllık şikâyet ve firmanın *"öyle bir özelliğimiz yok"* cevabı
+**panelden bağımsız olarak doğrulandı.**
+
+### Alt sayfalardan doğrulananlar
+
+| Sayfa | Ne gördüm |
+|---|---|
+| `Ayarlar > Kullanıcılar` | **`Yeni Kullanıcı Ekle`** düğmesi var, mevcut tek kullanıcı listeleniyor. Çok kullanıcı gerçek. |
+| `Ürünler > Ürün Varyantları` | *"'renk', 'ebat'… gibi dilediğiniz şekilde ürün varyantı tanımlayabilir"* — gerçek varyant sistemi |
+| `Ürünler > Depolar` | `Ana Depo` kayıtlı + `Yeni Depo Ekle` — çoklu depo gerçek |
+| `Ürün / Hizmet Tanımları` | **`Excelden Ürün Yükle`** düğmesi — toplu içe aktarım gerçek (bizde YOK) |
+| `Projeler` | *"masraflarınızı, alışlarınızı ve satışlarınızı girerken proje seçebilirsiniz… bir projedeki tüm gelir ve giderleri tek sayfada gösteririz"* |
+| `Fihrist` | Müşteri/tedarikçi **dışındaki** kişi kartları — *"muhasebeciniz, köşedeki pideci, banka şubesi"*. Excel'e aktarım da var. Küçük ama esnafın diliyle yazılmış. |
+| `Takvim` (üst bar, 04 rozeti) | `/crm/ngncalendar` — aylık takvim. Katmanlar: **Vadesi Geçen Çek/Senet · Vadesi Geçen Masraf · Yaklaşan Çek/Senet · Yaklaşan Masraf · Alış-Satış Faturaları · Sevk Tarihleri · Kredi Ödemeleri · Notlarınız.** Gün kutusuna tıklayıp not girilebiliyor. **Bizim `vade` + `vergi-takvimi` modüllerimizin birleşmiş hâli — ve bizimkinden zengin.** |
+| `Ayarlar > E-Fatura` | İki yol: *"E-Fatura mükellefi olmak istiyorum"* / *"Zaten e-Fatura kullanıcısıyım"*. **Entegratörler açıkça yazılı: eLogo, QNB eSolutions, Trendyol e-Faturam, Uyumsoft.** Yani kendi entegratörleri yok, dördüne birden köprü kuruyorlar. |
+| `BizimMuhasebeci` | Ayrı site: **bizimmuhasebeci.com**. E-postayla müşavir davet ediliyor, müşavir kendi paneline kaydoluyor. Müşavirin gördükleri: gelen e-faturalar, fişi/evrağı yüklenmiş masraf ve alış kayıtları, gönderilen e-arşiv/e-faturalar, **banka hesap hareketleri**, KDV raporu. |
+| `BizimSipariş` | Ayrı site: **bizimsiparis.com**. Ürünlere "E-Ticaret Ürünü" işareti konuyor, müşterilere "BizimSipariş Müşterisi" işareti; müşteri **SMS ile tek kullanımlık kodla** giriyor, sipariş doğrudan `Satışlar`a düşüyor. |
+| `Avantajlar` | **Ödeal Yazar Kasa POS** · **Sanal POS** (BDDK onaylı kuruluşlar) · **Kolay Akaryakıt** (araçtan inmeden yakıt, masraf otomatik işleniyor) · **E-İmza** (E-Güven ile %20 indirim) |
+
+### Teknoloji — canlı parmak izi
+
+- **ASP.NET WebForms**: giriş sayfası `bhlogin.aspx`, `__VIEWSTATE` / `__EVENTTARGET` alanları.
+  Tam sayfa yenilemeli, SPA değil.
+- **jQuery 1.11.1** — bu sürüm **2014** çıkışlı. Ayrıca `jquery-ui`, **Bootstrap 3**,
+  **Modernizr 2.8.3**, `select2`, `ckeditor`, `jquery.nicescroll`, `jquery.gritter`, `switchery`.
+  React/Vue **yok**.
+- Ölçüm: **Google Tag Manager** + **Microsoft Clarity** (oturum kaydı/ısı haritası) + **Bing UET**.
+- Footer: **`2014, 2025 © BizimHesap A.Ş.`** — panelin telifi 2025'te donmuş
+  (pazarlama sitesi 2026 diyor). Ayrıca `hakkimizda` "2015'te kurulduk" derken **footer 2014**.
+
+→ **Arayüzün eski durması kozmetik değil, taban gerçekten eski kuşak.** On yıllık bir WebForms
+uygulamasının üstüne modül eklene eklene büyümüş. Bu, "neden mobil güncellenmiyor" ve "neden
+öneriler yapılmıyor" şikâyetlerinin de teknik açıklaması olabilir: **değiştirmesi pahalı bir taban.**
 
 ### Üst bar
 
@@ -97,23 +200,15 @@ avatar + `Mehmet GEZER` açılır menüsü. **Genel arama yok.**
    kullanım"*) · **`DUYURULAR`** · **`YAKLAŞAN MASRAFLAR`** (*"Yaklaşan ödeme kaydınız bulunmuyor"*).
 9. Footer: **`2014, 2025 © BizimHesap A.Ş.`**
 
-### 🔴 Panelden gelen en önemli teyit: KÂR YOK
+### Ana ekranda da kâr yok
 
-Ana ekranda gösterilen finansal büyüklükler: **Ciro · Masraf · Stok Değeri · Varlıklar · Borçlar ·
-Bugünkü Satış · Bugünkü Tahsilat.** Cironu görürsün, masrafını görürsün — ama **"kâr" kelimesi
-ekranın hiçbir yerinde geçmiyor.** Bu, `/ozellikler/raporlar` sayfasındaki bulguyu (30+ rapor, kâr-zarar
-yok) ve mağaza yorumlarındaki 5 yıllık şikâyeti **panelden bağımsız olarak doğruluyor.**
+Ana ekranın gösterdiği finansal büyüklükler: **Ciro · Masraf · Stok Değeri · Varlıklar · Borçlar ·
+Bugünkü Satış · Bugünkü Tahsilat.** Cironu görürsün, masrafını görürsün — **"kâr" kelimesi ekranın
+hiçbir yerinde geçmiyor.** Raporlardaki bulguyla birebir örtüşüyor.
 
-### Arayüz izlenimi
-
-Koyu sol menü + düz doygun renkli kutular + üstte beyaz bar = **klasik hazır yönetim paneli şablonu**
-(AdminLTE/Bootstrap kuşağı, ~2015-2018 estetiği). Footer'daki **`2014, 2025`** telifi de bunu
-destekliyor — pazarlama sitesi 2026 derken **panelin telifi 2025'te durmuş.** Pazarlama sitesi
-modern (Next.js), panel eski. Yorumlardaki *"bilgisayarda harika ama mobil rezalet"* övgüsü bir
-tasarım övgüsü değil, **"işini görüyor"** övgüsü.
-
-→ **Bizim tasarım üstünlüğümüz burada somut.** Paraner'ın koyu teması ve titanyum aksanlarının
-yanında bu panel on yıl eski duruyor.
+→ **Tasarım üstünlüğümüz burada somut.** Koyu sol menü + düz doygun renkli kutular = hazır yönetim
+paneli şablonu estetiği; Paraner'ın koyu teması ve titanyum aksanlarının yanında on yıl eski duruyor.
+Yorumlardaki *"bilgisayarda harika"* övgüsü bir tasarım övgüsü değil, **"işini görüyor"** övgüsü.
 
 ## Bizden fazlası ne? (asıl soru)
 
@@ -147,6 +242,14 @@ Sıralama: **bizde hiç yok** → yukarıdan aşağı önem sırasına göre.
 14. **Toplu ürün yükleme / toplu fiyat-görsel güncelleme** (Excel import). Bizde sadece export var.
 15. **Müşteriye özel fiyat listesi**, **cari virman**, **ekstre paylaşımı**, **SMS ile ödeme
     hatırlatma**, **online fiş okuma (OCR)**, **kapalı devre e-ticaret sitesi (Bizim Sipariş, B2B)**.
+16. **Panel gezildikten sonra eklenenler:** `Demirbaşlar` · `Kataloglarınız` ·
+    `Etiket Şablonları` · `Teklif ve Özel Şablonlar` · `Fatura/İrsaliye Şablonu` ·
+    `Ürün Eşleştirme` / `Listeleme` / `Fiyat Güncelleme` (pazaryeri üçlüsü) ·
+    `Hareket Görmeyen Ürünler` raporu (ölü stok) · **`Fihrist`** (müşteri/tedarikçi dışı kişi kartları).
+17. **Vade takvimi — bizimkinden zengin.** Bizde `vade` + `vergi-takvimi` ayrı ve dar;
+    onlarınki tek takvimde 8 katman: vadesi geçen/yaklaşan çek-senet, vadesi geçen/yaklaşan masraf,
+    alış-satış faturaları, **sevk tarihleri**, **kredi ödemeleri**, serbest notlar.
+    Üst barda kırmızı rozetle sayı gösteriyor. **Kopyalanabilir ve ucuz.**
 
 ### B. İçerik/pazarlama tarafında fazlası
 
@@ -186,6 +289,14 @@ Sıralama: **bizde hiç yok** → yukarıdan aşağı önem sırasına göre.
    analizi hiç yok; %100 işletme odaklılar.
 10. **Oturum yönetimi ilkel** — "bir cihazdan girince diğerinden atıyor", "sürekli login istiyor".
     Bizde çapraz-subdomain kalıcı oturum var.
+11. 🔴 **Teknoloji tabanı on yıl eski — asıl yapısal zayıflık bu.** Panel **ASP.NET WebForms**
+    (`__VIEWSTATE`, tam sayfa yenileme) üzerinde, **jQuery 1.11.1 (2014)** + Bootstrap 3 +
+    Modernizr 2.8.3 ile çalışıyor. Her tıklama sunucuya tam sayfa turu demek.
+    Yorumlardaki *"program çok yavaş"*, *"sistem kapanıyor, hazırladığın fatura çöp oluyor"*,
+    *"sürekli login istiyor"* şikâyetleri bu tabanla birebir uyumlu.
+    → **"Öneriler dikkate alınmıyor" ve "mobil 22 aydır güncellenmiyor" da muhtemelen tercih değil,
+    maliyet:** bu tabanı değiştirmek pahalı. Bizim en büyük yapısal avantajımız burada — biz
+    modern tabandayız ve hızlı hareket edebiliyoruz. Bu bir pazarlama cümlesi değil, **zaman avantajı**.
 
 ## Mağaza yorum analizi
 
@@ -311,19 +422,33 @@ kâr-zarar, "öneriler dikkate alınmıyor" diyen sadık müşteriler, çöken y
 - `docs/RAKIP-defteran.md`'de *"Bizim Hesap ~₺10.350"* yazıyordu. **Güncel değil:**
   KDV dahil yıllık gerçek maliyet **₺12.528** (Temel) / **₺15.840** (Tam). Satır güncellendi.
 
+### Panel — CANLI DOĞRULANDI ✅ (oturumlu gezinti)
+
+| İddia | Kanıt |
+|---|---|
+| **Kâr-zarar raporu YOK** | Dört rapor sayfası da açıldı: 29 raporun tamamı listelendi, "kâr/karlılık" geçen **tek rapor yok**. En yakını "GELİR GİDER DURUMU" |
+| Sol menü tam ağacı | Canlı DOM'dan 53 satır + gerçek URL'ler çıkarıldı (yukarıda) |
+| Çok kullanıcı gerçek | `/sec/ngnusers` → `Yeni Kullanıcı Ekle` |
+| Varyant gerçek | `/prd/ngnvariant` → *"'renk', 'ebat' gibi… varyant tanımlayabilirsiniz"* |
+| Çoklu depo gerçek | `/sto/ngnwarehouses` → `Ana Depo` + `Yeni Depo Ekle` |
+| Excel import gerçek | `/prd/ngnproducts` → **`Excelden Ürün Yükle`** |
+| Proje bazlı takip gerçek | `/acc/ngnprojects` → *"masraf, alış ve satış girerken proje seçebilirsiniz"* |
+| e-Fatura entegratörleri | `/app/ngneinvoicesettings` → **eLogo, QNB eSolutions, Trendyol e-Faturam, Uyumsoft** |
+| Muhasebeci paneli ayrı ürün | `/app/ngnaccountantad` → **bizimmuhasebeci.com**, e-postayla davet, müşavir banka hareketlerini de görüyor |
+| B2B ayrı ürün | `/app/ngnb2bad` → **bizimsiparis.com**, müşteri SMS-OTP ile giriyor, sipariş `Satışlar`a düşüyor |
+| Takvim modülü | `/crm/ngncalendar` → 8 katman (vadesi geçen/yaklaşan çek-senet, masraf, faturalar, sevk tarihleri, kredi ödemeleri, notlar) |
+| Ortaklıklar panelde | `/app/ngnadvantages` → Ödeal POS · Sanal POS · Kolay Akaryakıt · E-İmza (E-Güven %20) |
+| **Eski teknoloji** | `bhlogin.aspx` + `__VIEWSTATE` (ASP.NET WebForms) · **jQuery 1.11.1 (2014)** · Bootstrap 3 · Modernizr 2.8.3 · React/Vue yok |
+| Ölçüm araçları | GTM + **Microsoft Clarity** + Bing UET |
+| Footer telifi donmuş | `2014, 2025 © BizimHesap A.Ş.` (pazarlama sitesi 2026 diyor) |
+
+> ⚠️ `Ekran Kilidi` (`/sec/screenlock`) **bilerek açılmadı** — oturumu kilitleyip erişimi keserdi.
+> Ne yaptığı menü adından çıkarıldı, canlı doğrulanmadı.
+> Kontör bakiyesi göstergesi ana ekranda **bulunamadı** (hesap henüz e-Fatura mükellefi değil;
+> muhtemelen başvuru sonrası çıkıyor).
+
 ## Eksik kalan — bir sonraki turda yapılacak
 
-- ⚠️ **Panelin ANA EKRANI incelendi (ekran görüntüsünden), ALT SAYFALAR incelenmedi.**
-  Claude for Chrome eklentisi iki denemede de bağlanmadı (`list_connected_browsers` → boş liste,
-  04.08.2026). Eklenti bağlanınca çıkarılacaklar:
-  - `Raporlar` menüsünün **tam alt madde listesi** → kâr-zarar yokluğunun kesin teyidi
-  - `Ürünler` (+) alt maddeleri → varyant/depo alanları gerçekten var mı
-  - `Ayarlar` (+) → kullanıcı ekleme + yetkilendirme ekranı neye benziyor
-  - `Nakit Yönetimi` (+), `E-Ticaret` (+), `Avantajlar` (+) alt maddeleri
-  - Kontör bakiyesi nerede gösteriliyor, üst bardaki takvim ikonu (04 rozeti) ne
-  - `Fihrist` ve `Ekran Kilidi` tam olarak ne yapıyor
-  > **Alternatif:** Mehmet bu menüleri açıp ekran görüntüsü atarsa aynı iş görülür (video değil,
-  > ekran görüntüsü — bkz. `[[yorum-medya-okuma]]`).
 - Blog'un trafik/sıralama gücü ölçülmedi (436 URL'nin kaçı gerçekten sıralanıyor?).
 - Kurumsal ortaklıkların (Opet, Ödeal, n11, 19 banka) ticari şartları bilinmiyor.
 - Mobil uygulamaları kurulup denenmedi (yorumlardaki "webde var mobilde yok" iddiası test edilmedi).

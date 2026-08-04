@@ -43,9 +43,22 @@ Mehmet yeni rakip buldu, 14 gün denemeye kayıt oldu. Kod değişikliği YOK, y
 - **Düzeltilen eski kayıtlar:** `RAKIP-defteran.md` fiyat satırındaki "Bizim Hesap ~₺10.350"
   güncel değildi · `paraner-app/OZELLIK-ARASTIRMASI.md`'deki "BizMu — ucuz, mikro işletme" satırı
   **yanlıştı** (ne ucuz ne mikro), ikisi de kaynaktan düzeltildi.
-- ⚠️ **EKSİK KALDI — panel gezilmedi.** `bizimhesap.com/web/ngn/newportal` oturum ister; Claude for
-  Chrome eklentisi bu makinede **bağlı değil** (`list_connected_browsers` → boş). Eklenti bağlanınca
-  sol menü ağacı + dashboard + kâr-zarar yokluğunun panelden teyidi yapılacak.
+- ✅ **PANEL CANLI GEZİLDİ** (Mehmet'in deneme hesabıyla, salt-okunur). Chrome eklentisi 4 denemede
+  de bağlanmadı (sebep: **eklentinin Claude hesabı** oturumunkinden farklı — memory'ye yazıldı).
+  Çözüm: ayrı bir Chrome örneği + DevTools Protocol; Mehmet giriş yaptı, gezinmeyi ben yaptım.
+  - **Sol menü tam ağacı** (53 satır + gerçek URL'ler) dokümana alındı.
+  - 🔴 **KÂR-ZARAR YOK — kesin teyit:** 4 rapor sayfası da açıldı, **29 raporun** hiçbirinde
+    "kâr/karlılık" yok. En yakını "GELİR GİDER DURUMU" (kâr hesaplamıyor). Ana ekranda da yok.
+  - Doğrulananlar: varyant, çoklu depo, Excel'den ürün yükleme, çok kullanıcı, proje bazlı takip,
+    e-Fatura entegratörleri (eLogo/QNB eSolutions/Trendyol e-Faturam/Uyumsoft), bizimmuhasebeci.com
+    (müşavir e-postayla davet, banka hareketlerini de görüyor), bizimsiparis.com (müşteri SMS-OTP).
+  - **8 katmanlı vade takvimi** (üst barda rozetli) — bizim `vade`+`vergi-takvimi`den zengin, ucuz kopya.
+  - 🔴 **Teknoloji tabanı eski:** ASP.NET WebForms (`bhlogin.aspx`, `__VIEWSTATE`) +
+    **jQuery 1.11.1 (2014)** + Bootstrap 3 + Modernizr 2.8.3, React/Vue yok. Footer `2014, 2025`.
+    → "yavaş", "sistem kapanıyor", "sürekli login" şikâyetleri bununla birebir uyumlu; mobilin
+    güncellenmemesi de muhtemelen tercih değil **maliyet**. Bizim zaman avantajımız burada.
+  - `Ekran Kilidi` bilerek açılmadı (oturumu kilitlerdi); kontör göstergesi bulunamadı
+    (hesap henüz e-Fatura mükellefi değil).
 
 ### 01.08 (3) — Parla paneli: 16 düzeltme, hepsi CANLI ÖLÇÜMLE bulundu
 Aynı gün, `270b2dc`'den sonra Mehmet canlıda gözle bakıp tek tek bildirdi; her biri
