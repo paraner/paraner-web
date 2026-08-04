@@ -142,7 +142,7 @@ export default function KdvBeyannameClient({
         title="KDV Beyanname Özeti"
         sub="Dönem KDV'sinin oran oran dökümü"
         action={
-          <button className="btn-ghost" onClick={kopyala} title="Özeti panoya kopyala">
+          <button className="btn btn-ghost btn-sm" onClick={kopyala} title="Özeti panoya kopyala">
             {kopyalandi ? <Check size={16} /> : <Copy size={16} />}
             {kopyalandi ? "Kopyalandı" : "Özeti Kopyala"}
           </button>

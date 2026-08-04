@@ -12,9 +12,14 @@ const AYLAR = [
 ];
 
 // SGK prim oranları — mobil `sgk-declarations.tsx` ile aynı (işçi %14, işveren %20,5).
-// ⚠️ Teşvik/indirim uygulanmadan, brüt maaş üzerinden KABA tahmindir.
+// ⚠️ Teşvik/indirim/tavan-taban uygulanmadan KABA tahmindir.
 const ISCI_ORAN = 0.14;
 const ISVEREN_ORAN = 0.205;
+
+export type MaasOdemesi = {
+  amount: string | number | null;
+  date: string | null;
+};
 
 type Bildirge = {
   id: string;
@@ -38,15 +43,31 @@ const BILDIRGELER: Bildirge[] = [
 export default function SgkClient({
   currency,
   calisanSayisi,
-  toplamMaas,
+  odemeler,
 }: {
   currency: string;
   calisanSayisi: number;
-  toplamMaas: number;
+  odemeler: MaasOdemesi[];
 }) {
   const simdi = new Date();
   const [ay, setAy] = useState(simdi.getMonth());
   const [yil, setYil] = useState(simdi.getFullYear());
+
+  // Seçili ayda yapılan maaş ödemelerinin toplamı — prim tahmini bunun üzerinden.
+  const { toplamMaas, odemeSayisi } = useMemo(() => {
+    const bas = new Date(yil, ay, 1).getTime();
+    const bit = new Date(yil, ay + 1, 1).getTime(); // hariç
+    let t = 0;
+    let n = 0;
+    for (const o of odemeler) {
+      if (!o.date) continue;
+      const x = new Date(o.date).getTime();
+      if (x < bas || x >= bit) continue;
+      t += Number(o.amount) || 0;
+      n++;
+    }
+    return { toplamMaas: t, odemeSayisi: n };
+  }, [odemeler, ay, yil]);
 
   const isciPrim = toplamMaas * ISCI_ORAN;
   const isverenPrim = toplamMaas * ISVEREN_ORAN;
@@ -104,6 +125,20 @@ export default function SgkClient({
             </Link>
           </div>
         </div>
+      ) : odemeSayisi === 0 ? (
+        <div className="pl-card">
+          <div className="pl-line">
+            <span>Çalışan sayısı</span>
+            <strong>{calisanSayisi}</strong>
+          </div>
+          <div className="pl-margin">
+            {AYLAR[ay]} {yil} için kayıtlı maaş ödemesi yok, bu yüzden prim tahmini
+            hesaplanamıyor.{" "}
+            <Link href="/panel/maaslar" className="tx-link">
+              Maaş ödemesi ekle
+            </Link>
+          </div>
+        </div>
       ) : (
         <div className="pl-card">
           <div className="pl-line">
@@ -111,7 +146,10 @@ export default function SgkClient({
             <strong>{calisanSayisi}</strong>
           </div>
           <div className="pl-line">
-            <span>Toplam brüt maaş</span>
+            <span>
+              {AYLAR[ay]} ayında ödenen maaş
+              <span className="pl-hint"> · {odemeSayisi} ödeme</span>
+            </span>
             <strong>{formatCurrency(toplamMaas, currency)}</strong>
           </div>
           <div className="pl-line">
@@ -127,7 +165,9 @@ export default function SgkClient({
             <strong>{formatCurrency(toplamPrim, currency)}</strong>
           </div>
           <div className="pl-margin">
-            Brüt maaş üzerinden kaba tahmindir; teşvik, indirim ve tavan/taban uygulanmamıştır.
+            Hesap, <Link href="/panel/maaslar" className="tx-link">Maaş Ödemeleri</Link>&apos;ne
+            girdiğiniz tutarlar üzerinden yapılır. Kaba tahmindir; teşvik, indirim ve
+            tavan/taban uygulanmamıştır. Girilen tutar net ise gerçek prim daha yüksek çıkar.
           </div>
         </div>
       )}

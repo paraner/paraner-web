@@ -6249,6 +6249,7 @@ body.parla-genis .panel-content { margin-right: 0; }
   display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0;
   border-radius: 10px;
 }
+.pl-hint { color: var(--text-faint); font-size: 12px; }
 
 /* ─────────────────────────────────────────────────────────────
    PDF Rapor (/panel/pdf-rapor)

@@ -123,7 +123,10 @@ export default function PdfRaporClient({
           title="PDF Rapor"
           sub="Aylık özet — yazdır ya da PDF olarak kaydet"
           action={
-            <button className="btn-primary" onClick={() => window.print()}>
+            /* ⚠️ `btn` TEMEL SINIFI ŞART: kutu biçimi (flex, padding, köşe, yazı) ondan gelir;
+               `btn-primary` yalnız titanyum rengi/gölgesi verir. Tek başına yazılırsa
+               düğme çıplak tarayıcı düğmesi gibi görünür (05.08.2026'da böyle çıktı). */
+            <button className="btn btn-primary btn-sm" onClick={() => window.print()}>
               <Printer size={16} />
               Yazdır / PDF Kaydet
             </button>

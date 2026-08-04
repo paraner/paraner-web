@@ -96,13 +96,15 @@ export default function DovizAltinClient({
         title="Döviz & Altın"
         sub={isStale ? "Fiyatlar şu an alınamadı" : `Güncelleme: ${guncelleme}`}
         action={
+          /* Cüzdanım'daki piyasa yenileme düğmesiyle AYNI sınıf (`refresh-btn`) — ikisi de
+             aynı veriyi tazeliyor, görünüm dili tek olsun. */
           <button
-            className="btn-ghost"
+            className="refresh-btn"
             onClick={() => basla(() => router.refresh())}
             disabled={yenileniyor}
             title="Fiyatları yenile"
           >
-            <RefreshCw size={16} className={yenileniyor ? "spin" : undefined} />
+            <RefreshCw size={14} className={yenileniyor ? "spin" : undefined} />
             {yenileniyor ? "Yenileniyor" : "Yenile"}
           </button>
         }
@@ -149,7 +151,7 @@ export default function DovizAltinClient({
                 </optgroup>
               </select>
               <button
-                className="btn-ghost dv-conv-swap"
+                className="btn btn-ghost dv-conv-swap"
                 onClick={() => setTers((v) => !v)}
                 title="Yönü değiştir"
                 aria-label="Yönü değiştir"
