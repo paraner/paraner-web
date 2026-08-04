@@ -114,7 +114,7 @@ Ajan raporlarındaki her iddia tek tek sınandı. **Ajanın 2 yanlışı düzelt
 | Faturalar stok'a dokunmuyor | `FaturalarClient.tsx` içinde `stok/stock/products/urun` grep'i **boş** |
 | Teklif→Fatura dönüşümü yok | `TekliflerClient.tsx:34` sadece `invoiced: { label: "Faturalandı" }` — durum etiketi; dönüştüren kod yok |
 | Mutabakat içeri dönük | `mutabakat/` içinde `token/link/share/public` grep'i **boş**. `our_balance`+`their_balance` elle girilen input, `status` elle seçilen dropdown → "Gönderildi" bir şey göndermiyor |
-| İçe aktarım yok | `lib/csv.ts` sadece `toCsv` + `downloadCsv`. Panelde `xlsx/parseCsv/içe aktar` grep'i **boş** |
+| ~~İçe aktarım yok~~ | ⚠️ **BU SATIR ARTIK GEÇERSİZ (04.08.2026'da düzeltildi).** O gün doğruydu; bugün `lib/csv.ts` içinde `parseCsv` var ve `ayarlar/AyarlarClient.tsx:1616` müşteri/tedarikçi + ürün CSV içe aktarımı yapıyor (kolon eşleştirme + TR başlık tahmini). Eksik kalan: `.xlsx` desteği, fatura/işlem aktarımı, görünürlük. Bkz. `PANEL-FIKIRLERI.md` |
 | Puantaj yok | `puantaj/mesai/attendance/overtime` grep'i boş. Var olan: `employees`, `employee_leaves`, `salary_payments` |
 | e-Fatura/PDF/OCR yok | `businessMenu.tsx` `href: null` (Yakında): Fiş/Makbuz Tara · Döviz & Altın · PDF Rapor · Muhasebeci Erişimi · SGK · **e-Defter/e-Fatura** |
 | Fiş yükleme altyapısı VAR | `lib/receipts.ts` + `IslemlerClient.tsx` drag-drop → OCR doğal uzantı |
