@@ -20,6 +20,28 @@
 
 ## Bu hafta (2026-07-23 →)
 
+### 04.08 (2) — Panel analizi + fikir listesi (`docs/PANEL-FIKIRLERI.md`)
+Mehmet "genel olarak neler eklenebilir, gerekirse yeni bölüm de açalım" dedi. Kod değişmedi.
+- 🔴 **BULGU: WEB, MOBİLİN GERİSİNDE.** `businessMenu.tsx` tepesindeki *"mobil ile birebir
+  tutarlı"* yorumu **artık yanlış.** Web'de "Yakında" görünen 4 özellik mobilde ÇALIŞIYOR:
+  `receipt-scan` (619 satır) · `exchange` (409) · `pdf-report` (295) · `sgk-declarations` (288).
+  Web'de **menüde bile olmayan** 2 tanesi mobilde var: `vat-declaration` (316) ·
+  `invoice-numbering` (195).
+- 🔴 **Fatura formu:** web `FaturaFormu.tsx` **253 satır**, mobil `invoice-create.tsx` **1256**.
+  Mobilde kalem editörü + 9 birim + vade tarihi + ödeme hesabı + PDF + vergi no doğrulama VAR,
+  web'de hiçbiri yok.
+- Web'in ince modülleri (mobil karşılığı ~3×): kar-zarar 171 · kdv-raporu 149 · nakit-akisi 120 ·
+  vergi-takvimi 97. **Raporlar + Vergi bloğu web'de neredeyse taslak.**
+- **Yeni bölüm önerileri:** 📅 Takvim & Hatırlatmalar (veri hazır, en ucuz) · 👥 Ekip & Yetkiler
+  (DB kararı ister) · 📈 İşletme Sağlığı (Parla ile, rakipsiz) · 🧾 e-Dönüşüm · 🏬 Depo & Lojistik ·
+  🏦 Banka & Tahsilat. **e-Ticaret'e girmeme önerisi** (rakibin ₺1.100'lük paketi tamamen o, devasa).
+- ⚠️ Kendi taslağımı denetlerken `RAKIP-defteran.md`'nin 13.07 tablosundan devralınan 2 madde
+  geçersiz çıktı: **CSV içe aktarım ZATEN VAR** (`parseCsv` + `AyarlarClient.tsx:1616`,
+  müşteri+ürün, kolon eşleştirmeli) ve **döviz/altın altyapısı hazır** (`lib/market.ts` +
+  `lib/assets.ts`). İkisi de kaynaktan düzeltildi, defteran dosyasındaki satır işaretlendi.
+- Not: `businessMenu.tsx:1` yorumu ("mobil ile birebir") **güncellenmedi** — kod değişikliği
+  istenmemişti; düzeltilecekse ayrı iş.
+
 ### 04.08 — Rakip analizi: Bizim Hesap (`docs/RAKIP-bizimhesap.md`)
 Mehmet yeni rakip buldu, 14 gün denemeye kayıt oldu. Kod değişikliği YOK, yalnız araştırma.
 - **Profil:** 2015 kuruluşlu, 40-50 bin kullanıcı, **Finberg** (QNB Finansbank fintech kolu)
