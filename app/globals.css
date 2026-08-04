@@ -6292,14 +6292,25 @@ body.parla-genis .panel-content { margin-right: 0; }
   .pr-sheet { padding: 18px 14px; }
 }
 
-/* Yazdırma: kabuğu tamamen gizle, yalnız rapor sayfası çıksın.
-   visibility yöntemi layout'tan bağımsız çalışır (sol menü/üst bar ne olursa olsun). */
+/* Yazdırma: kabuğu KALDIR, yalnız rapor sayfası çıksın.
+   ⚠️ `visibility:hidden` + `position:absolute` YETMEZ (04.08.2026): `.panel-shell` ve
+   `.panel-main`'de `height:100dvh` + `overflow:hidden` var — bunlar nötrlenmezse bir
+   sayfadan uzun rapor İLK SAYFADAN SONRA KIRPILIR. O yüzden kabuk `display:none`,
+   kaplar `height:auto; overflow:visible` ve rapor NORMAL AKIŞTA kalıyor (çok sayfa
+   sağlıklı bölünsün). */
 @media print {
-  body * { visibility: hidden; }
-  .pr-sheet, .pr-sheet * { visibility: visible; }
-  .pr-ui { display: none !important; }
+  html, body {
+    height: auto !important; min-height: 0 !important; overflow: visible !important;
+    background: #fff !important;
+  }
+  .panel-sidebar, .panel-topbar, .panel-menu-btn, .panel-menu-backdrop,
+  .parla-drawer, .parla-panel, .pr-ui { display: none !important; }
+  .panel-shell, .panel-main, .panel-content {
+    display: block !important; height: auto !important; min-height: 0 !important;
+    max-height: none !important; overflow: visible !important;
+    margin: 0 !important; padding: 0 !important;
+  }
   .pr-sheet {
-    position: absolute; left: 0; top: 0; width: 100%;
     border: 0; border-radius: 0; padding: 0; background: #fff; color: #111;
   }
   .pr-sheet h2 { border-bottom-color: #ddd; }
