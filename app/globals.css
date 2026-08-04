@@ -6178,3 +6178,137 @@ body.parla-genis .panel-content { margin-right: 0; }
 .parla-kat-ok { background: linear-gradient(180deg, #eef0f2 0%, #c4c8ce 55%, #a9afb6 100%); border-color: transparent; color: #0a0b0d; }
 .parla-kat-ok:disabled { opacity: 0.4; cursor: not-allowed; }
 .parla-kat-vazgec:hover { color: var(--text); border-color: var(--border-strong); }
+
+/* ─────────────────────────────────────────────────────────────
+   Döviz & Altın (/panel/doviz-altin)
+   Mobil `exchange.tsx` karşılığı. Fiyatlar sunucuda çekilir (lib/market.ts).
+   ───────────────────────────────────────────────────────────── */
+.spin { animation: admSpin 0.8s linear infinite; }
+
+.dv-ic { font-size: 24px; line-height: 1; width: 30px; text-align: center; flex-shrink: 0; }
+.dv-gold-img { border-radius: 50%; flex-shrink: 0; object-fit: contain; }
+
+.dv-prices { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+
+.dv-conv { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dv-conv-input {
+  flex: 1 1 140px; min-width: 0; padding: 10px 13px; border-radius: 10px; outline: none;
+  font-family: inherit; font-size: 16px; font-variant-numeric: tabular-nums;
+  background: var(--card-2); border: 1px solid var(--border); color: var(--text);
+}
+.dv-conv-input:focus { border-color: var(--focus-ring); }
+.dv-conv-sel {
+  flex: 0 0 auto; padding: 10px 13px; border-radius: 10px; outline: none; cursor: pointer;
+  font-family: inherit; font-size: 14px;
+  background: var(--card-2); border: 1px solid var(--border); color: var(--text);
+}
+.dv-conv-swap { flex: 0 0 auto; padding: 10px; }
+.dv-conv-out {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
+  font-size: 20px; font-variant-numeric: tabular-nums;
+}
+.dv-conv-out-label { color: var(--text-dim); font-size: 14px; }
+
+@media (max-width: 560px) {
+  .dv-conv-out { font-size: 17px; }
+  .dv-prices { align-items: flex-end; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Ay gezinme çubuğu — KDV Beyanname, SGK, PDF Rapor ortak kullanır
+   ───────────────────────────────────────────────────────────── */
+.ay-nav {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 16px; padding: 8px 10px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+}
+.ay-nav button {
+  display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0;
+  border-radius: 9px; cursor: pointer;
+  background: var(--card-2); border: 1px solid var(--border); color: var(--text);
+}
+.ay-nav button:hover:not(:disabled) { border-color: var(--border-strong); }
+.ay-nav button:disabled { opacity: 0.35; cursor: not-allowed; }
+.ay-nav-label { font-size: 15px; font-weight: 600; color: var(--text); }
+
+.tx-link { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.tx-link:hover { opacity: 0.75; }
+
+/* KDV beyanname son gün uyarısı */
+.beyan-uyari {
+  margin-bottom: 16px; padding: 11px 14px; border-radius: 10px; font-size: 13px;
+  background: var(--card-2); border: 1px solid var(--border); color: var(--text-dim);
+}
+.beyan-uyari.yakin {
+  background: rgba(245, 158, 11, .10); border-color: rgba(245, 158, 11, .32); color: var(--text);
+}
+
+/* SGK bildirge ikonu */
+.sgk-ic {
+  display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0;
+  border-radius: 10px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PDF Rapor (/panel/pdf-rapor)
+   Mobil expo-print çıktısının web karşılığı: sayfayı tarayıcıdan yazdır.
+   ───────────────────────────────────────────────────────────── */
+.pr-sheet {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 26px 24px; color: var(--text);
+}
+.pr-head { text-align: center; border-bottom: 2px solid var(--income); padding-bottom: 16px; margin-bottom: 22px; }
+.pr-head h1 { margin: 0; font-size: 21px; color: var(--income); }
+.pr-head p { margin: 6px 0 0; color: var(--text-dim); font-size: 13px; }
+
+.pr-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 8px; }
+.pr-kpi { padding: 14px; border-radius: 10px; text-align: center; border: 1px solid var(--border); }
+.pr-kpi-label { display: block; font-size: 12px; color: var(--text-dim); }
+.pr-kpi-val { display: block; margin-top: 5px; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pr-in .pr-kpi-val { color: var(--income); }
+.pr-out .pr-kpi-val { color: var(--danger); }
+
+.pr-sheet h2 {
+  font-size: 15px; margin: 26px 0 4px; padding-bottom: 7px;
+  border-bottom: 1px solid var(--border);
+}
+.pr-sub { margin: 8px 0 0; font-size: 12px; color: var(--text-dim); }
+.pr-empty { margin: 24px 0; text-align: center; color: var(--text-dim); font-size: 14px; }
+
+.pr-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.pr-table th {
+  text-align: left; padding: 8px 6px; font-size: 11px; font-weight: 600;
+  color: var(--text-dim); background: var(--card-2); white-space: nowrap;
+}
+.pr-table td { padding: 8px 6px; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+.pr-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pr-pos { color: var(--income); font-weight: 600; }
+.pr-neg { color: var(--danger); font-weight: 600; }
+.pr-foot { margin-top: 28px; text-align: center; color: var(--text-faint); font-size: 11px; }
+
+@media (max-width: 560px) {
+  .pr-kpis { grid-template-columns: 1fr; }
+  .pr-sheet { padding: 18px 14px; }
+}
+
+/* Yazdırma: kabuğu tamamen gizle, yalnız rapor sayfası çıksın.
+   visibility yöntemi layout'tan bağımsız çalışır (sol menü/üst bar ne olursa olsun). */
+@media print {
+  body * { visibility: hidden; }
+  .pr-sheet, .pr-sheet * { visibility: visible; }
+  .pr-ui { display: none !important; }
+  .pr-sheet {
+    position: absolute; left: 0; top: 0; width: 100%;
+    border: 0; border-radius: 0; padding: 0; background: #fff; color: #111;
+  }
+  .pr-sheet h2 { border-bottom-color: #ddd; }
+  .pr-table th { background: #f5f5f5; color: #666; }
+  .pr-table td { border-bottom-color: #eee; }
+  .pr-kpi { border-color: #e5e5e5; }
+  .pr-head p, .pr-sub, .pr-kpi-label { color: #666; }
+  .pr-foot { color: #999; }
+  .pr-table { page-break-inside: auto; }
+  .pr-table tr { page-break-inside: avoid; }
+  .pr-sheet h2 { page-break-after: avoid; }
+}

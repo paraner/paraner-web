@@ -20,6 +20,30 @@
 
 ## Bu hafta (2026-07-23 →)
 
+### 04.08 (3) — Mobilde hazır 4 sayfa web'e taşındı
+Mehmet: *"telefonda hazır olanı taşıyalım, sayfalar web'de de hazır olsun; düzenlemeleri sonra."*
+Dördü de mevcut tabloları kullanıyor, **DB şemasına dokunulmadı.**
+- **`/panel/doviz-altin`** (mobil `exchange.tsx`) — döviz + altın listesi, alış/satış, günlük
+  değişim %, **çevirici** (iki yönlü). Altyapı zaten vardı: `lib/market.ts` + `lib/assets.ts`.
+  Fiyat SUNUCUDA çekiliyor, Next fetch 5 dk cache. Altın görselleri `public/gold/`.
+- **`/panel/kdv-beyanname`** (mobil `vat-declaration.tsx`) — ay ay, %1/%10/%20 kovalarına ayrılmış
+  hesaplanan/indirilecek KDV + net + ödenecek, "Özeti Kopyala". Kova mantığı mobille birebir.
+- **`/panel/sgk`** (mobil `sgk-declarations.tsx`) — çalışan sayısı + toplam maaştan prim tahmini
+  (işçi %14, işveren %20,5) + 6 maddelik bildirge takvimi (SGK, muhtasar, Ba/Bs, geçici vergi).
+- **`/panel/pdf-rapor`** (mobil `pdf-report.tsx`) — aylık özet: gelir/gider/net, gider dağılımı,
+  faturalar, işlemler. Mobil expo-print kullanıyor; **web'de tarayıcıdan yazdır → PDF kaydet**
+  (ek bağımlılık YOK). `@media print` kabuğu gizliyor, yalnız `.pr-sheet` basılıyor.
+- Menü: `businessMenu.tsx`'te 3 pasif satır aktifleşti + **KDV Beyanname Özeti YENİ satır** olarak
+  eklendi (web'de menüde hiç yoktu). "SGK Bildirgeleri" → "SGK & Bildirgeler".
+- ⚠️ **CLAUDE.md kural 4 GÜNCEL DEĞİL:** `CORE_PREFETCH` listesi 23.07'de canlı ölçümle
+  KALDIRILMIŞ (`Sidebar.tsx:43-58` — peşin ısıtma sayfayı 4× yavaşlatıyormuş). Artık tüm linkler
+  `auto` + `unstable_dynamicOnHover`. Yeni sayfalar bunu otomatik miras alıyor, **eklenecek liste yok.**
+  CLAUDE.md'deki madde düzeltilmeli (dokunmadım, karar Mehmet'in).
+- ✅ `tsc --noEmit` temiz · `npm run build` başarılı, dört rota da çıktı.
+- 🔴 **HENÜZ CANLIDA GÖZLE BAKILMADI** — sayfalar derlendi, tarayıcıda test edilmedi.
+- Not: **Fatura Numaralama zaten web'de varmış** (`AyarlarClient.tsx:222`), yeniden yazılmadı.
+  Fiş/Makbuz Tara taşınmadı (Parla beynine bağlı, ayrı iş).
+
 ### 04.08 (2) — Panel analizi + fikir listesi (`docs/PANEL-FIKIRLERI.md`)
 Mehmet "genel olarak neler eklenebilir, gerekirse yeni bölüm de açalım" dedi. Kod değişmedi.
 - 🔴 **BULGU: WEB, MOBİLİN GERİSİNDE.** `businessMenu.tsx` tepesindeki *"mobil ile birebir

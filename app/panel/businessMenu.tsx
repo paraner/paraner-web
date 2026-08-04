@@ -6,7 +6,7 @@ import {
   Repeat, ScanLine, Files,
   ArrowLeftRight, TrendingUp, CircleDollarSign, Percent, PieChart, UserCircle,
   BookOpen, CircleCheck, Clock, Banknote, Receipt, CalendarDays, Tags, Layers,
-  Download, FileBarChart, Share2, AlarmClock, ShieldCheck, Cloud,
+  Download, FileBarChart, Share2, AlarmClock, ShieldCheck, Cloud, ClipboardList,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -47,7 +47,7 @@ export const BUSINESS_SECTIONS: BusinessMenuSection[] = [
       { label: "Çek / Senet Takibi", icon: <CircleCheck />, href: "/panel/cek-senet" },
       { label: "Borç / Alacak", icon: <ArrowLeftRight />, href: "/panel/borc-alacak" },
       { label: "Nakit Akışı Analizi", icon: <TrendingUp />, href: "/panel/nakit-akisi" },
-      { label: "Döviz & Altın", icon: <CircleDollarSign />, href: null },
+      { label: "Döviz & Altın", icon: <CircleDollarSign />, href: "/panel/doviz-altin" },
       { label: "KDV Hesapla", icon: <Percent />, href: "/panel/kdv" },
       { label: "Kategori Bütçeleri", icon: <PieChart />, href: "/panel/butceler" },
     ],
@@ -96,7 +96,7 @@ export const BUSINESS_SECTIONS: BusinessMenuSection[] = [
       { label: "Gelir / Gider Raporu", icon: <PieChart />, href: "/panel/gelir-gider-raporu" },
       { label: "Kâr / Zarar Tablosu", icon: <TrendingUp />, href: "/panel/kar-zarar" },
       { label: "KDV Raporu", icon: <FileBarChart />, href: "/panel/kdv-raporu" },
-      { label: "PDF Rapor Oluştur", icon: <FileText />, href: null },
+      { label: "PDF Rapor Oluştur", icon: <FileText />, href: "/panel/pdf-rapor" },
       { label: "Muhasebeci Erişimi", icon: <Share2 />, href: null },
     ],
   },
@@ -107,7 +107,8 @@ export const BUSINESS_SECTIONS: BusinessMenuSection[] = [
     color: "#F97316",
     items: [
       { label: "Vergi Takvimi", icon: <AlarmClock />, href: "/panel/vergi-takvimi" },
-      { label: "SGK Bildirgeleri", icon: <ShieldCheck />, href: null },
+      { label: "KDV Beyanname Özeti", icon: <ClipboardList />, href: "/panel/kdv-beyanname" },
+      { label: "SGK & Bildirgeler", icon: <ShieldCheck />, href: "/panel/sgk" },
       { label: "e-Defter / e-Fatura", icon: <Cloud />, href: null },
     ],
   },

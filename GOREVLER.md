@@ -217,14 +217,54 @@
       vergi yükü, ücretsiz fatura oluşturucu, kâr marjı (Defteran'ın girmediği nişler).
 - [ ] **Sosyal kanıt** — sitede tek sayı yok; App Store puanı varsa hero'ya.
 
+## 🧱 WEB↔MOBİL PARİTE — mobilde HAZIR, web'de yok (04.08.2026 ölçümü)
+> Kaynak: `docs/PANEL-FIKIRLERI.md`. Yeni icat değil, **mobilde çalışan ekranı web'e getirmek.**
+> ⚠️ `businessMenu.tsx:1`'deki *"mobil ile birebir tutarlı"* yorumu ARTIK YANLIŞ, güncellenmeli.
+
+- [x] ~~Döviz & Altın~~ · ~~PDF Rapor~~ · ~~SGK & Bildirgeler~~ · ~~KDV Beyanname Özeti~~ → **04.08'de web'e taşındı**
+- [ ] 🔴 **Fatura kalem editörü** — mobilde `invoice-create.tsx` (1256 satır) TAM: kalem, 9 birim,
+      vade tarihi, ödeme hesabı, PDF, vergi no doğrulama. Web `FaturaFormu.tsx` **253 satır**, hiçbiri yok.
+      Aşağıdaki "ÜRÜN" bölümünün ilk maddesiyle aynı iş — mobilden port en kısa yol.
+- [ ] **Fiş / Makbuz Tara** — mobilde `receipt-scan.tsx` (619 satır) çalışıyor; web'de `href: null`.
+      Web'de `lib/receipts.ts` altyapısı var, beyin `~/Developer/Paraner/parla/`.
+- [ ] **Fatura Numaralama'yı menüye çıkar** — web'de KOD VAR (`AyarlarClient.tsx:222`) ama
+      yalnız Ayarlar içinde; mobilde ayrı ekran (`invoice-numbering.tsx`).
+- [ ] **İnce modülleri mobil seviyesine çıkar** (satır: web → mobil):
+      kar-zarar 171→495 · kdv-raporu 149→413 · nakit-akisi 120→397 · vergi-takvimi 97→326 · vade 180→409.
+- [ ] **Muhasebeci Erişimi** — mobilde `accountant-access.tsx` (134 satır, küçük); web'de `href: null`.
+      Çoklu-kullanıcı şeması gerekiyor → "Ekip & Yetkiler" bölümüyle birlikte düşünülmeli.
+
+## 🆕 YENİ BÖLÜM ÖNERİLERİ — Mehmet'le DETAYLI KONUŞULACAK (04.08.2026)
+> Mehmet: *"yeni bölüm önerilerini not al, üzerinde detaylı konuşuruz seninle."*
+> Gerekçeler ve ayrıntı: `docs/PANEL-FIKIRLERI.md` §"Yeni BÖLÜM önerileri".
+
+- [ ] **📅 Takvim & Hatırlatmalar** — *en ucuzu, veri zaten bizde.* Bugün "bu hafta ne olacak?"
+      cevabı 5 sayfaya dağılmış (vade · vergi-takvimi · duzenli-odemeler · duzenli-fatura · cek-senet).
+      Rakip tek takvimde 8 katman + üst barda rozet gösteriyor. Yeni veri modeli ~gerektirmiyor.
+- [ ] **👥 Ekip & Yetkiler** — Kullanıcılar · Roller · Muhasebeci Erişimi · Erişim kaydı.
+      Bugün dağınık: roller `AyarlarClient.tsx:1897` "Yakında", muhasebeci ayrı ölü satır.
+      ⚠️ DB şeması ister → mobil ekiple ortak karar. Mali müşavir = ücretsiz büyüme kanalı.
+- [ ] **📈 İşletme Sağlığı (Analiz)** — Gün sonu/"patron raporu" · sağlık skoru · proaktif uyarılar ·
+      "Parla'ya sor". **Rakipte AI HİÇ YOK** → kopyalanması en zor hamlemiz.
+- [ ] **🧾 e-Dönüşüm** — e-Fatura/e-Arşiv/e-İrsaliye + kontör + entegratör ayarı.
+      Bulgu: Bizim Hesap'ın KENDİ entegratörü yok (eLogo/QNB eSolutions/Trendyol/Uyumsoft'a köprü)
+      → sıfırdan GİB entegrasyonu şart değil. ⚠️ Önce kalem editörü.
+- [ ] **🏬 Depo & Lojistik** — depolar · transfer · **sayım** · irsaliye · ölü stok. ⚠️ Şema ister.
+- [ ] **🏦 Banka & Tahsilat** — banka bağlama/ekstre · otomatik eşleştirme · ödeme linki.
+      `paraner-app/banka-entegrasyonu/` klasörü mevcut. Büyük iş, "sonraki faz".
+- [ ] ⛔ **🛒 e-Ticaret / pazaryeri — GİRMEME önerisi.** Rakibin ₺1.100+KDV'lik üst paketi tamamen bu
+      (80+ entegrasyon, sürekli bakım). O emek kâr/mobil/AI tarafında daha çok getirir. Karar Mehmet'in.
+
 ## 🧩 ÜRÜN — eksik özellikler (Defteran'da var, bizde yok)
 - [ ] **Fatura kalem editörü** — ⚠️ EN KRİTİK TEKNİK BORÇ. e-Fatura + teklif→fatura + stok düşümü ÜÇÜ
-      birden buna kilitli (`FaturalarClient.tsx:216`).
-- [ ] **Excel/CSV içe aktarım** (fatura + cari) — bizde sadece export var. Rakipten göç silahı.
+      birden buna kilitli (`FaturalarClient.tsx:216`). **Mobilde hazır** (yukarı bak) → port edilebilir.
+- [ ] **Excel/CSV içe aktarım** — ⚠️ **KISMEN VAR:** `AyarlarClient.tsx:1616` müşteri/tedarikçi + ürün
+      CSV aktarımı çalışıyor (kolon eşleştirme + TR başlık tahmini). Eksik: `.xlsx`, fatura/işlem
+      aktarımı, ve GÖRÜNÜRLÜK (Ayarlar'a gömülü, göç silahı kimse görmüyor).
 - [ ] **Mutabakatta güvenli paylaşım linki** — token'lı public route + onay (şu an tamamen içeri dönük).
 - [ ] **Teklif → Fatura tek-tık dönüşümü** (`invoiced` durumu var, dönüştüren kod yok).
 - [ ] **Fatura → Stok otomatik hareketi** (alış artır, satış azalt; şu an manuel).
-- [ ] **PDF rapor** (menüde `href: null`).
+- [x] ~~**PDF rapor**~~ → 04.08.2026'da eklendi (`/panel/pdf-rapor`, tarayıcıdan yazdır/PDF kaydet).
 - [ ] **Puantaj** (çalışan/maaş/izin var, devam-mesai yok).
 
 ## 🧹 ESKİ VERİ / TEMİZLİK
