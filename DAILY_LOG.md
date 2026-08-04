@@ -49,9 +49,40 @@ Dördü de mevcut tabloları kullanıyor, **DB şemasına dokunulmadı.**
   · **sgk:** 6 bildirge, geri sayımlar 04.08'e göre doğru (Geçici Vergi 17 Ağustos → 13 gün).
   · **pdf-rapor:** DOLU veriyle sınandı; Temmuz'da 7 işlem, Net = Gelir − Gider birebir tutuyor,
     gider yüzdeleri %100'e tamamlanıyor. Çok para birimli ayda TRY/USD seçici beliriyor.
-- ⚠️ **Doğrulanamayanlar (dürüstlük):** KDV hesabı FATURALI bir dönemde denenmedi (test hesabında
-  o aylarda fatura yok) · SGK prim tahmini GERÇEK maaşla denenmedi (kayıtlı çalışanın maaşı ₺0) ·
-  "Yazdır / PDF Kaydet" çıktısı basılmadı (salt-okunur test).
+- ✅ **05.08 — üç eksik doğrulama da tamamlandı** (Mehmet: *"bunları dene, ne yapılması
+  gerekiyorsa test et"*). Test verisi girildi, sınandı, **hepsi geri alındı**:
+  · **KDV DOLU VERİYLE TUTTU:** 3 test faturası (1000@%20 satış, 1000@%10 satış, 500@%20 alış)
+    → 11 değerin **hepsi** birebir: hesaplanan 300,00 · indirilecek 100,00 · **ödenecek 200,00** ·
+    3 fatura. "Özeti Kopyala" çalıştı. Faturalar silindi, liste eski hâline döndü.
+  · **YAZDIRMA ÇIKTISI TUTTU:** gerçek `@media print` kuralları uygulanıp ölçüldü — sol menü,
+    üst bar ve para birimi seçici gizli; başlık/özet/tablolar tam; **kırpılma yok**
+    (rapor 775px ≤ sayfa 1262px), son satır görünür.
+  · **SGK GERÇEK MAAŞLA TUTTU** (düzeltmeden sonra): Temmuz'daki ₺122.258 ödeme üzerinden
+    işçi ₺17.116,12 · işveren ₺25.062,89 · **toplam ₺42.179,01** — kuruş farkı yok.
+
+### 05.08 — Canlı testte çıkan 4 hata düzeltildi (hepsi bu 4 sayfada, hepsi benim)
+- 🔴 **DÜĞMELER ÇIPLAKTI** (Mehmet ekran görüntüsüyle bildirdi). Panelde düğme **iki sınıf**
+  ister: `btn` (kutu biçimi: flex/padding/köşe/yazı) + `btn-primary`|`btn-ghost` (yalnız renk).
+  `btn` yazılmayınca varsayılan tarayıcı düğmesi görünüyor. Dördü de düzeltildi;
+  Döviz "Yenile" → Cüzdanım'daki `refresh-btn` ile aynı sınıfa alındı (aynı veriyi tazeliyorlar).
+  **→ KALICI KURAL: yeni düğmede `className="btn btn-primary"` — `btn`'i ATLAMA.**
+- 🔴 **SGK PRİMİ HERKESTE ₺0 GÖSTERİYORDU.** `employees.salary`'den hesaplıyordum ama o kolonu
+  **yazan hiçbir arayüz yok** (ne web çalışan formu, ne mobil — mobilin `Employee` tipinde
+  `salary` alanı bile yok). Kolon ölü → prim kalıcı 0. Test hesabında ₺122.258 gerçek ödeme
+  varken ekran 0 diyordu. **Artık `salary_payments`'tan, SEÇİLİ AYA göre.** Ödeme yoksa
+  açıklayıcı boş durum + Maaş Ödemeleri linki. ⚠️ **MOBİLDE AYNI HATA DURUYOR** → GOREVLER'e yazıldı.
+- 🔴 **React #418 hydration hatası** (kdv-beyanname + sgk). "N gün kaldı" metnini hem sunucu
+  hem istemci **kendi** `new Date()`'iyle hesaplıyordu → metinler uyuşmayınca React ağacı
+  client'ta yeniden render ediliyordu. **Çözüm:** `lib/format.ts` → yeni **`bugunISO()`**;
+  sunucu "bugün"ü prop olarak geçiyor, **client `new Date()` çağırmıyor**. Üç sayfada da uygulandı
+  (pdf-rapor hata vermiyordu ama aynı latent risk vardı: gece yarısı / TZ farkı).
+  **→ KALICI KURAL: tarihe bağlı metin üreten client bileşeninde `new Date()` YOK, sunucudan al.**
+- 🔴 **Altın ikonları boş çıkıyordu** — `next/image` ile alan boş kaldı. Cüzdanım'daki
+  `AssetIcon` zaten düz `<img>` kullanıyor → aynı desene geçildi.
+- ✅ **Hepsi yeniden test edildi ve GEÇTİ:** üç sayfada **sıfır konsol mesajı** (izlemenin
+  çalıştığı 3 ayrı sondajla kanıtlandı) · altın görselleri 5/5 yüklü (120×120), bayraklarla
+  dikey merkezleri birebir çakışıyor · geri sayımlar 12/21/54 gün ve 05.08.2026 doğru ·
+  dört sayfada taşma 0, sıfır boyutlu düğme 0.
 - ⚠️ **Test sırasında Mehmet'in sekmesi çalındı:** sekmeyi öne alma `osascript` döngüsü
   "app.paraner.com içeren HER sekme" diyordu → Mehmet'in kendi panel sekmesi de kapsama girdi,
   ekranı 2 saniyede bir zıpladı. **Bu testte döngüye zaten gerek yoktu** (gizli sekme yalnız
