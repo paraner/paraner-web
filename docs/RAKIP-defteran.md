@@ -26,7 +26,8 @@
   1. **"%20 indirim" yanlış** — ₺750×12 = ₺9.000, yıllık ₺5.200 → gerçek indirim **%42**. Aylık fiyat çapa (anchor).
   2. **e-Fatura kontörü konusunda tam sessizlik** — adet/belge başı ücret/entegratör adı hiçbir yerde yok, "arayın" diyor. "Sürpriz ücret yok" vaadiyle çelişiyor. **Saldırılabilir nokta.**
 
-**Rakip kıyası (yıllık gerçek maliyet, KDV dahil):** Paraşüt tam paket ~₺13.536 · Logo İşbaşı ~₺7.860 · **Defteran ₺5.200** · Bizim Hesap ~₺10.350. → Defteran **fiyat kırıcı**, Paraşüt'ün %62 altında.
+**Rakip kıyası (yıllık gerçek maliyet, KDV dahil):** Paraşüt tam paket ~₺13.536 · Logo İşbaşı ~₺7.860 · **Defteran ₺5.200** · Bizim Hesap **₺12.528** (Temel) / **₺15.840** (Tam). → Defteran **fiyat kırıcı**, Paraşüt'ün %62 altında.
+> ⚠️ Buradaki eski "Bizim Hesap ~₺10.350" rakamı **güncel değildi**, 04.08.2026'da ham fiyat sayfasından düzeltildi. Bizim Hesap'ın tam analizi: **[`RAKIP-bizimhesap.md`](RAKIP-bizimhesap.md)** — Defteran'ın tersi bir profil (10 yıllık, çok derin ürün, ama yorgun ve puanı düşük).
 
 ## Özellikler (13 modül)
 

@@ -20,6 +20,33 @@
 
 ## Bu hafta (2026-07-23 →)
 
+### 04.08 — Rakip analizi: Bizim Hesap (`docs/RAKIP-bizimhesap.md`)
+Mehmet yeni rakip buldu, 14 gün denemeye kayıt oldu. Kod değişikliği YOK, yalnız araştırma.
+- **Profil:** 2015 kuruluşlu, 40-50 bin kullanıcı, **Finberg** (QNB Finansbank fintech kolu)
+  yatırımlı. Tutar/tarih hiçbir yerde açıklanmamış — "büyük yatırım" iddiası **doğrulanamadı**.
+- **Fiyat (ham HTML'den):** Temel ₺870+KDV/ay yıllık (₺10.440+KDV) · Tam ₺1.100+KDV/ay
+  (₺13.200+KDV) · aylık ₺1.250/₺1.500. KDV dahil yıllık **₺12.528 / ₺15.840** = Paraşüt seviyesi.
+  e-Fatura kontörü ayrı ve **açıkça yayınlanmış** (200→₺490 … 100.000→₺99.000).
+- **Bizden fazlası 15 madde** — en ağırları: e-Fatura ailesi, **19 banka entegrasyonu**,
+  80+ e-ticaret entegrasyonu, saha satış, üretim/reçete, çoklu depo+varyant, sınırsız
+  kullanıcı+yetkilendirme, proje, şube, kredi takibi, POS, BA-BS, Excel import.
+- 🔴 **En keskin açıkları KÂR-ZARAR RAPORU YOK** — 30+ raporları var, kâr-zarar yok; mağaza
+  yorumlarında **5 yıldır** isteniyor, firma cevabı *"öyle bir özelliğimiz yok"*. **Bizde canlı.**
+- **Mobil terk edilmiş:** iOS+Android ikisi de v1.0.168, iOS yayın tarihi 07.10.2024 → **~22 ay**.
+  Play **3,22** (922 oy, 100 B+ indirme) · iOS **3,89** (257 oy).
+- **Yorum analizi** (549 Play + 171 iOS, API'den çekildi): 1★ payı %17,5; yazılı yorum ortalaması
+  3,96 ama genel puan 3,22 → **sessiz kitle daha kızgın**. 2025+ ortalaması **2,63**, yorum hacmi
+  2017'de 112 → 2026'da 9. Şikâyet temaları: fiyat/zam %32 · destek %17 · donma %16 ·
+  geliştirilmiyor %13 · oturum %10. Övgü: kapsam/fiyat oranı, basitlik, **web paneli** (mobil değil).
+- **AI'ya kapalılar:** robots.txt'te ClaudeBot/GPTBot/Google-Extended hepsi `Disallow` +
+  `ai-train=no`. Defteran'ın tam tersi → AI cevap motorlarında bedava boşluk bize kalıyor.
+- **Düzeltilen eski kayıtlar:** `RAKIP-defteran.md` fiyat satırındaki "Bizim Hesap ~₺10.350"
+  güncel değildi · `paraner-app/OZELLIK-ARASTIRMASI.md`'deki "BizMu — ucuz, mikro işletme" satırı
+  **yanlıştı** (ne ucuz ne mikro), ikisi de kaynaktan düzeltildi.
+- ⚠️ **EKSİK KALDI — panel gezilmedi.** `bizimhesap.com/web/ngn/newportal` oturum ister; Claude for
+  Chrome eklentisi bu makinede **bağlı değil** (`list_connected_browsers` → boş). Eklenti bağlanınca
+  sol menü ağacı + dashboard + kâr-zarar yokluğunun panelden teyidi yapılacak.
+
 ### 01.08 (3) — Parla paneli: 16 düzeltme, hepsi CANLI ÖLÇÜMLE bulundu
 Aynı gün, `270b2dc`'den sonra Mehmet canlıda gözle bakıp tek tek bildirdi; her biri
 Chrome eklentisiyle ölçülüp düzeltildi. **Son hâl:**
