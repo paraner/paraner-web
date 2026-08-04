@@ -282,6 +282,15 @@
       client-kontrollü systemPrompt server'da sabitlensin; mobil token AsyncStorage→expo-secure-store; aktif profil ortak DB alanı.
 
 ## 📱 MOBİL CLAUDE'A İLETİLECEK
+- [ ] 🔴 **SGK prim tahmini MOBİLDE BOZUK** (05.08.2026, web'de canlı testte yakalandı).
+      `app/sgk-declarations.tsx` primi `employees.salary`'den hesaplıyor ama **o kolonu yazan
+      hiçbir arayüz yok**: mobil `employee-expenses.tsx`'teki `Employee` arayüzünde `salary`
+      alanı bile yok (yalnız ödemelerden türeyen `total_salary` var), web çalışan formunda da
+      yok. Kolon her hesapta `0.00` → **prim tahmini herkeste kalıcı olarak ₺0,00.**
+      Kanıt: test hesabında ₺122.258'lik gerçek maaş ödemesi varken ekran ₺0 gösteriyordu.
+      **Web'de düzeltildi:** `salary_payments` tablosundan, SEÇİLİ AYA göre hesaplanıyor
+      (`app/panel/sgk/`). Mobil de aynı şekilde düzeltilmeli — ya bu, ya çalışan formuna
+      "Brüt Maaş" alanı eklenmeli. ⚠️ `employees.salary` şu an ÖLÜ KOLON.
 - [ ] **Faturalar web'de tek "akıllı hub" oldu** — mobil de aynı tek-ekran hub'a getirilebilir (Tür sekmeleri
       + durum çipleri + arama + tarih + CSV + detay çekmecesi). Web `due_date` okuyor, `transactions`'a senkronluyor, atomik RPC numara.
 - [ ] `businessMenu.ts`: "Çalışan Listesi" + "Harcama Kayıtları" ikisi de `/employee-expenses` → ayrıştır.
