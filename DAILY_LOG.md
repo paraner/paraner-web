@@ -40,7 +40,22 @@ Dördü de mevcut tabloları kullanıyor, **DB şemasına dokunulmadı.**
   `auto` + `unstable_dynamicOnHover`. Yeni sayfalar bunu otomatik miras alıyor, **eklenecek liste yok.**
   CLAUDE.md'deki madde düzeltilmeli (dokunmadım, karar Mehmet'in).
 - ✅ `tsc --noEmit` temiz · `npm run build` başarılı, dört rota da çıktı.
-- 🔴 **HENÜZ CANLIDA GÖZLE BAKILMADI** — sayfalar derlendi, tarayıcıda test edilmedi.
+- ✅ **CANLIDA GÖZLE DOĞRULANDI** (`c7e2942`, Chrome eklentisiyle, admin oturumu açık):
+  dördü de açılıyor, **hiçbirinde 404 / boş ekran / konsol hatası YOK** (konsol izleme kendi
+  sondajıyla sınandı → "hata yok" bulgusu aracın sessizliği değil).
+  · **doviz-altin:** veri DOLU (USD 47,5439 · Gram altın 6.211,56), çevirici canlı — 100 → 4.754,39 TL,
+    250 → 11.885,98 TL, kurla birebir tutarlı.
+  · **kdv-beyanname:** ay okları çalışıyor (Ağustos→Temmuz), "28 Eylül — 55 gün kaldı" bandı doğru.
+  · **sgk:** 6 bildirge, geri sayımlar 04.08'e göre doğru (Geçici Vergi 17 Ağustos → 13 gün).
+  · **pdf-rapor:** DOLU veriyle sınandı; Temmuz'da 7 işlem, Net = Gelir − Gider birebir tutuyor,
+    gider yüzdeleri %100'e tamamlanıyor. Çok para birimli ayda TRY/USD seçici beliriyor.
+- ⚠️ **Doğrulanamayanlar (dürüstlük):** KDV hesabı FATURALI bir dönemde denenmedi (test hesabında
+  o aylarda fatura yok) · SGK prim tahmini GERÇEK maaşla denenmedi (kayıtlı çalışanın maaşı ₺0) ·
+  "Yazdır / PDF Kaydet" çıktısı basılmadı (salt-okunur test).
+- ⚠️ **Test sırasında Mehmet'in sekmesi çalındı:** sekmeyi öne alma `osascript` döngüsü
+  "app.paraner.com içeren HER sekme" diyordu → Mehmet'in kendi panel sekmesi de kapsama girdi,
+  ekranı 2 saniyede bir zıpladı. **Bu testte döngüye zaten gerek yoktu** (gizli sekme yalnız
+  animasyon ölçümünü bozar, DOM okumasını değil). Durduruldu, memory'ye ders yazıldı.
 - Not: **Fatura Numaralama zaten web'de varmış** (`AyarlarClient.tsx:222`), yeniden yazılmadı.
   Fiş/Makbuz Tara taşınmadı (Parla beynine bağlı, ayrı iş).
 
