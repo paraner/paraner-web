@@ -1,9 +1,8 @@
 # Rakip Analizi — Bizim Hesap (bizimhesap.com)
 
 > 2026-08-04. Kaynak: ham HTML (pazarlama sitesi + fiyat sayfası + sitemap + robots), iTunes API,
-> Google Play `batchexecute` API, kendi kodumuzda grep/read.
-> **Panel (`/web/ngn/newportal`) HENÜZ GEZİLMEDİ** — Chrome eklentisi bağlı olmadığı için oturumlu
-> keşif yapılamadı; bkz. §Eksik kalan.
+> Google Play `batchexecute` API, kendi kodumuzda grep/read,
+> **panel ana ekranı: Mehmet'in gönderdiği ekran görüntüsü** (14 gün denemeli gerçek hesap).
 > Özet: Defteran'ın tersi. Bizden **ürün olarak çok daha derin**, ama **10 yıllık yorgunluk**
 > topluyor: mobil 22 aydır güncellenmemiş, Play puanı 3,22, en çok istenen özellik 5 yıldır yapılmamış.
 
@@ -44,6 +43,77 @@
 Tam ₺15.840** · Logo İşbaşı ~₺7.860 · Defteran ₺5.200 · **Paraner İşletme Max yıllık ₺8.900**.
 → Bizim Hesap **fiyat kırıcı değil, kapsam satıcısı**: Paraşüt seviyesinde fiyatlıyor, karşılığında
 Paraşüt'te olmayan e-ticaret/saha/üretim veriyor.
+
+## Panel — ana ekran (gerçek hesap, 04.08.2026)
+
+Kaynak: Mehmet'in 14 gün denemeli hesabının ekran görüntüsü. URL `bizimhesap.com/web/ngn/newportal`
+(tam sayfa yenilenen klasik yol yapısı, SPA değil).
+
+### Sol menü — 17 satır, birebir sırasıyla
+
+`ANA SAYFA` · `BizimSipariş` [yeni] · **`BizimMuhasebeci`** (kalın) · `Müşteriler` · `Tedarikçiler` ·
+`Ürünler` (+) · `Satışlar` · `Alışlar` · `Teklifler` · `Nakit Yönetimi` (+) · `E-Ticaret` [yeni] (+) ·
+`Avantajlar` [yeni] (+) · `Ayarlar` (+) · `Raporlar` (+) · `Yardım` — ayraç — `Fihrist` · `Ekran Kilidi`
+
+**Okunacaklar:**
+- **Müşteriler ve Tedarikçiler AYRI menüler** — bizde tek "Cariler" var. Onların ayrımı esnafın
+  kafasındaki ayrıma daha yakın.
+- **Satışlar / Alışlar** üst düzey menü; bizde "İşlemler" altında gizli.
+- **`BizimMuhasebeci` menüde KALIN yazılmış** — mali müşavir bağlantısını ürünün merkezine koymuşlar.
+- **`Ekran Kilidi`** — dükkân tezgâhındaki ortak bilgisayar gerçeğine göre tasarlanmış bir özellik.
+  Küçük ama "bu insanları tanıyorlar" sinyali. Bizde yok, düşünmemişiz bile.
+- **`Fihrist`** — ayrı bir dizin/rehber sayfası.
+- **Menüde AI/asistan YOK, arama kutusu YOK.**
+
+### Üst bar
+
+`☰` (menü daraltma) · **`Mali Müşavirini Davet Et`** düğmesi · takvim ikonu (kırmızı **04** rozeti) ·
+avatar + `Mehmet GEZER` açılır menüsü. **Genel arama yok.**
+→ "Mali Müşavirini Davet Et"i üst bara koymuşlar: muhasebeci = büyüme kanalı. Bizde böyle bir döngü yok.
+
+### Ana ekran içeriği
+
+1. **Tarih + canlı döviz kuru** — `4 Ağustos 2026 Salı`, `$ 47,4497 / 47,5352`, `€ 54,6882 / 54,7867`
+   (alış/satış). Ucuz ama işletme sahibinin her gün baktığı bir şey.
+2. Sağ üstte **`BUGÜNKÜ SATIŞ` / `BUGÜNKÜ TAHSİLAT`** (ikisi de TL 0,00).
+3. **Deneme bandı:** *"Deneme sürenizden **13 gün** kaldı."* + yeşil **`Abonelik Başlat`** düğmesi.
+   → 14 gün doğrulandı, sayaç kalıcı ve satın almaya iten bir bant.
+4. **Onboarding kontrol listesi — "Aramıza hoş geldiniz!", `0/4` ilerleme çubuğu.**
+   Dört adım ve her birinde **süre tahmini**:
+   | Adım | Süre | Düğme |
+   |---|---|---|
+   | Müşterilerinizi sisteme kaydedin | 2 dakika | `Müşteri Ekle` |
+   | Ürün veya hizmetlerinizi tanımlayın | 1 dakika | `Ürün Ekle` |
+   | Saniyeler içinde faturanızı kesin | 2 dakika | `Fatura Oluştur` |
+   | **e-Fatura'da uygun fiyatlarla işlem yapın** | 3 dakika | `Başvuru Yap` |
+   → **Çok iyi kurgulanmış.** "2 dakika" demek direnci kırıyor; ve **4. adım doğrudan e-Fatura
+   başvurusu** — yani onboarding'in sonu kontör gelirine bağlanıyor. Bizim onboarding'imizde
+   süre tahmini de, gelire bağlanan bir son adım da yok.
+5. Altında *"Desteğe mi ihtiyacınız var? **Bize Ulaşın**"*.
+6. **Üç renkli KPI kutusu:** `Ağustos Cirosu` (mavi) · `Ağustos Masrafları` (kırmızı) ·
+   `Stok Değeri` (açık mavi).
+7. **`VARLIKLAR` / `BORÇLAR`** — iki geniş kutu, ikisi de 0,00 TL.
+8. Sağ sütun: **`DAVET ET, KAZAN`** (referans: *"size 3.000 Bizim Para, arkadaşınıza 1 ay ek
+   kullanım"*) · **`DUYURULAR`** · **`YAKLAŞAN MASRAFLAR`** (*"Yaklaşan ödeme kaydınız bulunmuyor"*).
+9. Footer: **`2014, 2025 © BizimHesap A.Ş.`**
+
+### 🔴 Panelden gelen en önemli teyit: KÂR YOK
+
+Ana ekranda gösterilen finansal büyüklükler: **Ciro · Masraf · Stok Değeri · Varlıklar · Borçlar ·
+Bugünkü Satış · Bugünkü Tahsilat.** Cironu görürsün, masrafını görürsün — ama **"kâr" kelimesi
+ekranın hiçbir yerinde geçmiyor.** Bu, `/ozellikler/raporlar` sayfasındaki bulguyu (30+ rapor, kâr-zarar
+yok) ve mağaza yorumlarındaki 5 yıllık şikâyeti **panelden bağımsız olarak doğruluyor.**
+
+### Arayüz izlenimi
+
+Koyu sol menü + düz doygun renkli kutular + üstte beyaz bar = **klasik hazır yönetim paneli şablonu**
+(AdminLTE/Bootstrap kuşağı, ~2015-2018 estetiği). Footer'daki **`2014, 2025`** telifi de bunu
+destekliyor — pazarlama sitesi 2026 derken **panelin telifi 2025'te durmuş.** Pazarlama sitesi
+modern (Next.js), panel eski. Yorumlardaki *"bilgisayarda harika ama mobil rezalet"* övgüsü bir
+tasarım övgüsü değil, **"işini görüyor"** övgüsü.
+
+→ **Bizim tasarım üstünlüğümüz burada somut.** Paraner'ın koyu teması ve titanyum aksanlarının
+yanında bu panel on yıl eski duruyor.
 
 ## Bizden fazlası ne? (asıl soru)
 
@@ -243,9 +313,17 @@ kâr-zarar, "öneriler dikkate alınmıyor" diyen sadık müşteriler, çöken y
 
 ## Eksik kalan — bir sonraki turda yapılacak
 
-- 🔴 **Panel gezilmedi.** `https://bizimhesap.com/web/ngn/newportal` oturum ister; Claude for Chrome
-  eklentisi bu makinede **bağlı değil** (`list_connected_browsers` → boş liste). Eklenti bağlanınca
-  şunlar çıkarılacak: sol menü ağacı, dashboard KPI'ları, kontör bakiyesi göstergesi, deneme süresi
-  uyarısı, arayüz yaşı/teknolojisi, gerçekten kâr-zarar olmadığının panelden teyidi.
+- ⚠️ **Panelin ANA EKRANI incelendi (ekran görüntüsünden), ALT SAYFALAR incelenmedi.**
+  Claude for Chrome eklentisi iki denemede de bağlanmadı (`list_connected_browsers` → boş liste,
+  04.08.2026). Eklenti bağlanınca çıkarılacaklar:
+  - `Raporlar` menüsünün **tam alt madde listesi** → kâr-zarar yokluğunun kesin teyidi
+  - `Ürünler` (+) alt maddeleri → varyant/depo alanları gerçekten var mı
+  - `Ayarlar` (+) → kullanıcı ekleme + yetkilendirme ekranı neye benziyor
+  - `Nakit Yönetimi` (+), `E-Ticaret` (+), `Avantajlar` (+) alt maddeleri
+  - Kontör bakiyesi nerede gösteriliyor, üst bardaki takvim ikonu (04 rozeti) ne
+  - `Fihrist` ve `Ekran Kilidi` tam olarak ne yapıyor
+  > **Alternatif:** Mehmet bu menüleri açıp ekran görüntüsü atarsa aynı iş görülür (video değil,
+  > ekran görüntüsü — bkz. `[[yorum-medya-okuma]]`).
 - Blog'un trafik/sıralama gücü ölçülmedi (436 URL'nin kaçı gerçekten sıralanıyor?).
 - Kurumsal ortaklıkların (Opet, Ödeal, n11, 19 banka) ticari şartları bilinmiyor.
+- Mobil uygulamaları kurulup denenmedi (yorumlardaki "webde var mobilde yok" iddiası test edilmedi).
