@@ -216,7 +216,7 @@
 - [ ] LineChart'a Shopify gibi kesik "önceki dönem" karşılaştırma çizgisi.
 - [ ] **Toast sistemini iyileştir** (Sonner-tarzı çalışıyor; Mehmet daha iyi görünüm/UX araştıracak).
 
-## 🌐 SEO / PAZARLAMA (rakip denetimi 2026-07-13 · `docs/RAKIP-defteran.md`)
+## 🌐 SEO / PAZARLAMA (rakip denetimi 2026-07-13 · `~/Developer/Paraner/rakipler/defteran.md`)
 - [ ] **Google'da yeni title** — Search Console → URL Denetimi → "Dizine eklenmeyi iste" (`/`, `/destek`,
       `/isletme`, `/bireysel`). *(Mehmet'in kişisel Google hesabındaki mülk.)*
 - [ ] **Genel mobil tarama:** ana sayfada telefonda taşma/bozulma tek tek bak (auth ekranları elden geçti, ana sayfa kaldı).
@@ -263,7 +263,7 @@
       → sıfırdan GİB entegrasyonu şart değil. ⚠️ Önce kalem editörü.
 - [ ] **🏬 Depo & Lojistik** — depolar · transfer · **sayım** · irsaliye · ölü stok. ⚠️ Şema ister.
 - [ ] **🏦 Banka & Tahsilat** — banka bağlama/ekstre · otomatik eşleştirme · ödeme linki.
-      `paraner-app/banka-entegrasyonu/` klasörü mevcut. Büyük iş, "sonraki faz".
+      `~/Developer/Paraner/arastirma/banka-entegrasyonu.md` klasörü mevcut. Büyük iş, "sonraki faz".
 - [ ] ⛔ **🛒 e-Ticaret / pazaryeri — GİRMEME önerisi.** Rakibin ₺1.100+KDV'lik üst paketi tamamen bu
       (80+ entegrasyon, sürekli bakım). O emek kâr/mobil/AI tarafında daha çok getirir. Karar Mehmet'in.
 
@@ -361,7 +361,7 @@
       - Edge fonksiyonları `paraner-app/supabase/functions/` altında yaşıyor (web repoda yok);
         yeni fonksiyon = `supabase/config.toml` kaydı da yazılacak (yukarıdaki kalıcı tuzak).
 - [ ] **Soğuk mail kampanyası** — işletmelere "14 gün ücretsiz" maili (10.000+). Plan hazır:
-      `docs/SOGUK-MAIL-PLANI.md`. ⚠️ İKİ TUZAK: (1) paraner.com'dan GÖNDERİLMEZ — spam şikâyeti
+      `~/Developer/Paraner/pazarlama/soguk-mail-plani.md`. ⚠️ İKİ TUZAK: (1) paraner.com'dan GÖNDERİLMEZ — spam şikâyeti
       şifre sıfırlama maillerini de öldürür, ayrı alan adı şart. (2) Resend'den GÖNDERİLMEZ —
       sözleşmesi soğuk maili yasaklıyor, hesap askıya alınırsa tüm işlem mailleri durur.
       Ayrıca İYS kaydı zorunlu (tacir/esnafa onay gerekmiyor ama kayıt + ret kontrolü gerekiyor).

@@ -6,6 +6,28 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 > ⚠️ Next 16: `middleware` → **`proxy`** olarak yeniden adlandırıldı (`proxy.ts`, fonksiyon adı `proxy`).
 
+# 🧭 NE NEREDE — kök harita
+
+Tüm Paraner klasörünün haritası: [`~/Developer/Paraner/CLAUDE.md`](../CLAUDE.md)
+
+**Bu repo GitHub'da PUBLIC.** Kod dışı / iş dosyaları 05.08.2026'da buradan çıkarılıp kök klasöre
+(git dışına) alındı — oradan oku, buraya geri koyma:
+
+| Arıyorsan | Yeri |
+|---|---|
+| Rakip analizi (Bizim Hesap, Defteran, 25 uygulama taraması) | `~/Developer/Paraner/rakipler/` |
+| Soğuk mail planı · influencer · sosyal medya | `~/Developer/Paraner/pazarlama/` |
+| Gelir/gider/kâr/büyüme · fiyatlandırma envanteri | `~/Developer/Paraner/finans/` |
+| Banka entegrasyonu araştırması | `~/Developer/Paraner/arastirma/` |
+| Yatırımcı · hesap sahiplikleri · lansman anımsatıcıları | kökte `YATIRIMCI.md` · `HESAPLAR-OZEL.md` · `ANIMSATICILAR.md` |
+
+⚠️ **Bu repoya ASLA:** rakip/pazarlama/fiyat stratejisi dosyası, şifre, API anahtarı.
+`docs/` altında kalanlar bilinçli olarak **web'in kendi teknik dokümanları**dır
+(admin paneli, destek sistemi, DMARC, panel fikirleri, abonelik sayfası planı).
+
+**Diğer projeler:** iOS `../paraner-ios/` (🟢 aktif Swift) · RN `../paraner-app/` (🧊 dondurulmuş)
+· Parla beyni `../parla/`
+
 # 👤 MEHMET YAZILIMCI DEĞİL — HER İŞ BİTİNCE SADE AÇIKLA + TEST YOLUNU VER
 
 Mehmet kod okumaz; değişiklikleri **canlıda gözle** test eder. Her görev bitince ya da bir şey
@@ -117,6 +139,10 @@ docs/                        — plan/denetim/şema notları + email-templates/ 
    layout guard'ına GÜVENME: Next 16'da layout istemci-taraflı gezinmede yeniden çalışmaz.
 
 > İş akışı (işe başla / işi bitir) + bekleyenler: `GOREVLER.md`, `DAILY_LOG.md`.
-> ⚠️ **DAILY_LOG haftalık:** proje `DAILY_LOG.md` yalnız BU HAFTA + kalıcı uyarıları tutar. Hafta
-> dolunca entriler proje DIŞINDAKİ arşive taşınır → `~/Developer/Paraner/daily-log/web/DAILY_LOG.md`.
-> Geçmişi okumak gerekince ORADAN oku. (Aynı sistem paraner-app'te: `daily-log/app/`.)
+>
+> ⚠️ **DAILY_LOG — 7 günlük aktarım:** proje `DAILY_LOG.md` yalnız son ~7 gün + kalıcı uyarıları
+> tutar. **"İşe başla" denince dosyanın başındaki `Son arşivleme` tarihine bak:** üzerinden 7+ gün
+> geçtiyse 7 günden eski girdileri `~/Developer/Paraner/daily-log/web/DAILY_LOG.md`'ye taşı,
+> buradan sil, tarihi bugüne çek. Bir hafta iş yapılmadıysa taşınacak bir şey yoktur, dokunma.
+> **Geçmişi okumak gerekince ORADAN oku.** ⚠️ "Hâlâ geçerli uyarılar" bölümü arşivlenmez, kalır.
+> (Aynı sistem `paraner-app` [`daily-log/app/`] ve `paraner-ios` [`daily-log/ios/`] tarafında.)

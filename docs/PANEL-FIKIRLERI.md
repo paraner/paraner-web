@@ -1,8 +1,8 @@
 # Panel Analizi ve Geliştirme Fikirleri
 
 > 2026-08-04. Kaynak: **kendi kodumuz ölçülerek** (web `app/panel/` 30 modül + mobil
-> `paraner-app/app/` ekranları, satır satır sayıldı) + `RAKIP-bizimhesap.md` (canlı panel gezildi)
-> + `RAKIP-defteran.md` + **720 mağaza yorumu** (rakibin uygulamasına yazılmış).
+> `paraner-app/app/` ekranları, satır satır sayıldı) + `~/Developer/Paraner/rakipler/bizimhesap.md` (canlı panel gezildi)
+> + `~/Developer/Paraner/rakipler/defteran.md` + **720 mağaza yorumu** (rakibin uygulamasına yazılmış).
 > Fikir listesidir, karar listesi değil. Kararlar Mehmet'in.
 
 ---
@@ -140,7 +140,7 @@ Bugün `Stok & Ürünler` altında sadece 2 sayfa var; rakipte bu alanda **6 say
 - Banka hesap bağlama / otomatik ekstre · Otomatik eşleştirme (ekstre ↔ işlem)
 - **Ödeme/tahsilat linki** (müşteriye link gönder, kartla ödesin) · POS mutabakatı
 
-> Rakipte **19 banka** entegre; Defteran'da **hiç yok**. `paraner-app/banka-entegrasyonu/`
+> Rakipte **19 banka** entegre; Defteran'da **hiç yok**. `~/Developer/Paraner/arastirma/banka-entegrasyonu.md`
 > klasörü zaten mevcut → oradan devam. Bu bir "sonraki faz" maddesi, hafta işi değil.
 
 ### 7. 🛒 Satış Kanalları (e-Ticaret) — *dürüst olmak gerekirse: bizim işimiz değil*
@@ -274,14 +274,14 @@ e-Dönüşüm · Depo & Lojistik · Banka & Tahsilat. e-Ticaret'e **girmeme** ö
 
 ### ⚠️ Kendi taslağımda düzelttiklerim
 
-İlk hâlde üç madde `RAKIP-defteran.md`'nin **13.07 tarihli** tablosundan devralınmıştı,
+İlk hâlde üç madde `~/Developer/Paraner/rakipler/defteran.md`'nin **13.07 tarihli** tablosundan devralınmıştı,
 kaynağa bakınca **geçersiz** çıktı:
 1. *"`lib/csv.ts` sadece `toCsv`, içe aktarım yok"* → **YANLIŞ**, `parseCsv` + çalışan içe aktarım var
 2. *"Döviz için `cuzdanim`den türetilebilir"* (tahmin) → **daha iyisi:** `lib/market.ts` hazır altyapı
 3. `lib/receipts.ts` iddiası → **doğruymuş**
 
 > Ders: bir önceki dokümanın doğrulama tablosu **o günün** fotoğrafıdır.
-> (`RAKIP-defteran.md`'deki ilgili satır da geçersiz olarak işaretlendi.)
+> (`~/Developer/Paraner/rakipler/defteran.md`'deki ilgili satır da geçersiz olarak işaretlendi.)
 
 ### Bu turda ölçülmeyenler (dürüstlük notu)
 
