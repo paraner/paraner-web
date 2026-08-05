@@ -145,4 +145,4 @@ docs/                        — plan/denetim/şema notları + email-templates/ 
 > geçtiyse 7 günden eski girdileri `~/Developer/Paraner/daily-log/web/DAILY_LOG.md`'ye taşı,
 > buradan sil, tarihi bugüne çek. Bir hafta iş yapılmadıysa taşınacak bir şey yoktur, dokunma.
 > **Geçmişi okumak gerekince ORADAN oku.** ⚠️ "Hâlâ geçerli uyarılar" bölümü arşivlenmez, kalır.
-> (Aynı sistem `paraner-rn-referans` [`daily-log/app/`] ve `paraner-app` [`daily-log/ios/`] tarafında.)
+> (Aynı sistem `paraner-rn-referans` [`daily-log/rn-referans/`] ve `paraner-app` [`daily-log/app/`] tarafında.)

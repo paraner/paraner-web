@@ -48,7 +48,7 @@ export default async function AiPage({
           Veri okunamadı: {error.message}
           {/* Kurulum yapılmadıysa asıl sebep bu — tahmin ettirme, söyle. */}
           {(error.message.includes("admin_ai_usage") || error.message.includes("function")) &&
-            " — paraner-rn-referans/supabase/ai-token-maliyet.sql çalıştırıldı mı?"}
+            " — paraner-backend/sql/ai-token-maliyet.sql çalıştırıldı mı?"}
         </p>
       </div>
     );

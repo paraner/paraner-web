@@ -3,7 +3,7 @@
 4 paralel ajan (güvenlik · doğruluk · SQL/RPC · UX) + her kritik bulgu elle doğrulandı.
 Kapsam: `app/admin/**`, `lib/admin*.ts`, `lib/lifecycle.ts`, `lib/aiPricing.ts`, `proxy.ts`,
 `sql/admin/admin-panel-rpc.sql`, `sql/admin/admin-audit-log.sql`, `sql/destek/destek-faz0.sql`,
-`paraner-rn-referans/supabase/ai-token-maliyet.sql` + `ai-usage-rpc-fix.sql` + `daily-ai-usage-cron.sql`.
+`paraner-backend/sql/ai-token-maliyet.sql` + `ai-usage-rpc-fix.sql` + `daily-ai-usage-cron.sql`.
 
 > **Genel durum:** mimari sağlam. service_role tarayıcıya sızmıyor (`server-only` her yerde),
 > 7 server action'ın 7'si de `requireAdmin()` çağırıyor, admin/agent ayrımı aksiyonlarda doğru,
@@ -14,7 +14,7 @@ Kapsam: `app/admin/**`, `lib/admin*.ts`, `lib/lifecycle.ts`, `lib/aiPricing.ts`,
 ## 🔴 KRİTİK — veri kaybı / para
 
 ### K1. AI maliyet geçmişi HER PAZAR sessizce siliniyor
-`paraner-rn-referans/supabase/ai-token-maliyet.sql:110-114` + `daily-ai-usage-cron.sql:9-16`
+`paraner-backend/sql/ai-token-maliyet.sql:110-114` + `daily-ai-usage-cron.sql:9-16`
 
 - Silme cron'u: **Pazar 00:00**, `date < CURRENT_DATE - 90 days` → sınır neredeyse hep **ayın ortasına** düşer.
 - Rollup cron'u: **her gün 02:00** — yani silmeden **2 saat SONRA**. (Dosyadaki `:122` yorumu "rollup daha erken" diyor, **YANLIŞ**.)

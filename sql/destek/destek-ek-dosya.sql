@@ -4,7 +4,7 @@
 -- dosyalar PRIVATE + imzalı link ile açılsın.
 --
 -- ⚠️ NEDEN MEVCUT DESEN KOPYALANMADI: `receipts`/`avatars` bucket'ları PUBLIC ve policy'leri
---    klasörü `profiles.id` ile eşliyor (paraner-rn-referans/supabase/receipts-storage.sql:27-34).
+--    klasörü `profiles.id` ile eşliyor (paraner-backend/sql/receipts-storage.sql:27-34).
 --    Destek bunlardan İKİ yönden ayrılıyor:
 --      · Sahiplik KİŞİ bazlı (support_tickets.user_id = auth.users.id), profil değil
 --      · Dosyayı talebin SAHİBİ + O DEPARTMANI GÖREN PERSONEL açabilmeli (üçüncü taraf yok)

@@ -12,7 +12,7 @@
   TRIAL_DAYS` + `paraner-web/lib/plans.ts` (yalnız gösterim). Mobil `checkTrialStatusServer` RPC'yi okur.
 - **Fiyat tek doğru kaynağı: mobil `app/premium.tsx`.** Web ana sayfa + `layout.tsx` AggregateOffer
   (Google'a yayınlanıyor) oradan türer. AI birim fiyatı `lib/aiPricing.ts`'te ELLE (Google fiyat API'si yok).
-- **⛔️ `paraner-rn-referans/supabase/ai-usage-rpc-fix.sql` GEÇERSİZ** — tekrar çalıştırılırsa denetim K2'yi
+- **⛔️ `paraner-backend/sql/ai-usage-rpc-fix.sql` GEÇERSİZ** — tekrar çalıştırılırsa denetim K2'yi
   sessizce geri alır. Çalıştırma.
 - **Edge davranışı `supabase/config.toml`'da yaşamalı, komut satırı bayrağında DEĞİL** — `--no-verify-jwt`
   bayrakla tutulursa bir sonraki deploy sessizce sıfırlar (`support-reply-notify` dersi). Yeni edge fonksiyonu = config kaydını da yaz.
@@ -80,7 +80,7 @@
 >   aç → sohbetler/işlemler AYRI mı (tek-aktif-profil garantisi de burada test edilir).
 > Karar (2026-07-24): kurallar kodda değil **admin panelinde**; web kapsamı = mobil paritesi (fiş hariç).
 - [x] **Faz 1 kodu yazıldı** — `ai_config_versions` tablosu (SQL hazır) + edge function "beyin modu"
-      (`paraner-rn-referans/supabase/functions/ai-chat/brain/*`). Eski sözleşme bozulmadı → mobil kırılmaz.
+      (`paraner-backend/supabase/functions/ai-chat/brain/*`). Eski sözleşme bozulmadı → mobil kırılmaz.
 - [x] ✅ **SQL çalıştırıldı** (`parla/sql/ai-config-versions.sql`) + **edge deploy edildi** (2026-07-24).
       Duman testi: fonksiyon ayakta, iki yol da 401 dönüyor (açılışta çökme yok).
 - [x] **Parla web'de ÇALIŞIYOR** (canlı doğrulandı): sohbet + işlem ekleme + fiş okuma + gerçek akış
@@ -358,7 +358,7 @@
         (Android + masaüstü Chrome/Edge/Firefox sorunsuz.) iPhone'lu müşteriye mobil uygulama yolu kalır.
       - Sıralama şart: önce KENDİ kutumuz ("bildirimleri aç"), sonra tarayıcının izni. Doğrudan tarayıcı
         kutusu açılırsa ve kullanıcı **Block derse o alan adına bir daha ASLA sorulamaz.**
-      - Edge fonksiyonları `paraner-rn-referans/supabase/functions/` altında yaşıyor (web repoda yok);
+      - Edge fonksiyonları `paraner-backend/supabase/functions/` altında yaşıyor (web repoda yok);
         yeni fonksiyon = `supabase/config.toml` kaydı da yazılacak (yukarıdaki kalıcı tuzak).
 - [ ] **Soğuk mail kampanyası** — işletmelere "14 gün ücretsiz" maili (10.000+). Plan hazır:
       `~/Developer/Paraner/pazarlama/soguk-mail-plani.md`. ⚠️ İKİ TUZAK: (1) paraner.com'dan GÖNDERİLMEZ — spam şikâyeti

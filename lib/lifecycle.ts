@@ -8,7 +8,7 @@ import type { AdminPerson, AdminPersonProfile } from "./adminUsers";
    kullanıcıda deneme bitse bile is_premium=true KALIYOR. 17.07.2026'da canlıda 2 böyle profil
    vardı. Bu yüzden gerçek durum trial_start_date + 14 günden HESAPLANIR; DB'nin dediği ile
    hesaplanan çeliştiğinde bunu "zombi" olarak İŞARETLERİZ (aksiyon alınacak yer orası).
-   Sunucu tarafı düzeltmesi: paraner-rn-referans/supabase/trial-expire-cron.sql. */
+   Sunucu tarafı düzeltmesi: paraner-backend/sql/trial-expire-cron.sql. */
 
 const DAY = 86400000;
 
