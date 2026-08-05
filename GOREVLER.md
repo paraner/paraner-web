@@ -29,16 +29,9 @@
 ---
 
 ## 🚨 LANSMAN ÖNCESİ ZORUNLU (o güne bırakılmaz)
-- [ ] 🔴 **VERİTABANI YEDEĞİ YOK** (27.07.2026, Supabase panelinde görüldü: "LAST BACKUP: No backups").
-      Bu veritabanı web + mobilin TÜM müşteri verisi: işlemler, faturalar, cariler, hesaplar,
-      çalışanlar, Parla sohbetleri. **Ücretsiz planda otomatik yedek YOK** (compute: NANO);
-      günlük otomatik yedek Pro plandan itibaren geliyor → ücret kararı Mehmet'te.
-      Bugün kritik değil (gerçek müşteri yok) ama **gerçek müşteri verisi girmeden ÖNCE** çözülmeli:
-      yanlış bir `DELETE`, hatalı bir migration ya da kaza = geri dönüş yolu yok.
-      Ara çözüm (ücretsiz): düzenli `pg_dump` ile elle yedek + güvenli bir yere kopya.
-      ⚠️ Yedek varken bile GERİ YÜKLEME denenmeden "yedeğim var" denmez — bir kez test edilmeli.
-
-## 💳 ÖDEME ENTEGRASYONU GELİNCE (tek yerde topla — çok yeri kırar)
+- [ ] 🔴 **VERİTABANI YEDEĞİ YOK** → görev **`paraner-backend/GOREVLER.md`**'e taşındı
+      (05.08.2026, veritabanı kendi reposuna alındı). Hâlâ açık ve lansman öncesi zorunlu;
+      burada tekrarlanmasın diye tek satıra indirildi.
 - [ ] 🔴 **Trial cron ödeyeni de düşürür:** `trial-expire-cron.sql` satın alımda `trial_plan`
       temizlenmeli YA DA cron'a "aboneliği yok" koşulu. `lib/lifecycle.ts` "paid" ayrımı gerçek abonelikten okumalı.
 - [ ] 🔴 **Abonelik alanlarını İSTEMCİ yazıyor** (web `AbonelikBolumu` + mobil `premium.tsx`, ikisi de

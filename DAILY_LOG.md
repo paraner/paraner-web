@@ -25,6 +25,35 @@
 
 ## Bu hafta (2026-07-29 →)
 
+### 05.08 (4) — Yapı günü: iş dosyaları repodan çıktı, repo GİZLENDİ
+
+**Kod değişikliği yok.** Bu repoya düşen kısım:
+
+**🔴 Repo PUBLIC'ti, PRIVATE yapıldı.** 66 gündür herkese açıkmış. Özel bir sebebi yokmuş —
+oluşturulurken varsayılan public seçilmiş. Kontroller:
+- **538 commit'lik tüm geçmiş tarandı** → `.env` hiç commit edilmemiş; Supabase/Stripe/Resend/
+  Google/GitHub anahtarı, service_role, düz metin şifre **hiçbiri yok**. ✅
+- Ama GitHub trafiği: son 14 günde **0 sayfa görüntüleme, 682 klonlama / 362 farklı kaynak**
+  → ayrım gözetmeyen botlar. Yani repo kopyalanmış durumda.
+- O pencerede repoda duran iş dosyaları: `RAKIP-defteran` (17 gün) · `influencer-outreach`
+  (17 gün) · `SOGUK-MAIL-PLANI` (8 gün) · `RAKIP-bizimhesap` (1 gün). Anahtar sızmadığı için
+  güvenlik açığı yok; kayıp yalnız iş bilgisi.
+- **Vercel etkilenmedi:** bağlantı GitHub App üzerinden (`app_slug: vercel`), görünürlükten
+  bağımsız. Gizledikten sonra üç domen de canlı: paraner.com / app. / admin. → HTTP 200.
+  Kodda `raw.githubusercontent` gibi açık-URL bağımlılığı yok (kontrol edildi).
+
+**Bu repodan çıkarılanlar** → `~/Developer/Paraner/` kök klasörüne (git dışı):
+`docs/RAKIP-bizimhesap.md` + `docs/RAKIP-defteran.md` → `rakipler/` ·
+`docs/SOGUK-MAIL-PLANI.md` + `docs/influencer-outreach.md` → `pazarlama/`.
+`docs/` altında kalanlar bilinçli olarak web'in KENDİ teknik dokümanları.
+
+**CLAUDE.md** başına "ne nerede" tablosu eklendi: taşınan dosyalar nereye gitti, bu repoya
+bir daha ne konulmaz. **DAILY_LOG** 7 günlük arşivleme sistemine geçti (`Son arşivleme`
+tarihi + kök arşiv); 25–28.07 girdileri arşive alındı, 728 → 391 satır.
+
+**Yol atıfları güncellendi:** `paraner-app` (RN) → `paraner-rn-referans` · mobil Swift artık
+`paraner-app` · şema/edge function `paraner-rn-referans/supabase/` → **`paraner-backend/`**.
+
 ### 04.08 (3) — Mobilde hazır 4 sayfa web'e taşındı
 Mehmet: *"telefonda hazır olanı taşıyalım, sayfalar web'de de hazır olsun; düzenlemeleri sonra."*
 Dördü de mevcut tabloları kullanıyor, **DB şemasına dokunulmadı.**
