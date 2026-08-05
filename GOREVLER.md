@@ -156,6 +156,18 @@
 - [ ] **Faz 1 — mobil push:** `withNoPushEntitlement` yüzünden remote push KAPALI → ücretli Apple hesabı + APNs (Mehmet kararı).
 - [ ] **Faz 2 (opsiyonel):** kullanıcı yeni mesajında agent'a bildirim · agent atama/öncelik/filtre · çanda "tümünü okundu".
 
+## 📱 PANEL — TELEFON GÖRÜNÜMÜ (05.08.2026 ölçümü)
+- [ ] 🔴 **Kaydırınca içerik ☰ ve + düğmelerinin ALTINDAN geçiyor.** İkisi de `position: fixed`
+      ama arkaları saydam: `.panel-menu-btn` → `rgba(0,0,0,0)` (tamamen şeffaf),
+      `.di-ada` → `rgba(255,255,255,0.043)`, ikisinde de `backdrop-filter: none`.
+      `.panel-topbar` ise `position: relative` → kaydırınca yukarı kayıp gidiyor, arkada
+      hiçbir zemin kalmıyor. Kanıt: `scrollY=424` iken `elementFromPoint(100,26)` bir
+      `.pl-line` (KDV tutar satırı) döndürdü — yani hamburger ikonu tutarın üstünde duruyor.
+      Hem okunabilirlik hem tıklanabilirlik bozuluyor. **TÜM panel sayfalarını etkiliyor**,
+      yeni sayfalara özel değil. Düzeltme: bu iki düğmenin arkasına opak zemin ya da
+      `backdrop-filter: blur` + yarı opak katman. ⚠️ Her sayfayı etkileyeceği için
+      Mehmet'in onayı bekleniyor (05.08'de soruldu, "işi bitir sonra devam ederiz" denildi).
+
 ## ⚡ PERFORMANS / PANEL — açık maddeler
 - [ ] **ESLint yapılandırması yok** — `npm run lint` çalışmıyor; kullanılmayan değişken / eksik hook
       bağımlılığı / erişilebilirlik yakalanmıyor (kod denetimi tsc + build'e kalmış).

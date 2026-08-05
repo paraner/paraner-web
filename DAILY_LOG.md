@@ -83,6 +83,31 @@ Dördü de mevcut tabloları kullanıyor, **DB şemasına dokunulmadı.**
   çalıştığı 3 ayrı sondajla kanıtlandı) · altın görselleri 5/5 yüklü (120×120), bayraklarla
   dikey merkezleri birebir çakışıyor · geri sayımlar 12/21/54 gün ve 05.08.2026 doğru ·
   dört sayfada taşma 0, sıfır boyutlu düğme 0.
+
+### 05.08 (2) — TELEFON GENİŞLİĞİ testi (390px) + kalan iki bulgu
+Mehmet'in *"mobil derken app mi, app.paraner.com'un telefon görünümü mü?"* sorusu bir boşluğu
+açtı: yeni sayfalar yalnız geniş ekranda (2294px) test edilmişti. 390px'te tekrar bakıldı.
+- ✅ **doviz-altin / kdv-beyanname / sgk → SORUNSUZ.** Üçünde de yatay kaydırma yok
+  (`scrollW = 390`), taşan eleman 0. Çevirici satırı temiz şekilde 2 satıra düşüyor.
+- ✅ **pdf-rapor tabloları TAŞMIYOR** (endişe edilen yerdi): Gider Dağılımı 296px,
+  İşlemler 298px, hiçbir hücrede kırpılma yok. Sıkışık ama okunur.
+- 🔴 **DÜZELTİLDİ — "Yazdır / PDF Kaydet" etiketi kesiliyordu:** düğme kutusu 135px, içerik
+  155px → son harf kırpılıyordu ("…PDF Kayde"). Sebep `.btn`'deki `white-space: nowrap` +
+  `overflow: hidden` — etiket sarmıyor, KESİLİYOR. ≤560px'te "/ PDF Kaydet" gizleniyor,
+  düğme yalnız "Yazdır" oluyor (`.pr-print-uzun`).
+  **→ KALICI DERS: `.btn` içindeki uzun etiket dar ekranda sarmaz, kesilir. Uzun etiketli
+  başlık düğmesi yazarken dar ekran için kısa varyant düşün.**
+- 🔴 **AÇIK KALDI (benim işim değil, tüm paneli etkiliyor):** kaydırınca içerik `☰` ve `+`
+  düğmelerinin altından geçiyor — ikisinin de arkası saydam, `.panel-topbar` sticky değil.
+  GOREVLER'e yazıldı, Mehmet'in onayı bekleniyor.
+- ⚠️ **Test yönteminin sınırı:** gerçek telefon değil, medya kuralları yeniden yazılarak
+  390px simüle edildi. JS ile genişlik okuyan bileşenler hâlâ 1920 görüyor; dokunma hedefi
+  boyutu, gerçek DPR ve mobil tarayıcı çubukları TEST EDİLMEDİ.
+
+### 05.08 (3) — App tarafına devir
+Mehmet SGK hatasını **kendi mobil oturumunda** düzeltecek; devir mesajı hazırlanıp verildi
+(dosya/satır referanslarıyla: `sgk-declarations.tsx:68`, `employee-expenses.tsx handleAdd`,
+`employees.salary` ölü kolon, web'in `salary_payments` çözümü). GOREVLER'deki mobil maddesi duruyor.
 - ⚠️ **Test sırasında Mehmet'in sekmesi çalındı:** sekmeyi öne alma `osascript` döngüsü
   "app.paraner.com içeren HER sekme" diyordu → Mehmet'in kendi panel sekmesi de kapsama girdi,
   ekranı 2 saniyede bir zıpladı. **Bu testte döngüye zaten gerek yoktu** (gizli sekme yalnız
