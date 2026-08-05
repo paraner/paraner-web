@@ -1,3 +1,4 @@
+<!-- deploy-kontrol: 2026-08-05 -->
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
