@@ -95,7 +95,7 @@ export async function createTicket(
    ThreadClient mesajı listeye eklemeyip realtime echo'suna güveniyordu → echo gecikirse
    ya da düşerse gönderen kendi mesajını SAYFAYI YENİLEYENE KADAR göremiyordu (Mehmet
    canlıda yakaladı). Mobil bu hataya düşmüyor çünkü zaten `.select().single()` ile dönen
-   satırı iyimser olarak ekliyor (paraner-app/lib/support.ts) — web ondan geri kalmıştı. */
+   satırı iyimser olarak ekliyor (paraner-rn-referans/lib/support.ts) — web ondan geri kalmıştı. */
 export async function sendMessage(
   ticketId: string,
   body: string,

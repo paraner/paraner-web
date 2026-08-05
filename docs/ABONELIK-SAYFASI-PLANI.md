@@ -18,7 +18,7 @@ Durum kartı + plan kartları + "14 Gün Ücretsiz Başlat". Plan kataloğu tek 
 düğmesi pasif duruyor; tek gerçek işlem deneme başlatmak.
 
 **🔴 Engel zinciri (kodla çözülmez):** EIN → Stripe hesabı → webhook + tablolar → UI.
-`paraner-app/GOREVLER.md:136`'ya göre **EIN IRS'te takılı**, Stripe hesabı bugün açılamıyor.
+`paraner-rn-referans/GOREVLER.md:136`'ya göre **EIN IRS'te takılı**, Stripe hesabı bugün açılamıyor.
 Ödeme mimarisi kararı zaten verilmiş (`GOREVLER.md:137`): **web = Stripe · iOS = Apple IAP ·
 tek yetki kaynağı RevenueCat**.
 
@@ -142,7 +142,7 @@ CSS'i · `.chip-seg` · `.soon-card` · `.tx-list`/`.tx-row` · `EmptyState` · 
   "fiyat 4 yerde" listesinin sayılmayan 5.'si. Fiyat değişince unutulacak yer burası.
 - **`app/gizlilik/page.tsx:25` CANLIDA YANLIŞ:** "Ödeme bilgileri RevenueCat tarafından
   işlenir" yazıyor — RevenueCat entegre değil, hiç ödeme alınmıyor. Mobilde de aynı
-  (`paraner-app/app/privacy.tsx:24`) ve `terms.tsx:35` bununla çelişiyor.
+  (`paraner-rn-referans/app/privacy.tsx:24`) ve `terms.tsx:35` bununla çelişiyor.
 - ~~İşletmede "Pro Yıllık" yok~~ → **eklenecek** (Mehmet onayladı, 28.07). Ayrıntı aşağıda.
 
 ---

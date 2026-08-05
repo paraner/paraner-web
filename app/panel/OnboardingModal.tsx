@@ -16,7 +16,7 @@ type StepKey = "currency" | "account" | "company" | "name" | "plan";
 type PlanDef = { id: Plan; name: string; price: string; tag?: string; perks: string[] };
 
 /* Planlar HESAP TÜRÜNE göre — MOBİL GERÇEĞİYLE BİREBİR (17.07.2026, Mehmet: "mobil ne ise
-   web'de de o olacak"). Kaynak: paraner-app/app/premium.tsx + app/plan-detail.tsx.
+   web'de de o olacak"). Kaynak: paraner-rn-referans/app/premium.tsx + app/plan-detail.tsx.
 
    Önceki hâlde tek liste vardı ve mobilden 3 yerde sapıyordu:
    1) İşletmeye "Pro ₺149,90" deniyordu → mobilde İşletme Pro ₺490.

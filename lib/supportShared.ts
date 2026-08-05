@@ -10,7 +10,7 @@ export type TicketStatus = "open" | "answered" | "resolved" | "closed";
    ⚠️ Değer listesi DB'deki CHECK ile BİREBİR aynı olmalı (sql/destek/destek-departman.sql:32 ve
    staff_departments). Buraya yeni departman eklemek YETMEZ: önce DB CHECK'i genişlet,
    yoksa insert sessizce değil GÜRÜLTÜLÜ patlar (iyi haber: sessiz bozulma yok).
-   ⚠️ Mobil de talep açıyor (paraner-app/lib/support.ts) — orada da aynı liste olmalı.
+   ⚠️ Mobil de talep açıyor (paraner-rn-referans/lib/support.ts) — orada da aynı liste olmalı.
    Departman kolonu DB'de DEFAULT 'teknik' → mobil eski sürüm kırılmaz.
 
    `ipucu` müşteriye gösterilir: yanlış departman seçimini azaltan asıl şey bu cümle.

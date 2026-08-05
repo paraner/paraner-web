@@ -7,7 +7,7 @@
 > `~/Developer/Paraner/daily-log/web/DAILY_LOG.md` arşivine taşı, buradan sil, tarihi bugüne çek.
 > **Geçmişi okumak gerekince arşivden oku.** Bir hafta iş yapılmadıysa taşınacak bir şey yoktur.
 > ⚠️ Aşağıdaki "Hâlâ geçerli uyarılar" bölümü ARŞİVLENMEZ, hep burada kalır.
-> Tam ayrıntı git geçmişinde. (Aynı sistem `paraner-app` ve `paraner-ios`'ta.)
+> Tam ayrıntı git geçmişinde. (Aynı sistem `paraner-rn-referans` ve `paraner-app`'ta.)
 
 ---
 

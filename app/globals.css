@@ -1153,7 +1153,7 @@ ul { list-style: none; }
 .auth-split-form .auth-head h1 { font-size: 30px; }
 .auth-split-form .auth-divider { margin: 18px 0; }
 
-/* Üst wordmark — ortalı, paraner.com linki + üstünden geçen ışıltı (paraner-app
+/* Üst wordmark — ortalı, paraner.com linki + üstünden geçen ışıltı (paraner-rn-referans
    AnimatedWordmark ile aynı: wordmark PNG MASKE, teal taban + hareketli beyaz parıltı). */
 /* Formun üstünde dönen 3B titanyum P (AuthLogo3D) — wordmark yerine tek logo */
 .auth-logo-link {

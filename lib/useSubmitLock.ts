@@ -5,7 +5,7 @@ import { useRef } from "react";
 // olduğundan, React yeniden render edip butonu disabled yapana kadar iki hızlı
 // tık/Enter da handler'a girer → mükerrer kayıt + çift bakiye. useRef ANINDA set
 // edildiği için ikinci çağrı acquire()'da erken döner. (Mobil tarafındaki
-// useSubmitLock ile aynı mantık — bkz. paraner-app GUVENLIK.md 12.06.)
+// useSubmitLock ile aynı mantık — bkz. paraner-rn-referans GUVENLIK.md 12.06.)
 //
 // Kullanım:
 //   const lock = useSubmitLock();

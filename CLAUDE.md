@@ -25,7 +25,7 @@ Tüm Paraner klasörünün haritası: [`~/Developer/Paraner/CLAUDE.md`](../CLAUD
 `docs/` altında kalanlar bilinçli olarak **web'in kendi teknik dokümanları**dır
 (admin paneli, destek sistemi, DMARC, panel fikirleri, abonelik sayfası planı).
 
-**Diğer projeler:** iOS `../paraner-ios/` (🟢 aktif Swift) · RN `../paraner-app/` (🧊 dondurulmuş)
+**Diğer projeler:** iOS `../paraner-app/` (🟢 aktif Swift) · RN `../paraner-rn-referans/` (🧊 dondurulmuş)
 · Parla beyni `../parla/`
 
 # 👤 MEHMET YAZILIMCI DEĞİL — HER İŞ BİTİNCE SADE AÇIKLA + TEST YOLUNU VER
@@ -42,7 +42,7 @@ değiştir/eklediğinde, teknik özet YERİNE şunu yaz (kısa, sade Türkçe, j
 
 # ⚠️ KODA BAŞLAMADAN ÖNCE: ETKİ HARİTASI ÇIKAR
 
-Paraner tek kod tabanı DEĞİL: **paraner-web + paraner-app (`~/Developer/Paraner/paraner-app`) + ORTAK Supabase**.
+Paraner tek kod tabanı DEĞİL: **paraner-web + paraner-rn-referans (`~/Developer/Paraner/paraner-rn-referans`) + ORTAK Supabase**.
 Bir yeri değiştirip diğerini atlamak = kullanıcının gördüğü tutarsızlık. Değişiklik/ekleme isteği gelince
 **önce şu katmanları tek tek tara, etkilenenleri çıkar, yol haritasını Mehmet'e sun; sonra kodla:**
 
@@ -145,4 +145,4 @@ docs/                        — plan/denetim/şema notları + email-templates/ 
 > geçtiyse 7 günden eski girdileri `~/Developer/Paraner/daily-log/web/DAILY_LOG.md`'ye taşı,
 > buradan sil, tarihi bugüne çek. Bir hafta iş yapılmadıysa taşınacak bir şey yoktur, dokunma.
 > **Geçmişi okumak gerekince ORADAN oku.** ⚠️ "Hâlâ geçerli uyarılar" bölümü arşivlenmez, kalır.
-> (Aynı sistem `paraner-app` [`daily-log/app/`] ve `paraner-ios` [`daily-log/ios/`] tarafında.)
+> (Aynı sistem `paraner-rn-referans` [`daily-log/app/`] ve `paraner-app` [`daily-log/ios/`] tarafında.)

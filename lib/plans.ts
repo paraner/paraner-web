@@ -1,5 +1,5 @@
 /* Abonelik planları (tier) — MOBİL İLE ORTAK SÖZLÜK.
-   Kaynak: paraner-app/stores/authStore.ts `SubscriptionTier` + app/(tabs)/profile/index.tsx
+   Kaynak: paraner-rn-referans/stores/authStore.ts `SubscriptionTier` + app/(tabs)/profile/index.tsx
    PLAN_LABELS. DB'de CHECK constraint YOK → veritabanı her string'i kabul eder; bu yüzden
    uydurma bir değer (ör. "premium") sessizce yazılır ve mobil onu tanımaz/etiketleyemez.
    Buraya yazılmayan bir tier'ı ASLA DB'ye yazma.

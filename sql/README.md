@@ -4,9 +4,9 @@
 > geçmişi. Silme: bir sorun çıktığında "bu kolon nereden geldi, hangi politika neyi eziyor"
 > sorusunun tek cevabı burası. Supabase Dashboard → SQL Editor'a yapıştırılarak çalıştırılır.
 >
-> ⚠️ **DB mobil uygulamayla ORTAK** (`paraner-app`). Şemaya dokunan her şey mobili de etkiler —
+> ⚠️ **DB mobil uygulamayla ORTAK** (`paraner-rn-referans`). Şemaya dokunan her şey mobili de etkiler —
 > yeni kolon/tablo gerekiyorsa önce Mehmet'e sor. Mobil tarafın kendi SQL'leri
-> `paraner-app/supabase/` altında.
+> `paraner-rn-referans/supabase/` altında.
 
 ## admin/ — yönetim paneli
 
@@ -48,7 +48,7 @@ Sebep: Parla'nın beyni hem web hem mobil tarafından kullanılıyor; bir taraf�
 durması kafa karıştırıyordu. Artık "Parla'da bir şey değişecek" denince tek adres: `parla/`.
 Plan ve mimari: `~/Developer/Paraner/parla/PLAN.md`.
 
-> Not: `paraner-app/supabase/ai-*.sql` dosyaları (token maliyeti, kullanım sayacı) TARİHSEL
+> Not: `paraner-rn-referans/supabase/ai-*.sql` dosyaları (token maliyeti, kullanım sayacı) TARİHSEL
 > kayıt olarak yerinde bırakıldı — çalıştırılmış migration geçmişi taşınırsa iz kaybolur.
 > Yeni Parla SQL'leri `parla/sql/` altına yazılır.
 
@@ -65,10 +65,10 @@ Plan ve mimari: `~/Developer/Paraner/parla/PLAN.md`.
 - **`destek-hesap-silme-set-null.sql`'in edge bağımlılığı KAPANDI** (2026-07-20): `ticket.user_id`
   NULL gelebildiği için `support-reply-notify` + `support-new-ticket-notify` NULL guard'lı
   sürümleriyle deploy edildi. ⚠️ Bu iki fonksiyonu bir daha deploy edersen **`--no-verify-jwt`
-  bayrağını unutma** — ya da daha iyisi, ayar artık `paraner-app/supabase/config.toml`'da
+  bayrağını unutma** — ya da daha iyisi, ayar artık `paraner-rn-referans/supabase/config.toml`'da
   kayıtlı olduğu için bayrak gerekmez. Kayıt silinirse deploy sessizce JWT zorunlu yapar ve
   destek e-postaları durur (2026-07-20'de tam bu oldu, yakalandı).
-- **`paraner-app/supabase/ai-usage-rpc-fix.sql` GEÇERSİZ** — tekrar çalıştırılırsa denetimdeki
+- **`paraner-rn-referans/supabase/ai-usage-rpc-fix.sql` GEÇERSİZ** — tekrar çalıştırılırsa denetimdeki
   K2 düzeltmesini sessizce geri alır.
 - `*-DOGRULAMA.sql` dosyaları hiçbir şeyi değiştirmez; "hangi adım gerçekten canlıda?"
   sorusunu tahmine bırakmamak için var. Bir şeyden şüphelenince önce onları çalıştır.

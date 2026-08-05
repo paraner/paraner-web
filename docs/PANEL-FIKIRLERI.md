@@ -1,7 +1,7 @@
 # Panel Analizi ve Geliştirme Fikirleri
 
 > 2026-08-04. Kaynak: **kendi kodumuz ölçülerek** (web `app/panel/` 30 modül + mobil
-> `paraner-app/app/` ekranları, satır satır sayıldı) + `~/Developer/Paraner/rakipler/bizimhesap.md` (canlı panel gezildi)
+> `paraner-rn-referans/app/` ekranları, satır satır sayıldı) + `~/Developer/Paraner/rakipler/bizimhesap.md` (canlı panel gezildi)
 > + `~/Developer/Paraner/rakipler/defteran.md` + **720 mağaza yorumu** (rakibin uygulamasına yazılmış).
 > Fikir listesidir, karar listesi değil. Kararlar Mehmet'in.
 
@@ -263,7 +263,7 @@ e-Dönüşüm · Depo & Lojistik · Banka & Tahsilat. e-Ticaret'e **girmeme** ö
 |---|---|
 | Web'de menüsüz sayfa yok | `app/panel/` 30 klasör, hepsi `businessMenu.tsx`/`Sidebar.tsx`'ten erişilebilir |
 | Web fatura formu tek satır | `faturalar/FaturaFormu.tsx:128` *"kalem editörü yok → tek özet kalem yaz"* |
-| Mobil fatura formu kalemli | `paraner-app/app/invoice-create.tsx` (1256 satır): *"En az bir kalem olmalıdır."*, `Satır Toplamı`, 9 birim, `Vade Tarihi`, `Ödeme Hesabı`, `PDF Paylaş` |
+| Mobil fatura formu kalemli | `paraner-rn-referans/app/invoice-create.tsx` (1256 satır): *"En az bir kalem olmalıdır."*, `Satır Toplamı`, 9 birim, `Vade Tarihi`, `Ödeme Hesabı`, `PDF Paylaş` |
 | Mobilde çalışan, webde "Yakında" | `receipt-scan.tsx` 619 · `exchange.tsx` 409 · `pdf-report.tsx` 295 · `sgk-declarations.tsx` 288 |
 | Webde menüde bile olmayan | `vat-declaration.tsx` 316 · `invoice-numbering.tsx` 195 |
 | Web modülleri ince | satır sayıları: kar-zarar 171 · kdv-raporu 149 · nakit-akisi 120 · vergi-takvimi 97 (mobil karşılıkları 3× civarı) |

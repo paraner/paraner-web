@@ -4,7 +4,7 @@
 --
 -- Mehmet'in kararları: 4 departman · öncelik alanı müşteriye SORULMAYACAK · şema izni verildi.
 --
--- ⚠️ MOBİL AYNI ŞEMAYI KULLANIYOR (paraner-app/lib/support.ts talep açıyor).
+-- ⚠️ MOBİL AYNI ŞEMAYI KULLANIYOR (paraner-rn-referans/lib/support.ts talep açıyor).
 --    department kolonu DEFAULT'lu → eski mobil sürüm KIRILMADAN çalışmaya devam eder,
 --    onun açtığı talepler 'teknik'e düşer. App Store sürümü BEKLEMEDEN uygulanabilir.
 --

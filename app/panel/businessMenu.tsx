@@ -1,4 +1,4 @@
-// İşletme sol menüsü — mobil (paraner-app/constants/businessMenu.ts) ile birebir
+// İşletme sol menüsü — mobil (paraner-rn-referans/constants/businessMenu.ts) ile birebir
 // tutarlı 8 bölüm. Web'de sayfası olan alt öğeler `href` ile bağlı; henüz olmayanlar
 // `href: null` → pasif satır (soluk, tıklanamaz; rozet YOK). İkonlar Lucide.
 import {

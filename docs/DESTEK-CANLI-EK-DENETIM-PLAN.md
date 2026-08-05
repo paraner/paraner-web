@@ -25,7 +25,7 @@
   mesajımızı da getirir" diyor → tek bacak realtime'a bırakılmış.
 - `lib/support.ts:64-71` `insert()` sonrası `.select()` yok → dönen satır elde bile değil.
 
-**Mobil bu hataya DÜŞMÜYOR** — `paraner-app/lib/support.ts` `sendMessage` `.select().single()`
+**Mobil bu hataya DÜŞMÜYOR** — `paraner-rn-referans/lib/support.ts` `sendMessage` `.select().single()`
 döndürüyor, `app/support-ticket.tsx:85` `setMessages(prev => [...prev, msg])` ile iyimser ekliyor.
 Yani doğru desen zaten repoda var, web ondan geri kalmış.
 
