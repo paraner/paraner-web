@@ -97,6 +97,11 @@ açtı: yeni sayfalar yalnız geniş ekranda (2294px) test edilmişti. 390px'te 
   düğme yalnız "Yazdır" oluyor (`.pr-print-uzun`).
   **→ KALICI DERS: `.btn` içindeki uzun etiket dar ekranda sarmaz, kesilir. Uzun etiketli
   başlık düğmesi yazarken dar ekran için kısa varyant düşün.**
+  ✅ **Canlıda doğrulandı:** 390px → görünen metin "Yazdır", `85/85` (kesilmiyor), sağ kenar 348.
+  1920px → "Yazdır / PDF Kaydet", `195/195`. Sınır 561px'te de tam etiket, kesilme yok.
+  ⚠️ Yöntem notu: `resize_window` bu oturumda ETKİSİZ (başarılı döner, `innerWidth` 1920'de kalır)
+  → telefon genişliği, sayfanın DOM+stilleri 390px'lik **aynı-origin iframe'e klonlanarak**
+  ölçüldü (gerçek viewport 390 → `@media` kuralları gerçek telefon gibi değerlendi).
 - 🔴 **AÇIK KALDI (benim işim değil, tüm paneli etkiliyor):** kaydırınca içerik `☰` ve `+`
   düğmelerinin altından geçiyor — ikisinin de arkası saydam, `.panel-topbar` sticky değil.
   GOREVLER'e yazıldı, Mehmet'in onayı bekleniyor.
