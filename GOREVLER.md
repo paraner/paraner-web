@@ -29,6 +29,25 @@
 ---
 
 ## 🚨 LANSMAN ÖNCESİ ZORUNLU (o güne bırakılmaz)
+
+- [ ] 🔴 **REPO HERKESE AÇIK — kapatılamıyor, Vercel engelliyor** (05.08.2026'da yaşandı)
+      **Sorun:** Vercel **Hobby** planı, bir GitHub **organizasyonuna ait ÖZEL** repodan
+      deploy etmiyor. Repo gizlenince ilk push **`failure`** aldı (commit `ab4191b`), Vercel
+      *"Failed deployment"* maili gönderdi. Repo geri açıldı, deploy düzeldi (`96163a6` → success).
+      **Kanıt:** GitHub commit status API — gizliyken `failure`, açıkken `success`.
+      ⚠️ **Site 200 dönüyor olması kanıt DEĞİL** — eski deploy yayında kalmaya devam ediyor.
+      Doğrulama her zaman commit status'ünden yapılır.
+      **Bu arada geçerli kural:** bu repo herkese açık → rakip analizi, pazarlama planı, fiyat
+      stratejisi, şifre, anahtar **KOYULMAZ**. Böyle bir şey kök klasöre yazılır.
+      **Kalıcı çözüm — üçünden biri seçilecek:**
+      1. **Repoyu kişisel hesaba taşı** (`mehmetgzr/paraner-web`) — ücretsiz, özel kalır,
+         otomatik deploy çalışır. Vercel'in kısıtı yalnız organizasyon repolarına özel.
+         Bedeli: web reposu `paraner` org'undan çıkar.
+      2. **Vercel Pro** (~$20/ay) — hiçbir yapı değişmez. ⚠️ Hobby planı şartları zaten
+         *"kişisel, ticari olmayan"* diyor; Paraner ticari ürün → **lansmanda Pro gerekecek.**
+      3. Vercel CLI / GitHub Actions ile elle deploy — ücretsiz ama otomatik push-deploy gider.
+      **Karar Mehmet'in.** Gelir başlayınca (2) en temizi; ondan önce (1) ücretsiz köprü.
+
 - [ ] 🔴 **VERİTABANI YEDEĞİ YOK** → görev **`paraner-backend/GOREVLER.md`**'e taşındı
       (05.08.2026, veritabanı kendi reposuna alındı). Hâlâ açık ve lansman öncesi zorunlu;
       burada tekrarlanmasın diye tek satıra indirildi.

@@ -29,7 +29,7 @@
 
 **Kod değişikliği yok.** Bu repoya düşen kısım:
 
-**🔴 Repo PUBLIC'ti, PRIVATE yapıldı.** 66 gündür herkese açıkmış. Özel bir sebebi yokmuş —
+**🔴 Repo gizlendi → Vercel kırıldı → geri açıldı.** 66 gündür herkese açıkmış. Özel bir sebebi yokmuş —
 oluşturulurken varsayılan public seçilmiş. Kontroller:
 - **538 commit'lik tüm geçmiş tarandı** → `.env` hiç commit edilmemiş; Supabase/Stripe/Resend/
   Google/GitHub anahtarı, service_role, düz metin şifre **hiçbiri yok**. ✅
@@ -41,6 +41,17 @@ oluşturulurken varsayılan public seçilmiş. Kontroller:
 - **Vercel etkilenmedi:** bağlantı GitHub App üzerinden (`app_slug: vercel`), görünürlükten
   bağımsız. Gizledikten sonra üç domen de canlı: paraner.com / app. / admin. → HTTP 200.
   Kodda `raw.githubusercontent` gibi açık-URL bağımlılığı yok (kontrol edildi).
+
+
+**⚠️ GİZLEME GERİ ALINDI — Vercel Hobby engeli (aynı gün).** Repo private yapıldıktan sonraki
+ilk push **deploy edilemedi**: Vercel Hobby planı **organizasyona ait ÖZEL** repolardan deploy
+etmiyor. Vercel *"Failed deployment for paraner"* maili gönderdi. Repo tekrar public yapıldı,
+deploy düzeldi. Kanıt (GitHub commit status): `ab4191b` = **failure** (gizliyken) ·
+`96163a6` = **success** (açıkken). Kaçan tek deploy `ab4191b` idi ve içeriği yalnız yorum
+satırıydı → **canlı sitede eksik yok.**
+⚠️ **Ders:** "site HTTP 200 dönüyor" deploy'un çalıştığının kanıtı DEĞİL — eski deploy yayında
+kalmaya devam ediyor. Doğrulama **commit status**'ünden yapılır. (İlk kontrolde bu hata yapıldı.)
+Kalıcı çözüm GOREVLER → LANSMAN ÖNCESİ: repoyu kişisel hesaba taşı / Vercel Pro / elle deploy.
 
 **Bu repodan çıkarılanlar** → `~/Developer/Paraner/` kök klasörüne (git dışı):
 `docs/RAKIP-bizimhesap.md` + `docs/RAKIP-defteran.md` → `rakipler/` ·

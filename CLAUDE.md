@@ -1,4 +1,3 @@
-<!-- deploy-kontrol: 2026-08-05 -->
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
@@ -11,8 +10,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 Tüm Paraner klasörünün haritası: [`~/Developer/Paraner/CLAUDE.md`](../CLAUDE.md)
 
-**Bu repo GitHub'da PUBLIC.** Kod dışı / iş dosyaları 05.08.2026'da buradan çıkarılıp kök klasöre
-(git dışına) alındı — oradan oku, buraya geri koyma:
+**⚠️ Bu repo GitHub'da HERKESE AÇIK (PUBLIC) — ve şimdilik öyle kalmak ZORUNDA.**
+05.08.2026'da gizlendi ama Vercel **Hobby planı organizasyona ait ÖZEL repolardan deploy
+etmiyor** → deploy kırıldı, geri açıldı. Kalıcı çözüm `GOREVLER.md` → "LANSMAN ÖNCESİ".
+O güne kadar buraya konan her şey herkese açıktır.
+
+Kod dışı / iş dosyaları 05.08.2026'da buradan çıkarılıp kök klasöre (git dışına) alındı —
+oradan oku, buraya geri koyma:
 
 | Arıyorsan | Yeri |
 |---|---|
