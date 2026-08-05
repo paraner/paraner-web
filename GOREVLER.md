@@ -335,6 +335,31 @@
 - [ ] **Hesap silme v2:** admin/dashboard silmede FARKLI mail (kullanıcı kendi silince "Görüşmek üzere" var;
       biz silersek ayrı). Trigger'a silme kaynağı ayrımı.
 - [ ] Dış-entegrasyon "Yakında": Fiş Tara (OCR), Döviz & Altın (API), PDF Rapor, SGK, e-Defter, Muhasebeci.
+- [ ] **🔔 TARAYICI BİLDİRİMİ (web push) — Mehmet: "şimdi kurmayalım, sonra" (05.08.2026)**
+      Fikir figopara.com'dan geldi: siteye girene "bildirimleri aç" kutusu. **Karar VERİLDİ, iş ertelendi:**
+      kapsam = **yalnız `app.paraner.com` (giriş yapmış müşteri)**, pazarlama sitesine KOYULMAYACAK;
+      altyapı = **kendi altyapımız** (OneSignal gibi 3. taraf yok — script yükü + KVKK + aylık ücret).
+      Gönderilecek şeyler: vergi/beyanname son günü · fatura vadesi · tekrarlayan ödeme yaklaşıyor ·
+      destek talebine cevap geldi · deneme bitiyor · aylık özet hazır.
+      Başlarken bilinmesi gerekenler (05.08 taraması, doğrulanmış):
+      - ✅ **`public.notifications` tablosu ZATEN VAR** (`sql/destek/destek-faz0.sql:37`, kolonlar
+        `type/title/body/link/data`) ve web+mobil çanı onu okuyor → push, o tablonun ÜSTÜNE binmeli;
+        yeni bildirim tipi icat edip ikinci bir kaynak açma.
+      - ➕ Gereken TEK yeni tablo: cihaz aboneliği (`push_subscriptions`: user_id + endpoint + anahtarlar).
+        Şema değişikliği → **mobil de aynı DB'yi kullanıyor, önce Mehmet'e sorulacak.**
+      - ⚠️ `public/sw.js` şu an **kill-switch** (eski service worker AÇILIŞI YAVAŞLATTIĞI için kaldırılmıştı).
+        Push için SW geri gelecek → aynı jank'e dönmemesi için yalnız push dinlesin, cache YAPMASIN.
+      - ⚠️ **Sunucudan bildirim gönderme altyapısı HİÇ YOK — mobilde de yok.** Mobildeki
+        `expo-notifications` yalnız cihazın kendi kurduğu yerel hatırlatma; `getExpoPushToken` kullanılmıyor.
+        Yani bu iş kurulunca **mobil de aynı sistemden beslenmeli** (tek gönderim yeri, iki istemci).
+      - ⚠️ **Çift bildirim riski:** telefonda uygulaması + web'de izni olan kullanıcı aynı şeyi iki kez
+        almamalı → gönderim tarafında kanal seçimi tek yerden.
+      - ⚠️ **iPhone'da çalışmaz** — kullanıcı siteyi "Ana Ekrana Ekle" yapmadıkça Safari izni hiç sormaz.
+        (Android + masaüstü Chrome/Edge/Firefox sorunsuz.) iPhone'lu müşteriye mobil uygulama yolu kalır.
+      - Sıralama şart: önce KENDİ kutumuz ("bildirimleri aç"), sonra tarayıcının izni. Doğrudan tarayıcı
+        kutusu açılırsa ve kullanıcı **Block derse o alan adına bir daha ASLA sorulamaz.**
+      - Edge fonksiyonları `paraner-app/supabase/functions/` altında yaşıyor (web repoda yok);
+        yeni fonksiyon = `supabase/config.toml` kaydı da yazılacak (yukarıdaki kalıcı tuzak).
 - [ ] **Soğuk mail kampanyası** — işletmelere "14 gün ücretsiz" maili (10.000+). Plan hazır:
       `docs/SOGUK-MAIL-PLANI.md`. ⚠️ İKİ TUZAK: (1) paraner.com'dan GÖNDERİLMEZ — spam şikâyeti
       şifre sıfırlama maillerini de öldürür, ayrı alan adı şart. (2) Resend'den GÖNDERİLMEZ —
